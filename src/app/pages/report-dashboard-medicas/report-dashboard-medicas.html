@@ -1,0 +1,1152 @@
+<div class="main">
+  <!-- Header con logo y título -->
+  <div class="header">
+    <div class="header-content">
+      <h2 class="title">Consulta externa - Médicas</h2>
+      <p class="subtitle">
+        Información actualizada al {{ currentDate }} | centro de atención: {{ centroAtencion }}
+      </p>
+    </div>
+
+    <div class="header-content header-content-actions">
+      <button class="btn-download btn-ficha-tecnica" (click)="downloadFichaTecnica()">
+        <i class="bi bi-file-earmark-pdf"></i>
+        Ficha Técnica
+      </button>
+    </div>
+  </div>
+  <!-- TABS -->
+
+
+  <div class="tabs">
+    <button class="tab-button" [class.active]="activeTab === 'Atenciones Medicas'"
+      (click)="setActiveTab('Atenciones Medicas')">
+      Atenciones Médicas
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Medicina Complementaria'"
+      (click)="setActiveTab('Medicina Complementaria')">
+      Medicina Complementaria
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Medicina Ocupacional'"
+      (click)="setActiveTab('Medicina Ocupacional')">
+      Medicina Ocupacional
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Medico de Personal'"
+      (click)="setActiveTab('Medico de Personal')">
+      Medico de Personal
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Consulta de Atencion Inmediata'"
+      (click)="setActiveTab('Consulta de Atencion Inmediata')">
+      Consulta de Atencion Inmediata
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Consulta de Apoyo  Desc'"
+      (click)="setActiveTab('Consulta de Apoyo  Desc')">
+      Consulta de Apoyo Desc
+    </button>
+  </div>
+
+  <!-- CONTENIDO TABS -->
+  <!-- Tab Atenciones Medicas -->
+  <div *ngIf="activeTab === 'Atenciones Medicas'" class="tab-content">
+
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anio" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodo" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_asegurado" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button (click)="loadDashboardAtencionesMedicas()" class="btn-search">Buscar</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Estado Loading-->
+    <div *ngIf="loadingAM" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Selecciona Periodo -->
+    <div *ngIf="selectPeriodoAM && !loadingAM" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información atenciones médicas</p>
+    </div>
+
+    <!-- Estado de Error -->
+    <div *ngIf="errorAM" class="alert alert-danger">
+      {{ errorAM }}
+    </div>
+
+    <!-- Contenido de Atenciones Medicas -->
+    <div *ngIf="!loadingAM && !errorAM && !selectPeriodoAM" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes a la atención médica</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesAtencionMedica) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio }}-{{ periodo }} | {{ centroAtencion }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes al servicio</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesServicio) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio }}-{{ periodo }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultantesServicio" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.cantidad) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="'/dm-total-atenciones-am'" class="card-link">
+                <h5 class="card-title">Total de Consultas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalAtenciones) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio }}-{{ periodo }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultas" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="'/dm-total-medicos-am'" class="card-link">
+                <h5 class="card-title">Numero de Médicos</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalMedicos) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio }}-{{ periodo }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalMedicos" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 3-->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="'/dm-total-deserciones-am'" class="card-link">
+                <h5 class="card-title">Número de deserciones</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(desercion) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio }}-{{ periodo }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataDesercion" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="'/dm-total-citados-am'" class="card-link">
+                <h5 class="card-title">Número de citas otorgadas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalCitasOtorgadas) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio }}-{{ periodo }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataCitasOtorgadas" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 4: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="'/dm-total-horas-programadas-am'" class="card-link">
+                <h5 class="card-title">Total de horas programadas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasProgramadas) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio }}-{{ periodo }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasProgramadas" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="'/dm-total-horas-efectivas-am'" class="card-link">
+                <h5 class="card-title">Total de horas efectivas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasEfectivas) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio }}-{{ periodo }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasEfectivas" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Medicinas Complementarias -->
+  <div *ngIf="activeTab === 'Medicina Complementaria'" class="tab-content">
+    <!-- Header con logo y título -->
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anio_mc" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodo_mc" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_asegurado_mc" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button (click)="loadDashboardMedicinasComplementarias()" class="btn-search">
+            Buscar
+          </button>
+        </div>
+
+
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingMC" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoMC && !loadingMC" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de medicina complementaria</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorMC" class="alert alert-danger">
+      {{ errorMC }}
+    </div>
+
+    <!-- Dashboard Content MC-->
+    <div *ngIf="!loadingMC && !errorMC && !selectPeriodoMC" class="dashboard-content">
+      <!-- Row 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes a medicina complementaria</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesMC) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mc }}-{{ periodo_mc }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes al servicio</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesServicioMC) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mc }}-{{ periodo_mc }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultantesServicioMC" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.cantidad) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" [href]="'/dm-total-atenciones-mc'">
+                <h5 class="card-title">Total de consultas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalAtencionesMC) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mc }}-{{ periodo_mc }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultasMC" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" [href]="'/dm-total-medicos-mc'">
+                <h5 class="card-title">Total de medicos</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalMedicosMC) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mc }}-{{ periodo_mc }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalMedicosMC" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Row 3: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" [href]="'/dm-total-horas-programadas-mc'">
+                <h5 class="card-title">Total horas programadas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasProgramadasMC) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mc }}-{{ periodo_mc }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasProgramadasMC" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" [href]="'/dm-total-horas-efectivas-mc'">
+                <h5 class="card-title">Total horas efectivas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasEfectivasMC) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mc }}-{{ periodo_mc }} | {{ centroAtencion }}
+              </p>
+            </div>
+
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasEfectivasMC" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Medicina Ocupacional -->
+  <div *ngIf="activeTab === 'Medicina Ocupacional'" class="tab-content">
+    <!-- Header con logo y título -->
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anio_mo" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodo_mo" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_asegurado_mo" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button (click)="loadDashboardMedicinaOcupacional()" class="btn-search">Buscar</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingMO" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoMO && !loadingMO" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de medicina ocupacional</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorMO" class="alert alert-danger">
+      {{ errorMO }}
+    </div>
+
+    <!-- Dashboard Content MO-->
+    <div *ngIf="!loadingMO && !errorMO && !selectPeriodoMO" class="dashboard-content">
+      <!-- Row 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes a medicina ocupacional</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesMO) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mo }}-{{ periodo_mo }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes al servicio</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesServicioMO) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mo }}-{{ periodo_mo }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultantesServicioMO" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.cantidad) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-atenciones-mo">
+                <h5 class="card-title">Total de consultas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalAtencionesMO) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mo }}-{{ periodo_mo }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultasMO" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-medicos-mo">
+                <h5 class="card-title">Total de medicos</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalMedicosMO) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mo }}-{{ periodo_mo }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalMedicosMO" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Row 3: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-horas-programadas-mo">
+                <h5 class="card-title">Total horas programadas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasProgramadasMO) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mo }}-{{ periodo_mo }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasProgramadasMO" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-horas-efectivas-mo">
+                <h5 class="card-title">Total horas efectivas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasEfectivasMO) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mo }}-{{ periodo_mo }} | {{ centroAtencion }}
+              </p>
+            </div>
+
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasEfectivasMO" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Medico de Personal -->
+  <div *ngIf="activeTab === 'Medico de Personal'" class="tab-content">
+    <!-- Header con logo y título -->
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anio_mp" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodo_mp" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_asegurado_mp" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button (click)="loadDashboardMedicoPersonal()" class="btn-search">Buscar</button>
+        </div>
+
+
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingMP" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoMP && !loadingMP" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de medico personal</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorMP" class="alert alert-danger">
+      {{ errorMP }}
+    </div>
+
+    <!-- Dashboard Content MP-->
+    <div *ngIf="!loadingMP && !errorMP && !selectPeriodoMP" class="dashboard-content">
+      <!-- Row 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes a medico de personal</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesMP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mp }}-{{ periodo_mp }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes al servicio</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesServicioMP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mp }}-{{ periodo_mp }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultantesServicioMP" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.cantidad) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-atenciones-mp">
+                <h5 class="card-title">Total de consultas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalAtencionesMP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mp }}-{{ periodo_mp }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultasMP" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-medicos-mp">
+                <h5 class="card-title">Total de medicos</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalMedicosMP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mp }}-{{ periodo_mp }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalMedicosMP" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Row 3: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-horas-programadas-mp">
+                <h5 class="card-title">Total horas programadas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasProgramadasMP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mp }}-{{ periodo_mp }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasProgramadasMP" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-horas-efectivas-mp">
+                <h5 class="card-title">Total horas efectivas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasEfectivasMP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_mp }}-{{ periodo_mp }} | {{ centroAtencion }}
+              </p>
+            </div>
+
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasEfectivasMP" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Consulta de Atencion Inmediata -->
+  <div *ngIf="activeTab === 'Consulta de Atencion Inmediata'" class="tab-content">
+    <!-- Header con logo y título -->
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anio_cai" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodo_cai" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_asegurado_cai" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button (click)="loadDashboardConsultaAtencionInmediata()" class="btn-search">
+            Buscar
+          </button>
+        </div>
+
+
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingCAI" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoCAI && !loadingCAI" class="select-periodo">
+      <p>
+        Por favor, seleccione un período para ver la información de consulta de atencion intermedia
+      </p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorCAI" class="alert alert-danger">
+      {{ errorCAI }}
+    </div>
+
+    <!-- Dashboard Content CAI-->
+    <div *ngIf="!loadingCAI && !errorCAI && !selectPeriodoCAI" class="dashboard-content">
+      <!-- Row 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes en atencion inmediata</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesCAI) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cai }}-{{ periodo_cai }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes al servicio</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesServicioCAI) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cai }}-{{ periodo_cai }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultantesServicioCAI" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.cantidad) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="dm-total-atenciones-cai">
+                <h5 class="card-title">Total de consultas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalAtencionesCAI) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cai }}-{{ periodo_cai }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultasCAI" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-medicos-cai">
+                <h5 class="card-title">Total de medicos</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalMedicosCAI) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cai }}-{{ periodo_cai }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalMedicosCAI" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Row 3: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-horas-programadas-cai">
+                <h5 class="card-title">Total horas programadas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasProgramadasCAI) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cai }}-{{ periodo_cai }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasProgramadasCAI" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-horas-efectivas-cai">
+                <h5 class="card-title">Total horas efectivas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasEfectivasCAI) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cai }}-{{ periodo_cai }} | {{ centroAtencion }}
+              </p>
+            </div>
+
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasEfectivasCAI" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Consulta de Apoyo  Desc -->
+  <div *ngIf="activeTab === 'Consulta de Apoyo  Desc'" class="tab-content">
+    <!-- Header con logo y título -->
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anio_cad" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodo_cad" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_asegurado_cad" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button (click)="loadDashboardConsultaApoyoDesc()" class="btn-search">Buscar</button>
+        </div>
+
+
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingCAD" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoCAD && !loadingCAD" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de consulta de apoyo desc</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorCAD" class="alert alert-danger">
+      {{ errorCAD }}
+    </div>
+
+    <!-- Dashboard Content MP-->
+    <div *ngIf="!loadingCAD && !errorCAD && !selectPeriodoCAD" class="dashboard-content">
+      <!-- Row 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes en cons. apoyo desc</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesCAD) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cad }}-{{ periodo_cad }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="''" class="card-link">
+                <h5 class="card-title">Total de consultantes al servicio</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalConsultantesServicioCAD) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cad }}-{{ periodo_cad }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultantesServicioCAD" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.cantidad) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-atenciones-cad">
+                <h5 class="card-title">Total de consultas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalAtencionesCAD) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cad }}-{{ periodo_cad }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalConsultasCAD" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-medicos-cad">
+                <h5 class="card-title">Total de medicos</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(totalMedicosCAD) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cad }}-{{ periodo_cad }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTotalMedicosCAD" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Row 3: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-horas-programadas-cad">
+                <h5 class="card-title">Total horas programadas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasProgramadasCAD) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cad }}-{{ periodo_cad }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasProgramadasCAD" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="/dm-total-horas-efectivas-cad">
+                <h5 class="card-title">Total horas efectivas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasEfectivasCAD) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anio_cad }}-{{ periodo_cad }} | {{ centroAtencion }}
+              </p>
+            </div>
+
+            <div class="contend_right">
+              <div *ngFor="let item of dataHorasEfectivasCAD" class="item-data">
+                <span> {{ item.agrupador }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

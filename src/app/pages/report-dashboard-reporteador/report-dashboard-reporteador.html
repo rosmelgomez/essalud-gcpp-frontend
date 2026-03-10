@@ -1,0 +1,235 @@
+<div class="main">
+  <!-- Header con logo y título -->
+  <div class="header">
+    <div class="header-content">
+      <h2 class="title">Atenciones por capítulo CIE - Médicas</h2>
+      <p class="subtitle">
+        Información actualizada al {{ currentDate }}
+      </p>
+    </div>
+  </div>
+
+  <div class="header">
+    <div class="header-actions">
+      <div class="buscar-group">
+        <select [(ngModel)]="anio" class="style-select">
+          <option value="">Seleccione un Año</option>
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
+        </select>
+        <select [(ngModel)]="periodo" class="style-select">
+          <option value="">Seleccione un periodo</option>
+          <option value="01">Enero</option>
+          <option value="02">Febrero</option>
+          <option value="03">Marzo</option>
+          <option value="04">Abril</option>
+          <option value="05">Mayo</option>
+          <option value="06">Junio</option>
+          <option value="07">Julio</option>
+          <option value="08">Agosto</option>
+          <option value="09">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
+        <div class="custom-dropdown" (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
+          <input type="text" placeholder="Buscar y seleccionar red asistencial..." (input)="filterRed($event)"
+            [value]="selectedRedName" class="dropdown-input" />
+          <div class="dropdown-list" *ngIf="isDropdownRedOpen">
+            <div *ngFor="let red of filteredRed" class="dropdown-item" (click)="selectOptionRed(red)">
+              {{ red.redasisdes }}
+            </div>
+            <div *ngIf="filteredRed.length === 0" class="dropdown-item disabled">
+              No hay resultados
+            </div>
+          </div>
+        </div>
+        <div class="custom-dropdown" [class.disabled]="!isCentroEnabled" (mouseleave)="closeDropdownCentro()"
+          (mouseenter)="openDropdownCentro()">
+          <input type="text"
+            [placeholder]="isCentroEnabled ? 'Buscar y seleccionar centro asistencial...' : 'Primero selecciona una red'"
+            (input)="filterCentro($event)" [value]="selectedCentroName" [disabled]="!isCentroEnabled"
+            class="dropdown-input" />
+          <div class="dropdown-list" *ngIf="isDropdownCentroOpen && isCentroEnabled">
+            <div *ngFor="let centro of filteredCentro" class="dropdown-item" (click)="selectOptionCentro(centro)">
+              {{ centro.cenasides }}
+            </div>
+            <div *ngIf="filteredCentro.length === 0" class="dropdown-item disabled">
+              No hay resultados
+            </div>
+          </div>
+        </div>
+        <select [(ngModel)]="servicio" class="style-select">
+          <option value="">Seleccione servicio</option>
+          <option *ngFor="let item of dataServicio" value="{{item.servhoscod}}">{{item.servhosdes}}</option>
+        </select>
+        <div class="custom-dropdown" (mouseleave)="closeDropdownActividad()" (mouseenter)="openDropdownActividad()">
+          <input type="text" placeholder="Buscar y seleccionar actividad..." (input)="filterActividad($event)"
+            [value]="selectedActividadName" class="dropdown-input" />
+          <div class="dropdown-list" *ngIf="isDropdownActividadOpen">
+            <div *ngFor="let actividadItem of filteredActividad" class="dropdown-item"
+              (click)="selectOptionActividad(actividadItem)">
+              {{ actividadItem.actdes }}
+            </div>
+            <div *ngIf="filteredActividad.length === 0" class="dropdown-item disabled">
+              No hay resultados
+            </div>
+          </div>
+        </div>
+        <div class="custom-dropdown" [class.disabled]="!isSubactividadEnabled"
+          (mouseleave)="closeDropdownSubactividad()" (mouseenter)="openDropdownSubactividad()">
+          <input type="text"
+            [placeholder]="isSubactividadEnabled ? 'Buscar y seleccionar subactividad...' : 'Primero selecciona una actividad'"
+            (input)="filterSubactividad($event)" [value]="selectedSubactividadName" [disabled]="!isSubactividadEnabled"
+            class="dropdown-input" />
+          <div class="dropdown-list" *ngIf="isDropdownSubactividadOpen && isSubactividadEnabled">
+            <div *ngFor="let subactividadItem of filteredSubactividad" class="dropdown-item"
+              (click)="selectOptionSubactividad(subactividadItem)">
+              {{ subactividadItem.actespnom }}
+            </div>
+            <div *ngIf="filteredSubactividad.length === 0" class="dropdown-item disabled">
+              No hay resultados
+            </div>
+          </div>
+        </div>
+        <select [(ngModel)]="sexo" class="style-select">
+          <option value="">Seleccione sexo</option>
+          <option value="M">Masculino</option>
+          <option value="F">Femenino</option>
+          <option value="A">Ambos</option>
+        </select>
+        <select [(ngModel)]="capitulo_CIE" class="style-select">
+          <option value="">Seleccione capítulo CIE</option>
+          <option *ngFor="let item of dataCapitulo" value="{{item.diagcod}}">{{item.edxcapdes}}</option>
+        </select>
+        <!-- Botón búsqueda -->
+        <button class="btn-search" (click)="getReporte()">Buscar</button>
+      </div>
+
+      <!-- Botón descargar CSV -->
+      <button *ngIf="!loadingAM && !errorAM && !selectPeriodoAM" class="btn-download">
+        <i class="bi bi-download"></i> Descargar CSV
+      </button>
+    </div>
+  </div>
+
+  <div class="mat-elevation-z8">
+    <table mat-table [dataSource]="dataSource" >
+
+      <ng-container matColumnDef="Centro origen" style="font-size:10px" >
+        <th mat-header-cell *matHeaderCellDef > Centro origen </th>
+        <td mat-cell *matCellDef="let element"> {{element.cod_oricentro}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Cód. red" style="font-size:10px">
+        <th mat-header-cell *matHeaderCellDef> Cód. red </th>
+        <td mat-cell *matCellDef="let element"> {{element.redasiscod}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Red asistencial" style="font-size:10px">
+        <th mat-header-cell *matHeaderCellDef> Red asistencial </th>
+        <td mat-cell *matCellDef="let element"> {{element.redasisdes}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Cód. centro" style="font-size:10px">
+        <th mat-header-cell *matHeaderCellDef> Cód. centro </th>
+        <td mat-cell *matCellDef="let element"> {{element.cod_centro}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Centro asistencial" style="font-size:10px">
+        <th mat-header-cell *matHeaderCellDef> Centro asistencial </th>
+        <td mat-cell *matCellDef="let element"> {{element.cenasides}} </td>
+      </ng-container>
+
+
+      <ng-container matColumnDef="Periodo" >
+        <th mat-header-cell *matHeaderCellDef> Periodo </th>
+        <td mat-cell *matCellDef="let element"> {{element.periodo}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Año" >
+        <th mat-header-cell *matHeaderCellDef> Año </th>
+        <td mat-cell *matCellDef="let element"> {{element.anio}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Cód. servicio" >
+        <th mat-header-cell *matHeaderCellDef> Cód. servicio </th>
+        <td mat-cell *matCellDef="let element"> {{element.cod_servicio}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Servicio" >
+        <th mat-header-cell *matHeaderCellDef> Servicio </th>
+        <td mat-cell *matCellDef="let element"> {{element.servicio}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Cód. actividad" >
+        <th mat-header-cell *matHeaderCellDef> Cód. actividad</th>
+        <td mat-cell *matCellDef="let element"> {{element.cod_actividad}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Actividad" >
+        <th mat-header-cell *matHeaderCellDef> Actividad </th>
+        <td mat-cell *matCellDef="let element"> {{element.actividad}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Cód. subactividad">
+        <th mat-header-cell *matHeaderCellDef> Cód. subactividad </th>
+        <td mat-cell *matCellDef="let element"> {{element.cod_subactividad}} </td>
+      </ng-container>
+
+       <ng-container matColumnDef="Subactividad" >
+        <th mat-header-cell *matHeaderCellDef> Subactividad </th>
+        <td mat-cell *matCellDef="let element"> {{element.subactividad}} </td>
+      </ng-container>
+
+             <ng-container matColumnDef="Sexo" >
+        <th mat-header-cell *matHeaderCellDef> Sexo </th>
+        <td mat-cell *matCellDef="let element"> {{element.sexo}} </td>
+      </ng-container>
+
+                   <ng-container matColumnDef="Edad (años)" >
+        <th mat-header-cell *matHeaderCellDef> Edad (años) </th>
+        <td mat-cell *matCellDef="let element"> {{element.anio_edad}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="DNI médico" >
+        <th mat-header-cell *matHeaderCellDef> DNI médico </th>
+        <td mat-cell *matCellDef="let element"> {{element.dni_medico}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Acto médico" >
+        <th mat-header-cell *matHeaderCellDef> Acto médico </th>
+        <td mat-cell *matCellDef="let element"> {{element.acto_med}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Paciente" >
+        <th mat-header-cell *matHeaderCellDef> Paciente </th>
+        <td mat-cell *matCellDef="let element"> {{element.doc_paciente}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Cód. diagnóstico" >
+        <th mat-header-cell *matHeaderCellDef> Cód. diagnóstico </th>
+        <td mat-cell *matCellDef="let element"> {{element.cod_diag}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Diagnóstico" >
+        <th mat-header-cell *matHeaderCellDef> Diagnóstico </th>
+        <td mat-cell *matCellDef="let element"> {{element.diagdes}} </td>
+      </ng-container>
+
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[10, 15, 20]" showFirstLastButtons aria-label="Select page of periodic elements">
+    </mat-paginator>
+  </div>
+
+
+  <!-- Estado Loading-->
+  <div *ngIf="loadingAM" class="loading">
+    <p>Cargando datos...</p>
+  </div>
+
+</div>

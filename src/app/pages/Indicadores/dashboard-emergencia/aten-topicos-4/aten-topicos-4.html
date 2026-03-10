@@ -1,0 +1,55 @@
+<div class="main">
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h2>Detalle de Atenciones - Prioridad I</h2>
+      <p>Centro: {{ nameCentro }} | Período: {{ periodo }}</p>
+    </div>
+    <div class="actions">
+      <button class="btn-export" (click)="downloadCSV()">Exportar CSV</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading">
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- TABS -->
+  <div *ngIf="!loading" class="tabs">
+    <button
+      class="tab-button"
+      [class.active]="activeTab === 'produccion'"
+      (click)="setActiveTab('produccion')"
+    >
+      Producción
+    </button>
+  </div>
+
+  <div *ngIf="!loading && activeTab === 'produccion'" class="tab-content">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Top 10 Diagnósticos</h3>
+        <div class="chart-host" #chartDiagnosticos></div>
+      </div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Atenciones por Fecha</h3>
+        <div class="chart-host chart-host-fechas" #chartFechaAten></div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Distribucion de tipo paciente </h3>
+        <div class="chart-host" #chartTipoPaciNom></div>
+      </div>
+    </div>
+  </div>
+</div>

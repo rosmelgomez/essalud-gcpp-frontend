@@ -1,0 +1,74 @@
+<div class="main" [class.menu-open]="isMenuOpen">
+  <div class="brand-block" [routerLink]="'/home'">
+    <div class="logo-wrap">
+      <img src="/images/Logoes.png" alt="EsSalud" class="logo" />
+      <div class="brand-copy">
+        <span class="brand-title">SIES</span>
+        <span class="sub">Monitoreo y analítica</span>
+      </div>
+    </div>
+  </div>
+
+  <button
+    class="menu-toggle"
+    type="button"
+    (click)="toggleMenu()"
+    aria-label="Abrir menú"
+    [attr.aria-expanded]="isMenuOpen"
+  >
+    <span class="line"></span>
+    <span class="line"></span>
+    <span class="line"></span>
+  </button>
+
+  <div class="nav-content" [class.open]="isMenuOpen">
+    <div class="user-card">
+      <div class="user-avatar">
+        <div class="avatar-badge">
+          <span class="avatar-initials">{{ getInitials() }}</span>
+        </div>
+        <div class="user-info">
+          <div class="user-code">{{ user?.dni || '—' }}</div>
+          <div class="user-fullname">{{ user?.name }} {{ user?.lastname }}</div>
+        </div>
+      </div>
+      <div class="role-badge">{{ user?.rol || 'Sin rol' }}</div>
+    </div>
+
+    <div class="containerBtn actions">
+      <a href="/home">
+        <button class="button ghost" type="button" (click)="closeMenu()">
+          <span class="button-label">Inicio</span>
+        </button>
+      </a>
+
+      <a href="/change-password">
+        <button class="button ghost" type="button" (click)="closeMenu()">
+          <span class="button-label">Cambiar Contraseña</span>
+        </button>
+      </a>
+
+      <a href="/manage-users" *ngIf="user?.rol == 'ADMIN'">
+        <button class="button ghost" type="button" (click)="closeMenu()">
+          <span class="button-label">Gestionar Usuarios</span>
+        </button>
+      </a>
+
+      <a href="/register">
+        <button
+          class="button ghost"
+          *ngIf="user?.rol == 'ADMIN'"
+          type="button"
+          (click)="closeMenu()"
+        >
+          <span class="button-label">Registrar usuario</span>
+        </button>
+      </a>
+
+      <button class="button ghost" type="button" (click)="logout()">
+        <span class="icon">⇦</span>
+        <span class="button-label">Cerrar sesión</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,67 @@
+<div class="main">
+  <div class="modules-container" [class.viewer-active]="showViewer">
+    <div class="modules-menu">
+      <a
+        href="https://app.powerbi.com/view?r=eyJrIjoiZDU3ODFkZjMtMDlkMi00YjgxLWE2MGYtNWRhMzA2ZWI2NmRjIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9"
+        class="module"
+        (click)="
+          openReport(
+            'https://app.powerbi.com/view?r=eyJrIjoiZDU3ODFkZjMtMDlkMi00YjgxLWE2MGYtNWRhMzA2ZWI2NmRjIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9',
+            $event
+          )
+        "
+      >
+        <img src="/images/order_1420037.png" alt="Atenciones" />
+        <span>Atenciones CE</span>
+      </a>
+
+      <a
+        href="https://app.powerbi.com/view?r=eyJrIjoiZDU3ODFkZjMtMDlkMi00YjgxLWE2MGYtNWRhMzA2ZWI2NmRjIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9"
+        class="module"
+        (click)="
+          openReport(
+            'https://app.powerbi.com/view?r=eyJrIjoiZDU3ODFkZjMtMDlkMi00YjgxLWE2MGYtNWRhMzA2ZWI2NmRjIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9',
+            $event
+          )
+        "
+      >
+        <img src="/images/shortlist_8915786.png" alt="Atendidos" />
+        <span>Atendidos CE</span>
+      </a>
+
+      <a href="" class="module" (click)="openReport('', $event)">
+        <img src="/images/ambulance.png" alt="Atención por topicós - EME" />
+        <span>Atención por topicós - EME</span>
+      </a>
+      <a href="" class="module" (click)="openReport('', $event)">
+        <img src="/images/resumen.png" alt="Resumen CE 2025" />
+        <span>Resumen CE 2025</span>
+      </a>
+
+      <div class="module inactive" title="Módulo no disponible">
+        <img src="/images/accidente.png" alt="Accidentes" />
+        <span>Accidentes</span>
+      </div>
+      <div class="module inactive" title="Módulo no disponible">
+        <img src="/images/diferimiento.png" alt="Diferimiento de citas CE" />
+        <span>Diferimiento de citas CE</span>
+      </div>
+
+      <div class="module inactive" title="Módulo no disponible">
+        <img src="/images/analytics.png" alt="Reportes" />
+        <span>Reportes Gerenciales</span>
+      </div>
+    </div>
+
+    <!-- Visor embebido para abrir el reporte debajo de las cards -->
+    <div id="rg-viewer" class="viewer-slot" *ngIf="showViewer">
+      <div class="viewer-card">
+        <div class="viewer-header">
+          <span class="viewer-title">Reporte</span>
+          <button class="btn-close-viewer" (click)="closeViewer()">✕</button>
+        </div>
+        <iframe id="rg-iframe" title="Reporte" [src]="selectedUrl"></iframe>
+      </div>
+    </div>
+  </div>
+</div>

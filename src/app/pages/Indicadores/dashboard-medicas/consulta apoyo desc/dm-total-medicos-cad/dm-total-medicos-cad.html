@@ -1,0 +1,127 @@
+<div class="main">
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h2>Detalle de producción médica</h2>
+      <p>Centro: {{ nameCentro }} | Período: {{ periodo }}</p>
+    </div>
+    <div class="actions">
+      <button class="btn-export" (click)="downloadCSV()">Exportar CSV</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading">
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- TABS -->
+  <div *ngIf="!loading" class="tabs">
+    <button class="tab-button" [class.active]="activeTab === 'Produccion'" (click)="setActiveTab('Produccion')">
+      Produccion
+    </button>
+  </div>
+
+  <div *ngIf="!loading && activeTab === 'Produccion'" class="tab-content">
+    <div class="pivot-wrapper">
+      <h3>Matriz de Atenciones por Día - Período {{ periodo }}</h3>
+      <table class="pivot">
+        <thead>
+          <tr>
+            <th>DNI Medico</th>
+            <th *ngFor="let f of pivotHeaders; trackBy: trackByString">{{ f }}</th>
+            <th>Total</th>
+          </tr>
+          <tr class="filter-row">
+            <th>
+              <input type="text" [(ngModel)]="pivotFilters.dni_medico" (input)="filterPivotByDni()"
+                placeholder="Filtrar DNI..." class="pivot-filter-input" />
+            </th>
+            <th *ngFor="let f of pivotHeaders; trackBy: trackByString">
+              <input type="text" [(ngModel)]="pivotFilters.columns[f]" (input)="filterPivotByColumn(f)"
+                placeholder="Buscar..." class="pivot-filter-input" />
+            </th>
+            <th>
+              <input type="text" [(ngModel)]="pivotFilters.total" (input)="filterPivotByTotal()" placeholder="Buscar..."
+                class="pivot-filter-input" />
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of pivotRowsFiltered; trackBy: trackByPivotRow">
+            <td>{{ row.dni_medico }}</td>
+            <td *ngFor="let f of pivotHeaders; trackBy: trackByString" [ngClass]="getCellClass(row.cells[f])">{{
+              row.cells[f] || 0 }}</td>
+            <td class="cell-total">{{ row.total }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <th>Total</th>
+            <th *ngFor="let f of pivotHeaders; trackBy: trackByString" class="cell-total">{{
+              pivotColumnTotalsFiltered[f] || 0 }}</th>
+            <th class="cell-total">{{ pivotGrandTotalFiltered }}</th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Atenciones por médico - Período {{ periodo }}</h3>
+        <div class="chart-filter-group">
+          <label for="dniMedicoFiltro" class="filter-label">🔍 Filtrar por DNI Médico</label>
+          <input id="dniMedicoFiltro" type="text" class="chart-filter-input" [(ngModel)]="dniMedicoFiltro"
+            (input)="onDniMedicoFiltroChange()" placeholder="Ej: 1234567890" />
+        </div>
+        <div #tmLineChart class="chart"></div>
+      </div>
+    </div>
+
+    <mat-card class="resumen-table">
+      <!-- HEADER -->
+      <div class="resumen-header">
+        <div class="cell dni_medico">DNI Médico</div>
+        <div class="cell fecha_atencion">Fecha Atención</div>
+        <div class="cell descripcion_servicio">Servicio</div>
+        <div class="cell atenciones">Atenciones</div>
+      </div>
+      <!-- FILTERS ROW -->
+      <div class="resumen-filters">
+        <input type="text" class="filter-input cell dni_medico" placeholder="Buscar dni medico"
+          (keyup)="filterData('dni_medico', $event)" />
+        <input type="text" class="filter-input cell fecha_atencion" placeholder="Buscar fecha atencion"
+          (keyup)="filterData('fecha_atencion', $event)" />
+        <input type="text" class="filter-input cell descripcion_servicio" placeholder="Buscar Servicio..."
+          (keyup)="filterData('descripcion_servicio', $event)" />
+        <input type="text" class="filter-input cell atenciones" placeholder="Buscar Nro Atenciones..."
+          (keyup)="filterData('atenciones', $event)" />
+      </div>
+
+      <div class="resumen-wrapper">
+        <!-- VIRTUAL SCROLL -->
+        <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+          <div *cdkVirtualFor="let row of tableRows; trackBy: trackByTableRow" class="resumen-row">
+            <div class="cell dni_medico">{{ row.dni_medico }}</div>
+            <div class="cell fecha_atencion">{{ row.fecha_atencion }}</div>
+            <div class="cell descripcion_servicio">{{ row.descripcion_servicio }}</div>
+            <div class="cell atenciones num">{{ row.atenciones | number }}</div>
+          </div>
+        </cdk-virtual-scroll-viewport>
+      </div>
+
+      <!-- TOTAL -->
+      <div class="table-footer">
+        <div class="footer-left"><strong>Total Filas:</strong></div>
+        <div class="footer-right num">
+          <strong>{{query1Data.length}}</strong>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</div>

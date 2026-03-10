@@ -1,0 +1,207 @@
+<div class="main">
+  <!-- Header con logo y título -->
+  <div class="header">
+    <div class="header-content">
+      <h2 class="title">Emergencias - Prioridad por tópico</h2>
+      <p class="subtitle">Información actualizada al {{ currentDate }} | Centro: {{ centroNombre }}</p>
+    </div>
+  </div>
+
+  <div class="tab-content">
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anio" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodo" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_asegurado" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button (click)="getTotalPrioridad()" class="btn-search">Buscar</button>
+        </div>
+        <!-- Botón descargar CSV -->
+        <button
+          *ngIf="!loading && !error && !selectPeriodo"
+          (click)="downloadCSV()"
+          class="btn-download"
+        >
+          <i class="bi bi-download"></i> Descargar CSV
+        </button>
+      </div>
+    </div>
+
+    <!--Estado de Cargando-->
+    <div *ngIf="loading" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Estado de Selección de Período -->
+    <div *ngIf="selectPeriodo && !loading" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información del dashboard</p>
+    </div>
+
+    <!-- Estado de Error -->
+    <div *ngIf="error" class="alert alert-danger">
+      {{ error }}
+    </div>
+
+    <!-- Dashboard Emergencia -->
+    <div *ngIf="!loading && !selectPeriodo" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link"  [href]="'/ate-prioridad1'">
+                <h5 class="card-title">Total de Atenciones Prioridad I</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(numberPrioridad1) }}</h2>
+              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of prioridad1" class="item-data">
+                <span> {{ item.topico_ses }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link"  [href]="'/ate-prioridad2'">
+                <h5 class="card-title">Total de Atenciones Prioridad II</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(numberPrioridad2) }}</h2>
+              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of prioridad2" class="item-data">
+                <span> {{ item.topico_ses }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: -->
+
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link"  [href]="'/ate-prioridad3'">
+                <h5 class="card-title">Total de Atenciones Prioridad III</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(numberPrioridad3) }}</h2>
+              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of prioridad3" class="item-data">
+                <span> {{ item.topico_ses }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link"  [href]="'/ate-prioridad4'">
+                <h5 class="card-title">Total de Atenciones Prioridad IV</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(numberPrioridad4) }}</h2>
+              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of prioridad4" class="item-data">
+                <span> {{ item.topico_ses }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 3: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link"  [href]="'/ate-prioridad5'">
+                <h5 class="card-title">Total de Atenciones Prioridad V</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(numberPrioridad5) }}</h2>
+              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of prioridad5" class="item-data">
+                <span> {{ item.topico_ses }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Defunciones registradas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(numberDefunciones) }}</h2>
+              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 4: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Egreso Pac.Sala Obs.<= 24 Horas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(numberEstanciasMenor24h) }}</h2>
+              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Egreso Pac.Sala Obs.> 24 Horas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(numberEstanciasMayor24h) }}</h2>
+              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

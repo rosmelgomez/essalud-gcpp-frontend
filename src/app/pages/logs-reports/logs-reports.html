@@ -1,0 +1,181 @@
+<div class="dashboard">
+  <!-- LOADING -->
+  <div *ngIf="isLoading" class="loading">
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header" *ngIf="!isLoading">
+    <div>
+      <h2>Dashboard de Auditoría</h2>
+      <p>Análisis completo de logs y actividad del sistema</p>
+    </div>
+
+    <div class="actions" *ngIf="!isLoading">
+      <button mat-raised-button color="accent" (click)="exportCSV()" [disabled]="isLoading">
+        Exportar CSV
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="filters-card" *ngIf="!isLoading">
+    <div class="stats-header">
+      <h3>Filtros</h3>
+    </div>
+    <!-- Filtros -->
+    <div class="filters-container">
+      <select [(ngModel)]="selectedYear" (change)="onYearChange()" class="style-select">
+        <option value="todos">Todos los años</option>
+        <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+      </select>
+
+      <select [(ngModel)]="selectedMonth" (change)="onMonthChange()" class="style-select">
+        <option *ngFor="let month of months" [value]="month.value">
+          {{ month.label }}
+        </option>
+      </select>
+
+      <select [(ngModel)]="selectedDay" (change)="onDayChange()" class="style-select">
+        <option value="">Todos los días</option>
+        <option *ngFor="let day of availableDays" [value]="day">{{ day }}</option>
+      </select>
+
+      <div class="custom-dropdown" (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
+        <input type="text" placeholder="Buscar y seleccionar red..." (input)="filterRed($event)"
+          (keydown)="handleRedKeydown($event)" [value]="selectedRedName" class="dropdown-input" />
+        <div class="dropdown-list" *ngIf="isDropdownRedOpen">
+          <div *ngFor="let red of filteredRed; let i = index" #redOption class="dropdown-item"
+            [class.active]="i === activeRedIndex" (click)="selectOptionRed(red)">
+            {{ red.redasisdes }}
+          </div>
+          <div *ngIf="filteredRed.length === 0" class="dropdown-item disabled">
+            No hay resultados
+          </div>
+        </div>
+      </div>
+
+      <div class="custom-dropdown centro-dropdown" (mouseleave)="closeDropdownCentro()"
+        (mouseenter)="openDropdownCentro()">
+        <input type="text" placeholder="Buscar y seleccionar centro..." (input)="filterCentro($event)" (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName"
+          class="dropdown-input" />
+        <div class="dropdown-list" *ngIf="isDropdownCentroOpen">
+          <div *ngFor="let centro of searchCentro ? filteredCentro : dataCentro; let i = index" #centroOption
+            class="dropdown-item" [class.active]="i === activeCentroIndex" (click)="selectOptionCentro(centro)">
+            {{ centro.cenasides }}
+          </div>
+          <div *ngIf="(searchCentro ? filteredCentro : dataCentro).length === 0" class="dropdown-item disabled">
+            No hay resultados
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+
+
+
+  <!-- GRÁFICOS -->
+  <div class="charts-grid" *ngIf="!isLoading">
+    <mat-card>
+      <h3>Cantidad de Logs por Rol</h3>
+      <div #chartRolContainer class="chart-container"></div>
+    </mat-card>
+
+    <mat-card>
+      <h3>Cantidad de Logs por Fecha</h3>
+      <div #chartFechaContainer class="chart-container"></div>
+    </mat-card>
+  </div>
+
+    <!-- TOTAL -->
+  <mat-card class="total-card" *ngIf="!isLoading">
+    <div class="stats-header">
+      <h3>Resumen de ingresos</h3>
+    </div>
+
+    <div class="stats-content">
+      <div class="stat-block">
+        <p class="stat-label">Total de ingresos</p>
+        <h1>{{ totalLogs }}</h1>
+        <p class="stat-subtext">Conteo Total de ingresos</p>
+      </div>
+      <div class="stat-block">
+        <p class="stat-label">Total de ingresos filtrados</p>
+        <h1>{{ filteredCount }}</h1>
+        <p class="stat-subtext">Conteo Total de ingresos filtrados</p>
+      </div>
+
+    </div>
+  </mat-card>
+
+  <!-- TABLA -->
+  <mat-card class="resumen-table" *ngIf="!isLoading">
+    <!-- HEADER -->
+    <div class="resumen-header">
+      <div class="cell dni">DNI</div>
+      <div class="cell name">Nombre</div>
+      <div class="cell username">Username</div>
+      <div class="cell ip_user">IP</div>
+      <div class="cell url">URL</div>
+      <div class="cell browser">Browser</div>
+      <div class="cell user_role">Rol</div>
+      <div class="cell codcas">CodCAS</div>
+      <div class="cell code_red">Code Red</div>
+      <div class="cell date">Fecha</div>
+    </div>
+
+    <!-- FILTERS ROW -->
+    <div class="resumen-filters">
+      <input type="text" class="filter-input cell dni" placeholder="Buscar DNI..."
+        (keyup)="filterData('dni', $event)" />
+      <input type="text" class="filter-input cell name" placeholder="Buscar Nombre..."
+        (keyup)="filterData('name', $event)" />
+      <input type="text" class="filter-input cell username" placeholder="Buscar Username..."
+        (keyup)="filterData('username', $event)" />
+      <input type="text" class="filter-input cell ip_user" placeholder="Buscar IP..."
+        (keyup)="filterData('ip_user', $event)" />
+      <input type="text" class="filter-input cell url" placeholder="Buscar URL..."
+        (keyup)="filterData('url', $event)" />
+      <input type="text" class="filter-input cell browser" placeholder="Buscar Navegador..."
+        (keyup)="filterData('browser', $event)" />
+      <input type="text" class="filter-input cell user_role" placeholder="Buscar Rol..."
+        (keyup)="filterData('user_role', $event)" />
+      <input type="text" class="filter-input cell codcas" placeholder="Buscar CodCAS..."
+        (keyup)="filterData('codcas', $event)" />
+      <input type="text" class="filter-input cell code_red" placeholder="Buscar Code Red..."
+        (keyup)="filterData('code_red', $event)" />
+      <input type="text" class="filter-input cell date" placeholder="Buscar Fecha..."
+        (keyup)="filterData('date', $event)" />
+    </div>
+
+    <!-- WRAPPER PARA SCROLL HORIZONTAL -->
+    <div class="resumen-wrapper">
+      <!-- VIRTUAL SCROLL -->
+      <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+        <div *cdkVirtualFor="let row of allLogs" class="resumen-row">
+          <div class="cell dni">{{ row.dni }}</div>
+          <div class="cell name">{{ row.name }}</div>
+          <div class="cell username">{{ row.username }}</div>
+          <div class="cell ip_user">{{ row.ip_user }}</div>
+          <div class="cell url">{{ row.url }}</div>
+          <div class="cell browser">{{ row.browser }}</div>
+          <div class="cell user_role">{{ row.user_role }}</div>
+          <div class="cell codcas">{{ row.codcas }}</div>
+          <div class="cell code_red">{{ row.code_red }}</div>
+          <div class="cell date">{{ formatDate(row.date) }}</div>
+        </div>
+      </cdk-virtual-scroll-viewport>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="table-footer">
+      <div class="footer-left"><strong>Total Logs:</strong></div>
+      <div class="footer-right num">
+        <strong>{{ allLogs.length }}</strong>
+      </div>
+    </div>
+  </mat-card>
+
+  <ng-template #noTable>
+    <div class="no-data">Sin datos de Logs.</div>
+  </ng-template>
+</div>

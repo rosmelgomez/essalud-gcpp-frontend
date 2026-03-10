@@ -1,0 +1,156 @@
+<div class="main">
+  <div class="centro-shell" *ngIf="!selectCentro">
+    <div class="centro-info">
+      <span class="badge">Bienvenido</span>
+      <h2>Selecciona tu centro asistencial</h2>
+      <p>
+        Para acceder a los módulos del sistema, primero debes seleccionar el centro asistencial con
+        el que trabajarás.
+      </p>
+      <ul class="tips">
+        <li>Usa el buscador para encontrar rápidamente tu centro.</li>
+        <li>El centro seleccionado se aplicará a todos los módulos.</li>
+        <li>Podrás cambiar de centro en cualquier momento.</li>
+      </ul>
+      <div class="quick-stats">
+        <div class="stat-item">
+          <div class="stat-icon">📊</div>
+          <div class="stat-text">
+            <span class="stat-value">{{ dataCentro.length }}</span>
+            <span class="stat-label">Centros disponibles</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">🏥</div>
+          <div class="stat-text">
+            <span class="stat-value" *ngIf="user?.rol =='ADMIN'">4</span>
+            <span class="stat-value" *ngIf="user?.rol !='ADMIN'">2</span>
+            <span class="stat-label">Módulos activos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="centro-container">
+      <div class="card-header">
+        <div>
+          <div class="eyebrow">Formulario</div>
+          <div class="title" *ngIf="user?.rol === 'ADMIN_RED'">{{nameRed}}</div>
+          <div class="title">Centros Asistenciales</div>
+        </div>
+        <div class="status-dot"></div>
+      </div>
+
+      <form [formGroup]="centroForm" autocomplete="off" class="register-form">
+        <!-- Admin puede usar ambos filtros en paralelo: red (opcional) y centro -->
+        <div class="form-grid" *ngIf="user?.rol === 'ADMIN'">
+          <div class="centro-form-group">
+            <label>Red Asistencial</label>
+            <div class="custom-dropdown" (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
+              <input type="text" placeholder="Buscar y seleccionar red..." (input)="filterRed($event)"
+                (keydown)="handleRedKeydown($event)" [value]="selectedRedName" class="dropdown-input" />
+              <div class="dropdown-list" *ngIf="isDropdownRedOpen">
+                <div *ngFor="let red of filteredRed; let i = index" #redOption class="dropdown-item"
+                  [class.active]="i === activeRedIndex" (click)="selectOptionRed(red)">
+                  {{ red.redasisdes }}
+                </div>
+                <div *ngIf="filteredRed.length === 0" class="dropdown-item disabled">
+                  No hay resultados
+                </div>
+              </div>
+            </div>
+            <input type="hidden" formControlName="code_red" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="centro-form-group">
+            <label *ngIf="user?.rol === 'ADMIN'">Centro Asistencial</label>
+            <div class="custom-dropdown" (mouseleave)="closeDropdown()" (mouseenter)="openDropdown()">
+              <input type="text" title="Selecciona un centro"
+                placeholder="Buscar y seleccionar centro..."
+                (input)="filterCentro($event)" (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName"
+                class="dropdown-input" />
+              <div class="dropdown-list" *ngIf="isDropdownOpen">
+                <div *ngFor="let centro of searchCentro ? filteredCentro : dataCentro; let i = index" #centroOption
+                  class="dropdown-item" [class.active]="i === activeCentroIndex" (click)="selectDropdownOption(centro)">
+                  {{ centro.cenasides }}
+                </div>
+                <div *ngIf="(searchCentro ? filteredCentro : dataCentro).length === 0" class="dropdown-item disabled">
+                  No hay resultados
+                </div>
+              </div>
+            </div>
+            <input type="hidden" formControlName="centro" />
+          </div>
+        </div>
+
+        <div class="register-submit">
+          <button type="button" (click)="saveCentro()">Seleccionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modules-container" *ngIf="selectCentro">
+    <div class="modules-header">
+      <div class="header-content">
+        <h1>El centro seleccionado es {{ nameCentro }}</h1>
+        <h1 class="modules-title">Módulos disponibles</h1>
+        <p class="modules-subtitle">Accede a los diferentes servicios de la plataforma</p>
+      </div>
+      <button class="btn-change-centro" (click)="changeCentro()" title="Cambiar centro" *ngIf="user?.rol != 'USER'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="12 5 19 12 12 19"></polyline>
+          <polyline points="19 12 5 12"></polyline>
+        </svg>
+        Cambiar Centro
+      </button>
+    </div>
+
+    <div class="modules-menu">
+      <!-- Módulo 1: Consulta externa (activo) -->
+      <a href="/dashboard" class="module">
+        <img src="/images/RCS2.png" alt="Consulta externa" />
+        <span>Consulta externa</span>
+      </a>
+
+      <!-- Módulo 2: Emergencia (activo) -->
+      <a href="/dashboard-eme" class="module">
+        <img src="/images/RSC1.png" alt="Emergencia" />
+        <span>Emergencia</span>
+      </a>
+
+      <!-- Módulo 3: Hospitalización (inactivo) -->
+      <div class="module inactive" title="Módulo no disponible">
+        <img src="/images/hospitalizacion.png" alt="Hospitalización" />
+        <span>Hospitalización</span>
+      </div>
+
+      <!-- Módulo 4: Centro quirúrgico (inactivo) -->
+      <div class="module inactive" title="Módulo no disponible">
+        <img src="/images/cirugia.png" alt="Centro quirúrgico" />
+        <span>Centro quirúrgico</span>
+      </div>
+
+      <!-- Módulo 5: Reportes gerenciales (admin) -->
+      <a href="/reports-gerenciales" class="module" *ngIf="user?.rol === 'ADMIN'">
+        <img src="/images/analytics.png" alt="Reportes gerenciales" />
+        <span>Reportes gerenciales</span>
+      </a>
+
+      <!-- Módulo 6: Reporteador -->
+      <a href="/dashboard-reporteador" class="module" *ngIf="user?.rol === 'ADMIN'">
+        <img src="/images/reporteador.png" alt="Reporteador" />
+        <span>Reporteador</span>
+      </a>
+
+      <!-- Módulo 7: Auditoría del Sistema (admin) -->
+      <a href="/logs-reports" class="module" *ngIf="user?.rol === 'ADMIN'">
+        <img src="/images/logs.png" alt="Auditoría del Sistema" />
+        <span>Auditoría del Sistema</span>
+      </a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,50 @@
+import { Component, signal } from '@angular/core';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Navbar } from './components/navbar/navbar';
+import { filter } from 'rxjs';
+import { AuthLogin } from './services/auth-login';
+import { OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    Navbar
+  ],
+  templateUrl: './app.html',
+  styleUrls: ['./app.css']
+})
+export class App implements OnInit {
+
+  title = 'Essalud_GCPP_Frontend';
+
+  currentNavbar: string = 'login';
+
+  constructor(
+    private router: Router,
+    private auth: AuthLogin
+  ) {}
+
+  ngOnInit(): void {
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        this.updateNavbar(event.urlAfterRedirects);
+      });
+  }
+
+  updateNavbar(url: string): void {
+    if (url === '/login') {
+      this.currentNavbar = 'login';
+    } else {
+      this.currentNavbar = 'app';
+    }
+  }
+
+  showNavbar(): boolean {
+    return this.currentNavbar === 'app' && this.auth.isLoggedIn();
+  }
+}

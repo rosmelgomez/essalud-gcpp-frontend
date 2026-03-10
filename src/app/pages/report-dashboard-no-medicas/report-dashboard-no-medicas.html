@@ -1,0 +1,1122 @@
+<div class="main">
+  <!-- Header con logo y título -->
+  <div class="header">
+    <div class="header-content">
+      <h2 class="title">Consulta externa - No médicas</h2>
+      <p class="subtitle">
+        Información actualizada al {{ currentDate }} | Centro de Atención: {{ centroAtencion }}
+      </p>
+    </div>
+    <div class="header-content header-content-actions">
+      <button class="btn-download btn-ficha-tecnica" (click)="downloadFichaTecnica()">
+        <i class="bi bi-file-earmark-pdf"></i>
+        Ficha Técnica
+      </button>
+    </div>
+  </div>
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-button" [class.active]="activeTab === 'Obstetricia'" (click)="setActiveTab('Obstetricia')">
+      Obstetricia
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Preventiva Promocional'"
+      (click)="setActiveTab('Preventiva Promocional')">
+      Preventiva Promocional
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Nutricion'" (click)="setActiveTab('Nutricion')">
+      Nutricion
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Enfermeria'" (click)="setActiveTab('Enfermeria')">
+      Enfermeria
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Psicologia'" (click)="setActiveTab('Psicologia')">
+      Psicologia
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Trabajo Social'" (click)="setActiveTab('Trabajo Social')">
+      Trabajo Social
+    </button>
+
+    <button class="tab-button" [class.active]="activeTab === 'CRED'" (click)="setActiveTab('CRED')">
+      CRED
+    </button>
+  </div>
+
+  <!-- CONTENIDO TABS -->
+  <!-- Tab Obstetricia -->
+  <div *ngIf="activeTab === 'Obstetricia'" class="tab-content">
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anioO" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodoO" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_aseguradoO" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button (click)="loadDashboardObstetricia()" class="btn-search">Buscar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado Loading  -->
+    <div *ngIf="loadingO" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Selecciona Periodo -->
+    <div *ngIf="selectPeriodoO && !loadingO" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información obstetricia</p>
+    </div>
+
+    <!-- Estado de Error -->
+    <div *ngIf="errorO" class="alert alert-danger">
+      {{ errorO }}
+    </div>
+
+    <!-- Contenido de Obstetricia -->
+    <div *ngIf="!loadingO && !errorO && !selectPeriodoO && !noDataO" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="dnm-total-atenciones-ob">
+                <h5 class="card-title">Total de atenciones Obstétricas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionesO) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioO }}-{{ periodoO }} | {{ centroAtencion }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Atenciones prenatales</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionesPrenatalesO) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioO }}-{{ periodoO }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataAtencionesPrenatalesO" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Atención de planificación familiar</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionesPlanificacionFamiliarO) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioO }}-{{ periodoO }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataAtencionesPlanificacionFamiliarO" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Actividades complementarias</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(actividadesComplementariasO) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioO }}-{{ periodoO }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataActividadesComplementariasO" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 3: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Atención preconcepcional</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionesPreconcepcionalO) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioO }}-{{ periodoO }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataAtencionesPreconcepcionalO" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Preventiva Promocional -->
+  <div *ngIf="activeTab === 'Preventiva Promocional'" class="tab-content">
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anioPP" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodoPP" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_aseguradoPP" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button class="btn-search" (click)="loadDashboardPreventivoPromocional()">Buscar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingPP" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoPP && !loadingPP" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información preventiva promocional</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorPP" class="alert alert-danger">
+      {{ errorPP }}
+    </div>
+
+    <!-- Contenido de preventiva promocional -->
+    <div *ngIf="!loadingPP && !errorPP && !selectPeriodoPP && !noDataPP" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="dnm-total-atenciones-pp">
+                <h5 class="card-title">Total de atenciones preventivo promocional</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionesPP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPP }}-{{ periodoPP }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Visitas domiciliarias</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(visitasDomiciliariasPP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPP }}-{{ periodoPP }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataVisitasDomiciliariasPP" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Fila 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Educación grupal</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(educacionGrupalPP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPP }}-{{ periodoPP }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataEducacionGrupalPP" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Psicoprofilaxis</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(psicoprofilaxisPP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPP }}-{{ periodoPP }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataPsicoprofilaxisPP" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Fila 3: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Consejería</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(consejeriaPP) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPP }}-{{ periodoPP }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataConsejeriaPP" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Nutricion -->
+  <div *ngIf="activeTab === 'Nutricion'" class="tab-content">
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anioN" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodoN" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_aseguradoN" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button class="btn-search" (click)="loadDashboardNutricion()">Buscar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingN" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoN && !loadingN" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de nutricion</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorN" class="alert alert-danger">
+      {{ errorN }}
+    </div>
+
+    <!-- Contenido de nutricion -->
+    <div *ngIf="!loadingN && !errorN && !selectPeriodoN && !noDataN" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="dnm-total-atenciones-nu">
+                <h5 class="card-title">Total de atenciones de nutrición</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionesN) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioN }}-{{ periodoN }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataAtencionesN" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Enfermeria -->
+  <div *ngIf="activeTab === 'Enfermeria'" class="tab-content">
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anioE" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodoE" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_aseguradoE" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button class="btn-search" (click)="loadDashboardEnfermeria()">Buscar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingE" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoE && !loadingE" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de enfermeria</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorE" class="alert alert-danger">
+      {{ errorE }}
+    </div>
+    <!-- Dashboard no medicas Content -->
+    <div *ngIf="!loadingE && !errorE && !selectPeriodoE && !noDataE" class="dashboard-content"></div>
+
+    <!-- Contenido de Enfermeria -->
+    <div *ngIf="!loadingE && !errorE && !selectPeriodoE && !noDataE" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="dnm-total-atenciones-en">
+                <h5 class="card-title">Total de atenciones de enfermeria</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionesE) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioE }}-{{ periodoE }} | {{ centroAtencion }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Atenciones en tuberculosis</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionesTuberculosisE) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioE }}-{{ periodoE }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataAtencionesTuberculosisE" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Atenciones en ITS-HIV/SIDA</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionItsE) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioE }}-{{ periodoE }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataAtencionItsE" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">
+                  Atención en Enfermedades crónicas no trasmisibles-adulto mayor
+                </h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionEnfermedadesCronicasE) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioE }}-{{ periodoE }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataAtencionEnfermedadesCronicasE" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 3: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Otras actividades ambulatorias</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(otrasActividadesE) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioE }}-{{ periodoE }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataOtrasActividadesE" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Atenciones en prevención y control de la anemia</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(atencionPreventivoE) }}</h2>
+              <p class="card-subtitle">Periodo {{ anioE }}-{{ periodoE }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataAtencionPreventivoE" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Psicologia -->
+  <div *ngIf="activeTab === 'Psicologia'" class="tab-content">
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anioPs" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodoPs" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_aseguradoPs" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button class="btn-search" (click)="loadDashboardPsicologia()">Buscar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingPs" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoPs && !loadingPs" class="select-periodo">
+      <p>Por favor, seleccione todos los filtros para ver la información de psicologia</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorPs" class="alert alert-danger">
+      {{ errorPs }}
+    </div>
+    <!-- Dashboard no medicas - psicologia Content -->
+    <div *ngIf="!loadingPs && !errorPs && !selectPeriodoPs && !noDataPs" class="dashboard-content"></div>
+
+    <!-- Contenido de Psicologia -->
+    <div *ngIf="!loadingPs && !errorPs && !selectPeriodoPs && !noDataPs" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de consultantes de psicologia</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(consultantesPs) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPs }}-{{ periodoPs }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="dnm-total-atenciones-ps">
+                <h5 class="card-title">Total de consultas de psicologia</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(consultasPs) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPs }}-{{ periodoPs }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Fila 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de horas efectivas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasEfectivasPs) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPs }}-{{ periodoPs }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de horas programadas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasProgramadasPs) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPs }}-{{ periodoPs }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Fila 3: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de profesionales</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(medicosPs) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPs }}-{{ periodoPs }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total procedimiento terapéutico</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(procedimientosTerapeuticosPs) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPs }}-{{ periodoPs }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Fila 4: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Número de procedimiento diagnóstico</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(procedimientosDiagnosticosPs) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPs }}-{{ periodoPs }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Trabajo Social -->
+  <div *ngIf="activeTab === 'Trabajo Social'" class="tab-content">
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anioTs" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodoTs" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_aseguradoTs" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button class="btn-search" (click)="loadDashboardTrabajoSocial()">Buscar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingTs" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoTs && !loadingTs" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de trabajo social</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorTs" class="alert alert-danger">
+      {{ errorTs }}
+    </div>
+    <!-- Dashboard no medicas Content -->
+    <div *ngIf="!loadingTs && !errorTs && !selectPeriodoTs && !noDataTs" class="dashboard-content"></div>
+
+    <!-- Contenido de trabajo social -->
+    <div *ngIf="!loadingTs && !errorTs && !selectPeriodoTs && !noDataTs" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="dnm-total-atenciones-ts">
+                <h5 class="card-title">Total de atenciones de trabajo social</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(trabajoSocialAtenciones) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioTs }}-{{ periodoTs }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Procedimientos Terapeúticos -->
+  <div *ngIf="activeTab === 'Procedimientos Terapeúticos'" class="tab-content">
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anioPt" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodoPt" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_aseguradoPt" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button class="btn-search" (click)="loadDashboardProcedimientosTerapeuticos()">
+            Buscar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingPT" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoPT && !loadingPT" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de procedimientos terapéuticos</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorPT" class="alert alert-danger">
+      {{ errorPT }}
+    </div>
+    <!-- Dashboard no procedimientos terapeuticos Content -->
+    <div *ngIf="!loadingPT && !errorPT && !selectPeriodoPT && !noDataPT" class="dashboard-content"></div>
+    <!-- Contenido de Procedimientos Terapeúticos -->
+    <div *ngIf="!loadingPT && !errorPT && !selectPeriodoPT && !noDataPT" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="dnm-total-atenciones-pt">
+                <h5 class="card-title">Total de atenciones de procedimientos terapéuticos</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(procedimientosTerapeuticosAtenciones) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPt }}-{{ periodoPt }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Terapia Individual</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(terapiaIndividual) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPt }}-{{ periodoPt }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTerapiaIndividual" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Terapia Pareja/Familiar</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(terapiaFamiliar) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPt }}-{{ periodoPt }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTerapiaFamiliar" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Terapia de Grupo</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(terapiaGrupal) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPt }}-{{ periodoPt }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataTerapiaGrupal" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Procedimientos Diagnósticos -->
+  <div *ngIf="activeTab === 'Procedimientos Diagnósticos'" class="tab-content">
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anioPd" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodoPd" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_aseguradoPd" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button class="btn-search" (click)="loadDashboardProcedimientosDiagnosticos()">
+            Buscar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingPD" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoPD && !loadingPD" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de procedimientos terapéuticos</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorPD" class="alert alert-danger">
+      {{ errorPD }}
+    </div>
+    <!-- Dashboard no medicas Content -->
+    <div *ngIf="!loadingPD && !errorPD && !selectPeriodoPD && !noDataPD" class="dashboard-content"></div>
+
+    <!-- Contenido de Procedimientos Diagnosticos -->
+    <div *ngIf="!loadingPD && !errorPD && !selectPeriodoPD && !noDataPD" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" href="dnm-total-atenciones-pd">
+                <h5 class="card-title">Total de atenciones de procedimientos diagnósticos</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(procedimientosDiagnosticosAtenciones) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioPd }}-{{ periodoPd }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab CRED -->
+  <div *ngIf="activeTab === 'CRED'" class="tab-content">
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anioCRED" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodoCRED" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_aseguradoCRED" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button class="btn-search" (click)="loadDashboardCRED()">Buscar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingCRED" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Select Period Message -->
+    <div *ngIf="selectPeriodoCRED && !loadingCRED" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de CRED</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorCRED" class="alert alert-danger">
+      {{ errorCRED }}
+    </div>
+    <!-- Dashboard no medicas Content -->
+    <div *ngIf="!loadingCRED && !errorCRED && !selectPeriodoCRED && !noDataCRED" class="dashboard-content"></div>
+    <!-- Contenido de CRED -->
+    <div *ngIf="!loadingCRED && !errorCRED && !selectPeriodoCRED && !noDataCRED" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total de atenciones de CRED</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(credAtenciones) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioCRED }}-{{ periodoCRED }} | {{ centroAtencion }}
+              </p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataCredAtenciones" class="item-data">
+                <span> {{ item.actespnom }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

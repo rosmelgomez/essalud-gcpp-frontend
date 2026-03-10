@@ -1,0 +1,207 @@
+<div class="main">
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h2>Detalle de Atenciones</h2>
+      <p> Período: {{ periodo }} | Centro: {{ nameCentro }}</p>
+    </div>
+    <div class="actions">
+      <button class="btn-export" (click)="downloadCSV()"> Exportar CSV</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading">
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- TABS -->
+  <div *ngIf="!loading" class="tabs">
+    <button class="tab-button" [class.active]="activeTab === 'produccion'" (click)="setActiveTab('produccion')">
+      Producción
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'diagnosticos'" (click)="setActiveTab('diagnosticos')">
+      Diagnósticos
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'noconsiderados'" (click)="setActiveTab('noconsiderados')">
+      No Considerados
+    </button>
+  </div>
+
+  <!-- CONTENIDO TABS -->
+  <div *ngIf="!loading && activeTab === 'produccion'" class="tab-content">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Atenciones por servicio - Período {{ periodo }}</h3>
+        <div #chartServicio class="chart"></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Atenciones por subactividad - Período {{ periodo }}</h3>
+        <div #chartSubactividad class="chart"></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Atenciones por agrupador - Período {{ periodo }}</h3>
+        <div #chartAgrupador class="chart"></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Atenciones por especialidad - Período {{ periodo }}</h3>
+        <div #chartEspecialidad class="chart"></div>
+      </div>
+    </div>
+
+    <div class="chart-full-width">
+      <h3>Sexo y grupo etario vs atenciones</h3>
+      <div #chartTornado class="chart"></div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && activeTab === 'diagnosticos'" class="tab-content">
+
+    <div class="chart-full-width">
+      <h3>Top 10 diagnósticos por atenciones - Período {{ periodo }}</h3>
+      <div #chartDiagnostico class="chart"></div>
+    </div>
+
+    <mat-card class="resumen-table">
+      <h3>Detalle de Diagnósticos</h3>
+      <!-- HEADER -->
+      <div class="resumen-header">
+        <div class="cell servicio">Servicio</div>
+        <div class="cell subactividad">Subactividad</div>
+        <div class="cell sexo">Sexo</div>
+        <div class="cell CodDiag">CodDiag</div>
+        <div class="cell descripcion_diagnostico">Diagnóstico</div>
+        <div class="cell total_atenciones num">Atenciones</div>
+      </div>
+
+      <!-- FILTERS ROW -->
+      <div class="resumen-filters">
+        <input type="text" class="filter-input cell descripcion_servicio" placeholder="Buscar Servicio..."
+          (keyup)="filterData('descripcion_servicio', $event)" />
+        <input type="text" class="filter-input cell subactividad" placeholder="Buscar Subactividad..."
+          (keyup)="filterData('subactividad', $event)" />
+        <input type="text" class="filter-input cell sexo" placeholder="Buscar Sexo..."
+          (keyup)="filterData('sexo', $event)" />
+        <input type="text" class="filter-input cell cod_diag" placeholder="Buscar CodDiag..."
+          (keyup)="filterData('cod_diag', $event)" />
+        <input type="text" class="filter-input cell descripcion_diagnostico" placeholder="Buscar Diagnóstico..."
+          (keyup)="filterData('descripcion_diagnostico', $event)" />
+        <input type="text" class="filter-input cell total_atenciones" placeholder="Buscar atenciones.."
+          (keyup)="filterData('total_atenciones', $event)" />
+      </div>
+
+      <!-- WRAPPER PARA SCROLL HORIZONTAL -->
+      <div class="resumen-wrapper">
+        <!-- VIRTUAL SCROLL -->
+        <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+          <div *cdkVirtualFor="let row of newtableQ4CountMap" class="resumen-row">
+            <div class="cell descripcion_servicio">{{ row.descripcion_servicio }}</div>
+            <div class="cell subactividad">{{ row.subactividad }}</div>
+            <div class="cell sexo">{{ row.sexo }}</div>
+            <div class="cell cod_diag">{{ row.cod_diag }}</div>
+            <div class="cell descripcion_diagnostico">{{ row.descripcion_diagnostico }}</div>
+            <div class="cell total_atenciones num">{{ row.total_atenciones }}</div>
+          </div>
+        </cdk-virtual-scroll-viewport>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="table-footer">
+        <div class="footer-left"><strong>Total de atenciones:</strong></div>
+        <div class="footer-right num">
+          <strong>{{ totalAtencionesQ4 }}</strong>
+        </div>
+      </div>
+    </mat-card>
+
+    <ng-template #noTable>
+      <div class="no-data">Sin datos producción por médico.</div>
+    </ng-template>
+  </div>
+
+  <div *ngIf="!loading && activeTab === 'noconsiderados'" class="tab-content">
+    <div class="chart-card">
+      <mat-card class="resumen-table-noconsiderados">
+        <h3>Registros No Considerados</h3>
+        <!-- HEADER -->
+        <div class="resumen-header-noconsiderados">
+          <div class="cell servicio2">Servicio</div>
+          <div class="cell actividad2">Actividad</div>
+          <div class="cell subactividad2">Subactividad</div>
+          <div class="cell tipo_consulta2">Tipo Consulta</div>
+          <div class="cell coddiag2">CodDiag</div>
+          <div class="cell diagnostico2">Diagnóstico</div>
+          <div class="cell dni_medico2 num">Dni Medico</div>
+          <div class="cell acto_med2 num">acto_med</div>
+          <div class="cell sexo2">Sexo</div>
+          <div class="cell fecha_atencion2">Fecha Atención</div>
+          <div class="cell desc_cl2">Desc CL</div>
+        </div>
+
+        <!-- FILTERS ROW -->
+        <div class="resumen-filters-noconsiderados">
+          <input type="text" class="filter-input-noconsiderados cell servicio2" placeholder="Buscar Servicio..."
+            (keyup)="filterDataQuery2('servicio2', $event)" />
+          <input type="text" class="filter-input-noconsiderados  cell actividad2" placeholder="Buscar Actividad..."
+            (keyup)="filterDataQuery2('actividad2', $event)" />
+          <input type="text" class="filter-input-noconsiderados cell subactividad2" placeholder="Buscar Subactividad..."
+            (keyup)="filterDataQuery2('subactividad2', $event)" />
+          <input type="text" class="filter-input-noconsiderados cell tipo_consulta2"
+            placeholder="Buscar Tipo Consulta..." (keyup)="filterDataQuery2('tipo_consulta2', $event)" />
+          <input type="text" class="filter-input-noconsiderados cell coddiag2" placeholder="Buscar CodDiag..."
+            (keyup)="filterDataQuery2('coddiag2', $event)" />
+          <input type="text" class="filter-input-noconsiderados cell diagnostico2" placeholder="Buscar Diagnóstico..."
+            (keyup)="filterDataQuery2('diagnostico2', $event)" />
+          <input type="text" class="filter-input-noconsiderados cell dni_medico2" placeholder="Buscar Dni Medico..."
+            (keyup)="filterDataQuery2('dni_medico2', $event)" />
+          <input type="text" class="filter-input-noconsiderados cell acto_med2" placeholder="Buscar acto_med..."
+            (keyup)="filterDataQuery2('acto_med2', $event)" />
+          <input type="text" class="filter-input-noconsiderados cell sexo2" placeholder="Buscar Sexo..."
+            (keyup)="filterDataQuery2('sexo2', $event)" />
+          <input type="text" class="filter-input-noconsiderados cell fecha_atencion2"
+            placeholder="Buscar Fecha Atención..." (keyup)="filterDataQuery2('fecha_atencion2', $event)" />
+          <input type="text" class="filter-input-noconsiderados cell desc_cl2" placeholder="Buscar Desc CL..."
+            (keyup)="filterDataQuery2('desc_cl2', $event)" />
+        </div>
+
+        <!-- WRAPPER PARA SCROLL HORIZONTAL -->
+        <div class="resumen-wrapper-noconsiderados">
+          <!-- VIRTUAL SCROLL -->
+          <cdk-virtual-scroll-viewport class="resumen-viewport-noconsiderados" [itemSize]="48">
+            <div *cdkVirtualFor="let row of query2DATA" class="resumen-row-noconsiderados">
+              <div class="cell servicio2">{{ row.servicio2 }}</div>
+              <div class="cell actividad2">{{ row.actividad2 }}</div>
+              <div class="cell subactividad2">{{ row.subactividad2 }}</div>
+              <div class="cell tipo_consulta2">{{ row.tipo_consulta2 }}</div>
+              <div class="cell coddiag2">{{ row.coddiag2 }}</div>
+              <div class="cell diagnostico2">{{ row.diagnostico2 }}</div>
+              <div class="cell dni_medico2 num">{{ row.dni_medico2 }}</div>
+              <div class="cell acto_med2 num">{{ row.acto_med2 }} </div>
+              <div class="cell sexo2">{{ row.sexo2 }}</div>
+              <div class="cell fecha_atencion2">{{ row.fecha_atencion2 }}</div>
+              <div class="cell desc_cl2">{{ row.desc_cl2 }}</div>
+            </div>
+          </cdk-virtual-scroll-viewport>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="table-footer-noconsiderados">
+          <div class="footer-left"><strong>Total atenciones</strong></div>
+          <div class="footer-right num">
+            <strong>{{ query2DATA.length }}</strong>
+          </div>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</div>
+
+

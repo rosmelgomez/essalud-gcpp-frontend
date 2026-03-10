@@ -1,0 +1,118 @@
+<div class="main">
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h2>Detalle Deserciones Consulta Externa</h2>
+      <p>Centro: {{ nameCentro }} | Período: {{ periodo }}</p>
+    </div>
+    <div class="actions">
+      <button class="btn-export" (click)="descargarCSV()"> Exportar CSV</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading">
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- TABS -->
+  <div *ngIf="!loading" class="tabs">
+    <button
+      class="tab-button"
+      [class.active]="activeTab === 'Detalle deserciones'"
+      (click)="setActiveTab('Detalle deserciones')"
+    >
+      Detalle Deserciones
+    </button>
+  </div>
+
+  <!-- CONTENIDO TABS -->
+
+  <div *ngIf="!loading && activeTab === 'Detalle deserciones'" class="tab-content">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Desercion por servicio - Período {{ periodo }}</h3>
+        <div #chartServicio></div>
+      </div>
+      <div class="chart-card">
+        <h3>Desercion por subactividad - Período {{ periodo }}</h3>
+        <div #chartSubactividad></div>
+      </div>
+      <div class="chart-card">
+        <h3>Desercion por agrupador - Período {{ periodo }}</h3>
+        <div #chartAgrupador></div>
+      </div>
+      <div class="chart-card">
+        <h3>Desercion por especialidad - Período {{ periodo }}</h3>
+        <div #chartEspecialidad></div>
+      </div>
+    </div>
+
+     <mat-card class="resumen-table">
+      <!-- HEADER -->
+      <div class="resumen-header">
+        <div class="cell servicio">Servicio</div>
+        <div class="cell subactividad">Subactividad</div>
+        <div class="cell agrupador">Agrupador</div>
+        <div class="cell especialidad">Especialidad</div>
+        <div class="cell actdes">Actdes</div>
+        <div class="cell cenasides">Cenasides</div>
+        <div class="cell acto_med">Acto Med</div>
+      </div>
+
+      <!-- FILTERS ROW -->
+      <div class="resumen-filters">
+        <input type="text" class="filter-input cell servicio" placeholder="Buscar Servicio..."
+          (keyup)="filterData('servicio', $event)">
+        <input type="text" class="filter-input cell subactividad" placeholder="Buscar Subactividad..."
+          (keyup)="filterData('subactividad', $event)">
+        <input type="text" class="filter-input cell agrupador" placeholder="Buscar Agrupador..."
+          (keyup)="filterData('agrupador', $event)">
+        <input type="text" class="filter-input cell especialidad" placeholder="Buscar Especialidad..."
+          (keyup)="filterData('especialidad', $event)">
+        <input type="text" class="filter-input cell actdes" placeholder="Buscar Actdes..."
+          (keyup)="filterData('actdes', $event)">
+        <input type="text" class="filter-input cell cenasides" placeholder="Buscar Cenasides..."
+          (keyup)="filterData('cenasides', $event)">
+        <input type="text" class="filter-input cell acto_med" placeholder="Buscar Acto Med..."
+          (keyup)="filterData('acto_med', $event)">
+      </div>
+
+      <!-- WRAPPER PARA SCROLL HORIZONTAL -->
+      <div class="resumen-wrapper">
+        <!-- VIRTUAL SCROLL -->
+        <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+          <div *cdkVirtualFor="let row of query1Data" class="resumen-row">
+            <div class="cell servicio">{{ row.servicio }}</div>
+            <div class="cell subactividad">{{ row.subactividad }}</div>
+            <div class="cell agrupador">{{ row.agrupador }}</div>
+            <div class="cell especialidad">{{ row.especialidad }}</div>
+            <div class="cell actdes">{{ row.actdes }}</div>
+            <div class="cell cenasides">{{ row.cenasides }}</div>
+            <div class="cell acto_med">{{ row.acto_med }}</div>
+          </div>
+        </cdk-virtual-scroll-viewport>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="table-footer">
+        <div class="footer-left"><strong>Total Filas:</strong></div>
+        <div class="footer-right num">
+          <strong>{{query1Data.length}}</strong>
+        </div>
+      </div>
+    </mat-card>
+
+    <ng-template #noTable>
+      <div class="no-data">Sin datos producción por médico.</div>
+    </ng-template>
+
+
+
+  </div>
+</div>
