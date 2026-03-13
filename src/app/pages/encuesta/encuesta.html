@@ -1,0 +1,135 @@
+<div class="main">
+  <div class="encuesta-header" *ngIf="selectedModuloName">
+    <h1>{{ selectedModuloName }} de {{nameCentro}} <span class="badge">Activo</span></h1>
+  </div>
+
+  <div class="info-modulos" [attr.style]="selectedModuloId ? 'display: none;' : ''">
+    <div *ngIf="!selectedModuloId" class="info-encuesta" >
+      <span class="help-badge">Ayuda</span>
+      <h2>Guia rapida para completar la encuesta</h2>
+      <p>
+        Sigue estos pasos para registrar la evaluacion correctamente y evitar observaciones incompletas.
+      </p>
+      <ol>
+        <li>Selecciona un modulo de consulta.</li>
+        <li>Selecciona una categoria y luego una subcategoria.</li>
+        <li>En cada variable marca <strong>Valido</strong> o <strong>No valido</strong>.</li>
+        <li>Si marcas No valido, describe la observacion en el campo correspondiente.</li>
+        <li>Revisa el avance y finalmente presiona Guardar Encuesta.</li>
+      </ol>
+      <p class="info-tip">
+        Recomendacion: no dejes variables sin calificar; el sistema valida que todas esten completas antes de guardar.
+      </p>
+
+      <div class="quick-stats">
+        <div class="stat-item">
+          <div class="stat-value">{{ modulosCompleto.length }}</div>
+          <div class="stat-label">Modulos disponibles</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">5</div>
+          <div class="stat-label">Pasos de llenado</div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!selectedModuloId" class="no-modulo-selected">
+      <h2>Selecciona un módulo de consulta para {{nameCentro}}</h2>
+      <div class="modulos-grid">
+        <ng-container>
+          <button *ngFor="let modulo of modulosCompleto" (click)="selectModulo(modulo)" class="btn-modulo">
+            {{ modulo.name_modulo }}
+          </button>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+
+  <div *ngIf="selectedModuloId" class="filtro-section">
+    <h3>Selecciona una Categoría</h3>
+    <div class="filtro-buttons">
+      <ng-container>
+        <button *ngFor="let categoria of categoriasFiltradas" (click)="selectCategoria(categoria)"
+          class="btn-filtro"
+          [class.active-filter]="categoria.id === selectedCategoriaId">
+          {{ categoria.name_categoria }}
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
+  <div *ngIf="selectedCategoriaId" class="filtro-section">
+    <h3>{{ selectedCategoriaName }} - Selecciona una Subcategoría</h3>
+    <div class="filtro-buttons">
+      <ng-container>
+        <button *ngFor="let subcategoria of subcategoriasFiltradas"
+          (click)="!subcategoriasGuardadas.has(subcategoria.id) && selectSubcategoria(subcategoria)"
+          class="btn-filtro"
+          [class.active-filter]="subcategoria.id === selectedSubcategoriaId"
+          [class.saved-filter]="subcategoriasGuardadas.has(subcategoria.id)"
+          [disabled]="subcategoriasGuardadas.has(subcategoria.id)"
+          [title]="subcategoriasGuardadas.has(subcategoria.id) ? 'Subcategoría ya guardada' : subcategoria.name_categoria">
+          <span *ngIf="subcategoriasGuardadas.has(subcategoria.id)" class="saved-check">✓ </span>{{ subcategoria.name_categoria }}
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
+  <div *ngIf="selectedSubcategoriaId && variablesConCalificacion.length > 0" class="encuesta-form">
+    <div class="variable-selector">
+      <label>Variable a evaluar</label>
+      <select class="variable-select" [(ngModel)]="currentVariableIndex">
+        <option *ngFor="let variable of variablesConCalificacion; let i = index" [ngValue]="i">
+          {{ variable.index }}. {{ variable.name_variable }}
+        </option>
+      </select>
+    </div>
+
+    <div *ngIf="getCurrentVariable()" class="variable-evaluation">
+      <h3>{{ getCurrentVariable()?.index }}. {{ getCurrentVariable()?.name_variable }}</h3>
+      <p class="instructions">
+        Marca si la información se considera consistente (Válido) o si presenta alguna observación (No válido).
+      </p>
+
+      <div class="calificacion-options">
+        <label class="radio-option">
+          <input type="radio" [name]="'calificacion_' + getCurrentVariable()?.id" value="valido"
+            [(ngModel)]="getCurrentVariable()!.calificacion">
+          <span class="radio-label">Válido</span>
+        </label>
+        <label class="radio-option">
+          <input type="radio" [name]="'calificacion_' + getCurrentVariable()?.id" value="no_valido"
+            [(ngModel)]="getCurrentVariable()!.calificacion">
+          <span class="radio-label">No válido</span>
+        </label>
+      </div>
+
+      <div class="observacion-field">
+        <label>Observaciones (opcional)</label>
+        <textarea [(ngModel)]="getCurrentVariable()!.observacion" placeholder="Ingresa tus observaciones aquí..."
+          rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="navigation-buttons">
+      <button (click)="irAnterior()" [disabled]="currentVariableIndex === 0" class="btn-secondary">
+        ← Anterior
+      </button>
+
+      <span class="current-info">
+        Variable {{ currentVariableIndex + 1 }} de {{ variablesConCalificacion.length }}
+      </span>
+
+      <button (click)="irSiguiente()" [disabled]="currentVariableIndex === variablesConCalificacion.length - 1"
+        class="btn-secondary">
+        Siguiente →
+      </button>
+    </div>
+
+    <div class="save-button-container">
+       <button (click)="resetForm()" class="btn-secondary">Volver a Modulo</button>
+      <button (click)="guardarEncuesta()" class="btn-primary">Guardar Encuesta</button>
+    </div>
+  </div>
+</div>

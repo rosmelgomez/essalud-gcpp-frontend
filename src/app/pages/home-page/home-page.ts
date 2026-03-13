@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { User } from '../../model/user';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CentroService } from '../../services/centro-service';
@@ -43,17 +43,22 @@ export class HomePage implements OnInit {
   isDropdownOpen: boolean = false;
   selectedCentroName: string = '';
   activeCentroIndex: number = -1;
+  showSurveyReminder: boolean = false;
+  surveyReminderError: string = '';
 
   constructor(
     private formBuilder: FormBuilder,
     private centroService: CentroService,
     private dataImport: DataImport,
     private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
     this.reactiveForm();
     this.user = this.dataImport.getUser();
+    this.handleSurveyReminder();
 
     // Solo usuarios ADMIN pueden acceder a getRed y getCentroWithRed
     if (this.user?.rol === 'ADMIN') {
@@ -69,6 +74,42 @@ export class HomePage implements OnInit {
       centro: ['', [Validators.required]],
       code_red: [''],
     });
+  }
+
+  private handleSurveyReminder(): void {
+    const surveyReminder = this.route.snapshot.queryParamMap.get('surveyReminder');
+
+    if (surveyReminder === '1') {
+      this.showSurveyReminder = true;
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { surveyReminder: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
+  }
+
+  goToEncuesta(): void {
+    if (!this.canGoToEncuesta()) {
+      this.surveyReminderError = 'Primero debes seleccionar un centro asistencial para completar la encuesta.';
+      return;
+    }
+
+    this.surveyReminderError = '';
+    this.showSurveyReminder = false;
+    void this.router.navigate(['/encuesta']);
+  }
+
+  closeSurveyReminder(): void {
+    this.surveyReminderError = '';
+    this.showSurveyReminder = false;
+  }
+
+  canGoToEncuesta(): boolean {
+    const dataCentro = this.dataImport.getDataCentro();
+    const codcas = dataCentro?.codcas?.toString().trim();
+    return !!codcas;
   }
 
   getCentro() {
@@ -220,6 +261,9 @@ export class HomePage implements OnInit {
       this.nameCentro = this.dataCentro.find((centro: any) => centro.cenasicod === codcas)?.cenasides || '';
       this.dataImport.saveDataCentro(codcas, this.nameCentro);
       this.dataImport.deleteDataIndicadores();
+      if (this.canGoToEncuesta()) {
+        this.surveyReminderError = '';
+      }
     } else {
       this.selectCentro = false;
     }

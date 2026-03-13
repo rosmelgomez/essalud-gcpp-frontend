@@ -58,6 +58,8 @@ import { DnmTotalAtencionesTs } from './pages/Indicadores/dashboard-no-medicas/t
 import { DnmTotalAtencionesPt } from './pages/Indicadores/dashboard-no-medicas/procedimientos terapeuticos/dnm-total-atenciones-pt/dnm-total-atenciones-pt';
 import { ReportDashboardReporteador } from './pages/report-dashboard-reporteador/report-dashboard-reporteador';
 import { ReportDashboardOdontologicas } from './pages/report-dashboard-odontologicas/report-dashboard-odontologicas';
+import { Encuesta } from './pages/encuesta/encuesta';
+import { DashboardEncuesta } from './pages/dashboard-encuesta/dashboard-encuesta';
 
 
 export const routes: Routes = [
@@ -161,5 +163,11 @@ export const routes: Routes = [
 
     ///dashboard-reporteador
     {path:'dashboard-reporteador', component: ReportDashboardReporteador, canActivate: [authenticateGuard]},
+
+    ///Encuesta
+
+    {path:'encuesta', component:Encuesta, canActivate: [authenticateGuard]},
+    {path:'dashboard-encuesta',component:DashboardEncuesta, canActivate: [authenticateGuard]},
+
 
 ];

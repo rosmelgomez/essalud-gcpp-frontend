@@ -16,6 +16,110 @@
 
 }
 
+.survey-alert {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: min(920px, calc(100% - 32px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: rgba(255, 249, 229, 0.97);
+  border: 1px solid rgba(191, 144, 0, 0.28);
+  box-shadow: 0 18px 40px rgba(7, 20, 50, 0.18);
+  color: #4c3a00;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.survey-alert__content {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.survey-alert__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f4c542;
+  color: #4c3a00;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.survey-alert__text strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 16px;
+}
+
+.survey-alert__text p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.survey-alert__error {
+  margin-top: 8px !important;
+  color: #9b1c1c;
+  font-weight: 600;
+}
+
+.survey-alert__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.survey-alert__primary,
+.survey-alert__secondary {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.survey-alert__primary {
+  background: #0f6aca;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 106, 202, 0.18);
+}
+
+.survey-alert__secondary {
+  background: rgba(76, 58, 0, 0.08);
+  color: #4c3a00;
+}
+
+.survey-alert__primary:disabled {
+  cursor: not-allowed;
+  background: #8ea8c6;
+  box-shadow: none;
+  transform: none;
+}
+
+.survey-alert__primary:hover,
+.survey-alert__secondary:hover {
+  transform: translateY(-1px);
+}
+
+.survey-alert__primary:hover {
+  box-shadow: 0 10px 24px rgba(15, 106, 202, 0.22);
+}
+
 .main::before {
   content: "";
   position: absolute;
@@ -662,6 +766,32 @@
 }
 
 @media only screen and (max-width: 720px) {
+  .survey-alert {
+    top: 16px;
+    width: min(100% - 24px, 920px);
+    padding: 16px;
+  }
+
+  .survey-alert,
+  .survey-alert__content,
+  .survey-alert__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .survey-alert__content {
+    gap: 10px;
+  }
+
+  .survey-alert__actions {
+    width: 100%;
+  }
+
+  .survey-alert__primary,
+  .survey-alert__secondary {
+    width: 100%;
+  }
+
   .main {
     padding: 28px 16px;
   }

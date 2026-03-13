@@ -1,4 +1,19 @@
 <div class="main">
+  <div class="survey-alert" *ngIf="showSurveyReminder">
+    <div class="survey-alert__content">
+      <span class="survey-alert__badge">Aviso</span>
+      <div class="survey-alert__text">
+        <strong>Recuerda completar la encuesta de conformidad.</strong>
+        <p>Tu participación ayuda a mantener actualizada la evaluación del servicio.</p>
+        <p class="survey-alert__error" *ngIf="surveyReminderError">{{ surveyReminderError }}</p>
+      </div>
+    </div>
+    <div class="survey-alert__actions">
+      <button type="button" class="survey-alert__primary" [disabled]="!canGoToEncuesta()" (click)="goToEncuesta()">Ir a encuesta</button>
+      <button type="button" class="survey-alert__secondary" (click)="closeSurveyReminder()">Cerrar</button>
+    </div>
+  </div>
+
   <div class="centro-shell" *ngIf="!selectCentro">
     <div class="centro-info">
       <span class="badge">Bienvenido</span>
@@ -146,7 +161,21 @@
         <span>Reporteador</span>
       </a>
 
-      <!-- Módulo 7: Auditoría del Sistema (admin) -->
+      <!-- Módulo 7: Encuesta -->
+      <a href="/encuesta" class="module" >
+        <img src="/images/survey.png" alt="Encuesta" />
+        <span>Encuesta de Conformidad</span>
+      </a>
+
+
+      <!-- Módulo 8: Dashboard Encuesta -->
+      <a href="/dashboard-encuesta" class="module" *ngIf="user?.rol === 'ADMIN'" >
+        <img src="/images/respuesta-encuesta.png" alt="Encuesta" />
+        <span>Respuesta de Encuestas</span>
+      </a>
+
+
+      <!-- Módulo 9: Auditoría del Sistema (admin) -->
       <a href="/logs-reports" class="module" *ngIf="user?.rol === 'ADMIN'">
         <img src="/images/logs.png" alt="Auditoría del Sistema" />
         <span>Auditoría del Sistema</span>

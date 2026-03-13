@@ -82,11 +82,15 @@ export class Login implements OnInit {
             next: (data) => {
               this.dataImport.saveUser(data);
               this.loginForm.reset();
-              this.router.navigate(['/home']);
+              this.router.navigate(['/home'], {
+                queryParams: { surveyReminder: '1' },
+              });
             },
             error: () => {
               this.loginForm.reset();
-              this.router.navigate(['/home']);
+              this.router.navigate(['/home'], {
+                queryParams: { surveyReminder: '1' },
+              });
             },
           });
         },

@@ -1,0 +1,305 @@
+<div class="main">
+  <div class="dashboard-shell">
+    <div class="header-panel">
+      <h1>Dashboard de Encuestas</h1>
+      <p>Vista administrativa con analisis de todos los centros.</p>
+    </div>
+
+    <div class="error-panel" *ngIf="errorCarga">
+      {{ errorCarga }}
+    </div>
+
+    <div class="loading-panel" *ngIf="loading && !errorCarga">
+      Cargando informacion del dashboard...
+    </div>
+
+    <ng-container *ngIf="!loading && !errorCarga">
+      <section class="filters-panel">
+        <div class="filters-grid">
+          <label>
+            Centro
+            <div class="custom-dropdown" (mouseenter)="openDropdown('centro')" (mouseleave)="closeDropdown('centro')">
+              <input
+                type="text"
+                class="dropdown-input"
+                placeholder="Buscar centro..."
+                [value]="dropdownOpen.centro ? dropdownSearch.centro : getSelectedDropdownLabel('centro')"
+                (focus)="focusDropdown('centro')"
+                (input)="filterDropdown('centro', $event)"
+              />
+              <div class="dropdown-list" *ngIf="dropdownOpen.centro">
+                <div
+                  *ngFor="let option of getFilteredDropdownOptions('centro')"
+                  class="dropdown-item"
+                  (click)="selectDropdownOption('centro', option)"
+                >
+                  {{ option.label }}
+                </div>
+                <div *ngIf="getFilteredDropdownOptions('centro').length === 0" class="dropdown-item disabled">No hay resultados</div>
+              </div>
+            </div>
+          </label>
+
+          <label>
+            Usuario
+            <div class="custom-dropdown" (mouseenter)="openDropdown('usuario')" (mouseleave)="closeDropdown('usuario')">
+              <input
+                type="text"
+                class="dropdown-input"
+                placeholder="Buscar usuario..."
+                [value]="dropdownOpen.usuario ? dropdownSearch.usuario : getSelectedDropdownLabel('usuario')"
+                (focus)="focusDropdown('usuario')"
+                (input)="filterDropdown('usuario', $event)"
+              />
+              <div class="dropdown-list" *ngIf="dropdownOpen.usuario">
+                <div
+                  *ngFor="let option of getFilteredDropdownOptions('usuario')"
+                  class="dropdown-item"
+                  (click)="selectDropdownOption('usuario', option)"
+                >
+                  {{ option.label }}
+                </div>
+                <div *ngIf="getFilteredDropdownOptions('usuario').length === 0" class="dropdown-item disabled">No hay resultados</div>
+              </div>
+            </div>
+          </label>
+
+          <label>
+            Modulo
+            <div class="custom-dropdown" (mouseenter)="openDropdown('modulo')" (mouseleave)="closeDropdown('modulo')">
+              <input
+                type="text"
+                class="dropdown-input"
+                placeholder="Buscar modulo..."
+                [value]="dropdownOpen.modulo ? dropdownSearch.modulo : getSelectedDropdownLabel('modulo')"
+                (focus)="focusDropdown('modulo')"
+                (input)="filterDropdown('modulo', $event)"
+              />
+              <div class="dropdown-list" *ngIf="dropdownOpen.modulo">
+                <div
+                  *ngFor="let option of getFilteredDropdownOptions('modulo')"
+                  class="dropdown-item"
+                  (click)="selectDropdownOption('modulo', option)"
+                >
+                  {{ option.label }}
+                </div>
+                <div *ngIf="getFilteredDropdownOptions('modulo').length === 0" class="dropdown-item disabled">No hay resultados</div>
+              </div>
+            </div>
+          </label>
+
+          <label>
+            Categoria
+            <div class="custom-dropdown" (mouseenter)="openDropdown('categoria')" (mouseleave)="closeDropdown('categoria')">
+              <input
+                type="text"
+                class="dropdown-input"
+                placeholder="Buscar categoria..."
+                [value]="dropdownOpen.categoria ? dropdownSearch.categoria : getSelectedDropdownLabel('categoria')"
+                (focus)="focusDropdown('categoria')"
+                (input)="filterDropdown('categoria', $event)"
+              />
+              <div class="dropdown-list" *ngIf="dropdownOpen.categoria">
+                <div
+                  *ngFor="let option of getFilteredDropdownOptions('categoria')"
+                  class="dropdown-item"
+                  (click)="selectDropdownOption('categoria', option)"
+                >
+                  {{ option.label }}
+                </div>
+                <div *ngIf="getFilteredDropdownOptions('categoria').length === 0" class="dropdown-item disabled">No hay resultados</div>
+              </div>
+            </div>
+          </label>
+
+          <label>
+            Subcategoria
+            <div class="custom-dropdown" (mouseenter)="openDropdown('subcategoria')" (mouseleave)="closeDropdown('subcategoria')">
+              <input
+                type="text"
+                class="dropdown-input"
+                placeholder="Buscar subcategoria..."
+                [value]="dropdownOpen.subcategoria ? dropdownSearch.subcategoria : getSelectedDropdownLabel('subcategoria')"
+                (focus)="focusDropdown('subcategoria')"
+                (input)="filterDropdown('subcategoria', $event)"
+              />
+              <div class="dropdown-list" *ngIf="dropdownOpen.subcategoria">
+                <div
+                  *ngFor="let option of getFilteredDropdownOptions('subcategoria')"
+                  class="dropdown-item"
+                  (click)="selectDropdownOption('subcategoria', option)"
+                >
+                  {{ option.label }}
+                </div>
+                <div *ngIf="getFilteredDropdownOptions('subcategoria').length === 0" class="dropdown-item disabled">No hay resultados</div>
+              </div>
+            </div>
+          </label>
+
+          <label>
+            Variable
+            <div class="custom-dropdown" (mouseenter)="openDropdown('variable')" (mouseleave)="closeDropdown('variable')">
+              <input
+                type="text"
+                class="dropdown-input"
+                placeholder="Buscar variable..."
+                [value]="dropdownOpen.variable ? dropdownSearch.variable : getSelectedDropdownLabel('variable')"
+                (focus)="focusDropdown('variable')"
+                (input)="filterDropdown('variable', $event)"
+              />
+              <div class="dropdown-list" *ngIf="dropdownOpen.variable">
+                <div
+                  *ngFor="let option of getFilteredDropdownOptions('variable')"
+                  class="dropdown-item"
+                  (click)="selectDropdownOption('variable', option)"
+                >
+                  {{ option.label }}
+                </div>
+                <div *ngIf="getFilteredDropdownOptions('variable').length === 0" class="dropdown-item disabled">No hay resultados</div>
+              </div>
+            </div>
+          </label>
+
+          <label>
+            Estado
+            <div class="custom-dropdown" (mouseenter)="openDropdown('estado')" (mouseleave)="closeDropdown('estado')">
+              <input
+                type="text"
+                class="dropdown-input"
+                placeholder="Buscar estado..."
+                [value]="dropdownOpen.estado ? dropdownSearch.estado : getSelectedDropdownLabel('estado')"
+                (focus)="focusDropdown('estado')"
+                (input)="filterDropdown('estado', $event)"
+              />
+              <div class="dropdown-list" *ngIf="dropdownOpen.estado">
+                <div
+                  *ngFor="let option of getFilteredDropdownOptions('estado')"
+                  class="dropdown-item"
+                  (click)="selectDropdownOption('estado', option)"
+                >
+                  {{ option.label }}
+                </div>
+                <div *ngIf="getFilteredDropdownOptions('estado').length === 0" class="dropdown-item disabled">No hay resultados</div>
+              </div>
+            </div>
+          </label>
+
+        </div>
+
+        <button class="btn-clear" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+      </section>
+
+      <section class="kpi-grid">
+        <article class="kpi-card">
+          <span>Total registros</span>
+          <strong>{{ totalRegistros }}</strong>
+        </article>
+        <article class="kpi-card kpi-ok">
+          <span>Validos</span>
+          <strong>{{ totalValidos }}</strong>
+        </article>
+        <article class="kpi-card kpi-bad">
+          <span>No validos</span>
+          <strong>{{ totalNoValidos }}</strong>
+        </article>
+        <article class="kpi-card kpi-note">
+          <span>Con comentario</span>
+          <strong>{{ totalConComentario }}</strong>
+        </article>
+      </section>
+
+      <section class="charts-grid">
+        <article class="chart-card chart-donut">
+          <h3>Distribucion por estado</h3>
+          <apx-chart [series]="estadoSeries" [chart]="estadoChart" [labels]="estadoLabels" [colors]="estadoColors"
+            [legend]="estadoLegend" [dataLabels]="estadoDataLabels" [stroke]="estadoStroke"
+            [responsive]="estadoResponsive" [noData]="chartNoData"></apx-chart>
+        </article>
+
+        <article class="chart-card">
+          <h3>Top modulos</h3>
+          <apx-chart [series]="moduloSeries" [chart]="moduloChart" [plotOptions]="moduloPlotOptions"
+            [dataLabels]="moduloDataLabels" [xaxis]="moduloXAxis" [colors]="moduloColors"
+            [noData]="chartNoData"></apx-chart>
+        </article>
+
+        <article class="chart-card">
+          <h3>Top categorias</h3>
+          <apx-chart [series]="categoriaSeries" [chart]="categoriaChart" [plotOptions]="categoriaPlotOptions"
+            [dataLabels]="categoriaDataLabels" [xaxis]="categoriaXAxis" [colors]="categoriaColors"
+            [noData]="chartNoData"></apx-chart>
+        </article>
+
+        <article class="chart-card chart-trend">
+          <h3>Top subcategorias</h3>
+          <apx-chart [series]="subcategoriaSeries" [chart]="subcategoriaChart" [plotOptions]="subcategoriaPlotOptions"
+            [dataLabels]="subcategoriaDataLabels" [xaxis]="subcategoriaXAxis" [colors]="subcategoriaColors"
+            [noData]="chartNoData"></apx-chart>
+        </article>
+      </section>
+
+      <section class="table-card resumen-table">
+
+        <div class="resumen-header">
+          <div class="cell fecha">Fecha</div>
+          <div class="cell centro">Centro</div>
+          <div class="cell modulo">Modulo</div>
+          <div class="cell categoria">Categoria</div>
+          <div class="cell subcategoria">Subcategoria</div>
+          <div class="cell variable">Variable</div>
+          <div class="cell estado">Estado</div>
+          <div class="cell comentario">Comentario</div>
+        </div>
+
+        <div class="resumen-filters">
+          <input class="filter-input cell fecha" type="text" placeholder="Buscar..." [(ngModel)]="filtrosTabla.fecha" />
+          <input class="filter-input cell centro" type="text" placeholder="Buscar..."
+            [(ngModel)]="filtrosTabla.centro" />
+          <input class="filter-input cell modulo" type="text" placeholder="Buscar..."
+            [(ngModel)]="filtrosTabla.modulo" />
+          <input class="filter-input cell categoria" type="text" placeholder="Buscar..."
+            [(ngModel)]="filtrosTabla.categoria" />
+          <input class="filter-input cell subcategoria" type="text" placeholder="Buscar..."
+            [(ngModel)]="filtrosTabla.subcategoria" />
+          <input class="filter-input cell variable" type="text" placeholder="Buscar..."
+            [(ngModel)]="filtrosTabla.variable" />
+          <input class="filter-input cell estado" type="text" placeholder="Buscar..."
+            [(ngModel)]="filtrosTabla.estado" />
+          <input class="filter-input cell comentario" type="text" placeholder="Buscar..."
+            [(ngModel)]="filtrosTabla.comentario" />
+        </div>
+
+        <div class="resumen-wrapper" *ngIf="mostrarTabla; else noDataInicio">
+          <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="72">
+            <div class="resumen-row" *cdkVirtualFor="let item of registrosTablaFiltrados">
+              <div class="cell fecha">{{ formatearFecha(item.date_creation) }}</div>
+              <div class="cell centro">{{ getCentroNombre(item.codcas) }}</div>
+              <div class="cell modulo">{{ getModuloNombre(item.id_modulo) }}</div>
+              <div class="cell categoria">{{ getCategoriaNombre(item.id_categoria) }}</div>
+              <div class="cell subcategoria">{{ getSubcategoriaNombre(item.id_subcategoria) }}</div>
+              <div class="cell variable">{{ getVariableNombre(item.id_variable) }}</div>
+              <div class="cell estado">
+                <span class="estado-pill" [ngClass]="getEstadoClase(item.status)">
+                  {{ getEstadoLabel(item.status) }}
+                </span>
+              </div>
+              <div class="cell comentario">{{ item.comment || '-' }}</div>
+            </div>
+          </cdk-virtual-scroll-viewport>
+
+          <div class="empty" *ngIf="registrosTablaFiltrados.length === 0">No hay registros con los filtros actuales.
+          </div>
+        </div>
+
+        <ng-template #noDataInicio>
+          <div class="empty">La tabla se habilita cuando aplicas al menos un filtro.</div>
+        </ng-template>
+
+        <div class="table-footer">
+          <div class="footer-left"><strong>Total registros mostrados:</strong></div>
+          <div class="footer-right"><strong>{{ mostrarTabla ? registrosTablaFiltrados.length : 0 }}</strong></div>
+        </div>
+      </section>
+    </ng-container>
+  </div>
+</div>
