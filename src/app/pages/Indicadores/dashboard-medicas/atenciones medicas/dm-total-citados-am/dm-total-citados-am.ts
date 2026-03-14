@@ -412,8 +412,9 @@ export class DmTotalCitadosAm implements OnInit, AfterViewInit, OnDestroy {
           dataLabels: {
             enabled: true,
             formatter: (val, opts) => {
-              const value = opts.w.globals.series[opts.seriesIndex] ?? 0;
-              const label = opts.w.globals.labels[opts.seriesIndex] ?? '';
+              const seriesIndex = opts?.seriesIndex ?? -1;
+              const value = opts?.w?.globals?.series?.[seriesIndex] ?? 0;
+              const label = opts?.w?.globals?.labels?.[seriesIndex] ?? '';
               return `${label}\n${Number(val).toFixed(2)}% (${value.toLocaleString()})`;
             },
             style: {

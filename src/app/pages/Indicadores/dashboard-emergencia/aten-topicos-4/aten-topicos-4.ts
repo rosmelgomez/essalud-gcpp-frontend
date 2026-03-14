@@ -342,7 +342,7 @@ export class AtenTopicos4 implements OnInit, OnDestroy {
       },
       tooltip: {
         x: {
-          formatter: (_val, opts) => categories[opts.dataPointIndex] ?? String(_val),
+          formatter: (_val, opts) => categories[opts?.dataPointIndex ?? -1] ?? String(_val),
         },
         y: {
           formatter: (val) => formatPct(Number(val)),
@@ -397,8 +397,9 @@ export class AtenTopicos4 implements OnInit, OnDestroy {
       dataLabels: {
         enabled: true,
         formatter: (value, opts) => {
-          const rawValue = values[opts.seriesIndex] ?? 0;
-          const label = labels[opts.seriesIndex] ?? '';
+          const seriesIndex = opts?.seriesIndex ?? -1;
+          const rawValue = values[seriesIndex] ?? 0;
+          const label = labels[seriesIndex] ?? '';
           return `${label}\n${Number(value).toFixed(2)}% (${rawValue.toLocaleString()})`;
         },
         style: {
