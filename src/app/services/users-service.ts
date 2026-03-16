@@ -21,7 +21,7 @@ export class UsersService {
 
   changePassword(user: Auth) {
     const url = base_url + `/changePassword`;
-    return this.http.post(url, user, { withCredentials: true, responseType: 'text' });
+    return this.http.put(url, user, { withCredentials: true, responseType: 'text' });
   }
 
   registerUser(user: User) {
