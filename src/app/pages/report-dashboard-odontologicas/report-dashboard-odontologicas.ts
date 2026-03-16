@@ -71,6 +71,27 @@ export class ReportDashboardOdontologicas implements OnInit {
     return new Intl.NumberFormat('es-PE').format(num);
   }
 
+    downloadFichaTecnica(): void {
+    this.fileService.getFile('f_consulta_externa_odo.pdf').subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'FICHA_TECNICA_DASHBOARD_ODONTOLOGICA.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      },
+      error: (err) => {
+        console.error('Error al descargar la ficha técnica:', err);
+        alert(
+          'Hubo un error al descargar la ficha técnica. Por favor, inténtelo de nuevo más tarde.',
+        );
+      },
+    });
+  }
+
+
   loadSesionesOdontologicas() {
     if (!this.anioSO || !this.periodoSO || !this.tipo_aseguradoSO) {
       this.errorSO = 'Por favor, complete todos los filtros.';

@@ -9,23 +9,24 @@
       </p>
     </div>
     <div class="header-content header-content-actions">
-      <button class="btn-download btn-ficha-tecnica" >
+      <button class="btn-download btn-ficha-tecnica" (click)="downloadFichaTecnica()">
         <i class="bi bi-file-earmark-pdf"></i>
         Ficha Técnica
       </button>
     </div>
   </div>
 
-    <!-- TABS -->
+  <!-- TABS -->
   <div class="tabs">
-    <button class="tab-button" [class.active]="activeTab === 'Sesiones Odontológicas'" (click)="setActiveTab('Sesiones Odontológicas')">
+    <button class="tab-button" [class.active]="activeTab === 'Sesiones Odontológicas'"
+      (click)="setActiveTab('Sesiones Odontológicas')">
       Sesiones Odontológicas
     </button>
   </div>
 
 
-    <!-- CONTENIDO TABS -->
-   <!-- Contenido para Sesiones Odontológicas -->
+  <!-- CONTENIDO TABS -->
+  <!-- Contenido para Sesiones Odontológicas -->
   <div *ngIf="activeTab === 'Sesiones Odontológicas'" class="tab-content">
     <div class="header">
       <div class="header-actions">
@@ -84,7 +85,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link" >
+              <a class="card-link">
                 <h5 class="card-title">Total de consultantes a la atención médica</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(totalConsultantesAtencionSO) }}</h2>
@@ -168,7 +169,7 @@
             </div>
           </div>
         </div>
-                <div class="card">
+        <div class="card">
           <div class="card-body">
             <div class="contend_left">
               <a class="card-link">

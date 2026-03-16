@@ -202,7 +202,7 @@ export class ReportDashboardMedicas implements OnInit {
   }
 
   downloadFichaTecnica(): void {
-    this.fileService.getFile('f_consulta_externa_m.pdf').subscribe({
+    this.fileService.getFile('f_consulta_externa.pdf').subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');

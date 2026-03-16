@@ -8,172 +8,140 @@ const base_url = BackendCredentials.api + '/medica';
   providedIn: 'root',
 })
 export class ReportDashboardMedicasService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /// Query Dashboard medicas
   /// Atenciones Medicas
   getQueryDMAMA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMAMA/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMAMA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Atenciones médicas - horas efectivas
   getQueryDMAMHE(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMAMHE/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMAMHE/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Atenciones médicas - horas programadas
   getQueryDMAMHP(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMAMHP/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMAMHP/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Atenciones médicas - citadas
   getQueryDMAMC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMAMC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMAMC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Atenciones médicas - desercion
   getQueryDMAMD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMAMD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMAMD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Atenciones médicas - medicos
   getQueryDMAMM(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMAMM/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMAMM/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Atenciones médicas - total consultante
   getQueryDMAMTC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMAMTC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMAMTC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Atenciones médicas - total consultante servicio
   getQueryDMAMTCS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMAMTCS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMAMTCS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Medicinas Complementaria - atenciones
   getQueryDMMCA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMMCA/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMCA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Medicinas Complementaria - horas efectivas
   getQueryDMMCHE(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMMCHE/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDMMCHE/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Medicinas Complementaria - horas programadas
   getQueryDMMCHP(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMMCHP/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMCHP/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Medicinas Complementaria - medicos
   getQueryDMMCM(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMMCM/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMCM/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Medicinas Complementaria - total consultante
   getQueryDMMCTC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMMCTC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMCTC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Medicinas Complementaria - total consultante servicio
   getQueryDMMCTCS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMMCTCS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMCTCS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Medicina Ocupacional - atenciones
   getQueryDMMOA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMMOA/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMOA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Medicina Ocupacional - horas efectivas
   getQueryDMMOHE(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMMOHE/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMOHE/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Medicina Ocupacional - horas programadas
   getQueryDMMOHP(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMMOHP/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMOHP/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Medicina Ocupacional - medicos
   getQueryDMMOM(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMMOM/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDMMOM/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Medicina Ocupacional - total consultante
   getQueryDMMOTC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMMOTC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDMMOTC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Medicina Ocupacional - total consultante servicio
   getQueryDMMOTCS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMMOTCS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMOTCS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Médico Personal - Atenciones
   getQueryDMMPA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMMPA/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMPA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Médico Personal - Horas Efectivas
   getQueryDMMPHE(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMMPHE/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMPHE/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Médico Personal - Horas Programadas
   getQueryDMMPHP(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMMPHP/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDMMPHP/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Médico Personal - Medicos
   getQueryDMMPM(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMMPM/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDMMPM/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Médico Personal - Total Consultante
   getQueryDMMPTC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMMPTC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMMPTC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Médico Personal - Total Consultante Servicio
   getQueryDMMPTCS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMMPTCS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDMMPTCS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Consulta Atención Inmediata - atenciones
   getQueryDMCAIA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMCAIA/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMCAIA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Consulta Atención Inmediata - horas efectivas
   getQueryDMCAIHE(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMCAIHE/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDMCAIHE/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Consulta Atención Inmediata - horas programadas
   getQueryDMCAIHP(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMCAIHP/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMCAIHP/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Consulta Atención Inmediata - medicos
   getQueryDMCAIM(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMCAIM/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDMCAIM/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Consulta Atención Inmediata - total de consultante
   getQueryDMCAITC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMCAITC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMCAITC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Consulta Atención Inmediata - total de consultante servicio
   getQueryDMCAITCS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMCAITCS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMCAITCS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Consulta Apoyo Desc - atenciones

@@ -33,6 +33,14 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       // Manejar errores de autenticación
       if (error.status === 401 || error.status === 403) {
+        if (isRefreshRequest) {
+          const errorMessage = error.error?.message || 'No se pudo renovar la sesión. Por favor, inicie sesión nuevamente.';
+          console.error('Error en refresh-token:', errorMessage);
+
+          redirectToLogin();
+          return throwError(() => error);
+        }
+
         if (!isLogoutRequest && !isRefreshRequest && !isAccessTokenRequest && auth.canRefreshToken()) {
           return auth.accessToken().pipe(
             switchMap(() => auth.refreshToken()),
@@ -48,14 +56,6 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
               return throwError(() => recoveryError);
             }),
           );
-        }
-
-        if (!isLogoutRequest && !isRefreshRequest && !isAccessTokenRequest) {
-          // Mostrar mensaje de error al usuario
-          const errorMessage = error.error?.message || 'Su sesión ha expirado. Por favor, inicie sesión nuevamente.';
-          console.error('Error de autenticación:', errorMessage);
-
-          redirectToLogin();
         }
       }
 

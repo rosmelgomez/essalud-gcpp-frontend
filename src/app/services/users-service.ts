@@ -15,7 +15,7 @@ export class UsersService {
   constructor(private http: HttpClient) {}
 
   verifyPassword(user: Auth) {
-    const url = base_url + `/login`;
+    const url = base_url + `/verifyPassword`;
     return this.http.post(url, user, { withCredentials: true, responseType: 'text' });
   }
 
