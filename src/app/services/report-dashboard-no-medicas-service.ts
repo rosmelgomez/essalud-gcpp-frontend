@@ -13,67 +13,55 @@ export class ReportDashboardNoMedicasService {
   /// Query Dashboard no medicas
   /// Obstetricia - Atenciones Medicas
   getQueryDNMOA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMOA/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMOA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Obstetricia - Prenatal
   getQueryDNMOP(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMOP/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMOP/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Obstetricia - Familiar
   getQueryDNMOF(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMOF/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMOF/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Obstetricia - Complementarias
   getQueryDNMOC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMOC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMOC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Obstetricia - Preconcepcional
   getQueryDNMOPC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMOPC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDNMOPC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   ///  Preventivo Promocional - Atenciones
   getQueryDNMPPA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPPA/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDNMPPA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Preventivo Promocional - domiciliaria
   getQueryDNMPPD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPPD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPPD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Preventivo Promocional - grupal
   getQueryDNMPPG(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPPG/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPPG/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Preventivo Promocional - psicoprofilaxis
   getQueryDNMPPP(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPPP/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPPP/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Preventivo Promocional - consejeria
   getQueryDNMPPC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPPC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPPC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   ///  Nutricion - nutricion_total
   getQueryDNMNNT(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMNNT/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMNNT/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   ///  Enfermeria - enfermeria_total
   getQueryDNMEET(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMEET/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMEET/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Enfermeria - enfermeria_tuberculosis
   getQueryDNMEETU(anio: string, periodo: string, codcas: string, codasegu: string) {
