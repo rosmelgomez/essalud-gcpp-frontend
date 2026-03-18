@@ -33,6 +33,7 @@ export class ReportDashboardReporteador implements OnInit , AfterViewInit {
   actividad: string = '';
   subactividad: string = '';
   sexo: string = '';
+  variable: string = '';
   capitulo_CIE: string = '';
 
   dataRed: any[] = [];
@@ -43,6 +44,7 @@ export class ReportDashboardReporteador implements OnInit , AfterViewInit {
   dataSubactividad: any[] = [];
   dataSubactividadCompleto: any[] = [];
   dataCapitulo: any[] = [];
+  dataVariable: any[] = [];
 
   filteredRed: any[] = [];
   filteredCentro: any[] = [];
@@ -283,6 +285,7 @@ export class ReportDashboardReporteador implements OnInit , AfterViewInit {
       actividad: this.ReportDashboardReporteadorService.getQueryDRAC(),
       subactividad: this.ReportDashboardReporteadorService.getQueryDRSUBAC(),
       capitulo: this.ReportDashboardReporteadorService.getQueryDRCAP(),
+      varible:this.ReportDashboardReporteadorService.getQueryDRVAR(),
     }).subscribe({
       next: (response) => {
         this.dataRed = response.red;
@@ -291,6 +294,7 @@ export class ReportDashboardReporteador implements OnInit , AfterViewInit {
         this.dataActividad = response.actividad;
         this.dataSubactividadCompleto = response.subactividad;
         this.dataCapitulo = response.capitulo;
+        this.dataVariable = response.varible;
       },
       error: (error) => {
         console.error('Error al obtener los datos de los selects');
@@ -312,14 +316,13 @@ export class ReportDashboardReporteador implements OnInit , AfterViewInit {
       cod_subactividad: this.subactividad || '',
       sexo: this.sexo || '',
       capitulo: this.capitulo_CIE || '',
+      variable: this.variable || ''
     };
-    console.log('Parámetros enviados para el reporte:', Resporteador);
     this.ReportDashboardReporteadorService.getQueryReporteador(Resporteador).subscribe({
       next: (response) => {
         this.loadingAM = false;
         this.reportData = response;
         this.dataSource.data = this.reportData;
-        console.log('Datos del reporte:', response);
       },
       error: (error) => {
         this.loadingAM = false;

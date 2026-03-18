@@ -8,4 +8,5 @@ export interface Resporteador {
   cod_subactividad: String,
   sexo: String,
   capitulo: String,
+  variable: String
 }

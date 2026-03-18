@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { BackendCredentials } from '../model/backendcredentials';
 import { HttpClient } from '@angular/common/http';
 
-const base_url = BackendCredentials.api + '/query';
+const base_url = BackendCredentials.api + '/repor';
 
 @Injectable({
   providedIn: 'root',
@@ -41,6 +41,6 @@ export class ReportDashboardReporteadorService {
   }
   /// Dashboard Reporteador query
   getQueryReporteador(Resporteador: Resporteador) {
-    return this.http.post<any>(base_url + `/queryReporteador`, Resporteador, { withCredentials: true });
+    return this.http.post<any>(base_url + `/queryDRQ`, Resporteador, { withCredentials: true });
   }
 }

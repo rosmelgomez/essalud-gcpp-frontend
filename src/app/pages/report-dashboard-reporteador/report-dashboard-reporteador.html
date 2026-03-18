@@ -14,6 +14,8 @@
       <div class="buscar-group">
         <select [(ngModel)]="anio" class="style-select">
           <option value="">Seleccione un Año</option>
+          <option value="2023">2023</option>
+          <option value="2024">2024</option>
           <option value="2025">2025</option>
           <option value="2026">2026</option>
         </select>
@@ -46,7 +48,7 @@
         </div>
         <div class="custom-dropdown" [class.disabled]="!isCentroEnabled" (mouseleave)="closeDropdownCentro()"
           (mouseenter)="openDropdownCentro()">
-          <input type="text"
+          <input type="text" title="centro"
             [placeholder]="isCentroEnabled ? 'Buscar y seleccionar centro asistencial...' : 'Primero selecciona una red'"
             (input)="filterCentro($event)" [value]="selectedCentroName" [disabled]="!isCentroEnabled"
             class="dropdown-input" />
@@ -78,7 +80,7 @@
         </div>
         <div class="custom-dropdown" [class.disabled]="!isSubactividadEnabled"
           (mouseleave)="closeDropdownSubactividad()" (mouseenter)="openDropdownSubactividad()">
-          <input type="text"
+          <input type="text" title="subactividad"
             [placeholder]="isSubactividadEnabled ? 'Buscar y seleccionar subactividad...' : 'Primero selecciona una actividad'"
             (input)="filterSubactividad($event)" [value]="selectedSubactividadName" [disabled]="!isSubactividadEnabled"
             class="dropdown-input" />
@@ -98,6 +100,12 @@
           <option value="F">Femenino</option>
           <option value="A">Ambos</option>
         </select>
+
+          <select [(ngModel)]="variable" class="style-select">
+          <option value="">Seleccione Variable</option>
+          <option *ngFor="let item of dataVariable" value="{{item.cod_variable}}">{{item.variable}}</option>
+        </select>
+
         <select [(ngModel)]="capitulo_CIE" class="style-select">
           <option value="">Seleccione capítulo CIE</option>
           <option *ngFor="let item of dataCapitulo" value="{{item.diagcod}}">{{item.edxcapdes}}</option>
