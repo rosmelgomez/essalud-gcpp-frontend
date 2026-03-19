@@ -146,33 +146,27 @@ export class ReportDashboardMedicasService {
 
   /// Consulta Apoyo Desc - atenciones
   getQueryDMCADA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMCADA/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMCADA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Consulta Apoyo Desc - horas efectivas
   getQueryDMCADHE(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMCADHE/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMCADHE/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Consulta Apoyo Desc - horas programadas
   getQueryDMCADHP(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMCADHP/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMCADHP/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Consulta Apoyo Desc - medicos
   getQueryDMCADM(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDMCADM/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDMCADM/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Consulta Apoyo Desc - total consultante
   getQueryDMCADTC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMCADTC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMCADTC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Consulta Apoyo Desc - total consultante servicio
   getQueryDMCADTCS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDMCADTCS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDMCADTCS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /* Indicadores de atenciones medicas */

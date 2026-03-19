@@ -65,246 +65,203 @@ export class ReportDashboardNoMedicasService {
   }
   ///  Enfermeria - enfermeria_tuberculosis
   getQueryDNMEETU(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMEETU/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDNMEETU/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Enfermeria - enfermeria_vih
   getQueryDNMEETV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMEEV/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMEEV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Enfermeria - enfermeria_cronicas_am
   getQueryDNMEECA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMEECA/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMEECA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Enfermeria - enfermeria_otros
   getQueryDNMEEO(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMEEO/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMEEO/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Enfermeria - enfermeria_prev_anemia
   getQueryDNMEEPA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMEEPA/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMEEPA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Psicologia
   /// psicologia total consultantes
   getQueryDNMPSTCS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPSTCS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPSTCS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// psicologia - total - consultas
   getQueryDNMPSTC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPSTC/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPSTC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Psicologia - horas - efectivas
   getQueryDNMPSHE(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDNMPSHE/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPSHE/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Psicologia - horas - programadas
   getQueryDNMPHP(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDNMPHP/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDNMPHP/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Psicologia - medicos
   getQueryDNMPSM(anio: string, periodo: string, codcas: string) {
-    const url = base_url + `/queryDNMPSM/${anio}/${periodo}/${codcas}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPSM/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Psicologia - procedimiento terapéutico
   getQueryDNMPSPT(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPSPT/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDNMPSPT/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Psicologia - procedimiento diagnóstico
   getQueryDNMPSPD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPSPD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDNMPSPD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   ///Trabajo Social (TS)
   ///Trabajo - social - total
   getQueryDNMTST(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMTST/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMTST/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Procedimientos terapéuticos (PT)
   /// Procedimientos terapéuticos - total
   getQueryDNMPTT(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPTT/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPTT/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Procedimientos terapéuticos - terapia Individual
   getQueryDNMPTTI(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPTTI/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPTTI/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Procedimientos terapéuticos - terapia pareja / familiar
   getQueryDNMPTTPF(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPTTPF/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPTTPF/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Procedimientos terapéuticos - terapia grupal
   getQueryDNMPTTG(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPTTG/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPTTG/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Procedimientos diagnósticos (PD)
   /// Procedimientos diagnósticos - total
   getQueryDNMPDT(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPDT/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPDT/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// CRED
   /// CRED -total
   getQueryDNMCREDT(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMCREDT/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMCREDT/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Indicadores de obstetricia
   /// total atenciones - servicio - subactividad
   getQueryDNMOBBTASS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMOBTASS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMOBTASS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - diagnostico
   getQueryDNMOBTAD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMOBTAD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMOBTAD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - csv
   getQueryDNMOBTACSV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMOBTACSV/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDNMOBTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Indicadores de preventiva promocional
   /// total atenciones - servicio - subactividad
   getQueryDNMPPTASS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPPTASS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPPTASS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - diagnostico
   getQueryDNMPPTAD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPPTAD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPPTAD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - csv
   getQueryDNMPPTACSV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPPTACSV/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPPTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Indicadores de nutricion
   /// total atenciones - servicio - subactividad
   getQueryDNMNUTASS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMNUTASS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMNUTASS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - diagnostico
   getQueryDNMNUTAD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMNUTAD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMNUTAD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - csv
   getQueryDNMNUTACSV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMNUTACSV/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMNUTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Indicadores de enfermeria
   /// total atenciones - servicio - subactividad
   getQueryDNMENTASS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMENTASS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMENTASS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - diagnostico
   getQueryDNMENTAD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMENTAD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMENTAD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - csv
   getQueryDNMENTACSV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMENTACSV/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>( base_url + `/queryDNMENTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Indicadores de psicologia
   /// total atenciones - servicio - subactividad
   getQueryDNMPSTASS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPSTASS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPSTASS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - diagnostico
   getQueryDNMPSTAD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPSTAD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPSTAD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - csv
   getQueryDNMPSTACSV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPSTACSV/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPSTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Indicadores de trabajo social
   /// total atenciones - servicio - subactividad
   getQueryDNMTSTASS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMTSTASS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMTSTASS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - diagnostico
   getQueryDNMTSTAD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMTSTAD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMTSTAD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - csv
   getQueryDNMTSTACSV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMTSTACSV/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMTSTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Indicadores de procedimientos terapeuticos
   /// total atenciones - servicio - subactividad
   getQueryDNMPTTASS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPTTASS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPTTASS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - diagnostico
   getQueryDNMPTTAD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPTTAD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPTTAD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - csv
   getQueryDNMPTTACSV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPTTACSV/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPTTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Indicadores de procedimiento diagnostico
   /// total atenciones - servicio - subactividad
   getQueryDNMPDTASS(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPDTASS/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPDTASS/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - diagnostico
   getQueryDNMPDTAD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPDTAD/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPDTAD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// total atenciones - csv
   getQueryDNMPDTACSV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    const url = base_url + `/queryDNMPDTACSV/${anio}/${periodo}/${codcas}/${codasegu}`;
-    return this.http.get<any>(url, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPDTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 }

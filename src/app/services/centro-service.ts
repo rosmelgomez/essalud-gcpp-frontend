@@ -8,25 +8,21 @@ const base_url = BackendCredentials.api + '/establecimiento';
   providedIn: 'root',
 })
 export class CentroService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getCentros() {
-    const url = base_url + '/getCentros';
-    return this.http.get<any[]>(url, { withCredentials: true });
+    return this.http.get<any[]>(base_url + '/getCentros', { withCredentials: true });
   }
 
   getRed() {
-    const url = base_url + '/getRedes';
-    return this.http.get<any[]>(url, { withCredentials: true });
+    return this.http.get<any[]>(base_url + '/getRedes', { withCredentials: true });
   }
 
   getCentrosWithRed() {
-    const url = base_url + '/getRedesWithCentros';
-    return this.http.get<any[]>(url, { withCredentials: true });
+    return this.http.get<any[]>(base_url + '/getRedesWithCentros', { withCredentials: true });
   }
 
   getCentrosByRed(code_red: string) {
-    const url = base_url + `/getCentroAsistencialByRed/${code_red}`;
-    return this.http.get<any[]>(url, { withCredentials: true });
+    return this.http.get<any[]>(base_url + `/getCentroAsistencialByRed/${code_red}`, { withCredentials: true });
   }
 }

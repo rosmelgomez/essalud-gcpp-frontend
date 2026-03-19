@@ -19,7 +19,7 @@ export class AuthLogin {
   constructor(
     private http: HttpClient,
     private userS: UsersService,
-  ) {}
+  ) { }
 
   login(user: Auth) {
     const url = base_url + `/login`;

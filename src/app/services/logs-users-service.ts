@@ -11,7 +11,6 @@ export class LogsUsersService {
   constructor(private http: HttpClient) {}
 
   getLogs() {
-    const url = base_url + '/getlogusers';
-    return this.http.get<any[]>(url, { withCredentials: true });
+    return this.http.get<any[]>(base_url + '/getlogusers', { withCredentials: true });
   }
 }

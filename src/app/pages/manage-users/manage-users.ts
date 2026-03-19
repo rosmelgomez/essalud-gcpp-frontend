@@ -111,7 +111,6 @@ export class ManageUsers implements OnInit {
       next: ({ red, centro }) => {
         this.dataRed = red;
         this.dataCentroCompleto = centro;
-        // Cache names for quick lookup in the table and filters.
         this.redNameByCode = red.reduce((acc: Record<string, string>, item: any) => {
           acc[String(item.redasiscod)] = item.redasisdes;
           return acc;

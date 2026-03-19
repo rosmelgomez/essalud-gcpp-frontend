@@ -12,41 +12,33 @@ const base_url = BackendCredentials.api + '/user';
 export class UsersService {
   user: User | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   verifyPassword(user: Auth) {
-    const url = base_url + `/verifyPassword`;
-    return this.http.post(url, user, { withCredentials: true, responseType: 'text' });
+    return this.http.post(base_url + `/verifyPassword`, user, { withCredentials: true, responseType: 'text' });
   }
 
   changePassword(user: Auth) {
-    const url = base_url + `/changePassword`;
-    return this.http.put(url, user, { withCredentials: true, responseType: 'text' });
+    return this.http.put(base_url + `/changePassword`, user, { withCredentials: true, responseType: 'text' });
   }
 
   registerUser(user: User) {
-    const url = base_url + '/register';
-    const endpoint = `${url}`;
-    return this.http.post(endpoint, user, { withCredentials: true, responseType: 'text' });
+    return this.http.post(base_url + `/register`, user, { withCredentials: true, responseType: 'text' });
   }
 
   getUser(username: string) {
-    const url = base_url + `/getInfoUser/${username}`;
-    return this.http.get<User>(url, { withCredentials: true });
+    return this.http.get<User>(base_url + `/getInfoUser/${username}`, { withCredentials: true });
   }
 
   updateUser(user: User) {
-    const url = base_url + '/updateUser';
-    return this.http.put(url, user, { withCredentials: true, responseType: 'text' });
+    return this.http.put(base_url + `/updateUser`, user, { withCredentials: true, responseType: 'text' });
   }
 
   deleteUser(username: string) {
-    const url = base_url + `/deleteUserByUsername/${username}`;
-    return this.http.delete(url, { withCredentials: true, responseType: 'text' });
+    return this.http.delete(base_url + `/deleteUserByUsername/${username}`, { withCredentials: true, responseType: 'text' });
   }
 
   getAllUsers() {
-    const url = base_url + `/getUsers`;
-    return this.http.get<User[]>(url, { withCredentials: true });
+    return this.http.get<User[]>(base_url + `/getUsers`, { withCredentials: true });
   }
 }
