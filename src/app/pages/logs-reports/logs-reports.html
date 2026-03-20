@@ -40,6 +40,11 @@
         <option *ngFor="let day of availableDays" [value]="day">{{ day }}</option>
       </select>
 
+      <select [(ngModel)]="selectedUserId" (change)="onUserChange()" class="style-select">
+        <option value="todos">Todos los usuarios</option>
+        <option *ngFor="let user of availableUsers" [value]="user.id">{{ user.label }}</option>
+      </select>
+
       <div class="custom-dropdown" (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
         <input type="text" placeholder="Buscar y seleccionar red..." (input)="filterRed($event)"
           (keydown)="handleRedKeydown($event)" [value]="selectedRedName" class="dropdown-input" />
@@ -84,6 +89,16 @@
       <h3>Cantidad de Logs por Fecha</h3>
       <div #chartFechaContainer class="chart-container"></div>
     </mat-card>
+
+    <mat-card>
+      <h3>Distribución de Logs por Navegador</h3>
+      <div #chartBrowserContainer class="chart-container"></div>
+    </mat-card>
+
+    <mat-card>
+      <h3>Top URLs Más Visitadas</h3>
+      <div #chartUrlContainer class="chart-container"></div>
+    </mat-card>
   </div>
 
     <!-- TOTAL -->
@@ -112,7 +127,7 @@
     <!-- HEADER -->
     <div class="resumen-header">
       <div class="cell dni">DNI</div>
-      <div class="cell name">Nombre</div>
+      <div class="cell full_name">Nombre Completo</div>
       <div class="cell username">Username</div>
       <div class="cell ip_user">IP</div>
       <div class="cell url">URL</div>
@@ -127,8 +142,8 @@
     <div class="resumen-filters">
       <input type="text" class="filter-input cell dni" placeholder="Buscar DNI..."
         (keyup)="filterData('dni', $event)" />
-      <input type="text" class="filter-input cell name" placeholder="Buscar Nombre..."
-        (keyup)="filterData('name', $event)" />
+      <input type="text" class="filter-input cell full_name" placeholder="Buscar Nombre..."
+        (keyup)="filterData('full_name', $event)" />
       <input type="text" class="filter-input cell username" placeholder="Buscar Username..."
         (keyup)="filterData('username', $event)" />
       <input type="text" class="filter-input cell ip_user" placeholder="Buscar IP..."
@@ -153,7 +168,7 @@
       <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
         <div *cdkVirtualFor="let row of allLogs" class="resumen-row">
           <div class="cell dni">{{ row.dni }}</div>
-          <div class="cell name">{{ row.name }}</div>
+          <div class="cell full_name">{{ row.full_name }}</div>
           <div class="cell username">{{ row.username }}</div>
           <div class="cell ip_user">{{ row.ip_user }}</div>
           <div class="cell url">{{ row.url }}</div>

@@ -1,3 +1,4 @@
+import { UsersService } from './../../services/users-service';
 import { Component, ElementRef, OnInit, QueryList, ViewChildren, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +13,7 @@ import { LogsUsersService } from '../../services/logs-users-service';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { CentroService } from '../../services/centro-service';
 import ApexCharts, { ApexOptions } from 'apexcharts';
+import { User } from '../../model/user';
 
 @Component({
   selector: 'app-logs-reports',
@@ -34,10 +36,19 @@ export class LogsReports implements OnInit, OnDestroy {
   @ViewChildren('centroOption') centroOptions!: QueryList<ElementRef<HTMLElement>>;
   @ViewChild('chartRolContainer') chartRolContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('chartFechaContainer') chartFechaContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('chartBrowserContainer') chartBrowserContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('chartUrlContainer') chartUrlContainer!: ElementRef<HTMLDivElement>;
+
+  //Datos para los usuarios
+  dataUser: User[] = [];
+  filteredUser: User[] = [];
+
+  searchUser: string = '';
+  isDropdownUserOpen: boolean = false
 
   /// Datos para el dropdown de Red Asistencial
   dataRed: any[] = [];
-  filteredRed: any = [];
+  filteredRed: any[] = [];
 
   searchRed: string = '';
   isDropdownRedOpen: boolean = false;
@@ -48,7 +59,7 @@ export class LogsReports implements OnInit, OnDestroy {
   ///Datos para el dropdown de Centro Asistencial
   dataCentro: any[] = [];
   dataCentroCompleto: any[] = [];
-  filteredCentro: any = [];
+  filteredCentro: any[] = [];
 
   searchCentro: string = '';
   isDropdownCentroOpen: boolean = false;
@@ -70,12 +81,14 @@ export class LogsReports implements OnInit, OnDestroy {
   // ApexCharts instances
   private chartRolInstance?: ApexCharts;
   private chartFechaInstance?: ApexCharts;
+  private chartBrowserInstance?: ApexCharts;
+  private chartUrlInstance?: ApexCharts;
 
   // Filtros
 
   filters = {
     dni: '',
-    name: '',
+    full_name: '',
     username: '',
     ip_user: '',
     url: '',
@@ -89,8 +102,10 @@ export class LogsReports implements OnInit, OnDestroy {
   selectedMonth = 'todos';
   selectedYear = 'todos';
   selectedDay = '';
+  selectedUserId = 'todos';
   availableYears: string[] = [];
   availableDays: string[] = [];
+  availableUsers: Array<{ id: string; label: string }> = [];
   months = [
     { value: 'todos', label: 'Todos los meses' },
     { value: '01', label: 'Enero' },
@@ -111,6 +126,7 @@ export class LogsReports implements OnInit, OnDestroy {
     private logsusersService: LogsUsersService,
     private cdr: ChangeDetectorRef,
     private centroService: CentroService,
+    private userService: UsersService,
   ) {}
 
   openDropdownRed() {
@@ -229,6 +245,7 @@ export class LogsReports implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.isLoading = true;
+    this.getUser();
     this.GetLogsUsers();
     this.getRed();
     this.getCentroWithRed();
@@ -239,6 +256,8 @@ export class LogsReports implements OnInit, OnDestroy {
     // Clean up chart instances to prevent memory leaks
     this.chartRolInstance?.destroy();
     this.chartFechaInstance?.destroy();
+    this.chartBrowserInstance?.destroy();
+    this.chartUrlInstance?.destroy();
   }
 
   private getCentroOptions(): any[] {
@@ -379,6 +398,18 @@ export class LogsReports implements OnInit, OnDestroy {
     this.isLoading = this.pendingLoads > 0;
   }
 
+  getUser() {
+    this.userService.getAllUsers().subscribe({
+      next: (resp) => {
+        this.dataUser = resp;
+        this.filteredUser = resp;
+      },
+      error: (err) => {
+        console.log('Error al obtener los usuarios', err);
+      },
+    });
+  }
+
   getRed() {
     this.beginLoading();
     this.centroService.getRed().subscribe({
@@ -403,6 +434,29 @@ export class LogsReports implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.log('Error al obtener los centros', err);
+        this.endLoading();
+      },
+    });
+  }
+
+   GetLogsUsers(): void {
+    this.beginLoading();
+    this.logsusersService.getLogs().subscribe({
+      next: (data) => {
+        this.allLogs = data;
+        this.allLogsOriginal = data;
+        this.loginLogs = data.filter((log) => this.isLoginUrl(log.url));
+        this.totalLogs = this.loginLogs.length;
+        this.dataSource.data = this.allLogs;
+        this.setupYearFilter();
+        this.setupDayFilter();
+        this.setDefaultFilters();
+        this.applyFilters();
+        this.cdr.detectChanges();
+        this.endLoading();
+      },
+      error: (err) => {
+        console.error('Error al obtener los logs de usuarios');
         this.endLoading();
       },
     });
@@ -442,28 +496,7 @@ export class LogsReports implements OnInit, OnDestroy {
     return String(value ?? '').trim().toLowerCase();
   }
 
-  GetLogsUsers(): void {
-    this.beginLoading();
-    this.logsusersService.getLogs().subscribe({
-      next: (data) => {
-        this.allLogs = data;
-        this.allLogsOriginal = data;
-        this.loginLogs = data.filter((log) => this.isLoginUrl(log.url));
-        this.totalLogs = this.loginLogs.length;
-        this.dataSource.data = this.allLogs;
-        this.setupYearFilter();
-        this.setupDayFilter();
-        this.setDefaultFilters();
-        this.applyFilters();
-        this.cdr.detectChanges();
-        this.endLoading();
-      },
-      error: (err) => {
-        console.error('Error al obtener los logs de usuarios');
-        this.endLoading();
-      },
-    });
-  }
+
 
   private setupYearFilter(): void {
     if (this.loginLogs.length === 0) return;
@@ -543,6 +576,36 @@ export class LogsReports implements OnInit, OnDestroy {
       : this.availableYears[this.availableYears.length - 1] || 'todos';
 
     this.updateDaysForSelectedMonth();
+    this.setupUserFilter();
+  }
+
+  private setupUserFilter(): void {
+    const usersMap = new Map<string, string>();
+
+    this.loginLogs.forEach((log) => {
+      const id = String(log.id_user ?? '').trim();
+      if (!id) return;
+
+      const fullName = String(log.full_name ?? '').trim();
+      const dni = String(log.dni ?? '').trim();
+      const label = fullName
+        ? `${fullName}${dni ? ` (${dni})` : ''}`
+        : dni
+          ? dni
+          : `Usuario ${id}`;
+
+      if (!usersMap.has(id)) {
+        usersMap.set(id, label);
+      }
+    });
+
+    this.availableUsers = Array.from(usersMap.entries())
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id, label]) => ({ id, label }));
+
+    if (this.selectedUserId !== 'todos' && !this.availableUsers.some((user) => user.id === this.selectedUserId)) {
+      this.selectedUserId = 'todos';
+    }
   }
 
   applyFilters(): void {
@@ -551,11 +614,15 @@ export class LogsReports implements OnInit, OnDestroy {
       selectedCentroCode: this.selectedCentroCode,
       selectedYear: this.selectedYear,
       selectedMonth: this.selectedMonth,
-      selectedDay: this.selectedDay
+      selectedDay: this.selectedDay,
+      selectedUserId: this.selectedUserId,
     });
 
     const baseData = this.applyAllFiltersOptimized([...this.loginLogs]);
     this.filteredCount = baseData.length;
+    this.allLogsOriginal = baseData;
+    this.allLogs = [...baseData];
+    this.dataSource.data = this.allLogs;
 
     console.log('Datos filtrados:', baseData.length, 'de', this.loginLogs.length);
 
@@ -604,6 +671,14 @@ export class LogsReports implements OnInit, OnDestroy {
         }
       }
 
+      // Filter by user id
+      if (this.selectedUserId !== 'todos') {
+        const logUserId = String(log.id_user ?? '').trim();
+        if (logUserId !== this.selectedUserId) {
+          return false;
+        }
+      }
+
       return true;
     });
   }
@@ -624,6 +699,10 @@ export class LogsReports implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  onUserChange(): void {
+    this.applyFilters();
+  }
+
   private isLoginUrl(url: unknown): boolean {
     if (!url) return false;
     const value = String(url).toLowerCase().trim();
@@ -632,18 +711,22 @@ export class LogsReports implements OnInit, OnDestroy {
 
   private renderCharts(data: any[]): void {
     setTimeout(() => {
-      if (!this.chartRolContainer || !this.chartFechaContainer) {
+      if (!this.chartRolContainer || !this.chartFechaContainer || !this.chartBrowserContainer || !this.chartUrlContainer) {
         console.log('Contenedores de gráficos no disponibles');
         return;
       }
 
       const conteoRol = this.contarPorRol(data);
       const { labels: fechaLabels, values: fechaValues } = this.procesarDatosPorFecha(data);
+      const conteoBrowser = this.contarPorNavegador(data);
+      const { labels: urlLabels, values: urlValues } = this.contarTopUrls(data);
 
-      console.log('Actualizando gráficos con datos:', { conteoRol, fechaLabels, fechaValues });
+      console.log('Actualizando gráficos con datos:', { conteoRol, fechaLabels, fechaValues, conteoBrowser, urlLabels, urlValues });
 
       this.renderChartRol(conteoRol);
       this.renderChartFecha(fechaLabels, fechaValues);
+      this.renderChartBrowser(conteoBrowser);
+      this.renderChartUrl(urlLabels, urlValues);
 
       this.cdr.detectChanges();
     }, 100);
@@ -843,6 +926,123 @@ export class LogsReports implements OnInit, OnDestroy {
     this.chartFechaInstance.render();
   }
 
+  private renderChartBrowser(conteo: Record<string, number>): void {
+    const container = this.chartBrowserContainer?.nativeElement;
+    if (!container) {
+      return;
+    }
+
+    const labels = Object.keys(conteo);
+    const values = Object.values(conteo);
+
+    if (labels.length === 0) {
+      this.chartBrowserInstance?.destroy();
+      this.chartBrowserInstance = undefined;
+      return;
+    }
+
+    if (this.chartBrowserInstance) {
+      this.chartBrowserInstance.updateOptions({
+        labels,
+        series: values,
+      });
+      return;
+    }
+
+    const options: ApexOptions = {
+      chart: {
+        type: 'donut',
+        height: 350,
+      },
+      labels,
+      series: values,
+      legend: {
+        position: 'bottom',
+      },
+      dataLabels: {
+        enabled: true,
+      },
+      tooltip: {
+        y: {
+          formatter: (val: number) => `${val} logs`,
+        },
+      },
+      colors: ['#0B63A7', '#00AEEF', '#45B7D1', '#5BC0DE', '#88D498', '#F9C74F'],
+    };
+
+    this.chartBrowserInstance = new ApexCharts(container, options);
+    this.chartBrowserInstance.render();
+  }
+
+  private renderChartUrl(labels: string[], values: number[]): void {
+    const container = this.chartUrlContainer?.nativeElement;
+    if (!container) {
+      return;
+    }
+
+    if (labels.length === 0) {
+      this.chartUrlInstance?.destroy();
+      this.chartUrlInstance = undefined;
+      return;
+    }
+
+    if (this.chartUrlInstance) {
+      this.chartUrlInstance.updateOptions({
+        xaxis: {
+          categories: labels,
+        },
+        series: [
+          {
+            name: 'Logs por URL',
+            data: values,
+          },
+        ],
+      });
+      return;
+    }
+
+    const options: ApexOptions = {
+      series: [
+        {
+          name: 'Logs por URL',
+          data: values,
+        },
+      ],
+      chart: {
+        type: 'bar',
+        height: 350,
+        toolbar: { show: true },
+      },
+      plotOptions: {
+        bar: {
+          horizontal: true,
+          borderRadius: 4,
+        },
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      xaxis: {
+        categories: labels,
+        title: {
+          text: 'Cantidad de Logs',
+        },
+      },
+      colors: ['#0B63A7'],
+      tooltip: {
+        y: {
+          formatter: (val: number) => `${val} logs`,
+        },
+      },
+      legend: {
+        show: false,
+      },
+    };
+
+    this.chartUrlInstance = new ApexCharts(container, options);
+    this.chartUrlInstance.render();
+  }
+
   private contarPorRol(data: any[]): Record<string, number> {
     return data.reduce(
       (acc, log) => {
@@ -871,6 +1071,31 @@ export class LogsReports implements OnInit, OnDestroy {
         return `${day}/${month}/${year}`;
       }),
       values: sortedEntries.map(([, count]) => count),
+    };
+  }
+
+  private contarPorNavegador(data: any[]): Record<string, number> {
+    return data.reduce((acc, log) => {
+      const browser = String(log.browser ?? 'Desconocido').trim() || 'Desconocido';
+      acc[browser] = (acc[browser] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }
+
+  private contarTopUrls(data: any[]): { labels: string[]; values: number[] } {
+    const conteo = data.reduce((acc, log) => {
+      const url = String(log.url ?? 'Sin URL').trim() || 'Sin URL';
+      acc[url] = (acc[url] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const topEntries = (Object.entries(conteo) as Array<[string, number]>)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8);
+
+    return {
+      labels: topEntries.map(([url]) => url),
+      values: topEntries.map(([, count]) => count),
     };
   }
 
@@ -913,41 +1138,41 @@ export class LogsReports implements OnInit, OnDestroy {
       return false;
     }
 
-    // filtro name
-    if (this.filters.name && !String(row.name).toLowerCase().includes(this.filters.name)) {
+    // filtro full_name
+    if (this.filters.full_name && !String(row.full_name).toLowerCase().includes(this.filters.full_name)) {
       return false;
     }
 
     // Filtro username
-    if (this.filters.username && !row.username.toLowerCase().includes(this.filters.username)) {
+    if (this.filters.username && !String(row.username ?? '').toLowerCase().includes(this.filters.username)) {
       return false;
     }
     // Filtro ip_user
-    if (this.filters.ip_user && !row.ip_user.toLowerCase().includes(this.filters.ip_user)) {
+    if (this.filters.ip_user && !String(row.ip_user ?? '').toLowerCase().includes(this.filters.ip_user)) {
       return false;
     }
 
     // Filtro url
-    if (this.filters.url && !row.url.toLowerCase().includes(this.filters.url)) {
+    if (this.filters.url && !String(row.url ?? '').toLowerCase().includes(this.filters.url)) {
       return false;
     }
 
     // Filtro browser
-    if (this.filters.browser && !row.browser.toLowerCase().includes(this.filters.browser)) {
+    if (this.filters.browser && !String(row.browser ?? '').toLowerCase().includes(this.filters.browser)) {
       return false;
     }
 
     // Filtro user_role
-    if (this.filters.user_role && !row.user_role.toLowerCase().includes(this.filters.user_role)) {
+    if (this.filters.user_role && !String(row.user_role ?? '').toLowerCase().includes(this.filters.user_role)) {
       return false;
     }
     // Filtro codcas
-    if (this.filters.codcas && !row.codcas.toLowerCase().includes(this.filters.codcas)) {
+    if (this.filters.codcas && !String(row.codcas ?? '').toLowerCase().includes(this.filters.codcas)) {
       return false;
     }
 
     // Filtro code_red
-    if (this.filters.code_red && !row.code_red.toLowerCase().includes(this.filters.code_red)) {
+    if (this.filters.code_red && !String(row.code_red ?? '').toLowerCase().includes(this.filters.code_red)) {
       return false;
     }
 

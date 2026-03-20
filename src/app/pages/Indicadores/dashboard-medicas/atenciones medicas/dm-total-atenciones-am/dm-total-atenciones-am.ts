@@ -329,7 +329,8 @@ export class DmTotalAtencionesAm implements OnInit, OnDestroy {
         const options: ApexOptions = {
           chart: {
             type: 'bar',
-            height: '100%',
+            height: Math.max(container.clientHeight, 350),
+            parentHeightOffset: 0,
             stacked: true,
             toolbar: { show: false },
           },
@@ -377,12 +378,48 @@ export class DmTotalAtencionesAm implements OnInit, OnDestroy {
             borderColor: 'rgba(10, 76, 140, 0.08)',
             xaxis: { lines: { show: true } },
             yaxis: { lines: { show: false } },
+            padding: {
+              top: 8,
+              right: 20,
+              bottom: 12,
+              left: 8,
+            },
           },
           legend: {
+            show: true,
             position: 'top',
             horizontalAlign: 'left',
             fontSize: '11px',
+            itemMargin: {
+              horizontal: 12,
+              vertical: 4,
+            },
+            formatter: (seriesName, opts) => {
+              if (!opts) {
+                return seriesName;
+              }
+              const values = (opts.w.globals.series[opts.seriesIndex] as number[]) ?? [];
+              const totalSerie = values.reduce((sum, value) => sum + Math.abs(Number(value) || 0), 0);
+              return `${seriesName} (${Math.round(totalSerie).toLocaleString()})`;
+            },
+            onItemClick: {
+              toggleDataSeries: false,
+            },
+            onItemHover: {
+              highlightDataSeries: false,
+            },
           },
+          responsive: [
+            {
+              breakpoint: 768,
+              options: {
+                legend: {
+                  position: 'bottom',
+                  horizontalAlign: 'center',
+                },
+              },
+            },
+          ],
           tooltip: {
             shared: true,
             intersect: false,
@@ -471,7 +508,8 @@ export class DmTotalAtencionesAm implements OnInit, OnDestroy {
         const options: ApexOptions = {
           chart: {
             type: 'bar',
-            height: '100%',
+            height: Math.max(container.clientHeight, 400),
+            parentHeightOffset: 0,
             toolbar: { show: false },
           },
           series: seriesData,
@@ -508,12 +546,48 @@ export class DmTotalAtencionesAm implements OnInit, OnDestroy {
             borderColor: 'rgba(10, 76, 140, 0.08)',
             xaxis: { lines: { show: true } },
             yaxis: { lines: { show: false } },
+            padding: {
+              top: 8,
+              right: 20,
+              bottom: 12,
+              left: 8,
+            },
           },
           legend: {
+            show: true,
             position: 'top',
             horizontalAlign: 'left',
             fontSize: '11px',
+            itemMargin: {
+              horizontal: 12,
+              vertical: 4,
+            },
+            formatter: (seriesName, opts) => {
+              if (!opts) {
+                return seriesName;
+              }
+              const values = (opts.w.globals.series[opts.seriesIndex] as number[]) ?? [];
+              const totalSerie = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
+              return `${seriesName} (${Math.round(totalSerie).toLocaleString()})`;
+            },
+            onItemClick: {
+              toggleDataSeries: false,
+            },
+            onItemHover: {
+              highlightDataSeries: false,
+            },
           },
+          responsive: [
+            {
+              breakpoint: 768,
+              options: {
+                legend: {
+                  position: 'bottom',
+                  horizontalAlign: 'center',
+                },
+              },
+            },
+          ],
           tooltip: {
             x: {
               formatter: (value) => {
@@ -584,7 +658,8 @@ export class DmTotalAtencionesAm implements OnInit, OnDestroy {
     return {
       chart: {
         type: 'bar',
-        height: '100%',
+        height: 350,
+        parentHeightOffset: 0,
         toolbar: { show: false },
       },
       series: [
@@ -627,6 +702,12 @@ export class DmTotalAtencionesAm implements OnInit, OnDestroy {
         borderColor: '#E8EAED',
         xaxis: { lines: { show: true } },
         yaxis: { lines: { show: false } },
+        padding: {
+          top: 8,
+          right: 20,
+          bottom: 12,
+          left: 8,
+        },
       },
       tooltip: {
         y: {
