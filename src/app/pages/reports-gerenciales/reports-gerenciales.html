@@ -1,7 +1,7 @@
 <div class="main">
-  <div class="modules-container" [class.viewer-active]="showViewer">
+  <div class="modules-container" [class.viewer-active]="showViewer" >
 
-    <div class="modules-menu" id="reportes_gerenciales">
+    <div class="modules-menu" id="reportes_gerenciales" *ngIf="showReporte">
       <div class="module" (click)="openReport(data_urls[0].atenciones_ce || '',$event)">
         <img src="/images/order_1420037.png" alt="Atenciones" />
         <span>Atenciones CE</span>
@@ -16,9 +16,9 @@
         <img src="/images/ambulance.png" alt="Atención por topicós - EME" />
         <span>Atención por topicós - EME</span>
       </div>
-      <div href="" class="module" (click)="openReport('', $event)">
+      <div href="" class="module" (click)="activarHistorico()">
         <img src="/images/resumen.png" alt="Resumen CE 2025" />
-        <span>Resumen CE 2025</span>
+        <span>Resumen CE</span>
       </div>
 
       <div class="module inactive" title="Módulo no disponible">
@@ -36,16 +36,16 @@
       </div>
     </div>
 
-    <button class="btn-change-reportes" title="volver reportes" id="btn_historico" >
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="12 5 19 12 12 19"></polyline>
-          <polyline points="19 12 5 12"></polyline>
-        </svg>
-        Volver a reportes
-      </button>
+    <button class="btn-change-reportes" title="volver reportes" id="btn_historico" *ngIf="showHistorico" (click)="desactivarHistorico()"  >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="12 5 19 12 12 19"></polyline>
+        <polyline points="19 12 5 12"></polyline>
+      </svg>
+      Volver a reportes
+    </button>
 
-    <div class="modules-menu" id="historico_ce">
+    <div class="modules-menu" id="historico_ce" *ngIf="showHistorico">
       <div class="module" (click)="openReport(data_urls[3].resumen_ce_2023 || '', $event)">
         <img src="/images/resumen.png" alt="Atenciones" />
         <span>Resumen - CE - 2023</span>

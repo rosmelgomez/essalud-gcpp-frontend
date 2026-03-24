@@ -145,7 +145,7 @@ export class DmTotalAtencionesCad implements OnInit, OnDestroy {
       q0: this.reporterDashboardMedicasService.getQuery0DMCADTASS(anio, periodo, codcas, codasegu),
       q1: this.reporterDashboardMedicasService.getQuery1DMCADTAAE(anio, periodo, codcas, codasegu),
       q2: this.reporterDashboardMedicasService.getQuery2DMCADTANC(anio, periodo, codcas, codasegu),
-      q3: this.reporterDashboardMedicasService.getQuery3DMCADTASGEA(anio,periodo,codcas,codasegu),
+      q3: this.reporterDashboardMedicasService.getQuery3DMCADTASGEA(anio, periodo, codcas, codasegu),
       q4: this.reporterDashboardMedicasService.getQuery4DMCADTACSV(anio, periodo, codcas, codasegu),
     }).subscribe({
       next: ({ q0, q1, q2, q3, q4 }) => {
@@ -328,7 +328,8 @@ export class DmTotalAtencionesCad implements OnInit, OnDestroy {
         const options: ApexOptions = {
           chart: {
             type: 'bar',
-            height: '100%',
+            height: Math.max(container.clientHeight, 350),
+            parentHeightOffset: 0,
             stacked: true,
             toolbar: { show: false },
           },
@@ -376,12 +377,48 @@ export class DmTotalAtencionesCad implements OnInit, OnDestroy {
             borderColor: 'rgba(10, 76, 140, 0.08)',
             xaxis: { lines: { show: true } },
             yaxis: { lines: { show: false } },
+            padding: {
+              top: 8,
+              right: 20,
+              bottom: 12,
+              left: 8,
+            },
           },
           legend: {
+            show: true,
             position: 'top',
             horizontalAlign: 'left',
             fontSize: '11px',
+            itemMargin: {
+              horizontal: 12,
+              vertical: 4,
+            },
+            formatter: (seriesName, opts) => {
+              if (!opts) {
+                return seriesName;
+              }
+              const values = (opts.w.globals.series[opts.seriesIndex] as number[]) ?? [];
+              const totalSerie = values.reduce((sum, value) => sum + Math.abs(Number(value) || 0), 0);
+              return `${seriesName} (${Math.round(totalSerie).toLocaleString()})`;
+            },
+            onItemClick: {
+              toggleDataSeries: false,
+            },
+            onItemHover: {
+              highlightDataSeries: false,
+            },
           },
+          responsive: [
+            {
+              breakpoint: 768,
+              options: {
+                legend: {
+                  position: 'bottom',
+                  horizontalAlign: 'center',
+                },
+              },
+            },
+          ],
           tooltip: {
             shared: true,
             intersect: false,
@@ -470,7 +507,8 @@ export class DmTotalAtencionesCad implements OnInit, OnDestroy {
         const options: ApexOptions = {
           chart: {
             type: 'bar',
-            height: '100%',
+            height: Math.max(container.clientHeight, 400),
+            parentHeightOffset: 0,
             toolbar: { show: false },
           },
           series: seriesData,
@@ -507,12 +545,48 @@ export class DmTotalAtencionesCad implements OnInit, OnDestroy {
             borderColor: 'rgba(10, 76, 140, 0.08)',
             xaxis: { lines: { show: true } },
             yaxis: { lines: { show: false } },
+            padding: {
+              top: 8,
+              right: 20,
+              bottom: 12,
+              left: 8,
+            },
           },
           legend: {
+            show: true,
             position: 'top',
             horizontalAlign: 'left',
             fontSize: '11px',
+            itemMargin: {
+              horizontal: 12,
+              vertical: 4,
+            },
+            formatter: (seriesName, opts) => {
+              if (!opts) {
+                return seriesName;
+              }
+              const values = (opts.w.globals.series[opts.seriesIndex] as number[]) ?? [];
+              const totalSerie = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
+              return `${seriesName} (${Math.round(totalSerie).toLocaleString()})`;
+            },
+            onItemClick: {
+              toggleDataSeries: false,
+            },
+            onItemHover: {
+              highlightDataSeries: false,
+            },
           },
+          responsive: [
+            {
+              breakpoint: 768,
+              options: {
+                legend: {
+                  position: 'bottom',
+                  horizontalAlign: 'center',
+                },
+              },
+            },
+          ],
           tooltip: {
             x: {
               formatter: (value) => {
@@ -583,7 +657,8 @@ export class DmTotalAtencionesCad implements OnInit, OnDestroy {
     return {
       chart: {
         type: 'bar',
-        height: '100%',
+        height: 350,
+        parentHeightOffset: 0,
         toolbar: { show: false },
       },
       series: [
@@ -626,6 +701,12 @@ export class DmTotalAtencionesCad implements OnInit, OnDestroy {
         borderColor: '#E8EAED',
         xaxis: { lines: { show: true } },
         yaxis: { lines: { show: false } },
+        padding: {
+          top: 8,
+          right: 20,
+          bottom: 12,
+          left: 8,
+        },
       },
       tooltip: {
         y: {
@@ -926,7 +1007,7 @@ export class DmTotalAtencionesCad implements OnInit, OnDestroy {
       return;
     }
 
-    const fileName = `am_total_atenciones_${this.periodo}_${this.nameCentro}.csv`;
+    const fileName = `cad_total_atenciones_${this.periodo}_${this.nameCentro}.csv`;
 
     const headers = Object.keys(this.dataCSV[0]);
     const csvContent = [

@@ -33,7 +33,7 @@ import { ReportDashboardMedicasService } from '../../../../../services/report-da
   templateUrl: './dm-total-atenciones-mp.html',
   styleUrl: './dm-total-atenciones-mp.css',
 })
-export class DmTotalAtencionesMp implements OnInit, OnDestroy {
+export class DmTotalAtencionesMp  implements OnInit, OnDestroy {
   nameCentro: string = '';
 
   loading: boolean = false;
@@ -117,7 +117,7 @@ export class DmTotalAtencionesMp implements OnInit, OnDestroy {
     private reporterDashboardMedicasService: ReportDashboardMedicasService,
     private dataImport: DataImport,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadAllData();
@@ -128,14 +128,11 @@ export class DmTotalAtencionesMp implements OnInit, OnDestroy {
   }
 
   loadAllData(): void {
-    const dataImport = this.dataImport.getDataDMMP();
+    const { nameCentro, codcas } = this.dataImport.getDataCentro();
+    const { anio, periodo, codasegu } = this.dataImport.getDataDMMP();
 
-    this.nameCentro = this.dataImport.getDataCentro()?.nameCentro || '';
-    const codcas = this.dataImport.getDataCentro()?.codcas || '';
-    const periodo = dataImport.periodo;
-    const anio = dataImport.anio;
-    const codasegu = dataImport.codasegu;
-    this.periodo = `${dataImport.anio}-${periodo}`;
+    this.nameCentro = nameCentro || '';
+    this.periodo = `${anio}-${periodo}`;
 
     if (!codcas || !periodo || !anio || !codasegu) {
       this.error = 'Código CAS, período, año o código de aseguradora no proporcionado.';
@@ -150,7 +147,7 @@ export class DmTotalAtencionesMp implements OnInit, OnDestroy {
       q2: this.reporterDashboardMedicasService.getQuery2DMMPTANC(anio, periodo, codcas, codasegu),
       q3: this.reporterDashboardMedicasService.getQuery3DMMPTASGEA(anio, periodo, codcas, codasegu),
       q4: this.reporterDashboardMedicasService.getQuery4DMMPTACSV(anio, periodo, codcas, codasegu),
-    }).subscribe({
+  }).subscribe({
       next: ({ q0, q1, q2, q3, q4 }) => {
         // Asignar datos a las variables correspondientes
         this.query4TotalAtencionesFilter = q4;
@@ -331,7 +328,8 @@ export class DmTotalAtencionesMp implements OnInit, OnDestroy {
         const options: ApexOptions = {
           chart: {
             type: 'bar',
-            height: '100%',
+            height: Math.max(container.clientHeight, 350),
+            parentHeightOffset: 0,
             stacked: true,
             toolbar: { show: false },
           },
@@ -379,12 +377,48 @@ export class DmTotalAtencionesMp implements OnInit, OnDestroy {
             borderColor: 'rgba(10, 76, 140, 0.08)',
             xaxis: { lines: { show: true } },
             yaxis: { lines: { show: false } },
+            padding: {
+              top: 8,
+              right: 20,
+              bottom: 12,
+              left: 8,
+            },
           },
           legend: {
+            show: true,
             position: 'top',
             horizontalAlign: 'left',
             fontSize: '11px',
+            itemMargin: {
+              horizontal: 12,
+              vertical: 4,
+            },
+            formatter: (seriesName, opts) => {
+              if (!opts) {
+                return seriesName;
+              }
+              const values = (opts.w.globals.series[opts.seriesIndex] as number[]) ?? [];
+              const totalSerie = values.reduce((sum, value) => sum + Math.abs(Number(value) || 0), 0);
+              return `${seriesName} (${Math.round(totalSerie).toLocaleString()})`;
+            },
+            onItemClick: {
+              toggleDataSeries: false,
+            },
+            onItemHover: {
+              highlightDataSeries: false,
+            },
           },
+          responsive: [
+            {
+              breakpoint: 768,
+              options: {
+                legend: {
+                  position: 'bottom',
+                  horizontalAlign: 'center',
+                },
+              },
+            },
+          ],
           tooltip: {
             shared: true,
             intersect: false,
@@ -473,7 +507,8 @@ export class DmTotalAtencionesMp implements OnInit, OnDestroy {
         const options: ApexOptions = {
           chart: {
             type: 'bar',
-            height: '100%',
+            height: Math.max(container.clientHeight, 400),
+            parentHeightOffset: 0,
             toolbar: { show: false },
           },
           series: seriesData,
@@ -510,12 +545,48 @@ export class DmTotalAtencionesMp implements OnInit, OnDestroy {
             borderColor: 'rgba(10, 76, 140, 0.08)',
             xaxis: { lines: { show: true } },
             yaxis: { lines: { show: false } },
+            padding: {
+              top: 8,
+              right: 20,
+              bottom: 12,
+              left: 8,
+            },
           },
           legend: {
+            show: true,
             position: 'top',
             horizontalAlign: 'left',
             fontSize: '11px',
+            itemMargin: {
+              horizontal: 12,
+              vertical: 4,
+            },
+            formatter: (seriesName, opts) => {
+              if (!opts) {
+                return seriesName;
+              }
+              const values = (opts.w.globals.series[opts.seriesIndex] as number[]) ?? [];
+              const totalSerie = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
+              return `${seriesName} (${Math.round(totalSerie).toLocaleString()})`;
+            },
+            onItemClick: {
+              toggleDataSeries: false,
+            },
+            onItemHover: {
+              highlightDataSeries: false,
+            },
           },
+          responsive: [
+            {
+              breakpoint: 768,
+              options: {
+                legend: {
+                  position: 'bottom',
+                  horizontalAlign: 'center',
+                },
+              },
+            },
+          ],
           tooltip: {
             x: {
               formatter: (value) => {
@@ -586,7 +657,8 @@ export class DmTotalAtencionesMp implements OnInit, OnDestroy {
     return {
       chart: {
         type: 'bar',
-        height: '100%',
+        height: 350,
+        parentHeightOffset: 0,
         toolbar: { show: false },
       },
       series: [
@@ -629,6 +701,12 @@ export class DmTotalAtencionesMp implements OnInit, OnDestroy {
         borderColor: '#E8EAED',
         xaxis: { lines: { show: true } },
         yaxis: { lines: { show: false } },
+        padding: {
+          top: 8,
+          right: 20,
+          bottom: 12,
+          left: 8,
+        },
       },
       tooltip: {
         y: {
@@ -929,7 +1007,7 @@ export class DmTotalAtencionesMp implements OnInit, OnDestroy {
       return;
     }
 
-    const fileName = `am_total_atenciones_${this.periodo}_${this.nameCentro}.csv`;
+    const fileName = `mp_total_atenciones_${this.periodo}_${this.nameCentro}.csv`;
 
     const headers = Object.keys(this.dataCSV[0]);
     const csvContent = [

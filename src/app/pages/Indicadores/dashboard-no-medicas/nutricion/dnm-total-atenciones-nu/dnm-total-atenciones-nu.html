@@ -3,10 +3,10 @@
   <div class="header">
     <div>
       <h2>Detalle de Atenciones</h2>
-      <p> Período: {{ periodo }} | Centro: {{ nameCentro }}</p>
+      <p>Período: {{ periodo }} | Centro: {{ nameCentro }}</p>
     </div>
     <div class="actions">
-      <button class="btn-export" (click)="downloadCSV()"> Exportar CSV</button>
+      <button class="btn-export" (click)="downloadCSV()">Exportar CSV</button>
     </div>
   </div>
 
@@ -22,13 +22,15 @@
 
   <!-- TABS -->
   <div *ngIf="!loading" class="tabs">
-    <button  class="tab-button" [class.active]="activeTab === 'produccion'" (click)="setActiveTab('produccion')">
+    <button class="tab-button" [class.active]="activeTab === 'produccion'" (click)="setActiveTab('produccion')">
       Producción
     </button>
-    <button style="display: none;"  class="tab-button" [class.active]="activeTab === 'diagnosticos'" (click)="setActiveTab('diagnosticos')">
+    <button style="display: none" class="tab-button" [class.active]="activeTab === 'diagnosticos'"
+      (click)="setActiveTab('diagnosticos')">
       Diagnósticos
     </button>
-    <button style="display: none;"  class="tab-button" [class.active]="activeTab === 'noconsiderados'" (click)="setActiveTab('noconsiderados')">
+    <button style="display: none" class="tab-button" [class.active]="activeTab === 'noconsiderados'"
+      (click)="setActiveTab('noconsiderados')">
       No Considerados
     </button>
   </div>
@@ -46,30 +48,29 @@
         <div #chartSubactividad class="chart"></div>
       </div>
 
-      <div class="chart-card">
-        <h3>Atenciones por diagnóstico - Período {{ periodo }}</h3>
-        <div #chartDiagnosticoBar class="chart"></div>
-      </div>
-
-      <div style="display: none;" class="chart-card">
+      <div style="display: none" class="chart-card">
         <h3>Atenciones por agrupador - Período {{ periodo }}</h3>
         <div #chartAgrupador class="chart"></div>
       </div>
 
-      <div style="display: none;" class="chart-card">
+      <div style="display: none" class="chart-card">
         <h3>Atenciones por especialidad - Período {{ periodo }}</h3>
         <div #chartEspecialidad class="chart"></div>
       </div>
     </div>
 
-    <div style="display: none;" class="chart-full-width">
+    <div class="chart-card">
+      <h3>Atenciones por diagnóstico - Período {{ periodo }}</h3>
+      <div #chartDiagnosticoBar class="chart"></div>
+    </div>
+
+    <div style="display: none" class="chart-full-width">
       <h3>Sexo y grupo etario vs atenciones</h3>
       <div #chartTornado class="chart"></div>
     </div>
   </div>
 
-  <div style="display: none;" *ngIf="!loading && activeTab === 'diagnosticos'" class="tab-content">
-
+  <div style="display: none" *ngIf="!loading && activeTab === 'diagnosticos'" class="tab-content">
     <div class="chart-full-width">
       <h3>Top 10 diagnósticos por atenciones - Período {{ periodo }}</h3>
       <div #chartDiagnostico class="chart"></div>
@@ -132,7 +133,7 @@
     </ng-template>
   </div>
 
-  <div style="display: none;" *ngIf="!loading && activeTab === 'noconsiderados'" class="tab-content">
+  <div style="display: none" *ngIf="!loading && activeTab === 'noconsiderados'" class="tab-content">
     <div class="chart-card">
       <mat-card class="resumen-table-noconsiderados">
         <h3>Registros No Considerados</h3>
@@ -155,7 +156,7 @@
         <div class="resumen-filters-noconsiderados">
           <input type="text" class="filter-input-noconsiderados cell servicio2" placeholder="Buscar Servicio..."
             (keyup)="filterDataQuery2('servicio2', $event)" />
-          <input type="text" class="filter-input-noconsiderados  cell actividad2" placeholder="Buscar Actividad..."
+          <input type="text" class="filter-input-noconsiderados cell actividad2" placeholder="Buscar Actividad..."
             (keyup)="filterDataQuery2('actividad2', $event)" />
           <input type="text" class="filter-input-noconsiderados cell subactividad2" placeholder="Buscar Subactividad..."
             (keyup)="filterDataQuery2('subactividad2', $event)" />
@@ -189,7 +190,7 @@
               <div class="cell coddiag2">{{ row.coddiag2 }}</div>
               <div class="cell diagnostico2">{{ row.diagnostico2 }}</div>
               <div class="cell dni_medico2 num">{{ row.dni_medico2 }}</div>
-              <div class="cell acto_med2 num">{{ row.acto_med2 }} </div>
+              <div class="cell acto_med2 num">{{ row.acto_med2 }}</div>
               <div class="cell sexo2">{{ row.sexo2 }}</div>
               <div class="cell fecha_atencion2">{{ row.fecha_atencion2 }}</div>
               <div class="cell desc_cl2">{{ row.desc_cl2 }}</div>

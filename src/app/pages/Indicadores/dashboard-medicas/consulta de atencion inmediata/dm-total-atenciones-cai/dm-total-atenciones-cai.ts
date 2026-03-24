@@ -43,7 +43,6 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
   query3DATA: any[] = []; // sexo grupo etario
   query4DATA: any[] = []; // diagnósticos - csv
 
-
   dataCSV: any[] = [];
 
   newtableQ4CountMap: any[] = [];
@@ -123,15 +122,11 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
   }
 
   loadAllData(): void {
+    const { nameCentro, codcas } = this.dataImport.getDataCentro();
+    const { anio, periodo, codasegu } = this.dataImport.getDataDMCAI();
 
-    const dataImport = this.dataImport.getDataDMCAI();
-
-    this.nameCentro = this.dataImport.getDataCentro()?.nameCentro || '';
-    const codcas = this.dataImport.getDataCentro()?.codcas || '';
-    const periodo = dataImport.periodo;
-    const anio = dataImport.anio;
-    const codasegu = dataImport.codasegu;
-    this.periodo = `${dataImport.anio}-${periodo}`;
+    this.nameCentro = nameCentro || '';
+    this.periodo = `${anio}-${periodo}`;
 
     if (!codcas || !periodo || !anio || !codasegu) {
       this.error = 'Código CAS, período, año o código de aseguradora no proporcionado.';
@@ -161,16 +156,26 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
 
         this.dataCSV = q4;
 
-
         // Construir tabla agrupada por descripcion_servicio, subactividad, sexo, cod_diag, descripcion_diagnostico
-        const groupMap = new Map<string, { descripcion_servicio: string; subactividad: string; sexo: string; cod_diag: string; descripcion_diagnostico: string; total_atenciones: number }>();
+        const groupMap = new Map<
+          string,
+          {
+            descripcion_servicio: string;
+            subactividad: string;
+            sexo: string;
+            cod_diag: string;
+            descripcion_diagnostico: string;
+            total_atenciones: number;
+          }
+        >();
 
         for (const row of q4) {
           const descripcion_servicio = (row as any).descripcion_servicio || 'Sin descripción';
           const subactividad = (row as any).subactividad || 'Sin subactividad';
           const sexo = (row as any).sexo || 'Sin sexo';
           const cod_diag = (row as any).cod_diag || 'Sin cod_diag';
-          const descripcion_diagnostico = (row as any).descripcion_diagnostico || 'Sin descripción diagnóstico';
+          const descripcion_diagnostico =
+            (row as any).descripcion_diagnostico || 'Sin descripción diagnóstico';
           const key = `${descripcion_servicio}||${subactividad}||${sexo}||${cod_diag}||${descripcion_diagnostico}`;
           if (!groupMap.has(key)) {
             groupMap.set(key, {
@@ -303,18 +308,12 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
         this.destroyChart(this.chartTornado);
 
         const grandTotal = sortedGrouped.reduce((sum, d) => sum + d.masculino + d.femenino, 0);
-        const maxValue = Math.max(
-          0,
-          ...sortedGrouped.flatMap((d) => [d.masculino, d.femenino]),
-        );
+        const maxValue = Math.max(0, ...sortedGrouped.flatMap((d) => [d.masculino, d.femenino]));
 
-        const formatAbs = (value: number) =>
-          Math.round(Math.abs(value)).toLocaleString();
+        const formatAbs = (value: number) => Math.round(Math.abs(value)).toLocaleString();
         const formatAbsPct = (value: number) => {
           const absValue = Math.abs(value);
-          const percentage = grandTotal
-            ? ((absValue / grandTotal) * 100).toFixed(1)
-            : '0.0';
+          const percentage = grandTotal ? ((absValue / grandTotal) * 100).toFixed(1) : '0.0';
           return `${absValue.toLocaleString()} (${percentage}%)`;
         };
 
@@ -323,7 +322,8 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
         const options: ApexOptions = {
           chart: {
             type: 'bar',
-            height: '100%',
+            height: Math.max(container.clientHeight, 350),
+            parentHeightOffset: 0,
             stacked: true,
             toolbar: { show: false },
           },
@@ -371,12 +371,48 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
             borderColor: 'rgba(10, 76, 140, 0.08)',
             xaxis: { lines: { show: true } },
             yaxis: { lines: { show: false } },
+            padding: {
+              top: 8,
+              right: 20,
+              bottom: 12,
+              left: 8,
+            },
           },
           legend: {
+            show: true,
             position: 'top',
             horizontalAlign: 'left',
             fontSize: '11px',
+            itemMargin: {
+              horizontal: 12,
+              vertical: 4,
+            },
+            formatter: (seriesName, opts) => {
+              if (!opts) {
+                return seriesName;
+              }
+              const values = (opts.w.globals.series[opts.seriesIndex] as number[]) ?? [];
+              const totalSerie = values.reduce((sum, value) => sum + Math.abs(Number(value) || 0), 0);
+              return `${seriesName} (${Math.round(totalSerie).toLocaleString()})`;
+            },
+            onItemClick: {
+              toggleDataSeries: false,
+            },
+            onItemHover: {
+              highlightDataSeries: false,
+            },
           },
+          responsive: [
+            {
+              breakpoint: 768,
+              options: {
+                legend: {
+                  position: 'bottom',
+                  horizontalAlign: 'center',
+                },
+              },
+            },
+          ],
           tooltip: {
             shared: true,
             intersect: false,
@@ -399,11 +435,7 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
   buildDiagnosticoChart(): void {
     setTimeout(() => {
       // Obtener top 10 diagnósticos por total de atenciones
-      const diagAgg = this.aggregateByLabel(
-        this.query1DATA,
-        (d) => d.cod_diag ?? 'Sin cod',
-
-      );
+      const diagAgg = this.aggregateByLabel(this.query1DATA, (d) => d.cod_diag ?? 'Sin cod');
 
       // Top 10 diagnósticos
       const topDiagCodes = diagAgg
@@ -469,7 +501,8 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
         const options: ApexOptions = {
           chart: {
             type: 'bar',
-            height: '100%',
+            height: Math.max(container.clientHeight, 400),
+            parentHeightOffset: 0,
             toolbar: { show: false },
           },
           series: seriesData,
@@ -506,12 +539,48 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
             borderColor: 'rgba(10, 76, 140, 0.08)',
             xaxis: { lines: { show: true } },
             yaxis: { lines: { show: false } },
+            padding: {
+              top: 8,
+              right: 20,
+              bottom: 12,
+              left: 8,
+            },
           },
           legend: {
+            show: true,
             position: 'top',
             horizontalAlign: 'left',
             fontSize: '11px',
+            itemMargin: {
+              horizontal: 12,
+              vertical: 4,
+            },
+            formatter: (seriesName, opts) => {
+              if (!opts) {
+                return seriesName;
+              }
+              const values = (opts.w.globals.series[opts.seriesIndex] as number[]) ?? [];
+              const totalSerie = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
+              return `${seriesName} (${Math.round(totalSerie).toLocaleString()})`;
+            },
+            onItemClick: {
+              toggleDataSeries: false,
+            },
+            onItemHover: {
+              highlightDataSeries: false,
+            },
           },
+          responsive: [
+            {
+              breakpoint: 768,
+              options: {
+                legend: {
+                  position: 'bottom',
+                  horizontalAlign: 'center',
+                },
+              },
+            },
+          ],
           tooltip: {
             x: {
               formatter: (value) => {
@@ -582,7 +651,8 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
     return {
       chart: {
         type: 'bar',
-        height: '100%',
+        height: 350,
+        parentHeightOffset: 0,
         toolbar: { show: false },
       },
       series: [
@@ -625,6 +695,12 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
         borderColor: '#E8EAED',
         xaxis: { lines: { show: true } },
         yaxis: { lines: { show: false } },
+        padding: {
+          top: 8,
+          right: 20,
+          bottom: 12,
+          left: 8,
+        },
       },
       tooltip: {
         y: {
@@ -744,14 +820,14 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
     }
   }
 
-    // Variable total de atenciones de la tabla del query 4
+  // Variable total de atenciones de la tabla del query 4
   totalAtencionesQ4: number = 0;
 
   calculateTotalAtencionesQ4(): void {
     const data = this.newtableQ4CountMap || [];
     this.totalAtencionesQ4 = data.reduce(
       (sum: number, row: any) => sum + Number(row.total_atenciones ?? 0),
-      0
+      0,
     );
   }
 
@@ -761,9 +837,7 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
     const filterValue = event.target.value.toLowerCase().trim();
     this.filters[column] = filterValue;
 
-    const filtered = this.query4TotalAtencionesFilter.filter((row) =>
-      this.applyAllFilters(row)
-    );
+    const filtered = this.query4TotalAtencionesFilter.filter((row) => this.applyAllFilters(row));
 
     this.newtableQ4CountMap = filtered;
     this.calculateTotalAtencionesQ4();
@@ -824,7 +898,7 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
     this.filtersQuery2[column] = filterValue;
 
     const filtered = this.query2TotalAtencionesFilter.filter((row) =>
-      this.applyAllFiltersQuery2(row)
+      this.applyAllFiltersQuery2(row),
     );
 
     this.query2DATA = filtered;
@@ -921,13 +995,13 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
   }
 
   // Descargar datos en formato CSV
-   downloadCSV(): void {
+  downloadCSV(): void {
     if (!this.dataCSV?.length) {
       console.warn('No hay datos para descargar');
       return;
     }
 
-    const fileName = `am_total_atenciones_${this.periodo}_${this.nameCentro}.csv`;
+    const fileName = `cai_total_atenciones_${this.periodo}_${this.nameCentro}.csv`;
 
     const headers = Object.keys(this.dataCSV[0]);
     const csvContent = [
@@ -944,6 +1018,4 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
     link.click();
     URL.revokeObjectURL(link.href);
   }
-
-
 }

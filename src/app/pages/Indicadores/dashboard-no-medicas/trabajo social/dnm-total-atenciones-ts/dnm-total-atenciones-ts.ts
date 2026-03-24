@@ -98,28 +98,29 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
   // Gráficos
   chartServicio: ApexCharts | null = null;
   chartSubactividad: ApexCharts | null = null;
-  chartDiagnosticoBar: ApexCharts | null = null;
   chartEspecialidad: ApexCharts | null = null;
   chartAgrupador: ApexCharts | null = null;
   chartTornado: ApexCharts | null = null;
   chartDiagnostico: ApexCharts | null = null;
-
+ chartDiagnosticoBar: ApexCharts | null = null;
   activeTab: 'produccion' | 'diagnosticos' | 'noconsiderados' = 'produccion';
 
   @ViewChild(MatSort) sort!: MatSort;
 
   @ViewChild('chartServicio') chartServicioEl!: ElementRef<HTMLDivElement>;
   @ViewChild('chartSubactividad') chartSubactividadEl!: ElementRef<HTMLDivElement>;
-  @ViewChild('chartDiagnosticoBar') chartDiagnosticoBarEl!: ElementRef<HTMLDivElement>;
   @ViewChild('chartEspecialidad') chartEspecialidadEl!: ElementRef<HTMLDivElement>;
   @ViewChild('chartAgrupador') chartAgrupadorEl!: ElementRef<HTMLDivElement>;
   @ViewChild('chartTornado') chartTornadoEl!: ElementRef<HTMLDivElement>;
   @ViewChild('chartDiagnostico') chartDiagnosticoEl!: ElementRef<HTMLDivElement>;
+  @ViewChild('chartDiagnosticoBar') chartDiagnosticoBarEl!: ElementRef<HTMLDivElement>;
+
+
   constructor(
     private report: ReportDashboardNoMedicasService,
     private dataImport: DataImport,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadAllData();
@@ -159,7 +160,6 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
         //this.query2DATA = q2;
         //this.query3DATA = q3;
         this.query4DATA = q2;
-        console.log('Datos CSV:', q2);
 
         this.dataCSV = q2;
 
@@ -229,6 +229,8 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
     //this.buildGroupAgeChart();
   }
 
+
+
   buildChartsForActiveTab(): void {
     if (this.activeTab === 'produccion') {
       this.buildCharts();
@@ -279,20 +281,6 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
     }, 100);
   }
 
-  buildBarDiagnosticoChart(): void {
-    setTimeout(() => {
-      this.renderTopBarChart(
-        this.query4DATA,
-        (d) => d.diagdes,
-        this.chartDiagnosticoBarEl?.nativeElement,
-        this.chartDiagnosticoBar,
-        (chart) => {
-          this.chartDiagnosticoBar = chart;
-        },
-      );
-    }, 100);
-  }
-
   buildBarAgrupadorChart(): void {
     setTimeout(() => {
       this.renderTopBarChart(
@@ -302,6 +290,20 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
         this.chartAgrupador,
         (chart) => {
           this.chartAgrupador = chart;
+        },
+      );
+    }, 100);
+  }
+
+  buildBarDiagnosticoChart(): void {
+    setTimeout(() => {
+      this.renderTopBarChart(
+        this.query4DATA,
+        (d) => d.diagdes,
+        this.chartDiagnosticoBarEl?.nativeElement,
+        this.chartDiagnosticoBar,
+        (chart) => {
+          this.chartDiagnosticoBar = chart;
         },
       );
     }, 100);
@@ -344,7 +346,8 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
         const options: ApexOptions = {
           chart: {
             type: 'bar',
-            height: '100%',
+            height: Math.max(container.clientHeight, 350),
+            parentHeightOffset: 0,
             stacked: true,
             toolbar: { show: false },
           },
@@ -392,12 +395,48 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
             borderColor: 'rgba(10, 76, 140, 0.08)',
             xaxis: { lines: { show: true } },
             yaxis: { lines: { show: false } },
+            padding: {
+              top: 8,
+              right: 20,
+              bottom: 12,
+              left: 8,
+            },
           },
           legend: {
+            show: true,
             position: 'top',
             horizontalAlign: 'left',
             fontSize: '11px',
+            itemMargin: {
+              horizontal: 12,
+              vertical: 4,
+            },
+            formatter: (seriesName, opts) => {
+              if (!opts) {
+                return seriesName;
+              }
+              const values = (opts.w.globals.series[opts.seriesIndex] as number[]) ?? [];
+              const totalSerie = values.reduce((sum, value) => sum + Math.abs(Number(value) || 0), 0);
+              return `${seriesName} (${Math.round(totalSerie).toLocaleString()})`;
+            },
+            onItemClick: {
+              toggleDataSeries: false,
+            },
+            onItemHover: {
+              highlightDataSeries: false,
+            },
           },
+          responsive: [
+            {
+              breakpoint: 768,
+              options: {
+                legend: {
+                  position: 'bottom',
+                  horizontalAlign: 'center',
+                },
+              },
+            },
+          ],
           tooltip: {
             shared: true,
             intersect: false,
@@ -486,7 +525,8 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
         const options: ApexOptions = {
           chart: {
             type: 'bar',
-            height: '100%',
+            height: Math.max(container.clientHeight, 400),
+            parentHeightOffset: 0,
             toolbar: { show: false },
           },
           series: seriesData,
@@ -523,12 +563,48 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
             borderColor: 'rgba(10, 76, 140, 0.08)',
             xaxis: { lines: { show: true } },
             yaxis: { lines: { show: false } },
+            padding: {
+              top: 8,
+              right: 20,
+              bottom: 12,
+              left: 8,
+            },
           },
           legend: {
+            show: true,
             position: 'top',
             horizontalAlign: 'left',
             fontSize: '11px',
+            itemMargin: {
+              horizontal: 12,
+              vertical: 4,
+            },
+            formatter: (seriesName, opts) => {
+              if (!opts) {
+                return seriesName;
+              }
+              const values = (opts.w.globals.series[opts.seriesIndex] as number[]) ?? [];
+              const totalSerie = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
+              return `${seriesName} (${Math.round(totalSerie).toLocaleString()})`;
+            },
+            onItemClick: {
+              toggleDataSeries: false,
+            },
+            onItemHover: {
+              highlightDataSeries: false,
+            },
           },
+          responsive: [
+            {
+              breakpoint: 768,
+              options: {
+                legend: {
+                  position: 'bottom',
+                  horizontalAlign: 'center',
+                },
+              },
+            },
+          ],
           tooltip: {
             x: {
               formatter: (value) => {
@@ -599,7 +675,8 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
     return {
       chart: {
         type: 'bar',
-        height: '100%',
+        height: 350,
+        parentHeightOffset: 0,
         toolbar: { show: false },
       },
       series: [
@@ -642,6 +719,12 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
         borderColor: '#E8EAED',
         xaxis: { lines: { show: true } },
         yaxis: { lines: { show: false } },
+        padding: {
+          top: 8,
+          right: 20,
+          bottom: 12,
+          left: 8,
+        },
       },
       tooltip: {
         y: {
@@ -673,8 +756,7 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
       chart.destroy();
     }
   }
-
-  private destroyAllCharts(): void {
+ private destroyAllCharts(): void {
     this.destroyChart(this.chartServicio);
     this.destroyChart(this.chartSubactividad);
     this.destroyChart(this.chartDiagnosticoBar);
@@ -943,7 +1025,7 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
       return;
     }
 
-    const fileName = `am_total_atenciones_${this.periodo}_${this.nameCentro}.csv`;
+    const fileName = `ts_total_atenciones_${this.periodo}_${this.nameCentro}.csv`;
 
     const headers = Object.keys(this.dataCSV[0]);
     const csvContent = [
