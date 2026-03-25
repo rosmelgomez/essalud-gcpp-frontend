@@ -44,7 +44,7 @@ export class AuthLogin {
   }
 
   accessToken() {
-    return this.http.post(base_url + `/access-token`, {}, { withCredentials: true, responseType: 'text' }).pipe(
+    return this.http.get(base_url + `/access-token`, { withCredentials: true, responseType: 'text' }).pipe(
       tap(() => {
         this.logoutInProgress = false;
         this.authStatusSubject.next(true);
