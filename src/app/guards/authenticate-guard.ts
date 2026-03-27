@@ -24,7 +24,7 @@ export const authenticateGuard: CanActivateFn = (route, state) => {
  }
 
   // Obtener los rols del usuario desde AuthService
-  const userrols = dataImport.getUser()?.rol || "";
+  const userrols = dataImport.getUser()?.roles || "";
 
   // Verificar si el usuario tiene al menos uno de los rols requeridos
   const hasRequiredrol = requiredrols.some(rol => userrols.includes(rol));

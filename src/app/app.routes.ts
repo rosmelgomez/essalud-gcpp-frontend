@@ -60,10 +60,12 @@ import { ReportDashboardReporteador } from './pages/report-dashboard-reporteador
 import { ReportDashboardOdontologicas } from './pages/report-dashboard-odontologicas/report-dashboard-odontologicas';
 import { Encuesta } from './pages/encuesta/encuesta';
 import { DashboardEncuesta } from './pages/dashboard-encuesta/dashboard-encuesta';
+import { SolicitudAcceso } from './pages/solicitud-acceso/solicitud-acceso';
 
 
 export const routes: Routes = [
     { path: '', pathMatch: 'full', canActivate: [redirectGuard], children: [] },
+    { path: 'solicitar-acceso',component:SolicitudAcceso },
     { path: 'login', component: Login },
     { path: 'register', component: Register, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
     { path: 'change-password', component: ChangePassword, canActivate: [authenticateGuard] },

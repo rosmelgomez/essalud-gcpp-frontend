@@ -61,7 +61,7 @@ export class HomePage implements OnInit {
     this.handleSurveyReminder();
 
     // Solo usuarios ADMIN pueden acceder a getRed y getCentroWithRed
-    if (this.user?.rol === 'ADMIN') {
+    if (Array.isArray(this.user?.roles) ? this.user?.roles.includes('ADMIN') : this.user?.roles === 'ADMIN') {
       this.getRed();
       this.getCentroWithRed();
     }
@@ -113,9 +113,10 @@ export class HomePage implements OnInit {
   }
 
   getCentro() {
-    if (this.user?.rol === 'ADMIN_RED') {
+    if (Array.isArray(this.user?.roles) ? this.user?.roles.includes('ADMIN_RED') : this.user?.roles === 'ADMIN_RED') {
       this.selectCentro = false;
-      this.centroService.getCentrosByRed((this.user?.code_red).toString() ).subscribe({
+      const codeRed = this.user?.code_red?.toString() || '';
+      this.centroService.getCentrosByRed(codeRed).subscribe({
         next: (resp) => {
           this.dataCentro = resp;
           this.nameRed = resp.length > 0 ? resp[0].redasisdes : '';
@@ -129,7 +130,7 @@ export class HomePage implements OnInit {
        this.centroService.getCentros().subscribe({
       next: (resp) => {
         this.dataCentro = resp;
-        if (this.user?.rol === 'USER') {
+        if (Array.isArray(this.user?.roles) ? this.user?.roles.includes('USER') : this.user?.roles === 'USER') {
           this.selectCentro = true;
           const codcas = this.user?.codcas?.toString();
           this.nameCentro = this.dataCentro.find((centro: any) => centro.cenasicod === codcas)?.cenasides || '';
@@ -283,7 +284,7 @@ export class HomePage implements OnInit {
     this.centroForm.reset();
 
     // Para admin, al cambiar centro se vuelve al estado sin filtro de red.
-    if (this.user?.rol === 'ADMIN') {
+    if (Array.isArray(this.user?.roles) ? this.user?.roles.includes('ADMIN') : this.user?.roles === 'ADMIN') {
       this.restoreAllCentros();
     }
   }
@@ -440,7 +441,7 @@ export class HomePage implements OnInit {
       next: (resp) => {
         this.dataCentroCompleto = resp;
         // Admin inicia con todos los centros y opcionalmente filtra por red.
-        if (this.user?.rol === 'ADMIN' && !this.selectedRedName) {
+        if (Array.isArray(this.user?.roles) ? this.user?.roles.includes('ADMIN') : this.user?.roles === 'ADMIN' && !this.selectedRedName) {
           this.dataCentro = resp;
           this.filteredCentro = resp;
         }

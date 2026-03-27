@@ -10,5 +10,5 @@ export interface User {
   date_creation: String;
   date_update: String;
   flag: boolean;
-  rol: String;
+  roles: String[];
 }

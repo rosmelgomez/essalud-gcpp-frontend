@@ -38,8 +38,8 @@
         <div class="stat-item">
           <div class="stat-icon">🏥</div>
           <div class="stat-text">
-            <span class="stat-value" *ngIf="user?.rol =='ADMIN'">4</span>
-            <span class="stat-value" *ngIf="user?.rol !='ADMIN'">2</span>
+            <span class="stat-value" *ngIf="user?.roles?.includes('ADMIN')">4</span>
+            <span class="stat-value"  *ngIf="user?.roles?.includes('ADMIN')">2</span>
             <span class="stat-label">Módulos activos</span>
           </div>
         </div>
@@ -50,7 +50,7 @@
       <div class="card-header">
         <div>
           <div class="eyebrow">Formulario</div>
-          <div class="title" *ngIf="user?.rol === 'ADMIN_RED'">{{nameRed}}</div>
+          <div class="title" *ngIf="user?.roles?.includes('ADMIN_RED')">{{nameRed}}</div>
           <div class="title">Centros Asistenciales</div>
         </div>
         <div class="status-dot"></div>
@@ -58,7 +58,7 @@
 
       <form [formGroup]="centroForm" autocomplete="off" class="register-form">
         <!-- Admin puede usar ambos filtros en paralelo: red (opcional) y centro -->
-        <div class="form-grid" *ngIf="user?.rol === 'ADMIN'">
+        <div class="form-grid" *ngIf="user?.roles?.includes('ADMIN')">
           <div class="centro-form-group">
             <label>Red Asistencial</label>
             <div class="custom-dropdown" (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
@@ -80,7 +80,7 @@
 
         <div class="form-grid">
           <div class="centro-form-group">
-            <label *ngIf="user?.rol === 'ADMIN'">Centro Asistencial</label>
+            <label *ngIf="user?.roles?.includes('ADMIN')">Centro Asistencial</label>
             <div class="custom-dropdown" (mouseleave)="closeDropdown()" (mouseenter)="openDropdown()">
               <input type="text" title="Selecciona un centro"
                 placeholder="Buscar y seleccionar centro..."
@@ -114,7 +114,7 @@
         <h1 class="modules-title">Módulos disponibles</h1>
         <p class="modules-subtitle">Accede a los diferentes servicios de la plataforma</p>
       </div>
-      <button class="btn-change-centro" (click)="changeCentro()" title="Cambiar centro" *ngIf="user?.rol != 'USER'">
+      <button class="btn-change-centro" (click)="changeCentro()" title="Cambiar centro" *ngIf="!user?.roles?.includes('USER')">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="12 5 19 12 12 19"></polyline>
@@ -150,13 +150,13 @@
       </div>
 
       <!-- Módulo 5: Reportes gerenciales (admin) -->
-      <a href="/reports-gerenciales" class="module" *ngIf="user?.rol === 'ADMIN'">
+      <a href="/reports-gerenciales" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/analytics.png" alt="Reportes gerenciales" />
         <span>Reportes gerenciales</span>
       </a>
 
       <!-- Módulo 6: Reporteador -->
-      <a href="/dashboard-reporteador" class="module" *ngIf="user?.rol === 'ADMIN'">
+      <a href="/dashboard-reporteador" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/reporteador.png" alt="Reporteador" />
         <span>Reporteador</span>
       </a>
@@ -169,14 +169,14 @@
 
 
       <!-- Módulo 8: Dashboard Encuesta -->
-      <a href="/dashboard-encuesta" class="module" *ngIf="user?.rol === 'ADMIN'" >
+      <a href="/dashboard-encuesta" class="module" *ngIf="user?.roles?.includes('ADMIN')" >
         <img src="/images/respuesta-encuesta.png" alt="Encuesta" />
         <span>Respuesta de Encuestas</span>
       </a>
 
 
       <!-- Módulo 9: Auditoría del Sistema (admin) -->
-      <a href="/logs-reports" class="module" *ngIf="user?.rol === 'ADMIN'">
+      <a href="/logs-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/logs.png" alt="Auditoría del Sistema" />
         <span>Auditoría del Sistema</span>
       </a>

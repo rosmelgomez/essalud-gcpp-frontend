@@ -27,7 +27,11 @@ export class UsersService {
   }
 
   getUser(username: string) {
-    return this.http.get<User>(base_url + `/getInfoUser/${username}`, { withCredentials: true });
+    return this.http.get<User>(base_url + `/getUser/${username}`, { withCredentials: true });
+  }
+
+  getUserByDni(dni: string) {
+    return this.http.get<User>(base_url + `/getUserByDni/${dni}`, { withCredentials: true });
   }
 
   updateUser(user: User) {

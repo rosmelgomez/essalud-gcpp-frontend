@@ -32,7 +32,7 @@
           <div class="user-fullname">{{ user?.name }} {{ user?.lastname }}</div>
         </div>
       </div>
-      <div class="role-badge">{{ user?.rol || 'Sin rol' }}</div>
+      <div class="role-badge">{{ user?.roles }}</div>
     </div>
 
     <div class="containerBtn actions">
@@ -48,7 +48,7 @@
         </button>
       </a>
 
-      <a href="/manage-users" *ngIf="user?.rol == 'ADMIN'">
+      <a href="/manage-users" *ngIf="user?.roles?.includes('ADMIN')">
         <button class="button ghost" type="button" (click)="closeMenu()">
           <span class="button-label">Gestionar Usuarios</span>
         </button>
@@ -57,7 +57,7 @@
       <a href="/register">
         <button
           class="button ghost"
-          *ngIf="user?.rol == 'ADMIN'"
+          *ngIf="user?.roles?.includes('ADMIN')"
           type="button"
           (click)="closeMenu()"
         >
