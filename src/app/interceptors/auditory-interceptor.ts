@@ -7,9 +7,12 @@ import { catchError, switchMap, throwError } from 'rxjs';
 export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthLogin);
   const router = inject(Router);
+  const publicRoutes = ['/login', '/solicitar-acceso'];
   const isLogoutRequest = req.url.includes('/logout') || req.url.includes('/log/register');
   const isRefreshRequest = req.url.includes('/refresh-token');
   const isAccessTokenRequest = req.url.includes('/access-token');
+  const currentPath = router.url.split('?')[0];
+  const isPublicRoute = publicRoutes.includes(currentPath);
 
   const redirectToLogin = () => {
     auth.clearToken();
@@ -33,6 +36,10 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       // Manejar errores de autenticación
       if (error.status === 401 || error.status === 403) {
+        if (isPublicRoute) {
+          return throwError(() => error);
+        }
+
         if (isRefreshRequest) {
           const errorMessage = error.error?.message || 'No se pudo renovar la sesión. Por favor, inicie sesión nuevamente.';
           console.error('Error en refresh-token:', errorMessage);

@@ -425,6 +425,7 @@ export class SolicitudAcceso implements OnInit {
       next: (resp) => {
         if (resp) {
           this.user = resp;
+          console.log('Usuario encontrado:', resp);
 
           const esUsuarioCentro = !!String(resp.codcas || '').trim();
           const tipoTrabajador = esUsuarioCentro ? this.TIPO_USUARIO_CENTRO : this.TIPO_CABEZA_RED;

@@ -22,6 +22,7 @@ export class App implements OnInit {
   title = 'Essalud_GCPP_Frontend';
 
   currentNavbar: string = 'login';
+  private readonly publicRoutesWithoutNavbar = ['/login', '/solicitar-acceso'];
 
   constructor(
     private router: Router,
@@ -37,7 +38,9 @@ export class App implements OnInit {
   }
 
   updateNavbar(url: string): void {
-    if (url === '/login') {
+    const routePath = url.split('?')[0];
+
+    if (this.publicRoutesWithoutNavbar.includes(routePath)) {
       this.currentNavbar = 'login';
     } else {
       this.currentNavbar = 'app';
