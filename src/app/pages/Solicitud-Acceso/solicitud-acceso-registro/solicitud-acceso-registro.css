@@ -1,3 +1,4 @@
+
 .main {
   background-image: url('/images/76824.jpg');
   background-size: cover;
@@ -10,9 +11,9 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 20px 12px 28px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  padding: 24px 18px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .solicitud-shell {
@@ -112,6 +113,70 @@
   box-shadow: 0 0 0 6px rgba(53, 209, 140, 0.2);
 }
 
+.form-block {
+  border: 1px solid #d9e6f3;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+  background: #fcfdff;
+}
+
+.form-block-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 6px 0 12px;
+}
+
+.current-info {
+  color: #334e6f;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.btn-secondary {
+  background: #f3f7fb;
+  color: #34547b;
+  border: 1px solid #d0deec;
+  border-radius: 8px;
+  min-height: 40px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e8f1fb;
+  color: #0064af;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.form-block-header {
+  margin-bottom: 10px;
+}
+
+.form-block-step {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4f6786;
+  font-weight: 700;
+}
+
+.form-block-header h3 {
+  margin: 4px 0 0;
+  font-size: 17px;
+  color: #0c2e57;
+}
+
 .dni-search-row {
   display: grid;
   grid-template-columns: 1fr 170px;
@@ -120,12 +185,27 @@
   margin-bottom: 8px;
 }
 
+.dni-search-row .solicitud-form-group {
+  margin-bottom: 0;
+}
+
+.dni-search-action {
+  display: flex;
+  flex-direction: column;
+}
+
+.dni-search-spacer {
+  visibility: hidden;
+  user-select: none;
+}
+
 .btn-search {
   background: #f3f7fb;
   color: #34547b;
   border: 1px solid #d0deec;
   border-radius: 8px;
   min-height: 44px;
+  width: 100%;
   cursor: pointer;
   font-weight: 700;
   transition: all 0.2s ease;
@@ -334,5 +414,14 @@
 
   .title {
     font-size: 18px;
+  }
+
+  .form-block-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .current-info {
+    order: -1;
   }
 }

@@ -60,12 +60,18 @@ import { ReportDashboardReporteador } from './pages/report-dashboard-reporteador
 import { ReportDashboardOdontologicas } from './pages/report-dashboard-odontologicas/report-dashboard-odontologicas';
 import { Encuesta } from './pages/encuesta/encuesta';
 import { DashboardEncuesta } from './pages/dashboard-encuesta/dashboard-encuesta';
-import { SolicitudAcceso } from './pages/solicitud-acceso/solicitud-acceso';
+import { SolicitudAccesoRegistro } from './pages/Solicitud-Acceso/solicitud-acceso-registro/solicitud-acceso-registro';
+import { SolicitudAccesoReports } from './pages/Solicitud-Acceso/solicitud-acceso-reports/solicitud-acceso-reports';
 
 
 export const routes: Routes = [
     { path: '', pathMatch: 'full', canActivate: [redirectGuard], children: [] },
-    { path: 'solicitar-acceso',component:SolicitudAcceso },
+
+    //solicitud de acceso
+    { path: 'solicitar-acceso-registro',component:SolicitudAccesoRegistro },
+    { path: 'solicitud-acceso-reports', component: SolicitudAccesoReports, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
+
+
     { path: 'login', component: Login },
     { path: 'register', component: Register, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
     { path: 'change-password', component: ChangePassword, canActivate: [authenticateGuard] },

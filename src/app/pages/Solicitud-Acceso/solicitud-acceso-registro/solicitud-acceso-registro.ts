@@ -1,12 +1,12 @@
-import { UsersService } from '../../services/users-service';
-import { CentroService } from './../../services/centro-service';
-import { SolicitudAccesoService } from './../../services/solicitud-acceso-service';
+import { UsersService } from '../../../services/users-service';
+import { EstablecimientoService } from '../../../services/establecimiento-service';
+import { SolicitudAccesoService } from '../../../services/solicitud-acceso-service';
 import { Component, ElementRef, OnInit, QueryList, ViewChildren, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { User } from '../../model/user';
-import { SolicitudAcceso as SolicitudAccesoPayload } from '../../model/SolicitudAcceso';
+import { User } from '../../../model/user';
+import { SolicitudAcceso as SolicitudAccesoPayload } from '../../../model/SolicitudAcceso';
 import { RouterModule } from '@angular/router';
 
 
@@ -14,12 +14,13 @@ import { RouterModule } from '@angular/router';
   selector: 'app-solicitud-acceso',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './solicitud-acceso.html',
-  styleUrl: './solicitud-acceso.css',
+  templateUrl: './solicitud-acceso-registro.html',
+  styleUrl: './solicitud-acceso-registro.css',
 })
-export class SolicitudAcceso implements OnInit {
+export class SolicitudAccesoRegistro implements OnInit {
   readonly TIPO_CABEZA_RED = 'HEAD_NETWORK';
   readonly TIPO_USUARIO_CENTRO = 'CENTER_USER';
+  currentBlock: 1 | 2 = 1;
 
 
   private _snackBar = inject(MatSnackBar);
@@ -56,7 +57,7 @@ export class SolicitudAcceso implements OnInit {
     private solicitudAccesoService: SolicitudAccesoService,
     private formBuilder: FormBuilder,
     private usersService: UsersService,
-    private centroService: CentroService,
+    private establecimientoService: EstablecimientoService,
   ) { }
 
   ngOnInit(): void {
@@ -71,7 +72,8 @@ export class SolicitudAcceso implements OnInit {
       tipoTrabajador: ['', [Validators.required]],
       dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
       name: ['', [Validators.required]],
-      lastname: ['', [Validators.required]],
+      apellidoPaterno: ['', [Validators.required]],
+      apellidoMaterno: ['', [Validators.required]],
       code_red: [''],
       codcas: [''],
       email: ['', [Validators.required, Validators.email]],
@@ -87,8 +89,26 @@ export class SolicitudAcceso implements OnInit {
     return this.registerForm?.get('tipoTrabajador')?.value === this.TIPO_USUARIO_CENTRO;
   }
 
+  get canOpenSecondBlock(): boolean {
+    return !!this.registerForm?.get('tipoTrabajador')?.value;
+  }
+
+  irBloqueSiguiente() {
+    if (!this.canOpenSecondBlock) {
+      return;
+    }
+    this.currentBlock = 2;
+  }
+
+  irBloqueAnterior() {
+    this.currentBlock = 1;
+  }
+
   private setupTipoTrabajadorBehavior() {
     this.registerForm.get('tipoTrabajador')?.valueChanges.subscribe((tipo) => {
+      if (!tipo && this.currentBlock === 2) {
+        this.currentBlock = 1;
+      }
       this.applyTipoTrabajadorRules(tipo ?? '');
     });
   }
@@ -386,7 +406,7 @@ export class SolicitudAcceso implements OnInit {
   }
 
   getRed() {
-    this.centroService.getRed().subscribe({
+    this.establecimientoService.getRed().subscribe({
       next: (resp) => {
         this.dataRed = resp;
         this.filteredRed = resp;
@@ -399,7 +419,7 @@ export class SolicitudAcceso implements OnInit {
   }
 
   getCentroWithRed() {
-    this.centroService.getCentrosWithRed().subscribe({
+    this.establecimientoService.getCentrosWithRed().subscribe({
       next: (resp) => {
         this.dataCentroCompleto = resp;
         this.dataCentro = [...resp];
@@ -425,15 +445,16 @@ export class SolicitudAcceso implements OnInit {
       next: (resp) => {
         if (resp) {
           this.user = resp;
-          console.log('Usuario encontrado:', resp);
 
           const esUsuarioCentro = !!String(resp.codcas || '').trim();
           const tipoTrabajador = esUsuarioCentro ? this.TIPO_USUARIO_CENTRO : this.TIPO_CABEZA_RED;
+          const { apellidoPaterno, apellidoMaterno } = this.splitLastnames(String(resp.lastname || ''));
 
           this.registerForm.patchValue({
             tipoTrabajador,
             name: String(resp.name || ''),
-            lastname: String(resp.lastname || ''),
+            apellidoPaterno,
+            apellidoMaterno,
             code_red: String(resp.code_red || ''),
             codcas: String(resp.codcas || ''),
           });
@@ -471,14 +492,23 @@ export class SolicitudAcceso implements OnInit {
       return;
     }
 
+    const apellidoPaterno = String(this.registerForm.value.apellidoPaterno || '').trim();
+    const apellidoMaterno = String(this.registerForm.value.apellidoMaterno || '').trim();
+
+
     const payload: SolicitudAccesoPayload = {
+      id: 0,
       dni: this.registerForm.value.dni,
       name: this.registerForm.value.name,
-      lastname: this.registerForm.value.lastname,
-      code_red: this.registerForm.value.code_red,
-      codcas: this.isCenterUser ? this.registerForm.value.codcas : '',
+      lastname: [apellidoPaterno, apellidoMaterno].filter(Boolean).join(' ').trim(),
+      code_red_solicitud: this.registerForm.value.code_red,
+      codcas_solicitud: this.isCenterUser ? this.registerForm.value.codcas : '',
       email: this.registerForm.value.email,
+      rol_solicitud: this.registerForm.value.tipoTrabajador === this.TIPO_CABEZA_RED ? 'ADMIN_RED' : 'USER',
       descripcion: this.registerForm.value.descripcion,
+      date_creation:"" ,
+      date_update: "",
+      status: "",
     };
 
     this.solicitudAccesoService.enviarSolicitud(payload).subscribe({
@@ -512,8 +542,26 @@ export class SolicitudAcceso implements OnInit {
     }
   }
 
+  private splitLastnames(lastname: string): { apellidoPaterno: string; apellidoMaterno: string } {
+    const value = String(lastname || '').trim();
+    if (!value) {
+      return { apellidoPaterno: '', apellidoMaterno: '' };
+    }
+
+    const parts = value.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return { apellidoPaterno: parts[0], apellidoMaterno: '' };
+    }
+
+    return {
+      apellidoPaterno: parts[0],
+      apellidoMaterno: parts.slice(1).join(' '),
+    };
+  }
+
   resetForm() {
     this.registerForm.reset();
+    this.currentBlock = 1;
     this.user = null;
     this.clearRedSelection();
     this.clearCentroSelection();

@@ -7,7 +7,7 @@ const base_url = BackendCredentials.api + '/establecimiento';
 @Injectable({
   providedIn: 'root',
 })
-export class CentroService {
+export class EstablecimientoService {
   constructor(private http: HttpClient) { }
 
   getCentros() {

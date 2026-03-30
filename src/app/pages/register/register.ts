@@ -6,7 +6,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { User } from '../../model/user';
-import { CentroService } from '../../services/centro-service';
+import { EstablecimientoService } from '../../services/establecimiento-service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { inject } from '@angular/core';
 import { signal } from '@angular/core';
@@ -62,7 +62,7 @@ export class Register implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private usersService: UsersService,
-    private centroService: CentroService,
+    private establecimientoService: EstablecimientoService,
   ) { }
 
   openDropdownRed() {
@@ -433,7 +433,7 @@ export class Register implements OnInit {
   }
 
   getRed() {
-    this.centroService.getRed().subscribe({
+    this.establecimientoService.getRed().subscribe({
       next: (resp) => {
         this.dataRed = resp;
       },
@@ -444,7 +444,7 @@ export class Register implements OnInit {
   }
 
   getCentroWithRed() {
-    this.centroService.getCentrosWithRed().subscribe({
+    this.establecimientoService.getCentrosWithRed().subscribe({
       next: (resp) => {
         this.dataCentroCompleto = resp;
 

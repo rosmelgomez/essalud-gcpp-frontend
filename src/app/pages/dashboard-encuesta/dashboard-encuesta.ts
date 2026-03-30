@@ -1,4 +1,4 @@
-import { CentroService } from './../../services/centro-service';
+import { EstablecimientoService } from '../../services/establecimiento-service';
 import { User } from './../../model/user';
 import { EncuestaService } from './../../services/encuesta-service';
 import { Component, OnInit } from '@angular/core';
@@ -216,7 +216,7 @@ export class DashboardEncuesta implements OnInit {
   constructor(
     private encuestaService: EncuestaService,
     private userService: UsersService,
-    private centroService: CentroService,
+    private establecimientoService: EstablecimientoService,
     private cdr: ChangeDetectorRef,
   ) { }
 
@@ -230,7 +230,7 @@ export class DashboardEncuesta implements OnInit {
     this.errorCarga = '';
 
     forkJoin({
-      centro: this.centroService.getCentros(),
+      centro: this.establecimientoService.getCentros(),
       user: this.userService.getAllUsers(),
       modulos: this.encuestaService.getModulos(),
       categorias: this.encuestaService.getCategorias(),

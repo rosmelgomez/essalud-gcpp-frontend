@@ -1,0 +1,161 @@
+<div class="main">
+  <div class="solicitud-shell">
+    <div class="solicitud-info">
+      <span class="help-badge">Guia rapida</span>
+      <h2>Solicitud de acceso</h2>
+      <p>Completa estos pasos para registrar tu solicitud sin observaciones.</p>
+      <ol class="tips">
+        <li>Selecciona el tipo de trabajador.</li>
+        <li>Busca por DNI para autocompletar tus datos.</li>
+        <li>En caso que no se autocomple tus datos, agregalo manualmente.</li>
+        <li>Para cabeza de red: selecciona solo Red.</li>
+        <li>Para usuario de centro: selecciona Red y Centro.</li>
+        <li>Ingresa correo institucional y descripcion.</li>
+      </ol>
+    </div>
+
+    <div class="solicitud-container">
+      <div class="card-header">
+        <div>
+          <div class="eyebrow">Formulario</div>
+          <div class="title">Solicitud de acceso</div>
+        </div>
+        <div class="status-dot"></div>
+      </div>
+
+      <form [formGroup]="registerForm" autocomplete="off" class="solicitud-form" (ngSubmit)="enviarSolicitud()">
+        <div class="form-block" *ngIf="currentBlock === 1">
+          <div class="form-block-header">
+            <span class="form-block-step">Bloque 1</span>
+            <h3>Datos del trabajador</h3>
+          </div>
+
+          <div class="dni-search-row">
+            <div class="solicitud-form-group">
+              <label>DNI</label>
+              <input type="text" formControlName="dni" name="dni" maxlength="8" placeholder="Ej: 12345678" />
+            </div>
+            <div class="solicitud-form-group dni-search-action">
+              <label class="dni-search-spacer">Accion</label>
+              <button type="button" class="btn-search" (click)="getUserByDni(registerForm.get('dni')?.value)">
+                Buscar DNI
+              </button>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="solicitud-form-group">
+              <label>Nombre</label>
+              <input type="text" formControlName="name" name="name" placeholder="Ej: Juan" />
+            </div>
+
+            <div class="solicitud-form-group">
+              <label>Apellido paterno</label>
+              <input type="text" formControlName="apellidoPaterno" name="apellidoPaterno" placeholder="Ej: Perez" />
+            </div>
+
+            <div class="solicitud-form-group">
+              <label>Apellido materno</label>
+              <input type="text" formControlName="apellidoMaterno" name="apellidoMaterno" placeholder="Ej: Gomez" />
+            </div>
+
+            <div class="solicitud-form-group">
+              <label>Tipo de trabajador</label>
+              <select formControlName="tipoTrabajador" name="tipoTrabajador">
+                <option value="">Seleccionar tipo...</option>
+                <option [value]="TIPO_CABEZA_RED">Cabeza de red</option>
+                <option [value]="TIPO_USUARIO_CENTRO">Usuario de un centro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-block" *ngIf="currentBlock === 2">
+          <div class="form-block-header">
+            <span class="form-block-step">Bloque 2</span>
+            <h3>Datos de acceso</h3>
+          </div>
+
+          <div class="form-grid">
+            <div class="solicitud-form-group">
+              <label>Red</label>
+              <div class="custom-dropdown" [class.disabled]="!registerForm.get('tipoTrabajador')?.value"
+                (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
+                <input type="text" title="Seleccionar red" placeholder="Buscar y seleccionar red..."
+                  (input)="filterRed($event)" (keydown)="handleRedKeydown($event)" [value]="selectedRedName"
+                  [disabled]="!registerForm.get('tipoTrabajador')?.value" class="dropdown-input" />
+                <div class="dropdown-list" *ngIf="isDropdownRedOpen">
+                  <div *ngFor="let red of filteredRed; let i = index" #redOption class="dropdown-item"
+                    [class.active]="i === activeRedIndex" (click)="selectOptionRed(red)">
+                    {{ red.redasisdes }}
+                  </div>
+                  <div *ngIf="filteredRed.length === 0" class="dropdown-item disabled">
+                    No hay resultados
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" formControlName="code_red" />
+            </div>
+
+            <div class="solicitud-form-group" *ngIf="isCenterUser">
+              <label>Centro</label>
+              <div class="custom-dropdown" [class.disabled]="!isCenterUser" (mouseleave)="closeDropdownCentro()"
+                (mouseenter)="openDropdownCentro()">
+                <input type="text" title="Seleccionar centro" placeholder="Buscar y seleccionar centro..."
+                  (input)="filterCentro($event)" (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName"
+                  [disabled]="!isCenterUser" class="dropdown-input" />
+                <div class="dropdown-list" *ngIf="isDropdownCentroOpen">
+                  <div *ngFor="let centro of searchCentro ? filteredCentro : dataCentro; let i = index" #centroOption
+                    class="dropdown-item" [class.active]="i === activeCentroIndex" (click)="selectOptionCentro(centro)">
+                    {{ centro.cenasides }}
+                  </div>
+                  <div *ngIf="(searchCentro ? filteredCentro : dataCentro).length === 0" class="dropdown-item disabled">
+                    No hay resultados
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" formControlName="codcas" />
+            </div>
+          </div>
+
+          <div class="form-grid single-column">
+            <div class="solicitud-form-group">
+              <label>Correo institucional</label>
+              <input type="email" formControlName="email" name="email" placeholder="usuario@essalud.gob.pe" />
+            </div>
+          </div>
+
+          <div class="form-grid single-column">
+            <div class="solicitud-form-group">
+              <label>Descripción</label>
+              <textarea formControlName="descripcion" name="descripcion" rows="4" maxlength="500"
+                placeholder="Indica el motivo de la solicitud y el tipo de acceso que necesitas."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-block-nav">
+          <button type="button" class="btn-secondary" (click)="irBloqueAnterior()" [disabled]="currentBlock === 1">
+            ← Anterior
+          </button>
+          <span class="current-info">Bloque {{ currentBlock }} de 2</span>
+          <button type="button" class="btn-secondary" (click)="irBloqueSiguiente()"
+            [disabled]="currentBlock === 2 || !canOpenSecondBlock">
+            Siguiente →
+          </button>
+        </div>
+
+        <div class="solicitud-submit" *ngIf="currentBlock === 2">
+          <button type="submit">Enviar solicitud</button>
+        </div>
+
+        <div class="login-like-footer">
+          <span>¿Ya tienes acceso?</span>
+          <a routerLink="/login">Iniciar sesión</a>
+        </div>
+      </form>
+
+
+    </div>
+  </div>
+</div>

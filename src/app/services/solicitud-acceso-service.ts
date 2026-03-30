@@ -8,12 +8,20 @@ const base_url = BackendCredentials.api + '/solicitud';
 @Injectable({
   providedIn: 'root',
 })
-export class SolicitudAccesoService {
+export class SolicitudAccesoService  {
 
   constructor(private http: HttpClient) { }
 
   enviarSolicitud(solicitud: SolicitudAcceso) {
     return this.http.post(base_url + `/register`, solicitud, { withCredentials: true, responseType: 'text' });
+  }
+
+  getListSolicitud() {
+    return this.http.get<SolicitudAcceso[]>(base_url + `/getSolicitudes`, { withCredentials: true });
+  }
+
+  updateSolicitud(solicitud: SolicitudAcceso) {
+    return this.http.put(base_url + `/updateSolicitud`, solicitud, { withCredentials: true, responseType: 'text' });
   }
 
 }

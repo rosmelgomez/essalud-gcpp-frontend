@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { forkJoin } from 'rxjs';
-import { CentroService } from '../../services/centro-service';
+import { EstablecimientoService } from '../../services/establecimiento-service';
 import {
   MatDialog,
   MatDialogActions,
@@ -76,7 +76,7 @@ export class ManageUsers implements OnInit {
 
   constructor(
     private userservice: UsersService,
-    private centroService: CentroService,
+    private establecimientoService: EstablecimientoService,
     private cdr: ChangeDetectorRef,
   ) { }
 
@@ -105,8 +105,8 @@ export class ManageUsers implements OnInit {
   getDataRedCentro(): void {
 
     forkJoin({
-      red: this.centroService.getRed(),
-      centro: this.centroService.getCentrosWithRed(),
+      red: this.establecimientoService.getRed(),
+      centro: this.establecimientoService.getCentrosWithRed(),
     }).subscribe({
       next: ({ red, centro }) => {
         this.dataRed = red;

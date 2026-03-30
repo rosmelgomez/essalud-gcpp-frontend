@@ -76,7 +76,7 @@ export class AuthLogin {
 
   logout() {
     this.logoutInProgress = true;
-    const url = base_url + `/logout`;
+    const url = base_url + `/logout-user`;
     return this.http.post(url, {}, { withCredentials: true, responseType: 'text' });
   }
 

@@ -11,7 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { ChangeDetectorRef } from '@angular/core';
 import { LogsUsersService } from '../../services/logs-users-service';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { CentroService } from '../../services/centro-service';
+import { EstablecimientoService } from '../../services/establecimiento-service';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { User } from '../../model/user';
 
@@ -125,7 +125,7 @@ export class LogsReports implements OnInit, OnDestroy {
   constructor(
     private logsusersService: LogsUsersService,
     private cdr: ChangeDetectorRef,
-    private centroService: CentroService,
+    private establecimientoService: EstablecimientoService,
     private userService: UsersService,
   ) {}
 
@@ -412,7 +412,7 @@ export class LogsReports implements OnInit, OnDestroy {
 
   getRed() {
     this.beginLoading();
-    this.centroService.getRed().subscribe({
+    this.establecimientoService.getRed().subscribe({
       next: (resp) => {
         this.dataRed = resp;
         this.endLoading();
@@ -426,7 +426,7 @@ export class LogsReports implements OnInit, OnDestroy {
 
   getCentroWithRed() {
     this.beginLoading();
-    this.centroService.getCentrosWithRed().subscribe({
+    this.establecimientoService.getCentrosWithRed().subscribe({
       next: (resp) => {
         this.dataCentroCompleto = resp;
         this.refreshCentrosBySelectedRed();

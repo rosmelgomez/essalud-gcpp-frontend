@@ -7,7 +7,7 @@ import { catchError, switchMap, throwError } from 'rxjs';
 export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthLogin);
   const router = inject(Router);
-  const publicRoutes = ['/login', '/solicitar-acceso'];
+  const publicRoutes = ['/login', '/solicitar-acceso-registro'];
   const isLogoutRequest = req.url.includes('/logout') || req.url.includes('/log/register');
   const isRefreshRequest = req.url.includes('/refresh-token');
   const isAccessTokenRequest = req.url.includes('/access-token');

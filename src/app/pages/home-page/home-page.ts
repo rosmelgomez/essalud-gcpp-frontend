@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { User } from '../../model/user';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CentroService } from '../../services/centro-service';
+import { EstablecimientoService } from '../../services/establecimiento-service';
 import { DataImport } from '../../services/data-import';
 
 @Component({
@@ -48,7 +48,7 @@ export class HomePage implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private centroService: CentroService,
+    private establecimientoService: EstablecimientoService,
     private dataImport: DataImport,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
@@ -116,7 +116,7 @@ export class HomePage implements OnInit {
     if (Array.isArray(this.user?.roles) ? this.user?.roles.includes('ADMIN_RED') : this.user?.roles === 'ADMIN_RED') {
       this.selectCentro = false;
       const codeRed = this.user?.code_red?.toString() || '';
-      this.centroService.getCentrosByRed(codeRed).subscribe({
+      this.establecimientoService.getCentrosByRed(codeRed).subscribe({
         next: (resp) => {
           this.dataCentro = resp;
           this.nameRed = resp.length > 0 ? resp[0].redasisdes : '';
@@ -127,7 +127,7 @@ export class HomePage implements OnInit {
         },
       });
     } else {
-       this.centroService.getCentros().subscribe({
+       this.establecimientoService.getCentros().subscribe({
       next: (resp) => {
         this.dataCentro = resp;
         if (Array.isArray(this.user?.roles) ? this.user?.roles.includes('USER') : this.user?.roles === 'USER') {
@@ -426,7 +426,7 @@ export class HomePage implements OnInit {
   }
 
   getRed() {
-    this.centroService.getRed().subscribe({
+    this.establecimientoService.getRed().subscribe({
       next: (resp) => {
         this.dataRed = resp;
       },
@@ -437,7 +437,7 @@ export class HomePage implements OnInit {
   }
 
   getCentroWithRed() {
-    this.centroService.getCentrosWithRed().subscribe({
+    this.establecimientoService.getCentrosWithRed().subscribe({
       next: (resp) => {
         this.dataCentroCompleto = resp;
         // Admin inicia con todos los centros y opcionalmente filtra por red.
