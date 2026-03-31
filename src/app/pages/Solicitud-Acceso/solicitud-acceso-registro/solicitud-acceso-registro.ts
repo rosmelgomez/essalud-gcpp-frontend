@@ -511,6 +511,8 @@ export class SolicitudAccesoRegistro implements OnInit {
       status: "",
     };
 
+    console.log('Payload a enviar:', payload);
+
     this.solicitudAccesoService.enviarSolicitud(payload).subscribe({
       next: () => {
         this._snackBar.open('Solicitud enviada correctamente', 'Cerrar', {

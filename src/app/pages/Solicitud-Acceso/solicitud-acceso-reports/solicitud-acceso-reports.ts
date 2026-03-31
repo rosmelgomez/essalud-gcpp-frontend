@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
-import { ScrollingModule } from '@angular/cdk/scrolling';
 import { FormsModule } from '@angular/forms';
 import { SolicitudAccesoService } from '../../../services/solicitud-acceso-service';
 import { EstablecimientoService } from '../../../services/establecimiento-service';
@@ -9,7 +8,7 @@ import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-solicitud-acceso-reports',
-  imports: [CommonModule, FormsModule, ScrollingModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './solicitud-acceso-reports.html',
   styleUrl: './solicitud-acceso-reports.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -19,10 +18,6 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
   readonly ROLE_USER = 'USER';
   readonly roleOptions: string[] = [this.ROLE_ADMIN_RED, this.ROLE_USER];
   readonly statusOptions: string[] = ['PENDIENTE', 'APROBADO', 'RECHAZADO'];
-  readonly virtualItemSize = 500;
-  readonly virtualMinBufferPx = this.virtualItemSize * 4;
-  readonly virtualMaxBufferPx = this.virtualItemSize * 8;
-
   dataSolicitudAcceso: SolicitudAcceso[] = [];
   filteredSolicitudes: SolicitudAcceso[] = [];
   virtualRows: SolicitudAcceso[][] = [];
@@ -50,6 +45,9 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
   private cardKeyCounter: number = 0;
   private cardKeyByRef = new WeakMap<SolicitudAcceso, string>();
   private cardsPerRow: number = 3;
+  pageSize: number = 24;
+  readonly pageSizeOptions: number[] = [24, 48, 96];
+  pageIndex: number = 0;
 
 
   constructor(
@@ -83,6 +81,25 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
 
   get totalResultados(): number {
     return this.filteredSolicitudes.length;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredSolicitudes.length / this.pageSize));
+  }
+
+  get paginationStart(): number {
+    if (this.filteredSolicitudes.length === 0) {
+      return 0;
+    }
+    return this.pageIndex * this.pageSize + 1;
+  }
+
+  get paginationEnd(): number {
+    return Math.min((this.pageIndex + 1) * this.pageSize, this.filteredSolicitudes.length);
+  }
+
+  get currentPageLabel(): string {
+    return `${this.pageIndex + 1} / ${this.totalPages}`;
   }
 
   @HostListener('window:resize')
@@ -144,17 +161,17 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
 
   onRedFilterChange(): void {
     this.selectedCentroFilter = '';
-    this.applyFilters();
+    this.applyFilters(true);
   }
 
   onCentroFilterChange(): void {
-    this.applyFilters();
+    this.applyFilters(true);
   }
 
   onDniFilterChange(): void {
     this.clearDniDebounce();
     this.dniFilterDebounceHandle = setTimeout(() => {
-      this.applyFilters();
+      this.applyFilters(true);
       this.cdr.markForCheck();
     }, this.dniFilterDebounceMs);
   }
@@ -164,10 +181,10 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
     this.selectedRedFilter = '';
     this.selectedCentroFilter = '';
     this.dniFilter = '';
-    this.applyFilters();
+    this.applyFilters(true);
   }
 
-  applyFilters(): void {
+  applyFilters(resetPage: boolean = false): void {
     const dniNormalized = this.dniFilter.trim().toLowerCase();
 
     this.filteredSolicitudes = this.dataSolicitudAcceso.filter((item) => {
@@ -181,7 +198,39 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
       return matchesRed && matchesCentro && matchesDni;
     });
 
+    if (resetPage) {
+      this.pageIndex = 0;
+    }
+
     this.rebuildVirtualRows();
+  }
+
+  onPageSizeChange(): void {
+    this.pageIndex = 0;
+    this.rebuildVirtualRows();
+    this.cdr.markForCheck();
+  }
+
+  goToPreviousPage(): void {
+    if (this.pageIndex <= 0) {
+      return;
+    }
+    this.pageIndex -= 1;
+    this.rebuildVirtualRows();
+    this.cdr.markForCheck();
+  }
+
+  goToNextPage(): void {
+    if (this.pageIndex >= this.totalPages - 1) {
+      return;
+    }
+    this.pageIndex += 1;
+    this.rebuildVirtualRows();
+    this.cdr.markForCheck();
+  }
+
+  getCardsRowTemplateColumns(): string {
+    return `repeat(${this.cardsPerRow}, minmax(0, 1fr))`;
   }
 
   getRedName(code?: string): string {
@@ -435,21 +484,34 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
 
   private calculateCardsPerRow(): number {
     if (typeof window === 'undefined') {
-      return 3;
+      return 4;
     }
-    if (window.innerWidth < 900) {
+    if (window.innerWidth < 768) {
       return 1;
     }
-    if (window.innerWidth < 1400) {
+    if (window.innerWidth < 1200) {
       return 2;
     }
-    return 3;
+    if (window.innerWidth < 1700) {
+      return 3;
+    }
+    return 4;
   }
 
   private rebuildVirtualRows(): void {
+    const totalItems = this.filteredSolicitudes.length;
+    const lastPageIndex = Math.max(0, Math.ceil(totalItems / this.pageSize) - 1);
+    if (this.pageIndex > lastPageIndex) {
+      this.pageIndex = lastPageIndex;
+    }
+
+    const start = this.pageIndex * this.pageSize;
+    const end = start + this.pageSize;
+    const pagedSolicitudes = this.filteredSolicitudes.slice(start, end);
+
     const rows: SolicitudAcceso[][] = [];
-    for (let index = 0; index < this.filteredSolicitudes.length; index += this.cardsPerRow) {
-      rows.push(this.filteredSolicitudes.slice(index, index + this.cardsPerRow));
+    for (let index = 0; index < pagedSolicitudes.length; index += this.cardsPerRow) {
+      rows.push(pagedSolicitudes.slice(index, index + this.cardsPerRow));
     }
     this.virtualRows = rows;
   }

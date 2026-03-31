@@ -23,12 +23,8 @@
 
 				<div class="filter-group">
 					<label for="filtro-centro">Centro</label>
-					<select
-						id="filtro-centro"
-						[(ngModel)]="selectedCentroFilter"
-						(change)="onCentroFilterChange()"
-						[disabled]="!selectedRedFilter"
-					>
+					<select id="filtro-centro" [(ngModel)]="selectedCentroFilter" (change)="onCentroFilterChange()"
+						[disabled]="!selectedRedFilter">
 						<option value="">Todos los centros</option>
 						<option *ngFor="let centro of centrosFiltrados" [value]="centro.cenasicod">
 							{{ centro.cenasides }}
@@ -38,14 +34,8 @@
 
 				<div class="filter-group">
 					<label for="filtro-dni">DNI</label>
-					<input
-						id="filtro-dni"
-						type="text"
-						maxlength="8"
-						[(ngModel)]="dniFilter"
-						(input)="onDniFilterChange()"
-						placeholder="Buscar por DNI"
-					/>
+					<input id="filtro-dni" type="text" maxlength="8" [(ngModel)]="dniFilter"
+						(input)="onDniFilterChange()" placeholder="Buscar por DNI" />
 				</div>
 
 				<button class="btn-clear" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
@@ -59,112 +49,141 @@
 				No se encontraron solicitudes con los filtros seleccionados.
 			</div>
 
-			<cdk-virtual-scroll-viewport
-				class="cards-viewport"
-				*ngIf="!isLoading && virtualRows.length > 0"
-				[itemSize]="virtualItemSize"
-				[minBufferPx]="virtualMinBufferPx"
-				[maxBufferPx]="virtualMaxBufferPx"
-			>
-				<div
-					class="virtual-item"
-					*cdkVirtualFor="let row of virtualRows; templateCacheSize: 24"
-				>
-					<div class="cards-row">
-					<article class="solicitud-card" *ngFor="let solicitud of row; trackBy: trackBySolicitud">
-					<div class="card-top">
-						<div>
-							<h2>{{ solicitud.name || '-' }} {{ solicitud.lastname || '' }}</h2>
-							<p class="meta-inline">
-								<span>DNI: {{ solicitud.dni || '-' }}</span>
-								<span>Correo: {{ solicitud.email || '-' }}</span>
-							</p>
-						</div>
-						<span class="status-pill">{{ solicitud.status || 'PENDIENTE' }}</span>
-					</div>
+			<div class="cards-viewport" *ngIf="!isLoading && virtualRows.length > 0">
+				<div class="virtual-item" *ngFor="let row of virtualRows">
+					<div class="cards-row" [style.gridTemplateColumns]="getCardsRowTemplateColumns()">
+						<article class="solicitud-card" *ngFor="let solicitud of row; trackBy: trackBySolicitud">
+							<div class="card-top">
+								<div>
+									<h2>{{ solicitud.name || '-' }} {{ solicitud.lastname || '' }}</h2>
+									<p class="meta-inline">
+										<span>DNI: {{ solicitud.dni || '-' }}</span>
+										<span>Correo: {{ solicitud.email || '-' }}</span>
+									</p>
+								</div>
+								<div class="card-top-side">
+									<span class="status-pill">{{ solicitud.status || 'PENDIENTE' }}</span>
+								</div>
+							</div>
 
-					<div class="card-body" *ngIf="!isEditing(solicitud)">
-						<div class="field"><span>Red</span><strong>{{ getRedName(resolveRedCode(solicitud)) }}</strong></div>
-						<div class="field"><span>Centro</span><strong>{{ getCentroName(resolveCentroCode(solicitud)) }}</strong></div>
-						<div class="field"><span>Correo</span><strong>{{ solicitud.email || '-' }}</strong></div>
-						<div class="field"><span>Rol Solicitado</span><strong>{{ solicitud.rol_solicitud || '-' }}</strong></div>
-						<div class="field full"><span>Descripcion</span><strong>{{ solicitud.descripcion || '-' }}</strong></div>
-						<div class="field"><span>Creacion</span><strong>{{ formatDate(solicitud.date_creation) }}</strong></div>
-						<div class="field"><span>Actualizacion</span><strong>{{ formatDate(solicitud.date_update) }}</strong></div>
-					</div>
+							<div class="card-body" *ngIf="!isEditing(solicitud)">
+								<div class="field"><span>Red</span><strong>{{ getRedName(resolveRedCode(solicitud))
+										}}</strong></div>
+								<div class="field"><span>Centro</span><strong>{{
+										getCentroName(resolveCentroCode(solicitud)) }}</strong></div>
+								<div class="field"><span>Correo</span><strong>{{ solicitud.email || '-' }}</strong>
+								</div>
+								<div class="field"><span>Rol Solicitado</span><strong>{{ solicitud.rol_solicitud || '-'
+										}}</strong></div>
+								<div class="field full"><span>Descripcion</span><strong>{{ solicitud.descripcion || '-'
+										}}</strong></div>
+								<div class="field"><span>Creacion</span><strong>{{ formatDate(solicitud.date_creation)
+										}}</strong></div>
+								<div class="field"><span>Actualizacion</span><strong>{{
+										formatDate(solicitud.date_update) }}</strong></div>
+							</div>
 
-					<div class="card-body edit" *ngIf="isEditing(solicitud) && getDraft(solicitud) as draft">
-						<div class="field full"><span>Descripcion</span><strong>{{ solicitud.descripcion || '-' }}</strong></div>
-						<div class="field"><span>Creacion</span><strong>{{ formatDate(solicitud.date_creation) }}</strong></div>
-						<div class="field"><span>Actualizacion</span><strong>{{ formatDate(solicitud.date_update) }}</strong></div>
+							<div class="card-body edit" *ngIf="isEditing(solicitud) && getDraft(solicitud) as draft">
+								<div class="field full"><span>Descripcion</span><strong>{{ solicitud.descripcion || '-'
+										}}</strong></div>
+								<div class="field"><span>Creacion</span><strong>{{ formatDate(solicitud.date_creation)
+										}}</strong></div>
+								<div class="field"><span>Actualizacion</span><strong>{{
+										formatDate(solicitud.date_update) }}</strong></div>
 
-						<div class="field-input">
-							<label>Rol solicitado</label>
-							<select [(ngModel)]="draft.rol_solicitud" (change)="onRoleEditChange(solicitud)">
-								<option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
-							</select>
-						</div>
+								<div class="field-input">
+									<label>Rol solicitado</label>
+									<select [(ngModel)]="draft.rol_solicitud" (change)="onRoleEditChange(solicitud)">
+										<option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
+									</select>
+								</div>
 
-						<div class="field readonly">
-							<span>Tipo de trabajador</span>
-							<strong>{{ getRoleDescription(draft.rol_solicitud) }}</strong>
-						</div>
+								<div class="field readonly">
+									<span>Tipo de trabajador</span>
+									<strong>{{ getRoleDescription(draft.rol_solicitud) }}</strong>
+								</div>
 
-						<div class="field-input">
-							<label>Red</label>
-							<select [(ngModel)]="draft.code_red_solicitud" (change)="onRedEditChange(solicitud)">
-								<option value="">Seleccione red</option>
-								<option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes }}</option>
-							</select>
-						</div>
+								<div class="field-input">
+									<label>Red</label>
+									<select [(ngModel)]="draft.code_red_solicitud"
+										(change)="onRedEditChange(solicitud)">
+										<option value="">Seleccione red</option>
+										<option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes
+											}}</option>
+									</select>
+								</div>
 
-						<div class="field-input">
-							<label>Centro</label>
-							<select [(ngModel)]="draft.codcas_solicitud" [disabled]="!canEditCentro(solicitud)">
-								<option value="">{{ canEditCentro(solicitud) ? 'Seleccione centro' : 'No aplica para ADMIN_RED' }}</option>
-								<option
-									*ngFor="let centro of getCentrosByRedCode(draft.code_red_solicitud)"
-									[value]="centro.cenasicod"
-								>
-									{{ centro.cenasides }}
-								</option>
-							</select>
-						</div>
+								<div class="field-input">
+									<label>Centro</label>
+									<select [(ngModel)]="draft.codcas_solicitud" [disabled]="!canEditCentro(solicitud)">
+										<option value="">{{ canEditCentro(solicitud) ? 'Seleccione centro' : 'No aplica
+											para ADMIN_RED' }}</option>
+										<option *ngFor="let centro of getCentrosByRedCode(draft.code_red_solicitud)"
+											[value]="centro.cenasicod">
+											{{ centro.cenasides }}
+										</option>
+									</select>
+								</div>
 
-						<div class="field-input">
-							<label>Estado</label>
-							<select [(ngModel)]="draft.status">
-								<option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
-							</select>
-						</div>
+								<div class="field-input">
+									<label>Estado</label>
+									<select [(ngModel)]="draft.status">
+										<option *ngFor="let status of statusOptions" [value]="status">{{ status }}
+										</option>
+									</select>
+								</div>
 
-						<div class="field full validation-message" *ngIf="validationState[getCardKey(solicitud)]">
-							<span>Validacion</span>
-							<strong>{{ validationState[getCardKey(solicitud)] }}</strong>
-						</div>
-					</div>
+								<div class="field full validation-message"
+									*ngIf="validationState[getCardKey(solicitud)]">
+									<span>Validacion</span>
+									<strong>{{ validationState[getCardKey(solicitud)] }}</strong>
+								</div>
+							</div>
 
-					<div class="card-actions" *ngIf="!isEditing(solicitud)">
-						<button type="button" class="btn-primary" (click)="iniciarEdicion(solicitud)">
-							Editar solicitud
-						</button>
-					</div>
+							<div class="card-actions" *ngIf="!isEditing(solicitud)">
+								<button type="button" class="btn-primary" (click)="iniciarEdicion(solicitud)">
+									Editar solicitud
+								</button>
+							</div>
 
-					<div class="card-actions" *ngIf="isEditing(solicitud)">
-						<button type="button" class="btn-muted" (click)="cancelarEdicion(solicitud)">Cancelar</button>
-						<button
-							type="button"
-							class="btn-primary"
-							(click)="guardarEdicion(solicitud)"
-							[disabled]="savingState[getCardKey(solicitud)]"
-						>
-							{{ savingState[getCardKey(solicitud)] ? 'Guardando...' : 'Guardar cambios' }}
-						</button>
-					</div>
-				</article>
+							<div class="card-actions" *ngIf="isEditing(solicitud)">
+								<button type="button" class="btn-muted"
+									(click)="cancelarEdicion(solicitud)">Cancelar</button>
+								<button type="button" class="btn-primary" (click)="guardarEdicion(solicitud)"
+									[disabled]="savingState[getCardKey(solicitud)]">
+									{{ savingState[getCardKey(solicitud)] ? 'Actualizando...' : 'Actualizar' }}
+								</button>
+							</div>
+						</article>
 					</div>
 				</div>
-			</cdk-virtual-scroll-viewport>
+			</div>
+
+			<div class="paginator" *ngIf="!isLoading && filteredSolicitudes.length > 0">
+				<div class="paginator-info">
+					<span>Mostrando {{ paginationStart }} - {{ paginationEnd }} de {{ totalResultados }}</span>
+				</div>
+
+				<div class="paginator-controls">
+					<label for="page-size">Por pagina</label>
+					<select id="page-size" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+						<option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+					</select>
+
+					<button type="button" class="btn-muted" (click)="goToPreviousPage()" [disabled]="pageIndex === 0">
+						Anterior
+					</button>
+					<span class="page-label">Pagina {{ currentPageLabel }}</span>
+					<button
+						type="button"
+						class="btn-primary"
+						(click)="goToNextPage()"
+						[disabled]="pageIndex >= totalPages - 1"
+					>
+						Siguiente
+					</button>
+				</div>
+			</div>
 		</section>
 	</section>
 </div>
