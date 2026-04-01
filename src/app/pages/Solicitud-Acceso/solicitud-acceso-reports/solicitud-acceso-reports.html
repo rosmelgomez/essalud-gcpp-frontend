@@ -174,12 +174,8 @@
 						Anterior
 					</button>
 					<span class="page-label">Pagina {{ currentPageLabel }}</span>
-					<button
-						type="button"
-						class="btn-primary"
-						(click)="goToNextPage()"
-						[disabled]="pageIndex >= totalPages - 1"
-					>
+					<button type="button" class="btn-primary" (click)="goToNextPage()"
+						[disabled]="pageIndex >= totalPages - 1">
 						Siguiente
 					</button>
 				</div>

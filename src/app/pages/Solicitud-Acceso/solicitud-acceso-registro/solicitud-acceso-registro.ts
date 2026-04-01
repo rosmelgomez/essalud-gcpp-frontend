@@ -399,7 +399,7 @@ export class SolicitudAccesoRegistro implements OnInit {
     }
 
     this.dataCentro = redCode
-      ? this.dataCentroCompleto.filter((centro: any) => centro.redasiscod === redCode)
+      ? this.dataCentroCompleto.filter((centro: any) => String(centro.redasiscod) === String(redCode))
       : [...this.dataCentroCompleto];
 
     this.filteredCentro = this.dataCentro;
@@ -441,29 +441,19 @@ export class SolicitudAccesoRegistro implements OnInit {
       return;
     }
 
-    this.usersService.getUserByDni(dni).subscribe({
+    this.usersService.getUserByDni(dniNormalizado).subscribe({
       next: (resp) => {
         if (resp) {
           this.user = resp;
-
-          const esUsuarioCentro = !!String(resp.codcas || '').trim();
-          const tipoTrabajador = esUsuarioCentro ? this.TIPO_USUARIO_CENTRO : this.TIPO_CABEZA_RED;
           const { apellidoPaterno, apellidoMaterno } = this.splitLastnames(String(resp.lastname || ''));
 
           this.registerForm.patchValue({
-            tipoTrabajador,
             name: String(resp.name || ''),
             apellidoPaterno,
             apellidoMaterno,
-            code_red: String(resp.code_red || ''),
-            codcas: String(resp.codcas || ''),
           });
 
-          const selectedRedCode = String(resp.code_red || '');
-          this.updateCentroDataByRedSelection(selectedRedCode || undefined);
-          this.syncSelectedRedAndCentroNames();
-
-          this._snackBar.open('Usuario encontrado. Campos autocompletados.', 'Cerrar', {
+          this._snackBar.open('Usuario encontrado. Se autocompletaron nombre y apellidos.', 'Cerrar', {
             duration: 3000,
           });
         } else {
@@ -530,18 +520,40 @@ export class SolicitudAccesoRegistro implements OnInit {
   }
 
   private syncSelectedRedAndCentroNames() {
-    const redCode = this.registerForm?.get('code_red')?.value;
-    const codcas = this.registerForm?.get('codcas')?.value;
+    const redCode = String(this.registerForm?.get('code_red')?.value || '');
+    const codcas = String(this.registerForm?.get('codcas')?.value || '');
 
     if (redCode) {
-      const red = this.dataRed.find((item: any) => item.redasiscod === redCode);
+      const red = this.dataRed.find((item: any) => String(item.redasiscod) === redCode);
       this.selectedRedName = red?.redasisdes ?? '';
+    } else {
+      this.selectedRedName = '';
     }
 
     if (codcas) {
-      const centro = this.dataCentroCompleto.find((item: any) => item.cenasicod === codcas);
+      const centro = this.dataCentroCompleto.find((item: any) => String(item.cenasicod) === codcas);
       this.selectedCentroName = centro?.cenasides ?? '';
+    } else {
+      this.selectedCentroName = '';
     }
+  }
+
+  private resolveRedCodeFromResponse(resp: any): string {
+    return String(
+      resp?.code_red_solicitud ??
+      resp?.code_red ??
+      resp?.redasiscod ??
+      '',
+    ).trim();
+  }
+
+  private resolveCentroCodeFromResponse(resp: any): string {
+    return String(
+      resp?.codcas_solicitud ??
+      resp?.codcas ??
+      resp?.cenasicod ??
+      '',
+    ).trim();
   }
 
   private splitLastnames(lastname: string): { apellidoPaterno: string; apellidoMaterno: string } {

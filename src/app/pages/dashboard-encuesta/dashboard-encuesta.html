@@ -184,9 +184,10 @@
             </div>
           </label>
 
+          <div class="filters-actions">
+            <button class="btn-clear" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+          </div>
         </div>
-
-        <button class="btn-clear" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
       </section>
 
       <section class="kpi-grid">
@@ -243,6 +244,7 @@
         <div class="resumen-header">
           <div class="cell fecha">Fecha</div>
           <div class="cell centro">Centro</div>
+          <div class="cell usuario">Usuario</div>
           <div class="cell modulo">Modulo</div>
           <div class="cell categoria">Categoria</div>
           <div class="cell subcategoria">Subcategoria</div>
@@ -255,6 +257,8 @@
           <input class="filter-input cell fecha" type="text" placeholder="Buscar..." [(ngModel)]="filtrosTabla.fecha" />
           <input class="filter-input cell centro" type="text" placeholder="Buscar..."
             [(ngModel)]="filtrosTabla.centro" />
+          <input class="filter-input cell usuario" type="text" placeholder="Buscar..."
+            [(ngModel)]="filtrosTabla.usuario" />
           <input class="filter-input cell modulo" type="text" placeholder="Buscar..."
             [(ngModel)]="filtrosTabla.modulo" />
           <input class="filter-input cell categoria" type="text" placeholder="Buscar..."
@@ -269,11 +273,12 @@
             [(ngModel)]="filtrosTabla.comentario" />
         </div>
 
-        <div class="resumen-wrapper" *ngIf="mostrarTabla; else noDataInicio">
+        <div class="resumen-wrapper" >
           <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="72">
             <div class="resumen-row" *cdkVirtualFor="let item of registrosTablaFiltrados">
               <div class="cell fecha">{{ formatearFecha(item.date_creation) }}</div>
               <div class="cell centro">{{ getCentroNombre(item.codcas) }}</div>
+              <div class="cell usuario">{{ getUsuarioNombreById(item.id_user) }}</div>
               <div class="cell modulo">{{ getModuloNombre(item.id_modulo) }}</div>
               <div class="cell categoria">{{ getCategoriaNombre(item.id_categoria) }}</div>
               <div class="cell subcategoria">{{ getSubcategoriaNombre(item.id_subcategoria) }}</div>
@@ -297,7 +302,7 @@
 
         <div class="table-footer">
           <div class="footer-left"><strong>Total registros mostrados:</strong></div>
-          <div class="footer-right"><strong>{{ mostrarTabla ? registrosTablaFiltrados.length : 0 }}</strong></div>
+          <div class="footer-right"><strong>{{ registrosTablaFiltrados.length }}</strong></div>
         </div>
       </section>
     </ng-container>

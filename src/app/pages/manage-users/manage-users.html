@@ -1,172 +1,223 @@
 <div class="main">
-  <div *ngIf="isLoading" class="loading">
-    <p>Cargando datos...</p>
-  </div>
-
-  <!-- Header con logo y título -->
-  <div class="header" *ngIf="!isLoading">
-    <div class="header-content">
-      <h2 class="title">Tabla de Usuarios para modificar o eliminar</h2>
-    </div>
-  </div>
-
-  <!-- TABLA -->
-  <mat-card class="resumen-table" *ngIf="!isLoading">
-    <!-- HEADER -->
-    <div class="resumen-header">
-      <div class="cell name">Nombre</div>
-      <div class="cell lastname">Apellido</div>
-      <div class="cell dni">Dni</div>
-      <div class="cell codcas">Centro</div>
-      <div class="cell code_red">Red</div>
-      <div class="cell role">Rol</div>
-      <div class="cell date_created">Fecha Creación</div>
-      <div class="cell date_updated">Fecha Actualización</div>
-      <div class="cell flag">Flag</div>
-      <div class="cell username">Username</div>
-      <div class="cell password">Contraseña</div>
-      <div class="cell actions">Acciones</div>
-    </div>
-
-    <!-- FILTERS ROW -->
-    <div class="resumen-filters">
-      <input type="text" class="filter-input cell name" placeholder="Buscar nombre..."
-        (keyup)="filterData('name', $event)" />
-      <input type="text" class="filter-input cell lastname" placeholder="Buscar apellido..."
-        (keyup)="filterData('lastname', $event)" />
-      <input type="text" class="filter-input cell dni" placeholder="Buscar DNI..."
-        (keyup)="filterData('dni', $event)" />
-      <input type="text" class="filter-input cell codcas" placeholder="Buscar centro..."
-        (keyup)="filterData('codcas', $event)" />
-      <input type="text" class="filter-input cell code_red" placeholder="Buscar red..."
-        (keyup)="filterData('code_red', $event)" />
-      <input type="text" class="filter-input cell role" placeholder="Buscar rol..."
-        (keyup)="filterData('role', $event)" />
-      <div class="cell date_creation filter-date-wrapper">
-        <input class="filter-input filter-date-input" placeholder="Filtrar fecha creación"
-          [matDatepicker]="dateCreationPicker" [ngModel]="dateCreationFilter" readonly
-          (dateChange)="onDateFilterChange('date_creation', $event.value)" />
-        <mat-datepicker-toggle class="filter-date-toggle" [for]="dateCreationPicker"></mat-datepicker-toggle>
-        <mat-datepicker #dateCreationPicker></mat-datepicker>
+  <section class="page-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Administración</p>
+        <h1>Gestor de Usuarios</h1>
+        <p class="subtitle">Vista en cards con filtros completos y edición por usuario.</p>
       </div>
-      <div class="cell date_update filter-date-wrapper">
-        <input class="filter-input filter-date-input" placeholder="Filtrar fecha actualización"
-          [matDatepicker]="dateUpdatePicker" [ngModel]="dateUpdateFilter" readonly
-          (dateChange)="onDateFilterChange('date_update', $event.value)" />
-        <mat-datepicker-toggle class="filter-date-toggle" [for]="dateUpdatePicker"></mat-datepicker-toggle>
-        <mat-datepicker #dateUpdatePicker></mat-datepicker>
+      <div class="badge-count">{{ totalResultados }} usuarios</div>
+    </header>
+
+    <section class="filter-panel">
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label for="filtro-name">Nombre</label>
+          <input id="filtro-name" type="text" [(ngModel)]="filters.name" (ngModelChange)="onFilterValueChange()"
+            placeholder="Buscar nombre" />
+        </div>
+
+        <div class="filter-group">
+          <label for="filtro-lastname">Apellido</label>
+          <input id="filtro-lastname" type="text" [(ngModel)]="filters.lastname"
+            (ngModelChange)="onFilterValueChange()" placeholder="Buscar apellido" />
+        </div>
+
+        <div class="filter-group">
+          <label for="filtro-dni">DNI</label>
+          <input id="filtro-dni" type="text" [(ngModel)]="filters.dni" (ngModelChange)="onFilterValueChange()"
+            placeholder="Buscar DNI" />
+        </div>
+
+        <div class="filter-group">
+          <label for="filtro-centro">Centro</label>
+          <input id="filtro-centro" type="text" [(ngModel)]="filters.codcas"
+            (ngModelChange)="onFilterValueChange()" placeholder="Buscar centro" />
+        </div>
+
+        <div class="filter-group">
+          <label for="filtro-red">Red</label>
+          <input id="filtro-red" type="text" [(ngModel)]="filters.code_red" (ngModelChange)="onFilterValueChange()"
+            placeholder="Buscar red" />
+        </div>
+
+        <div class="filter-group">
+          <label for="filtro-role">Rol</label>
+          <select id="filtro-role" [(ngModel)]="filters.role" (ngModelChange)="onFilterValueChange()">
+            <option value="">Todos los roles</option>
+            <option *ngFor="let role of roleOptions" [value]="role.toLowerCase()">{{ role }}</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filtro-username">Username</label>
+          <input id="filtro-username" type="text" [(ngModel)]="filters.username"
+            (ngModelChange)="onFilterValueChange()" placeholder="Buscar username" />
+        </div>
+
+
+        <div class="filter-group">
+          <label for="filtro-date-creation">Fecha Creación</label>
+          <input id="filtro-date-creation" type="date" [(ngModel)]="filters.date_creation"
+            (ngModelChange)="onFilterValueChange()" />
+        </div>
+
+        <div class="filter-group">
+          <label for="filtro-date-update">Fecha Actualización</label>
+          <input id="filtro-date-update" type="date" [(ngModel)]="filters.date_update"
+            (ngModelChange)="onFilterValueChange()" />
+        </div>
+
+        <div class="filter-group">
+          <label for="filtro-flag">Estado</label>
+          <select id="filtro-flag" [(ngModel)]="filters.flag" (ngModelChange)="onFilterValueChange()">
+            <option *ngFor="let option of flagOptions" [value]="option.value">{{ option.label }}</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn-muted" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+        </div>
       </div>
-      <input type="text" class="filter-input cell flag" placeholder="Buscar flag..."
-        (keyup)="filterData('flag', $event)" />
-      <input type="text" class="filter-input cell username" placeholder="Buscar username..."
-        (keyup)="filterData('username', $event)" />
-    </div>
+    </section>
 
-    <!-- WRAPPER PARA SCROLL HORIZONTAL -->
-    <div class="resumen-wrapper">
-      <!-- VIRTUAL SCROLL -->
-      <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
-        <div *cdkVirtualFor="let row of allUser" class="resumen-row">
-          <div class="cell name">
-            <input title="editar nombre" *ngIf="isEditing(row)" class="row-edit-input" type="text"
-              [(ngModel)]="editableRow.name" />
-            <span *ngIf="!isEditing(row)">{{ row.name || 'Sin nombre' }}</span>
-          </div>
-          <div class="cell lastname">
-            <input *ngIf="isEditing(row)" class="row-edit-input" type="text" title="Editar apellido"
-              placeholder="apellido" [(ngModel)]="editableRow.lastname" />
-            <span *ngIf="!isEditing(row)">{{ row.lastname || 'Sin apellido' }}</span>
-          </div>
-          <div class="cell dni">
-            <input *ngIf="isEditing(row)" class="row-edit-input" type="text" title="Editar DNI" placeholder="DNI"
-              [(ngModel)]="editableRow.dni" />
-            <span *ngIf="!isEditing(row)">{{ row.dni || 'Sin dni' }}</span>
-          </div>
-          <div class="cell codcas">
-            <select *ngIf="isEditing(row)" class="row-edit-input" [(ngModel)]="editableRow.codcas"
-              [disabled]="!editingCentroEnabled" (change)="onEditingCentroChange()">
-              <option value="">{{ getEditingCentroPlaceholder() }}</option>
-              <option *ngFor="let centro of editingAllCentroForSelectedRed" [value]="centro.cenasicod">
-                {{ centro.cenasides }}
-              </option>
-            </select>
-            <span *ngIf="!isEditing(row)">{{ getCentroName(row.codcas) || 'Sin centro' }}</span>
-          </div>
-          <div class="cell code_red">
-            <select *ngIf="isEditing(row)" class="row-edit-input" [(ngModel)]="editableRow.code_red"
-              [disabled]="!editingRedEnabled" (change)="onEditingRedChange()">
-              <option value="">{{ getEditingRedPlaceholder() }}</option>
-              <option *ngFor="let red of dataRed" [value]="red.redasiscod">
-                {{ red.redasisdes }}
-              </option>
-            </select>
-            <span *ngIf="!isEditing(row)">{{ getRedName(row.code_red) || 'Sin red' }}</span>
-          </div>
-          <div class="cell role">
-            <select *ngIf="isEditing(row)" class="row-edit-input" [(ngModel)]="editableRow.role"
-              (change)="onEditingRoleChange()">
-              <option value="">Seleccionar rol...</option>
-              <option value="ADMIN">Administrador</option>
-              <option value="USER">Usuario Normal</option>
-              <option value="ADMIN_RED">Administrador de Red</option>
-            </select>
-            <span *ngIf="!isEditing(row)">{{ row.role || 'Sin rol' }}</span>
-          </div>
+    <section class="cards-wrapper">
+      <div class="loading" *ngIf="isLoading">Cargando usuarios...</div>
 
-          <div class="cell date_created">
-            <span>{{ formatDate(row.date_creation) }}</span>
-          </div>
-          <div class="cell date_updated">
-            <span>{{ formatDate(row.date_update) }}</span>
-          </div>
-          <div class="cell flag">
-            <select *ngIf="isEditing(row)" class="row-edit-input" [(ngModel)]="editableRow.flag">
-              <option value="">Seleccionar estado...</option>
-              <option [ngValue]="true">Activo</option>
-              <option [ngValue]="false">Inactivo</option>
-            </select>
-            <span *ngIf="!isEditing(row)">{{ getFlagLabel(row.flag) }}</span>
-          </div>
+      <div class="empty" *ngIf="!isLoading && filteredUsers.length === 0">
+        No se encontraron usuarios con los filtros seleccionados.
+      </div>
 
+      <div class="cards-viewport" *ngIf="!isLoading && virtualRows.length > 0">
+        <div class="virtual-item" *ngFor="let row of virtualRows">
+          <div class="cards-row" [style.gridTemplateColumns]="getCardsRowTemplateColumns()">
+            <article class="user-card" *ngFor="let user of row; trackBy: trackByUser">
+              <div class="card-top">
+                <div>
+                  <h2>{{ user.name || '-' }} {{ user.lastname || '' }}</h2>
+                  <p class="meta-inline">
+                    <span>ID: {{ user.id || '-' }}</span>
+                    <span>DNI: {{ user.dni || '-' }}</span>
+                    <span>Username: {{ user.username || '-' }}</span>
+                  </p>
+                </div>
+                <span class="status-pill">{{ getFlagLabel(user.flag) }}</span>
+              </div>
 
-          <div class="cell username">
-            <input *ngIf="isEditing(row)" class="row-edit-input" type="text" title="Editar username"
-              placeholder="Username" [(ngModel)]="editableRow.username" />
-            <span *ngIf="!isEditing(row)">{{ row.username || 'Sin usuario' }}</span>
-          </div>
-          <div class="cell password">
-            <input *ngIf="isEditing(row)" class="row-edit-input" type="text" placeholder="nueva contraseña"
-              [(ngModel)]="editableRow.password" />
-            <span *ngIf="!isEditing(row)">{{ row.password || 'contraseña no visible' }}</span>
-          </div>
+              <div class="card-body" *ngIf="!isEditing(user)">
+                <div class="field"><span>Rol</span><strong>{{ user.role || '-' }}</strong></div>
+                <div class="field"><span>Red</span><strong>{{ getRedName(user.code_red) || '-' }}</strong></div>
+                <div class="field"><span>Centro</span><strong>{{ getCentroName(user.codcas) || '-' }}</strong></div>
+                <div class="field"><span>Estado</span><strong>{{ getFlagLabel(user.flag) }}</strong></div>
+                <div class="field"><span>Password</span><strong>{{ user.password || '-' }}</strong></div>
+                <div class="field"><span>Creación</span><strong>{{ formatDate(user.date_creation) || '-' }}</strong></div>
+                <div class="field"><span>Actualización</span><strong>{{ formatDate(user.date_update) || '-' }}</strong>
+                </div>
+              </div>
 
-          <div class="cell actions">
-            <button *ngIf="!isEditing(row)" mat-icon-button color="primary" (click)="startEdit(row)">
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button *ngIf="isEditing(row)" mat-icon-button color="primary" (click)="updateUser()"
-              [disabled]="isUpdateDisabled()">
-              <mat-icon>check</mat-icon>
-            </button>
-            <button *ngIf="isEditing(row)" mat-icon-button color="warn" (click)="cancelEdit()">
-              <mat-icon>close</mat-icon>
-            </button>
-            <button *ngIf="!isEditing(row)" mat-icon-button color="warn" (click)="deleteUser(row.username)">
-              <mat-icon>delete</mat-icon>
-            </button>
+              <div class="card-body edit" *ngIf="isEditing(user) && editableRow as editUser">
+                <div class="field-input">
+                  <label>Nombre</label>
+                  <input type="text" [(ngModel)]="editUser.name" />
+                </div>
+
+                <div class="field-input">
+                  <label>Apellido</label>
+                  <input type="text" [(ngModel)]="editUser.lastname" />
+                </div>
+
+                <div class="field-input">
+                  <label>DNI</label>
+                  <input type="text" [(ngModel)]="editUser.dni" />
+                </div>
+
+                <div class="field-input">
+                  <label>Username</label>
+                  <input type="text" [(ngModel)]="editUser.username" />
+                </div>
+
+                <div class="field-input full">
+                  <label>Password</label>
+                  <input type="text" [(ngModel)]="editUser.password" placeholder="Nueva contraseña" />
+                </div>
+
+                <div class="field-input">
+                  <label>Rol</label>
+                  <select [(ngModel)]="editUser.role" (change)="onEditingRoleChange()">
+                    <option value="">Seleccionar rol</option>
+                    <option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
+                  </select>
+                </div>
+
+                <div class="field-input">
+                  <label>Red</label>
+                  <select [(ngModel)]="editUser.code_red" [disabled]="!editingRedEnabled" (change)="onEditingRedChange()">
+                    <option value="">{{ getEditingRedPlaceholder() }}</option>
+                    <option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes }}</option>
+                  </select>
+                </div>
+
+                <div class="field-input">
+                  <label>Centro</label>
+                  <select [(ngModel)]="editUser.codcas" [disabled]="!editingCentroEnabled"
+                    (change)="onEditingCentroChange()">
+                    <option value="">{{ getEditingCentroPlaceholder() }}</option>
+                    <option *ngFor="let centro of editingAllCentroForSelectedRed" [value]="centro.cenasicod">
+                      {{ centro.cenasides }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="field-input">
+                  <label>Estado</label>
+                  <select [(ngModel)]="editUser.flag">
+                    <option [ngValue]="true">Activo</option>
+                    <option [ngValue]="false">Inactivo</option>
+                  </select>
+                </div>
+
+                <div class="field validation-message full" *ngIf="isUpdateDisabled()">
+                  <span>Validación</span>
+                  <strong>Para rol USER debes seleccionar Red y Centro válidos.</strong>
+                </div>
+              </div>
+
+              <div class="card-actions" *ngIf="!isEditing(user)">
+                <button type="button" class="btn-primary" (click)="startEdit(user)">Editar usuario</button>
+                <button type="button" class="btn-danger" (click)="deleteUser(user.username)">Eliminar</button>
+              </div>
+
+              <div class="card-actions" *ngIf="isEditing(user)">
+                <button type="button" class="btn-muted" (click)="cancelEdit()">Cancelar</button>
+                <button type="button" class="btn-primary" (click)="updateUser()" [disabled]="isUpdateDisabled() || isSavingEdit">
+                  {{ isSavingEdit ? 'Actualizando...' : 'Actualizar' }}
+                </button>
+              </div>
+            </article>
           </div>
         </div>
-      </cdk-virtual-scroll-viewport>
-    </div>
-
-    <!-- FOOTER -->
-    <div class="table-footer">
-      <div class="footer-left"><strong>Total Usuarios:</strong></div>
-      <div class="footer-right num">
-        <strong>{{ allUser.length }}</strong>
       </div>
-    </div>
-  </mat-card>
 
+      <div class="paginator" *ngIf="!isLoading && filteredUsers.length > 0">
+        <div class="paginator-info">
+          <span>Mostrando {{ paginationStart }} - {{ paginationEnd }} de {{ totalResultados }}</span>
+        </div>
 
+        <div class="paginator-controls">
+          <label for="page-size">Por página</label>
+          <select id="page-size" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+            <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+          </select>
+
+          <button type="button" class="btn-muted" (click)="goToPreviousPage()" [disabled]="pageIndex === 0">
+            Anterior
+          </button>
+          <span class="page-label">Página {{ currentPageLabel }}</span>
+          <button type="button" class="btn-primary" (click)="goToNextPage()" [disabled]="pageIndex >= totalPages - 1">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </section>
+  </section>
 </div>

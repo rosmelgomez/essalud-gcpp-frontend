@@ -55,6 +55,7 @@ interface EstadoSegmento {
 interface TablaEncuestaFilters {
   fecha: string;
   centro: string;
+  usuario: string;
   modulo: string;
   categoria: string;
   subcategoria: string;
@@ -94,10 +95,10 @@ export class DashboardEncuesta implements OnInit {
 
   // Datos filtrados
   encuestaFiltrada: Encuesta[] = [];
+  encuestaTablaData: Encuesta[] = [];
   serieModulos: SerieResumen[] = [];
   serieCategorias: SerieResumen[] = [];
   serieSubcategorias: SerieResumen[] = [];
-  registrosRecientes: Encuesta[] = [];
   estadoSegmentos: EstadoSegmento[] = [];
 
   estadoSeries: ApexNonAxisChartSeries = [];
@@ -185,6 +186,7 @@ export class DashboardEncuesta implements OnInit {
   filtrosTabla: TablaEncuestaFilters = {
     fecha: '',
     centro: '',
+    usuario: '',
     modulo: '',
     categoria: '',
     subcategoria: '',
@@ -247,6 +249,7 @@ export class DashboardEncuesta implements OnInit {
         this.subcategorias = res.subcategorias;
         this.variables = res.variables;
         this.encuesta = res.encuestas;
+        this.encuestaTablaData = [...this.encuesta];
 
         // En dashboard de administrador se inicia sin centro seleccionado (todos).
         this.filtros.codcas = '';
@@ -373,9 +376,7 @@ export class DashboardEncuesta implements OnInit {
     this.serieSubcategorias = this.armarSerie(this.encuestaFiltrada, 'subcategoria');
     this.estadoSegmentos = this.armarSegmentosEstado(this.encuestaFiltrada);
     this.actualizarGraficosApex();
-    this.registrosRecientes = [...this.encuestaFiltrada]
-      .sort((a, b) => this.obtenerSortFecha(b) - this.obtenerSortFecha(a))
-      .slice(0, 10);
+
   }
 
   limpiarFiltros(): void {
@@ -442,6 +443,11 @@ export class DashboardEncuesta implements OnInit {
     return nombre || String(user.username || user.dni || user.id);
   }
 
+  getUsuarioNombreById(idUser: number): string {
+    const user = this.users.find(u => u.id === idUser);
+    return user ? this.getNombreUsuario(user) : '-';
+  }
+
   getEstadoLabel(status: string): string {
     const normalizado = (status || '').trim().toLowerCase();
     if (normalizado === 'valido') {
@@ -473,13 +479,11 @@ export class DashboardEncuesta implements OnInit {
   }
 
   get registrosTablaFiltrados(): Encuesta[] {
-    if (!this.mostrarTabla) {
-      return [];
-    }
 
     return this.registrosTablaBase.filter((item) => {
       const fecha = this.formatearFecha(item.date_creation);
       const centro = this.getCentroNombre(item.codcas);
+      const usuario = this.getUsuarioNombreById(item.id_user);
       const modulo = this.getModuloNombre(item.id_modulo);
       const categoria = this.getCategoriaNombre(item.id_categoria);
       const subcategoria = this.getSubcategoriaNombre(item.id_subcategoria);
@@ -489,6 +493,7 @@ export class DashboardEncuesta implements OnInit {
 
       return this.contieneFiltro(fecha, this.filtrosTabla.fecha)
         && this.contieneFiltro(centro, this.filtrosTabla.centro)
+        && this.contieneFiltro(usuario, this.filtrosTabla.usuario)
         && this.contieneFiltro(modulo, this.filtrosTabla.modulo)
         && this.contieneFiltro(categoria, this.filtrosTabla.categoria)
         && this.contieneFiltro(subcategoria, this.filtrosTabla.subcategoria)
@@ -498,12 +503,9 @@ export class DashboardEncuesta implements OnInit {
     });
   }
 
-  get mostrarTabla(): boolean {
-    return this.hayFiltrosPrincipalesAplicados();
-  }
 
   get registrosTablaBase(): Encuesta[] {
-    return [...this.encuestaFiltrada].sort((a, b) => this.obtenerSortFecha(b) - this.obtenerSortFecha(a));
+    return [...this.encuestaTablaData].sort((a, b) => this.obtenerSortFecha(b) - this.obtenerSortFecha(a));
   }
 
   private actualizarIndicadores(): void {

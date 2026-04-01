@@ -69,11 +69,13 @@ export class LogsReports implements OnInit, OnDestroy {
   activeCentroIndex: number = -1;
 
   dataSource = new MatTableDataSource<any>();
+  allLogsData: any[] = [];
+  tableLogsData: any[] = [];
   allLogs: any[] = [];
   allLogsOriginal: any[] = [];
   loginLogs: any[] = [];
 
-  totalLogs = 0;
+  totalIngresos = 0;
   filteredCount = 0;
   isLoading = true;
   private pendingLoads = 0;
@@ -403,6 +405,7 @@ export class LogsReports implements OnInit, OnDestroy {
       next: (resp) => {
         this.dataUser = resp;
         this.filteredUser = resp;
+        this.setupUserFilter();
       },
       error: (err) => {
         console.log('Error al obtener los usuarios', err);
@@ -443,10 +446,11 @@ export class LogsReports implements OnInit, OnDestroy {
     this.beginLoading();
     this.logsusersService.getLogs().subscribe({
       next: (data) => {
-        this.allLogs = data;
-        this.allLogsOriginal = data;
+        this.allLogsData = data;
+        this.tableLogsData = [...data];
+        this.allLogs = [...this.tableLogsData];
+        this.allLogsOriginal = [...this.tableLogsData];
         this.loginLogs = data.filter((log) => this.isLoginUrl(log.url));
-        this.totalLogs = this.loginLogs.length;
         this.dataSource.data = this.allLogs;
         this.setupYearFilter();
         this.setupDayFilter();
@@ -582,22 +586,42 @@ export class LogsReports implements OnInit, OnDestroy {
   private setupUserFilter(): void {
     const usersMap = new Map<string, string>();
 
-    this.loginLogs.forEach((log) => {
-      const id = String(log.id_user ?? '').trim();
+    this.dataUser.forEach((user) => {
+      const id = String(user.id ?? '').trim();
       if (!id) return;
 
-      const fullName = String(log.full_name ?? '').trim();
-      const dni = String(log.dni ?? '').trim();
-      const label = fullName
-        ? `${fullName}${dni ? ` (${dni})` : ''}`
-        : dni
-          ? dni
-          : `Usuario ${id}`;
+      const name = String(user.name ?? '').trim();
+      const lastname = String(user.lastname ?? '').trim();
+      const dni = String(user.dni ?? '').trim();
+      const username = String(user.username ?? '').trim();
+      const fullName = `${name} ${lastname}`.trim();
+
+      const labelBase = fullName || username || `Usuario ${id}`;
+      const label = dni ? `${labelBase} (${dni})` : labelBase;
 
       if (!usersMap.has(id)) {
         usersMap.set(id, label);
       }
     });
+
+    if (usersMap.size === 0) {
+      this.loginLogs.forEach((log) => {
+        const id = String(log.id_user ?? '').trim();
+        if (!id) return;
+
+        const fullName = String(log.full_name ?? '').trim();
+        const dni = String(log.dni ?? '').trim();
+        const label = fullName
+          ? `${fullName}${dni ? ` (${dni})` : ''}`
+          : dni
+            ? dni
+            : `Usuario ${id}`;
+
+        if (!usersMap.has(id)) {
+          usersMap.set(id, label);
+        }
+      });
+    }
 
     this.availableUsers = Array.from(usersMap.entries())
       .sort((a, b) => a[1].localeCompare(b[1]))
@@ -618,16 +642,26 @@ export class LogsReports implements OnInit, OnDestroy {
       selectedUserId: this.selectedUserId,
     });
 
-    const baseData = this.applyAllFiltersOptimized([...this.loginLogs]);
-    this.filteredCount = baseData.length;
-    this.allLogsOriginal = baseData;
-    this.allLogs = [...baseData];
+    const dataLogin = this.applyAllFiltersOptimized([...this.loginLogs]);
+    const dataTotalLogs = this.applyAllFiltersOptimized([...this.allLogsData]);
+    const tableData = this.applyColumnFilters(this.tableLogsData);
+
+    this.totalIngresos = dataLogin.length;
+    this.filteredCount = dataTotalLogs.length;
+    this.allLogsOriginal = [...this.tableLogsData];
+    this.allLogs = [...tableData];
     this.dataSource.data = this.allLogs;
 
-    console.log('Datos filtrados:', baseData.length, 'de', this.loginLogs.length);
+    console.log('Datos tabla mostrados:', tableData.length, 'de', this.tableLogsData.length);
+    console.log('Datos gráficos 1 y 2 (login):', dataLogin.length, 'de', this.loginLogs.length);
+    console.log('Datos gráficos 3 y 4 (total logs):', dataTotalLogs.length, 'de', this.allLogsData.length);
 
-    this.renderCharts(baseData);
+    this.renderCharts(dataLogin, dataTotalLogs);
     this.isLoading = false;
+  }
+
+  private applyColumnFilters(data: any[]): any[] {
+    return data.filter((row) => this.applyAllFilters(row));
   }
 
   private applyAllFiltersOptimized(data: any[]): any[] {
@@ -709,17 +743,17 @@ export class LogsReports implements OnInit, OnDestroy {
     return value === '/login' || value.startsWith('/login?') || value.includes('/login');
   }
 
-  private renderCharts(data: any[]): void {
+  private renderCharts(dataLogin: any[], dataTotalLogs: any[]): void {
     setTimeout(() => {
       if (!this.chartRolContainer || !this.chartFechaContainer || !this.chartBrowserContainer || !this.chartUrlContainer) {
         console.log('Contenedores de gráficos no disponibles');
         return;
       }
 
-      const conteoRol = this.contarPorRol(data);
-      const { labels: fechaLabels, values: fechaValues } = this.procesarDatosPorFecha(data);
-      const conteoBrowser = this.contarPorNavegador(data);
-      const { labels: urlLabels, values: urlValues } = this.contarTopUrls(data);
+      const conteoRol = this.contarPorRol(dataLogin);
+      const { labels: fechaLabels, values: fechaValues } = this.procesarDatosPorFecha(dataLogin);
+      const conteoBrowser = this.contarPorNavegador(dataTotalLogs);
+      const { labels: urlLabels, values: urlValues } = this.contarTopUrls(dataTotalLogs);
 
       console.log('Actualizando gráficos con datos:', { conteoRol, fechaLabels, fechaValues, conteoBrowser, urlLabels, urlValues });
 
@@ -1091,7 +1125,7 @@ export class LogsReports implements OnInit, OnDestroy {
 
     const topEntries = (Object.entries(conteo) as Array<[string, number]>)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 8);
+      .slice(0, 10);
 
     return {
       labels: topEntries.map(([url]) => url),
@@ -1116,68 +1150,105 @@ export class LogsReports implements OnInit, OnDestroy {
     }
   }
 
-  // Filtrar datos de la tabla por columna
-  filterData(column: keyof typeof this.filters, event: any): void {
-    const filterValue = event.target.value.toLowerCase().trim();
-    this.filters[column] = filterValue;
+  // Filtrar datos de la tabla por columna - Se usa cuando se termina de escribir en los inputs
+  private updateTableFilters(): void {
+    const filtered = this.applyColumnFilters([...this.tableLogsData]);
+    this.allLogs = filtered;
+    this.dataSource.data = this.allLogs;
+  }
 
-    // Filtrar los datos originales
-    const filtered = this.allLogsOriginal.filter((row) => {
-      return this.applyAllFilters(row);
+  clearFilters(): void {
+    this.selectedYear = 'todos';
+    this.selectedMonth = 'todos';
+    this.selectedDay = '';
+    this.selectedUserId = 'todos';
+
+    this.selectedRedName = '';
+    this.selectedRedCode = '';
+    this.searchRed = '';
+    this.isDropdownRedOpen = false;
+    this.activeRedIndex = -1;
+
+    this.selectedCentroName = '';
+    this.selectedCentroCode = '';
+    this.searchCentro = '';
+    this.isDropdownCentroOpen = false;
+    this.activeCentroIndex = -1;
+
+    Object.keys(this.filters).forEach((key) => {
+      const filterKey = key as keyof typeof this.filters;
+      this.filters[filterKey] = '';
     });
 
-    // Actualizar los datos mostrados
-    this.allLogs = filtered;
+    this.refreshCentrosBySelectedRed();
+    this.updateDaysForSelectedMonth();
+    this.applyFilters();
+  }
+
+  // Obtener nombre de Red por código
+  getRedNombre(codeRed: string): string {
+    if (!codeRed) return '';
+    const red = this.dataRed.find((r: any) => this.normalizeCode(r.redasiscod) === this.normalizeCode(codeRed));
+    return red ? String(red.redasisdes ?? '') : codeRed;
+  }
+
+  // Obtener nombre de Centro por código
+  getCentroNombre(codCas: string): string {
+    if (!codCas) return '';
+    const centro = this.dataCentroCompleto.find((c: any) => this.normalizeCode(c.cenasicod) === this.normalizeCode(codCas));
+    return centro ? String(centro.cenasides ?? '') : codCas;
   }
 
   //Aplicar todos los filtros activos a una fila
 
   private applyAllFilters(row: any): boolean {
-    // filtro dni
-    if (this.filters.dni && !String(row.dni).toLowerCase().includes(this.filters.dni)) {
-      return false;
-    }
-
-    // filtro full_name
-    if (this.filters.full_name && !String(row.full_name).toLowerCase().includes(this.filters.full_name)) {
-      return false;
-    }
-
-    // Filtro username
-    if (this.filters.username && !String(row.username ?? '').toLowerCase().includes(this.filters.username)) {
-      return false;
-    }
-    // Filtro ip_user
-    if (this.filters.ip_user && !String(row.ip_user ?? '').toLowerCase().includes(this.filters.ip_user)) {
-      return false;
-    }
-
-    // Filtro url
-    if (this.filters.url && !String(row.url ?? '').toLowerCase().includes(this.filters.url)) {
-      return false;
-    }
-
-    // Filtro browser
-    if (this.filters.browser && !String(row.browser ?? '').toLowerCase().includes(this.filters.browser)) {
-      return false;
-    }
-
-    // Filtro user_role
-    if (this.filters.user_role && !String(row.user_role ?? '').toLowerCase().includes(this.filters.user_role)) {
-      return false;
-    }
-    // Filtro codcas
-    if (this.filters.codcas && !String(row.codcas ?? '').toLowerCase().includes(this.filters.codcas)) {
-      return false;
-    }
-
-    // Filtro code_red
+    // Filtro Red
     if (this.filters.code_red && !String(row.code_red ?? '').toLowerCase().includes(this.filters.code_red)) {
       return false;
     }
 
-    // Filtro date
-    if (this.filters.date && !String(row.date).toLowerCase().includes(this.filters.date)) {
+    // Filtro Centro
+    if (this.filters.codcas && !String(row.codcas ?? '').toLowerCase().includes(this.filters.codcas)) {
+      return false;
+    }
+
+    // Filtro Usuario
+    if (this.filters.full_name && !String(row.full_name ?? '').toLowerCase().includes(this.filters.full_name)) {
+      return false;
+    }
+
+    // Filtro IP
+    if (this.filters.ip_user && !String(row.ip_user ?? '').toLowerCase().includes(this.filters.ip_user)) {
+      return false;
+    }
+
+    // Filtro DNI
+    if (this.filters.dni && !String(row.dni ?? '').toLowerCase().includes(this.filters.dni)) {
+      return false;
+    }
+
+    // Filtro Username
+    if (this.filters.username && !String(row.username ?? '').toLowerCase().includes(this.filters.username)) {
+      return false;
+    }
+
+    // Filtro URL
+    if (this.filters.url && !String(row.url ?? '').toLowerCase().includes(this.filters.url)) {
+      return false;
+    }
+
+    // Filtro Browser
+    if (this.filters.browser && !String(row.browser ?? '').toLowerCase().includes(this.filters.browser)) {
+      return false;
+    }
+
+    // Filtro Rol
+    if (this.filters.user_role && !String(row.user_role ?? '').toLowerCase().includes(this.filters.user_role)) {
+      return false;
+    }
+
+    // Filtro Fecha
+    if (this.filters.date && !String(row.date ?? '').toLowerCase().includes(this.filters.date)) {
       return false;
     }
 

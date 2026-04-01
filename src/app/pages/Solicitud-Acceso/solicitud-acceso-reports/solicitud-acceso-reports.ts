@@ -45,8 +45,8 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
   private cardKeyCounter: number = 0;
   private cardKeyByRef = new WeakMap<SolicitudAcceso, string>();
   private cardsPerRow: number = 3;
-  pageSize: number = 24;
-  readonly pageSizeOptions: number[] = [24, 48, 96];
+  pageSize: number = 8;
+  readonly pageSizeOptions: number[] = [8, 24, 96];
   pageIndex: number = 0;
 
 
@@ -114,6 +114,8 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
 
 
   getDataSolicitudAcceso(): void {
+    this.isLoadingSolicitudes = true;
+    this.cdr.markForCheck();
     this.solicitudAccesoService.getListSolicitud().subscribe({
       next: (data) => {
         this.dataSolicitudAcceso = data;
@@ -332,16 +334,8 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
     this.savingState[key] = true;
     this.solicitudAccesoService.updateSolicitud(payload).subscribe({
       next: () => {
-        const index = this.dataSolicitudAcceso.findIndex((item) => this.getCardKey(item) === key);
-
-        if (index >= 0) {
-          const updated = { ...payload } as SolicitudAcceso;
-          this.cardKeyByRef.set(updated, key);
-          this.dataSolicitudAcceso[index] = updated;
-        }
-
         this.cancelarEdicion(solicitud);
-        this.applyFilters();
+        this.getDataSolicitudAcceso();
         this.cdr.markForCheck();
       },
       error: (err) => {

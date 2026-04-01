@@ -1,14 +1,10 @@
-import { Component, inject, ChangeDetectionStrategy, Inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, HostListener, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { ScrollingModule } from '@angular/cdk/scrolling';
 import { UsersService } from '../../services/users-service';
-import { OnInit, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { forkJoin } from 'rxjs';
 import { EstablecimientoService } from '../../services/establecimiento-service';
 import {
@@ -26,24 +22,29 @@ import {
   imports: [
     CommonModule,
     FormsModule,
-    MatCardModule,
     MatButtonModule,
-    ScrollingModule,
     MatIconModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
   ],
   templateUrl: './manage-users.html',
   styleUrl: './manage-users.css',
 })
 export class ManageUsers implements OnInit {
   readonly dialog = inject(MatDialog);
+  readonly roleOptions: string[] = ['ADMIN', 'ADMIN_RED', 'USER'];
+  readonly flagOptions: Array<{ label: string; value: string }> = [
+    { label: 'Todos', value: '' },
+    { label: 'Activo', value: '1' },
+    { label: 'Inactivo', value: '0' },
+  ];
+  readonly pageSizeOptions: number[] = [8, 24, 96];
 
-  isLoading: boolean = true;
-  private pendingLoads = 0;
+  isLoadingUsers: boolean = true;
+  isLoadingCatalogos: boolean = true;
+  isSavingEdit: boolean = false;
 
-  allUser: any[] = [];
   allUserOriginal: any[] = [];
+  filteredUsers: any[] = [];
+  virtualRows: any[][] = [];
   editingRowKey: string | number | null = null;
   editableRow: any | null = null;
 
@@ -56,11 +57,11 @@ export class ManageUsers implements OnInit {
   private redNameByCode: Record<string, string> = {};
   private centroNameByCode: Record<string, string> = {};
 
-  dateCreationFilter: Date | null = null;
-  dateUpdateFilter: Date | null = null;
+  private cardsPerRow: number = 3;
+  pageSize: number = 8;
+  pageIndex: number = 0;
 
   filters = {
-    id: '',
     name: '',
     lastname: '',
     dni: '',
@@ -68,7 +69,6 @@ export class ManageUsers implements OnInit {
     code_red: '',
     role: '',
     username: '',
-    password: '',
     date_creation: '',
     date_update: '',
     flag: '',
@@ -81,8 +81,46 @@ export class ManageUsers implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.cardsPerRow = this.calculateCardsPerRow();
     this.loadData();
     this.getDataRedCentro();
+  }
+
+  get isLoading(): boolean {
+    return this.isLoadingUsers || this.isLoadingCatalogos;
+  }
+
+  get totalResultados(): number {
+    return this.filteredUsers.length;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredUsers.length / this.pageSize));
+  }
+
+  get paginationStart(): number {
+    if (this.filteredUsers.length === 0) {
+      return 0;
+    }
+    return this.pageIndex * this.pageSize + 1;
+  }
+
+  get paginationEnd(): number {
+    return Math.min((this.pageIndex + 1) * this.pageSize, this.filteredUsers.length);
+  }
+
+  get currentPageLabel(): string {
+    return `${this.pageIndex + 1} / ${this.totalPages}`;
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    const nextCardsPerRow = this.calculateCardsPerRow();
+    if (nextCardsPerRow !== this.cardsPerRow) {
+      this.cardsPerRow = nextCardsPerRow;
+      this.rebuildVirtualRows();
+      this.cdr.markForCheck();
+    }
   }
 
 
@@ -119,12 +157,15 @@ export class ManageUsers implements OnInit {
           acc[String(item.cenasicod)] = item.cenasides;
           return acc;
         }, {});
-        this.isLoading = false;
+        this.isLoadingCatalogos = false;
+        this.applyActiveFilters();
+        this.cdr.markForCheck();
       }
       ,
       error: (err) => {
         console.error('Error fetching data:', err);
-        this.isLoading = false;
+        this.isLoadingCatalogos = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -133,15 +174,16 @@ export class ManageUsers implements OnInit {
   loadData(): void {
     this.userservice.getAllUsers().subscribe({
       next: (data) => {
-        this.allUser = data;
         this.allUserOriginal = data;
-        this.cdr.detectChanges();
-        this.isLoading = false;
+        this.isLoadingUsers = false;
+        this.applyActiveFilters(true);
+        this.cdr.markForCheck();
       }
       ,
       error: (err) => {
         console.error('Error fetching data:', err);
-        this.isLoading = false;
+        this.isLoadingUsers = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -149,6 +191,8 @@ export class ManageUsers implements OnInit {
   private getRowKey(row: any): string | number {
     return row?.id ?? row?.username;
   }
+
+  trackByUser = (_index: number, row: any): string | number => this.getRowKey(row);
 
   isEditing(row: any): boolean {
     return this.editingRowKey === this.getRowKey(row);
@@ -353,10 +397,11 @@ export class ManageUsers implements OnInit {
   cancelEdit(): void {
     this.editingRowKey = null;
     this.editableRow = null;
+    this.isSavingEdit = false;
     this.editingRedEnabled = false;
     this.editingCentroEnabled = false;
     this.editingAllCentroForSelectedRed = [];
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
   // Lookup helpers to display labels instead of codes.
   getRedName(code: string | number | null | undefined): string {
@@ -377,6 +422,56 @@ export class ManageUsers implements OnInit {
       return 'Inactivo';
     }
     return 'Inactivo';
+  }
+
+  onFilterValueChange(): void {
+    this.applyActiveFilters(true);
+  }
+
+  limpiarFiltros(): void {
+    this.filters = {
+      name: '',
+      lastname: '',
+      dni: '',
+      codcas: '',
+      code_red: '',
+      role: '',
+      username: '',
+      date_creation: '',
+      date_update: '',
+      flag: '',
+    };
+    this.applyActiveFilters(true);
+  }
+
+  onPageSizeChange(): void {
+    this.pageIndex = 0;
+    this.rebuildVirtualRows();
+    this.cdr.markForCheck();
+  }
+
+  goToPreviousPage(): void {
+    if (this.pageIndex <= 0) {
+      return;
+    }
+
+    this.pageIndex -= 1;
+    this.rebuildVirtualRows();
+    this.cdr.markForCheck();
+  }
+
+  goToNextPage(): void {
+    if (this.pageIndex >= this.totalPages - 1) {
+      return;
+    }
+
+    this.pageIndex += 1;
+    this.rebuildVirtualRows();
+    this.cdr.markForCheck();
+  }
+
+  getCardsRowTemplateColumns(): string {
+    return `repeat(${this.cardsPerRow}, minmax(0, 1fr))`;
   }
 
   updateUser(): void {
@@ -416,14 +511,18 @@ export class ManageUsers implements OnInit {
             ? null
             : Number(this.editableRow.flag);
         }
+
+        this.isSavingEdit = true;
         this.userservice.updateUser(this.editableRow).subscribe({
           next: () => {
             this.cancelEdit();
             this.loadData();
-            this.cdr.detectChanges();
+            this.cdr.markForCheck();
           },
           error: (err) => {
             console.error('Error updating user:', err);
+            this.isSavingEdit = false;
+            this.cdr.markForCheck();
           }
         });
       }
@@ -446,7 +545,7 @@ export class ManageUsers implements OnInit {
         this.userservice.deleteUser(username).subscribe({
           next: () => {
             this.loadData();
-            this.cdr.detectChanges();
+            this.cdr.markForCheck();
           },
           error: (err) => {
             console.error('Error deleting user:', err);
@@ -458,32 +557,6 @@ export class ManageUsers implements OnInit {
 
 
 
-
-  // Filtrar datos de la tabla por columna
-  filterData(column: keyof typeof this.filters, event: any): void {
-    const filterValue = event.target.value.toLowerCase().trim();
-    this.filters[column] = filterValue;
-
-    this.applyActiveFilters();
-  }
-
-  onDateFilterChange(column: 'date_creation' | 'date_update', selectedDate: Date | null): void {
-    if (!selectedDate) {
-      this.filters[column] = '';
-      return;
-    }
-
-    if (column === 'date_creation') {
-      this.dateCreationFilter = selectedDate;
-    }
-
-    if (column === 'date_update') {
-      this.dateUpdateFilter = selectedDate;
-    }
-
-    this.filters[column] = this.normalizeDateFilterValue(selectedDate);
-    this.applyActiveFilters();
-  }
 
   private normalizeDateFilterValue(value: unknown): string {
     if (!value) {
@@ -516,78 +589,138 @@ export class ManageUsers implements OnInit {
     return text.toLowerCase();
   }
 
-  private applyActiveFilters(): void {
-    // Filtrar los datos originales
-    const filtered = this.allUserOriginal.filter((row) => {
-      return this.applyAllFilters(row);
-    });
-
-    // Actualizar los datos mostrados
-    this.allUser = filtered;
-  }
-
   //Aplicar todos los filtros activos a una fila
 
   private applyAllFilters(row: any): boolean {
-
     // filtro name
-    if (this.filters.name && !String(row.name).toLowerCase().includes(this.filters.name)) {
+    if (this.filters.name && !String(row.name ?? '').toLowerCase().includes(this.filters.name.toLowerCase())) {
       return false;
     }
 
     // filtro lastname
-    if (this.filters.lastname && !String(row.lastname).toLowerCase().includes(this.filters.lastname)) {
+    if (
+      this.filters.lastname
+      && !String(row.lastname ?? '').toLowerCase().includes(this.filters.lastname.toLowerCase())
+    ) {
       return false;
     }
 
     // filtro dni
-    if (this.filters.dni && !String(row.dni).toLowerCase().includes(this.filters.dni)) {
+    if (this.filters.dni && !String(row.dni ?? '').toLowerCase().includes(this.filters.dni.toLowerCase())) {
       return false;
     }
 
     // Filtro codcas
     const centroLabel = this.getCentroName(row.codcas).toLowerCase();
-    if (this.filters.codcas && !centroLabel.includes(this.filters.codcas)) {
+    if (this.filters.codcas && !centroLabel.includes(this.filters.codcas.toLowerCase())) {
       return false;
     }
 
     // Filtro code_red
     const redLabel = this.getRedName(row.code_red).toLowerCase();
-    if (this.filters.code_red && !redLabel.includes(this.filters.code_red)) {
+    if (this.filters.code_red && !redLabel.includes(this.filters.code_red.toLowerCase())) {
       return false;
     }
+
     // Filtro role
-    if (this.filters.role && !row.role.toLowerCase().includes(this.filters.role)) {
+    if (this.filters.role && !String(row.role ?? '').toLowerCase().includes(this.filters.role.toLowerCase())) {
       return false;
     }
 
     // Filtro username
-    if (this.filters.username && !row.username.toLowerCase().includes(this.filters.username)) {
-      return false;
-    }
-
-    // Filtro password
-    if (this.filters.password && !row.password.toLowerCase().includes(this.filters.password)) {
+    if (
+      this.filters.username
+      && !String(row.username ?? '').toLowerCase().includes(this.filters.username.toLowerCase())
+    ) {
       return false;
     }
 
     // Filtro date_creation
     const dateCreationLabel = this.normalizeDateFilterValue(row.date_creation);
-    if (this.filters.date_creation && !dateCreationLabel.includes(this.filters.date_creation)) {
+    if (this.filters.date_creation && !dateCreationLabel.includes(this.filters.date_creation.toLowerCase())) {
       return false;
     }
 
     // Filtro date_updated
     const dateUpdateLabel = this.normalizeDateFilterValue(row.date_update);
-    if (this.filters.date_update && !dateUpdateLabel.includes(this.filters.date_update)) {
+    if (this.filters.date_update && !dateUpdateLabel.includes(this.filters.date_update.toLowerCase())) {
       return false;
     }
+
     // Filtro flag
-    if (this.filters.flag && !String(row.flag).toLowerCase().includes(this.filters.flag)) {
+    const normalizedFlag = String(row.flag == null ? '' : Number(row.flag)).toLowerCase();
+    if (this.filters.flag && !normalizedFlag.includes(this.filters.flag.toLowerCase())) {
       return false;
     }
 
     return true;
+  }
+
+  private applyActiveFilters(resetPage: boolean = false): void {
+    const normalizeFilterValue = (value: string) => value.toLowerCase().trim();
+
+    this.filters = {
+      name: normalizeFilterValue(this.filters.name),
+      lastname: normalizeFilterValue(this.filters.lastname),
+      dni: normalizeFilterValue(this.filters.dni),
+      codcas: normalizeFilterValue(this.filters.codcas),
+      code_red: normalizeFilterValue(this.filters.code_red),
+      role: normalizeFilterValue(this.filters.role),
+      username: normalizeFilterValue(this.filters.username),
+      date_creation: normalizeFilterValue(this.filters.date_creation),
+      date_update: normalizeFilterValue(this.filters.date_update),
+      flag: normalizeFilterValue(this.filters.flag),
+    };
+
+    const filtered = this.allUserOriginal.filter((row) => this.applyAllFilters(row));
+    this.filteredUsers = filtered;
+
+    if (resetPage) {
+      this.pageIndex = 0;
+    }
+
+    if (this.pageIndex >= this.totalPages) {
+      this.pageIndex = Math.max(0, this.totalPages - 1);
+    }
+
+    this.rebuildVirtualRows();
+  }
+
+  private rebuildVirtualRows(): void {
+    const start = this.pageIndex * this.pageSize;
+    const end = start + this.pageSize;
+    const pageItems = this.filteredUsers.slice(start, end);
+    this.virtualRows = this.chunkArray(pageItems, this.cardsPerRow);
+  }
+
+  private chunkArray<T>(items: T[], size: number): T[][] {
+    if (size <= 0) {
+      return [items];
+    }
+
+    const chunks: T[][] = [];
+    for (let index = 0; index < items.length; index += size) {
+      chunks.push(items.slice(index, index + size));
+    }
+    return chunks;
+  }
+
+  private calculateCardsPerRow(): number {
+    if (typeof window === 'undefined') {
+      return 3;
+    }
+
+    const width = window.innerWidth;
+    if (width >= 1400) {
+      return 4;
+    }
+    if (width >= 1024) {
+      return 3;
+    }
+    if (width >= 640) {
+      return 2;
+    }
+    return 1;
   }
 
 }
