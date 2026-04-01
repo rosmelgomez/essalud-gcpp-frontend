@@ -32,6 +32,7 @@ import { User } from '../../model/user';
   styleUrl: './logs-reports.css',
 })
 export class LogsReports implements OnInit, OnDestroy {
+  @ViewChildren('userOption') userOptions!: QueryList<ElementRef<HTMLElement>>;
   @ViewChildren('redOption') redOptions!: QueryList<ElementRef<HTMLElement>>;
   @ViewChildren('centroOption') centroOptions!: QueryList<ElementRef<HTMLElement>>;
   @ViewChild('chartRolContainer') chartRolContainer!: ElementRef<HTMLDivElement>;
@@ -44,7 +45,10 @@ export class LogsReports implements OnInit, OnDestroy {
   filteredUser: User[] = [];
 
   searchUser: string = '';
-  isDropdownUserOpen: boolean = false
+  isDropdownUserOpen: boolean = false;
+  filteredAvailableUsers: Array<{ id: string; label: string }> = [];
+  selectedUserLabel: string = 'Todos los usuarios';
+  activeUserIndex: number = -1;
 
   /// Datos para el dropdown de Red Asistencial
   dataRed: any[] = [];
@@ -91,7 +95,6 @@ export class LogsReports implements OnInit, OnDestroy {
   filters = {
     dni: '',
     full_name: '',
-    username: '',
     ip_user: '',
     url: '',
     browser: '',
@@ -266,6 +269,80 @@ export class LogsReports implements OnInit, OnDestroy {
     return this.searchCentro ? this.filteredCentro : this.dataCentro;
   }
 
+  getAllUserOptions(): Array<{ id: string; label: string }> {
+    return [{ id: 'todos', label: 'Todos los usuarios' }, ...this.availableUsers];
+  }
+
+  private getUserOptions(): Array<{ id: string; label: string }> {
+    return this.searchUser ? this.filteredAvailableUsers : this.getAllUserOptions();
+  }
+
+  private syncSelectedUserLabel(): void {
+    if (this.selectedUserId === 'todos') {
+      this.selectedUserLabel = 'Todos los usuarios';
+      return;
+    }
+
+    const selectedUser = this.availableUsers.find((user) => user.id === this.selectedUserId);
+    this.selectedUserLabel = selectedUser?.label ?? 'Todos los usuarios';
+  }
+
+  openDropdownUser() {
+    this.isDropdownUserOpen = true;
+    if (!this.searchUser) {
+      this.filteredAvailableUsers = this.getAllUserOptions();
+    }
+    const options = this.getUserOptions();
+    this.activeUserIndex = options.length > 0 ? 0 : -1;
+    this.scrollActiveUserIntoView();
+  }
+
+  focusDropdownUser() {
+    this.searchUser = '';
+    this.isDropdownUserOpen = true;
+    this.filteredAvailableUsers = this.getAllUserOptions();
+    const options = this.getUserOptions();
+    this.activeUserIndex = options.length > 0 ? 0 : -1;
+    this.scrollActiveUserIntoView();
+  }
+
+  closeDropdownUser() {
+    this.isDropdownUserOpen = false;
+    this.searchUser = '';
+    this.activeUserIndex = -1;
+    this.syncSelectedUserLabel();
+  }
+
+  filterUser(event: any) {
+    const rawValue = String(event.target.value ?? '');
+    const searchValue = rawValue.toLowerCase();
+    this.searchUser = rawValue;
+    this.isDropdownUserOpen = true;
+
+    const allOptions = this.getAllUserOptions();
+    if (searchValue.trim() === '') {
+      this.filteredAvailableUsers = allOptions;
+    } else {
+      this.filteredAvailableUsers = allOptions.filter((user) =>
+        user.label.toLowerCase().includes(searchValue) || user.id.toLowerCase().includes(searchValue),
+      );
+    }
+
+    const options = this.getUserOptions();
+    this.activeUserIndex = options.length > 0 ? 0 : -1;
+    this.scrollActiveUserIntoView();
+  }
+
+  selectOptionUser(user: { id: string; label: string }) {
+    this.selectedUserId = user.id;
+    this.selectedUserLabel = user.label;
+    this.isDropdownUserOpen = false;
+    this.searchUser = '';
+    this.activeUserIndex = -1;
+
+    this.onUserChange();
+  }
+
   handleRedKeydown(event: KeyboardEvent) {
     const key = event.key;
 
@@ -314,6 +391,57 @@ export class LogsReports implements OnInit, OnDestroy {
 
     if (key === 'Escape') {
       this.closeDropdownRed();
+    }
+  }
+
+  handleUserKeydown(event: KeyboardEvent) {
+    const key = event.key;
+
+    if (key === 'ArrowDown') {
+      event.preventDefault();
+      if (!this.isDropdownUserOpen) {
+        this.openDropdownUser();
+      }
+      const options = this.getUserOptions();
+      if (options.length === 0) {
+        this.activeUserIndex = -1;
+        return;
+      }
+      this.activeUserIndex = Math.min(this.activeUserIndex + 1, options.length - 1);
+      this.scrollActiveUserIntoView();
+      return;
+    }
+
+    if (key === 'ArrowUp') {
+      event.preventDefault();
+      if (!this.isDropdownUserOpen) {
+        this.openDropdownUser();
+      }
+      const options = this.getUserOptions();
+      if (options.length === 0) {
+        this.activeUserIndex = -1;
+        return;
+      }
+      this.activeUserIndex = Math.max(this.activeUserIndex - 1, 0);
+      this.scrollActiveUserIntoView();
+      return;
+    }
+
+    if (key === 'Enter') {
+      if (!this.isDropdownUserOpen) {
+        return;
+      }
+      event.preventDefault();
+      const options = this.getUserOptions();
+      const index = this.activeUserIndex >= 0 ? this.activeUserIndex : 0;
+      if (options.length > 0 && options[index]) {
+        this.selectOptionUser(options[index]);
+      }
+      return;
+    }
+
+    if (key === 'Escape') {
+      this.closeDropdownUser();
     }
   }
 
@@ -375,6 +503,17 @@ export class LogsReports implements OnInit, OnDestroy {
     setTimeout(() => {
       const items = this.redOptions?.toArray();
       const target = items?.[this.activeRedIndex]?.nativeElement;
+      target?.scrollIntoView({ block: 'nearest' });
+    }, 0);
+  }
+
+  private scrollActiveUserIntoView() {
+    if (!this.isDropdownUserOpen || this.activeUserIndex < 0) {
+      return;
+    }
+    setTimeout(() => {
+      const items = this.userOptions?.toArray();
+      const target = items?.[this.activeUserIndex]?.nativeElement;
       target?.scrollIntoView({ block: 'nearest' });
     }, 0);
   }
@@ -630,17 +769,15 @@ export class LogsReports implements OnInit, OnDestroy {
     if (this.selectedUserId !== 'todos' && !this.availableUsers.some((user) => user.id === this.selectedUserId)) {
       this.selectedUserId = 'todos';
     }
+
+    this.syncSelectedUserLabel();
+
+    if (!this.searchUser) {
+      this.filteredAvailableUsers = this.getAllUserOptions();
+    }
   }
 
   applyFilters(): void {
-    console.log('Aplicando filtros:', {
-      selectedRedCode: this.selectedRedCode,
-      selectedCentroCode: this.selectedCentroCode,
-      selectedYear: this.selectedYear,
-      selectedMonth: this.selectedMonth,
-      selectedDay: this.selectedDay,
-      selectedUserId: this.selectedUserId,
-    });
 
     const dataLogin = this.applyAllFiltersOptimized([...this.loginLogs]);
     const dataTotalLogs = this.applyAllFiltersOptimized([...this.allLogsData]);
@@ -652,9 +789,6 @@ export class LogsReports implements OnInit, OnDestroy {
     this.allLogs = [...tableData];
     this.dataSource.data = this.allLogs;
 
-    console.log('Datos tabla mostrados:', tableData.length, 'de', this.tableLogsData.length);
-    console.log('Datos gráficos 1 y 2 (login):', dataLogin.length, 'de', this.loginLogs.length);
-    console.log('Datos gráficos 3 y 4 (total logs):', dataTotalLogs.length, 'de', this.allLogsData.length);
 
     this.renderCharts(dataLogin, dataTotalLogs);
     this.isLoading = false;
@@ -743,10 +877,12 @@ export class LogsReports implements OnInit, OnDestroy {
     return value === '/login' || value.startsWith('/login?') || value.includes('/login');
   }
 
-  private renderCharts(dataLogin: any[], dataTotalLogs: any[]): void {
+  private renderCharts(dataLogin: any[], dataTotalLogs: any[], retryCount = 0): void {
     setTimeout(() => {
       if (!this.chartRolContainer || !this.chartFechaContainer || !this.chartBrowserContainer || !this.chartUrlContainer) {
-        console.log('Contenedores de gráficos no disponibles');
+        if (retryCount < 5) {
+          this.renderCharts(dataLogin, dataTotalLogs, retryCount + 1);
+        }
         return;
       }
 
@@ -754,8 +890,6 @@ export class LogsReports implements OnInit, OnDestroy {
       const { labels: fechaLabels, values: fechaValues } = this.procesarDatosPorFecha(dataLogin);
       const conteoBrowser = this.contarPorNavegador(dataTotalLogs);
       const { labels: urlLabels, values: urlValues } = this.contarTopUrls(dataTotalLogs);
-
-      console.log('Actualizando gráficos con datos:', { conteoRol, fechaLabels, fechaValues, conteoBrowser, urlLabels, urlValues });
 
       this.renderChartRol(conteoRol);
       this.renderChartFecha(fechaLabels, fechaValues);
@@ -769,12 +903,10 @@ export class LogsReports implements OnInit, OnDestroy {
   private renderChartRol(conteo: Record<string, number>): void {
     const container = this.chartRolContainer?.nativeElement;
     if (!container) {
-      console.log('Contenedor de gráfico de rol no disponible');
       return;
     }
 
     if (Object.keys(conteo).length === 0) {
-      console.log('No hay datos para el gráfico de rol');
       if (this.chartRolInstance) {
         this.chartRolInstance.destroy();
         this.chartRolInstance = undefined;
@@ -852,6 +984,33 @@ export class LogsReports implements OnInit, OnDestroy {
       legend: {
         show: false,
       },
+      responsive: [
+        {
+          breakpoint: 1100,
+          options: {
+            chart: { height: 300 },
+          },
+        },
+        {
+          breakpoint: 768,
+          options: {
+            chart: { height: 260 },
+            plotOptions: {
+              bar: {
+                columnWidth: '70%',
+              },
+            },
+            xaxis: {
+              labels: {
+                rotate: -25,
+                trim: true,
+                maxHeight: 60,
+                style: { fontSize: '10px' },
+              },
+            },
+          },
+        },
+      ],
     };
 
     this.chartRolInstance = new ApexCharts(container, options);
@@ -861,12 +1020,10 @@ export class LogsReports implements OnInit, OnDestroy {
   private renderChartFecha(labels: string[], values: number[]): void {
     const container = this.chartFechaContainer?.nativeElement;
     if (!container) {
-      console.log('Contenedor de gráfico de fecha no disponible');
       return;
     }
 
     if (labels.length === 0) {
-      console.log('No hay datos para el gráfico de fecha');
       if (this.chartFechaInstance) {
         this.chartFechaInstance.destroy();
         this.chartFechaInstance = undefined;
@@ -954,6 +1111,29 @@ export class LogsReports implements OnInit, OnDestroy {
       legend: {
         show: false,
       },
+      responsive: [
+        {
+          breakpoint: 1100,
+          options: {
+            chart: { height: 300 },
+          },
+        },
+        {
+          breakpoint: 768,
+          options: {
+            chart: { height: 260 },
+            markers: { size: 4 },
+            xaxis: {
+              labels: {
+                rotate: -25,
+                trim: true,
+                maxHeight: 60,
+                style: { fontSize: '10px' },
+              },
+            },
+          },
+        },
+      ],
     };
 
     this.chartFechaInstance = new ApexCharts(container, options);
@@ -1002,6 +1182,24 @@ export class LogsReports implements OnInit, OnDestroy {
         },
       },
       colors: ['#0B63A7', '#00AEEF', '#45B7D1', '#5BC0DE', '#88D498', '#F9C74F'],
+      responsive: [
+        {
+          breakpoint: 1100,
+          options: {
+            chart: { height: 300 },
+          },
+        },
+        {
+          breakpoint: 768,
+          options: {
+            chart: { height: 250 },
+            legend: {
+              position: 'bottom',
+              fontSize: '11px',
+            },
+          },
+        },
+      ],
     };
 
     this.chartBrowserInstance = new ApexCharts(container, options);
@@ -1071,6 +1269,27 @@ export class LogsReports implements OnInit, OnDestroy {
       legend: {
         show: false,
       },
+      responsive: [
+        {
+          breakpoint: 1100,
+          options: {
+            chart: { height: 300 },
+          },
+        },
+        {
+          breakpoint: 768,
+          options: {
+            chart: { height: 260 },
+            yaxis: {
+              labels: {
+                style: {
+                  fontSize: '10px',
+                },
+              },
+            },
+          },
+        },
+      ],
     };
 
     this.chartUrlInstance = new ApexCharts(container, options);
@@ -1162,6 +1381,10 @@ export class LogsReports implements OnInit, OnDestroy {
     this.selectedMonth = 'todos';
     this.selectedDay = '';
     this.selectedUserId = 'todos';
+    this.selectedUserLabel = 'Todos los usuarios';
+    this.searchUser = '';
+    this.isDropdownUserOpen = false;
+    this.activeUserIndex = -1;
 
     this.selectedRedName = '';
     this.selectedRedCode = '';
@@ -1227,10 +1450,7 @@ export class LogsReports implements OnInit, OnDestroy {
       return false;
     }
 
-    // Filtro Username
-    if (this.filters.username && !String(row.username ?? '').toLowerCase().includes(this.filters.username)) {
-      return false;
-    }
+
 
     // Filtro URL
     if (this.filters.url && !String(row.url ?? '').toLowerCase().includes(this.filters.url)) {
@@ -1261,10 +1481,11 @@ export class LogsReports implements OnInit, OnDestroy {
     const csvRows = [headers.join(',')];
 
     this.dataSource.data.forEach((log) => {
+      const usuario = String(log.full_name ?? '').trim() || `Usuario ${String(log.id_user ?? '').trim() || 'N/A'}`;
       const row = [
         log.id,
         log.ip_user,
-        log.username,
+        usuario,
         log.log,
         log.request,
         log.url,

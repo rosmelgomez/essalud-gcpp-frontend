@@ -19,8 +19,8 @@
 
         <div class="filter-group">
           <label for="filtro-lastname">Apellido</label>
-          <input id="filtro-lastname" type="text" [(ngModel)]="filters.lastname"
-            (ngModelChange)="onFilterValueChange()" placeholder="Buscar apellido" />
+          <input id="filtro-lastname" type="text" [(ngModel)]="filters.lastname" (ngModelChange)="onFilterValueChange()"
+            placeholder="Buscar apellido" />
         </div>
 
         <div class="filter-group">
@@ -31,8 +31,8 @@
 
         <div class="filter-group">
           <label for="filtro-centro">Centro</label>
-          <input id="filtro-centro" type="text" [(ngModel)]="filters.codcas"
-            (ngModelChange)="onFilterValueChange()" placeholder="Buscar centro" />
+          <input id="filtro-centro" type="text" [(ngModel)]="filters.codcas" (ngModelChange)="onFilterValueChange()"
+            placeholder="Buscar centro" />
         </div>
 
         <div class="filter-group">
@@ -51,8 +51,8 @@
 
         <div class="filter-group">
           <label for="filtro-username">Username</label>
-          <input id="filtro-username" type="text" [(ngModel)]="filters.username"
-            (ngModelChange)="onFilterValueChange()" placeholder="Buscar username" />
+          <input id="filtro-username" type="text" [(ngModel)]="filters.username" (ngModelChange)="onFilterValueChange()"
+            placeholder="Buscar username" />
         </div>
 
 
@@ -105,12 +105,13 @@
               </div>
 
               <div class="card-body" *ngIf="!isEditing(user)">
-                <div class="field"><span>Rol</span><strong>{{ user.role || '-' }}</strong></div>
+                <div class="field"><span>Rol</span><strong>{{ (user.roles && user.roles.length > 0 ? user.roles[0] : '-') || '-' }}</strong></div>
                 <div class="field"><span>Red</span><strong>{{ getRedName(user.code_red) || '-' }}</strong></div>
                 <div class="field"><span>Centro</span><strong>{{ getCentroName(user.codcas) || '-' }}</strong></div>
                 <div class="field"><span>Estado</span><strong>{{ getFlagLabel(user.flag) }}</strong></div>
                 <div class="field"><span>Password</span><strong>{{ user.password || '-' }}</strong></div>
-                <div class="field"><span>Creación</span><strong>{{ formatDate(user.date_creation) || '-' }}</strong></div>
+                <div class="field"><span>Creación</span><strong>{{ formatDate(user.date_creation) || '-' }}</strong>
+                </div>
                 <div class="field"><span>Actualización</span><strong>{{ formatDate(user.date_update) || '-' }}</strong>
                 </div>
               </div>
@@ -118,22 +119,22 @@
               <div class="card-body edit" *ngIf="isEditing(user) && editableRow as editUser">
                 <div class="field-input">
                   <label>Nombre</label>
-                  <input type="text" [(ngModel)]="editUser.name" />
+                  <input title="name" type="text" [(ngModel)]="editUser.name" />
                 </div>
 
                 <div class="field-input">
                   <label>Apellido</label>
-                  <input type="text" [(ngModel)]="editUser.lastname" />
+                  <input  title="lastname" type="text" [(ngModel)]="editUser.lastname" />
                 </div>
 
                 <div class="field-input">
                   <label>DNI</label>
-                  <input type="text" [(ngModel)]="editUser.dni" />
+                  <input title="dni" type="text" [(ngModel)]="editUser.dni" />
                 </div>
 
                 <div class="field-input">
                   <label>Username</label>
-                  <input type="text" [(ngModel)]="editUser.username" />
+                  <input title="username" type="text" [(ngModel)]="editUser.username" />
                 </div>
 
                 <div class="field-input full">
@@ -143,7 +144,7 @@
 
                 <div class="field-input">
                   <label>Rol</label>
-                  <select [(ngModel)]="editUser.role" (change)="onEditingRoleChange()">
+                  <select [(ngModel)]="editableRow.roles[0]" (change)="onEditingRoleChange()">
                     <option value="">Seleccionar rol</option>
                     <option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
                   </select>
@@ -151,7 +152,8 @@
 
                 <div class="field-input">
                   <label>Red</label>
-                  <select [(ngModel)]="editUser.code_red" [disabled]="!editingRedEnabled" (change)="onEditingRedChange()">
+                  <select [(ngModel)]="editUser.code_red" [disabled]="!editingRedEnabled"
+                    (change)="onEditingRedChange()">
                     <option value="">{{ getEditingRedPlaceholder() }}</option>
                     <option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes }}</option>
                   </select>
@@ -189,7 +191,8 @@
 
               <div class="card-actions" *ngIf="isEditing(user)">
                 <button type="button" class="btn-muted" (click)="cancelEdit()">Cancelar</button>
-                <button type="button" class="btn-primary" (click)="updateUser()" [disabled]="isUpdateDisabled() || isSavingEdit">
+                <button type="button" class="btn-primary" (click)="updateUser()"
+                  [disabled]="isUpdateDisabled() || isSavingEdit">
                   {{ isSavingEdit ? 'Actualizando...' : 'Actualizar' }}
                 </button>
               </div>

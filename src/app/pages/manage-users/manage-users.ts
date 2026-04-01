@@ -15,6 +15,7 @@ import {
   MatDialogTitle,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
+import { User } from '../../model/user';
 
 
 @Component({
@@ -30,7 +31,7 @@ import {
 })
 export class ManageUsers implements OnInit {
   readonly dialog = inject(MatDialog);
-  readonly roleOptions: string[] = ['ADMIN', 'ADMIN_RED', 'USER'];
+  readonly roleOptions: string[] = ['ADMIN', 'ADMIN_RED', 'USER', 'CONSULTA'];
   readonly flagOptions: Array<{ label: string; value: string }> = [
     { label: 'Todos', value: '' },
     { label: 'Activo', value: '1' },
@@ -42,8 +43,8 @@ export class ManageUsers implements OnInit {
   isLoadingCatalogos: boolean = true;
   isSavingEdit: boolean = false;
 
-  allUserOriginal: any[] = [];
-  filteredUsers: any[] = [];
+  allUserOriginal: User[] = [];
+  filteredUsers: User[] = [];
   virtualRows: any[][] = [];
   editingRowKey: string | number | null = null;
   editableRow: any | null = null;
@@ -58,6 +59,11 @@ export class ManageUsers implements OnInit {
   private centroNameByCode: Record<string, string> = {};
 
   private cardsPerRow: number = 3;
+
+  // Helper para obtener el rol principal del usuario
+  private getPrimaryRole(roles?: String[]): string {
+    return roles && roles.length > 0 ? String(roles[0]) : '';
+  }
   pageSize: number = 8;
   pageIndex: number = 0;
 
@@ -201,18 +207,23 @@ export class ManageUsers implements OnInit {
   startEdit(row: any): void {
     this.editingRowKey = this.getRowKey(row);
     this.editableRow = { ...row };
+    // Hacer copia profunda del array de roles para evitar mutaciones
+    if (this.editableRow.roles && Array.isArray(this.editableRow.roles)) {
+      this.editableRow.roles = [...this.editableRow.roles];
+    }
     this.initializeEditingDropdowns();
   }
 
   initializeEditingDropdowns(): void {
     if (!this.editableRow) return;
 
+    const primaryRole = this.getPrimaryRole(this.editableRow.roles);
     // USER: codcas (cenasicod) es la fuente para inferir red (redasiscod).
-    if (this.editableRow.role === 'USER' && this.editableRow.codcas) {
+    if (primaryRole === 'USER' && this.editableRow.codcas) {
       this.syncUserRedFromCodcas();
     }
 
-    this.applyEditingRoleRules(this.editableRow.role);
+    this.applyEditingRoleRules(primaryRole);
   }
 
   onEditingRoleChange(): void {
@@ -220,7 +231,8 @@ export class ManageUsers implements OnInit {
       return;
     }
 
-    this.applyEditingRoleRules(this.editableRow.role);
+    const primaryRole = this.getPrimaryRole(this.editableRow.roles);
+    this.applyEditingRoleRules(primaryRole);
   }
 
   private applyEditingRoleRules(role: string): void {
@@ -258,7 +270,8 @@ export class ManageUsers implements OnInit {
   }
 
   private updateEditingCentrosByRed(redCode?: string, clearSelectedCentro = true): void {
-    if (!this.editableRow || this.editableRow.role !== 'USER') {
+    const primaryRole = this.getPrimaryRole(this.editableRow?.roles);
+    if (!this.editableRow || primaryRole !== 'USER') {
       this.editingAllCentroForSelectedRed = [];
       return;
     }
@@ -291,11 +304,12 @@ export class ManageUsers implements OnInit {
       return 'Selecciona un centro';
     }
 
-    if (this.editableRow.role === 'ADMIN_RED') {
+    const primaryRole = this.getPrimaryRole(this.editableRow.roles);
+    if (primaryRole === 'ADMIN_RED') {
       return 'No aplica para esta red';
     }
 
-    if (this.editableRow.role === 'ADMIN') {
+    if (primaryRole === 'ADMIN') {
       return 'No aplica para este rol';
     }
 
@@ -307,7 +321,8 @@ export class ManageUsers implements OnInit {
       return 'Seleccionar red...';
     }
 
-    if (this.editableRow.role === 'ADMIN') {
+    const primaryRole = this.getPrimaryRole(this.editableRow.roles);
+    if (primaryRole === 'ADMIN') {
       return 'No aplica para este rol';
     }
 
@@ -319,8 +334,9 @@ export class ManageUsers implements OnInit {
       return;
     }
 
-    if (this.editableRow.role !== 'USER') {
-      if (this.editableRow.role === 'ADMIN_RED') {
+    const primaryRole = this.getPrimaryRole(this.editableRow.roles);
+    if (primaryRole !== 'USER') {
+      if (primaryRole === 'ADMIN_RED') {
         this.editableRow.codcas = '';
       }
       return;
@@ -330,7 +346,8 @@ export class ManageUsers implements OnInit {
   }
 
   onEditingCentroChange(): void {
-    if (!this.editableRow || this.editableRow.role !== 'USER') {
+    const primaryRole = this.getPrimaryRole(this.editableRow?.roles);
+    if (!this.editableRow || primaryRole !== 'USER') {
       return;
     }
 
@@ -347,7 +364,8 @@ export class ManageUsers implements OnInit {
   }
 
   private syncUserRedFromCodcas(): void {
-    if (!this.editableRow || this.editableRow.role !== 'USER' || !this.editableRow.codcas) {
+    const primaryRole = this.getPrimaryRole(this.editableRow?.roles);
+    if (!this.editableRow || primaryRole !== 'USER' || !this.editableRow.codcas) {
       return;
     }
 
@@ -360,7 +378,8 @@ export class ManageUsers implements OnInit {
   }
 
   private isUserRedCentroSelectionValid(): boolean {
-    if (!this.editableRow || this.editableRow.role !== 'USER') {
+    const primaryRole = this.getPrimaryRole(this.editableRow?.roles);
+    if (!this.editableRow || primaryRole !== 'USER') {
       return true;
     }
 
@@ -494,16 +513,17 @@ export class ManageUsers implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         if (this.editableRow) {
-          if (this.editableRow.role === 'ADMIN') {
+          const primaryRole = this.getPrimaryRole(this.editableRow.roles);
+          if (primaryRole === 'ADMIN') {
             this.editableRow.code_red = '';
             this.editableRow.codcas = '';
           }
 
-          if (this.editableRow.role === 'ADMIN_RED') {
+          if (primaryRole === 'ADMIN_RED') {
             this.editableRow.codcas = '';
           }
 
-          if (this.editableRow.role === 'USER') {
+          if (primaryRole === 'USER') {
             this.editableRow.code_red = '';
           }
 
@@ -622,9 +642,13 @@ export class ManageUsers implements OnInit {
       return false;
     }
 
-    // Filtro role
-    if (this.filters.role && !String(row.role ?? '').toLowerCase().includes(this.filters.role.toLowerCase())) {
-      return false;
+    // Filtro role - busca en el array de roles
+    if (this.filters.role) {
+      const rolesList = (row.roles ?? []).map((r: String) => String(r).toLowerCase());
+      const hasMatchingRole = rolesList.some((role: string) => role.includes(this.filters.role.toLowerCase()));
+      if (!hasMatchingRole) {
+        return false;
+      }
     }
 
     // Filtro username

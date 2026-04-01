@@ -496,6 +496,7 @@ button[type="submit"]:active {
   margin-top: 12px;
 }
 
+
 @media (max-width: 1040px) {
   .login-wrapper {
     grid-template-columns: 1fr;

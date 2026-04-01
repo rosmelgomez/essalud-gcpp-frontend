@@ -19,7 +19,7 @@ import { DataImport } from '../../services/data-import';
 export class Login implements OnInit {
   public loginForm!: FormGroup;
   showPassword = false;
-  loginError = '';
+
   sessionExpiredMessage = '';
 
   constructor(
@@ -67,7 +67,6 @@ export class Login implements OnInit {
   }
 
   login() {
-    this.loginError = '';
     this.sessionExpiredMessage = '';
 
     if (this.loginForm.valid) {
@@ -95,17 +94,8 @@ export class Login implements OnInit {
           });
         },
         error: (error) => {
-          if (error?.status === 0) {
-            this.loginError = 'No se puede conectar al servidor';
-            return;
-          }
-
-          if (error?.status === 401 || error?.status === 403) {
-            this.loginError = 'Usuario o contraseña inválidos.';
-            return;
-          }
-
-          this.loginError = 'Error al iniciar sesión. Intente nuevamente.';
+          console.error('Error de autenticación:', error);
+          alert('Credenciales incorrectas. Por favor, inténtelo de nuevo.');
         },
       });
     } else {

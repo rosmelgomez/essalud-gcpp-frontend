@@ -9,7 +9,8 @@
       </div>
     </div>
     <div class="survey-alert__actions">
-      <button type="button" class="survey-alert__primary" [disabled]="!canGoToEncuesta()" (click)="goToEncuesta()">Ir a encuesta</button>
+      <button type="button" class="survey-alert__primary" [disabled]="!canGoToEncuesta()" (click)="goToEncuesta()">Ir a
+        encuesta</button>
       <button type="button" class="survey-alert__secondary" (click)="closeSurveyReminder()">Cerrar</button>
     </div>
   </div>
@@ -38,8 +39,8 @@
         <div class="stat-item">
           <div class="stat-icon">🏥</div>
           <div class="stat-text">
-            <span class="stat-value" *ngIf="user?.roles?.includes('ADMIN')">4</span>
-            <span class="stat-value"  *ngIf="user?.roles?.includes('ADMIN')">2</span>
+            <span class="stat-value" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">4</span>
+            <span class="stat-value" *ngIf="user?.roles?.includes('ADMIN_RED')">2</span>
             <span class="stat-label">Módulos activos</span>
           </div>
         </div>
@@ -58,7 +59,7 @@
 
       <form [formGroup]="centroForm" autocomplete="off" class="register-form">
         <!-- Admin puede usar ambos filtros en paralelo: red (opcional) y centro -->
-        <div class="form-grid" *ngIf="user?.roles?.includes('ADMIN')">
+        <div class="form-grid" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
           <div class="centro-form-group">
             <label>Red Asistencial</label>
             <div class="custom-dropdown" (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
@@ -80,10 +81,9 @@
 
         <div class="form-grid">
           <div class="centro-form-group">
-            <label *ngIf="user?.roles?.includes('ADMIN')">Centro Asistencial</label>
+            <label *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">Centro Asistencial</label>
             <div class="custom-dropdown" (mouseleave)="closeDropdown()" (mouseenter)="openDropdown()">
-              <input type="text" title="Selecciona un centro"
-                placeholder="Buscar y seleccionar centro..."
+              <input type="text" title="Selecciona un centro" placeholder="Buscar y seleccionar centro..."
                 (input)="filterCentro($event)" (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName"
                 class="dropdown-input" />
               <div class="dropdown-list" *ngIf="isDropdownOpen">
@@ -114,7 +114,8 @@
         <h1 class="modules-title">Módulos disponibles</h1>
         <p class="modules-subtitle">Accede a los diferentes servicios de la plataforma</p>
       </div>
-      <button class="btn-change-centro" (click)="changeCentro()" title="Cambiar centro" *ngIf="!user?.roles?.includes('USER')">
+      <button class="btn-change-centro" (click)="changeCentro()" title="Cambiar centro"
+        *ngIf="!user?.roles?.includes('USER')">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="12 5 19 12 12 19"></polyline>
@@ -150,32 +151,37 @@
       </div>
 
       <!-- Módulo 5: Reportes gerenciales (admin) -->
-      <a href="/reports-gerenciales" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+      <a href="/reports-gerenciales" class="module" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/analytics.png" alt="Reportes gerenciales" />
         <span>Reportes gerenciales</span>
       </a>
 
       <!-- Módulo 6: Reporteador -->
-      <a href="/dashboard-reporteador" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+      <a href="/dashboard-reporteador" class="module" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/reporteador.png" alt="Reporteador" />
         <span>Reporteador</span>
       </a>
 
       <!-- Módulo 7: Encuesta -->
-      <a href="/encuesta" class="module" >
+      <a href="/encuesta" class="module">
         <img src="/images/survey.png" alt="Encuesta" />
         <span>Encuesta de Conformidad</span>
       </a>
 
 
-      <!-- Módulo 8: Dashboard Encuesta -->
-      <a href="/dashboard-encuesta" class="module" *ngIf="user?.roles?.includes('ADMIN')" >
+      <!-- Módulo 8: Dashboard Encuesta (admin) -->
+      <a href="/dashboard-encuesta" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/respuesta-encuesta.png" alt="Encuesta" />
         <span>Respuesta de Encuestas</span>
       </a>
 
-
       <!-- Módulo 9: Auditoría del Sistema (admin) -->
+      <a href="/solicitud-acceso-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+        <img src="/images/acceso.png" alt="Auditoría del Sistema" />
+        <span>Solicitud de Acceso</span>
+      </a>
+
+      <!-- Módulo 10: Auditoría del Sistema (admin) -->
       <a href="/logs-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/logs.png" alt="Auditoría del Sistema" />
         <span>Auditoría del Sistema</span>

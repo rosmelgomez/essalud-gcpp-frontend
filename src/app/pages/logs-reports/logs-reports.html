@@ -46,10 +46,22 @@
 
           <label>
             Usuario
-            <select [(ngModel)]="selectedUserId" (change)="onUserChange()" class="style-select">
-              <option value="todos">Todos los usuarios</option>
-              <option *ngFor="let user of availableUsers" [value]="user.id">{{ user.label }}</option>
-            </select>
+            <div class="custom-dropdown" (mouseleave)="closeDropdownUser()" (mouseenter)="openDropdownUser()">
+              <input type="text" placeholder="Buscar usuario..." (input)="filterUser($event)"
+                (keydown)="handleUserKeydown($event)" (focus)="focusDropdownUser()"
+                [value]="isDropdownUserOpen ? searchUser : selectedUserLabel" class="dropdown-input" />
+              <div class="dropdown-list" *ngIf="isDropdownUserOpen">
+                <div *ngFor="let user of searchUser ? filteredAvailableUsers : getAllUserOptions(); let i = index"
+                  #userOption class="dropdown-item" [class.active]="i === activeUserIndex"
+                  (click)="selectOptionUser(user)">
+                  {{ user.label }}
+                </div>
+                <div *ngIf="(searchUser ? filteredAvailableUsers : getAllUserOptions()).length === 0"
+                  class="dropdown-item disabled">
+                  No hay resultados
+                </div>
+              </div>
+            </div>
           </label>
 
           <label>
@@ -108,12 +120,12 @@
 
       <section class="charts-grid">
         <article class="chart-card">
-          <h3>Cantidad de logs por rol</h3>
+          <h3>Cantidad de ingresos por rol</h3>
           <div #chartRolContainer class="chart-container"></div>
         </article>
 
         <article class="chart-card">
-          <h3>Cantidad de logs por fecha</h3>
+          <h3>Cantidad de ingresos por fecha</h3>
           <div #chartFechaContainer class="chart-container"></div>
         </article>
 
@@ -135,7 +147,6 @@
           <div class="cell full_name">Usuario</div>
           <div class="cell ip_user">IP</div>
           <div class="cell dni">DNI</div>
-          <div class="cell username">Username</div>
           <div class="cell url">URL</div>
           <div class="cell browser">Browser</div>
           <div class="cell user_role">Rol</div>
@@ -143,26 +154,22 @@
         </div>
 
         <div class="resumen-filters">
-          <input type="text" class="filter-input cell code_red" placeholder="Buscar Red..." 
+          <input type="text" class="filter-input cell code_red" placeholder="Buscar Red..."
             [(ngModel)]="filters.code_red" />
-          <input type="text" class="filter-input cell codcas" placeholder="Buscar Centro..." 
+          <input type="text" class="filter-input cell codcas" placeholder="Buscar Centro..."
             [(ngModel)]="filters.codcas" />
           <input type="text" class="filter-input cell full_name" placeholder="Buscar Usuario..."
             [(ngModel)]="filters.full_name" />
-          <input type="text" class="filter-input cell ip_user" placeholder="Buscar IP..." 
+          <input type="text" class="filter-input cell ip_user" placeholder="Buscar IP..."
             [(ngModel)]="filters.ip_user" />
-          <input type="text" class="filter-input cell dni" placeholder="Buscar DNI..." 
-            [(ngModel)]="filters.dni" />
-          <input type="text" class="filter-input cell username" placeholder="Buscar Username..."
-            [(ngModel)]="filters.username" />
-          <input type="text" class="filter-input cell url" placeholder="Buscar URL..." 
-            [(ngModel)]="filters.url" />
+          <input type="text" class="filter-input cell dni" placeholder="Buscar DNI..." [(ngModel)]="filters.dni" />
+
+          <input type="text" class="filter-input cell url" placeholder="Buscar URL..." [(ngModel)]="filters.url" />
           <input type="text" class="filter-input cell browser" placeholder="Buscar Navegador..."
             [(ngModel)]="filters.browser" />
-          <input type="text" class="filter-input cell user_role" placeholder="Buscar Rol..." 
+          <input type="text" class="filter-input cell user_role" placeholder="Buscar Rol..."
             [(ngModel)]="filters.user_role" />
-          <input type="text" class="filter-input cell date" placeholder="Buscar Fecha..." 
-            [(ngModel)]="filters.date" />
+          <input type="text" class="filter-input cell date" placeholder="Buscar Fecha..." [(ngModel)]="filters.date" />
         </div>
 
         <div class="resumen-wrapper">
@@ -173,7 +180,6 @@
               <div class="cell full_name">{{ row.full_name }}</div>
               <div class="cell ip_user">{{ row.ip_user }}</div>
               <div class="cell dni">{{ row.dni }}</div>
-              <div class="cell username">{{ row.username }}</div>
               <div class="cell url">{{ row.url }}</div>
               <div class="cell browser">{{ row.browser }}</div>
               <div class="cell user_role">{{ row.user_role }}</div>
