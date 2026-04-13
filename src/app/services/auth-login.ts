@@ -4,10 +4,10 @@ import { Auth } from '../model/auth';
 import { tap } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
 import { catchError, throwError } from 'rxjs';
-import { BackendCredentials } from '../model/backendcredentials';
+import { Backend } from '../model/api';
 import { UsersService } from './users-service';
 
-const base_url = BackendCredentials.api;
+const base_url = Backend.api;
 
 @Injectable({
   providedIn: 'root',

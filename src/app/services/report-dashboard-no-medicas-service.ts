@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { BackendCredentials } from '../model/backendcredentials';
+import { Backend } from '../model/api';
 import { HttpClient } from '@angular/common/http';
 
-const base_url = BackendCredentials.api + '/no-medica';
+const base_url = Backend.api + '/no-medica';
 
 @Injectable({
   providedIn: 'root',

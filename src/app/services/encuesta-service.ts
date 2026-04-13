@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BackendCredentials } from '../model/backendcredentials';
+import { Backend } from '../model/api';
 import { Modulo } from '../model/modulo';
 import { Categoria } from '../model/categoria';
 import { Subcategoria } from '../model/subcategoria';
 import { Variable } from '../model/variable';
 import { Encuesta } from '../model/encuesta';
 
-const base_url = BackendCredentials.api + '/encuesta';
+const base_url = Backend.api + '/encuesta';
 
 @Injectable({
   providedIn: 'root',

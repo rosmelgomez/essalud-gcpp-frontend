@@ -3,9 +3,9 @@ import { Router, NavigationEnd } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { filter } from 'rxjs/operators';
 import { AuthLogin } from './auth-login';
-import { BackendCredentials } from '../model/backendcredentials';
+import { Backend } from '../model/api';
 
-const log_url = BackendCredentials.api + '/log/register';
+const log_url = Backend.api + '/log/register';
 
 @Injectable({
   providedIn: 'root',
