@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { OnInit } from '@angular/core';
-import { DataImport } from '../../services/data-import';
+import { DataImport } from '../../services/localstorage-service';
 import { ReportDashboardMedicasService } from '../../services/report-dashboard-medicas-service';
 import { FileService } from '../../services/file-service';
 

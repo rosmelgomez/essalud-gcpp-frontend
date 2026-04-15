@@ -1,13 +1,14 @@
-import { logoutGuard } from './../../guards/logout-guard';
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core';
 import { ReportDashboardIntervencionesQuirurgicasService } from '../../services/report-dashboard-intervenciones-quirurgicas-service';
-import{ DataImport } from '../../services/data-import';
+import { DataImport } from '../../services/localstorage-service';
 //import { FileService } from 'src/app/services/file.service';
 
 @Component({
   selector: 'app-report-dashboard-intervenciones-quirurgicas',
-  imports: [],
+  imports: [CommonModule, FormsModule],
   templateUrl: './report-dashboard-intervenciones-quirurgicas.html',
   styleUrl: './report-dashboard-intervenciones-quirurgicas.css',
 })
@@ -15,7 +16,7 @@ export class ReportDashboardIntervencionesQuirurgicas {
 
   currentDate: string = '';
 
-    // Estados para grado de complejidad
+  // Estados para grado de complejidad
   loadingGC: boolean = false;
   errorGC: string | null = null;
   noDataGC: boolean = false;
@@ -39,7 +40,7 @@ export class ReportDashboardIntervencionesQuirurgicas {
   complejidadE: number = 0;
 
 
-    //data indicadores grado de complejidad
+  //data indicadores grado de complejidad
   dataComplejidadA: any[] = [];
   dataComplejidadB: any[] = [];
   dataComplejidadC: any[] = [];
@@ -51,7 +52,7 @@ export class ReportDashboardIntervencionesQuirurgicas {
     private cdr: ChangeDetectorRef,
     private dataImport: DataImport,
     //private fileService: FileService,
-  ) {}
+  ) { }
 
 
   ngOnInit(): void {
@@ -83,11 +84,27 @@ export class ReportDashboardIntervencionesQuirurgicas {
     dataComplejidad.forEach((tipo) => {
       switch (tipo) {
         case 'A':
-          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, 'A', 'COMPLEJIDAD A').subscribe({
+          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc, tipo).subscribe({
             next: (data) => {
-              this.dataComplejidadA = data;
               this.complejidadA = data.length;
               this.loadingGC = false;
+
+              ///datos para el detalle de complejidad A
+              const areaCountMap = new Map<string, number>();
+
+              for (const row of data) {
+                const area = (row as any).area || 'Sin area';
+                areaCountMap.set(area, (areaCountMap.get(area) || 0) + 1);
+              }
+
+              this.dataComplejidadA = Array.from(areaCountMap, ([area, total]) => ({
+                area,
+                total,
+              }));
+              this.dataComplejidadA.sort((a, b) => b.total - a.total);
+
+
+
               this.cdr.detectChanges();
             },
             error: (err) => {
@@ -98,41 +115,99 @@ export class ReportDashboardIntervencionesQuirurgicas {
           });
           break;
         case 'B':
-          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, 'B', 'COMPLEJIDAD B').subscribe({
+          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc, tipo).subscribe({
             next: (data) => {
-              this.dataComplejidadB = data;
+
               this.complejidadB = data.length;
               this.loadingGC = false;
+
+              const areaCountMap = new Map<string, number>();
+
+              for (const row of data) {
+                const area = (row as any).area || 'Sin area';
+                areaCountMap.set(area, (areaCountMap.get(area) || 0) + 1);
+              }
+
+              this.dataComplejidadB = Array.from(areaCountMap, ([area, total]) => ({
+                area,
+                total,
+              }));
+              this.dataComplejidadB.sort((a, b) => b.total - a.total);
+
               this.cdr.detectChanges();
             }
           });
           break;
         case 'C':
-          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, 'C', 'COMPLEJIDAD C').subscribe({
+          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc, tipo).subscribe({
             next: (data) => {
               this.dataComplejidadC = data;
               this.complejidadC = data.length;
               this.loadingGC = false;
+
+              const areaCountMap = new Map<string, number>();
+
+              for (const row of data) {
+                const area = (row as any).area || 'Sin area';
+                areaCountMap.set(area, (areaCountMap.get(area) || 0) + 1);
+              }
+
+              this.dataComplejidadC = Array.from(areaCountMap, ([area, total]) => ({
+                area,
+                total,
+              }));
+              this.dataComplejidadC.sort((a, b) => b.total - a.total);
+
               this.cdr.detectChanges();
             }
           });
           break;
         case 'D':
-          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, 'D', 'COMPLEJIDAD D').subscribe({
+          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc, tipo).subscribe({
             next: (data) => {
               this.dataComplejidadD = data;
               this.complejidadD = data.length;
               this.loadingGC = false;
+
+
+              const areaCountMap = new Map<string, number>();
+
+              for (const row of data) {
+                const area = (row as any).area || 'Sin area';
+                areaCountMap.set(area, (areaCountMap.get(area) || 0) + 1);
+              }
+
+              this.dataComplejidadD = Array.from(areaCountMap, ([area, total]) => ({
+                area,
+                total,
+              }));
+              this.dataComplejidadD.sort((a, b) => b.total - a.total);
+
               this.cdr.detectChanges();
             }
           });
           break;
         case 'E':
-          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, 'E', 'COMPLEJIDAD E').subscribe({
+          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc, tipo).subscribe({
             next: (data) => {
               this.dataComplejidadE = data;
               this.complejidadE = data.length;
               this.loadingGC = false;
+
+
+              const areaCountMap = new Map<string, number>();
+
+              for (const row of data) {
+                const area = (row as any).area || 'Sin area';
+                areaCountMap.set(area, (areaCountMap.get(area) || 0) + 1);
+              }
+
+              this.dataComplejidadE = Array.from(areaCountMap, ([area, total]) => ({
+                area,
+                total,
+              }));
+              this.dataComplejidadE.sort((a, b) => b.total - a.total);
+
               this.cdr.detectChanges();
             }
           });
@@ -142,27 +217,18 @@ export class ReportDashboardIntervencionesQuirurgicas {
   }
 
 
-   formatNumber(num: number): string {
+  formatNumber(num: number): string {
     return new Intl.NumberFormat('es-PE').format(num);
   }
 
   // Tabs
   activeTab:
-    | 'Atenciones Medicas'
-    | 'Medicina Complementaria'
-    | 'Medicina Ocupacional'
-    | 'Medico de Personal'
-    | 'Consulta de Atencion Inmediata'
-    | 'Consulta de Apoyo  Desc' = 'Atenciones Medicas';
+    | 'Grado de Complejidad' = 'Grado de Complejidad';
 
   setActiveTab(
     tab:
-      | 'Atenciones Medicas'
-      | 'Medicina Complementaria'
-      | 'Medicina Ocupacional'
-      | 'Medico de Personal'
-      | 'Consulta de Atencion Inmediata'
-      | 'Consulta de Apoyo  Desc',
+      | 'Grado de Complejidad'
+
   ): void {
     this.activeTab = tab;
     this.cdr.detectChanges();

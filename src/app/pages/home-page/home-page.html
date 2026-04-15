@@ -127,7 +127,7 @@
 
     <div class="modules-menu">
       <!-- Módulo 1: Consulta externa (activo) -->
-      <a href="/dashboard" class="module">
+      <a href="/dashboard" class="module" (click)="saveModulo('Consulta Externa')">
         <img src="/images/RCS2.png" alt="Consulta externa" />
         <span>Consulta externa</span>
       </a>
@@ -138,17 +138,19 @@
         <span>Emergencia</span>
       </a>
 
-      <!-- Módulo 3: Hospitalización (inactivo) -->
+
+      <!-- Módulo 3: Centro quirúrgico  -->
+      <a href="/dashboard"  class="module" (click)="saveModulo('Centro Quirúrgico')">
+        <img src="/images/cirugia.png" alt="Centro quirúrgico" />
+        <span>Centro quirúrgico</span>
+      </a>
+
+      <!-- Módulo 4: Hospitalización (inactivo) -->
       <div class="module inactive" title="Módulo no disponible">
         <img src="/images/hospitalizacion.png" alt="Hospitalización" />
         <span>Hospitalización</span>
       </div>
 
-      <!-- Módulo 4: Centro quirúrgico (inactivo) -->
-      <div class="module inactive" title="Módulo no disponible">
-        <img src="/images/cirugia.png" alt="Centro quirúrgico" />
-        <span>Centro quirúrgico</span>
-      </div>
 
       <!-- Módulo 5: Reportes gerenciales (admin) -->
       <a href="/reports-gerenciales" class="module" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">

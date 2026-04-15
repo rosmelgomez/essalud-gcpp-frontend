@@ -1,7 +1,7 @@
 import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataImport } from '../../services/data-import';
+import { DataImport } from '../../services/localstorage-service';
 import { FileService } from '../../services/file-service';
 import { ReportDashboardNoMedicasService } from '../../services/report-dashboard-no-medicas-service';
 import { forkJoin } from 'rxjs';

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UsersService } from '../../services/users-service';
 import { Auth } from '../../model/auth';
-import { DataImport } from '../../services/data-import';
+import { DataImport } from '../../services/localstorage-service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { inject } from '@angular/core';

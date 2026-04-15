@@ -50,6 +50,35 @@ export class DataImport {
     }
   }
 
+  saveDataModulo(modulo: string): void {
+
+    const data: { modulo?: string } = {};
+
+    if (modulo?.trim()) {
+      data.modulo = modulo;
+    }
+    if (Object.keys(data).length > 0) {
+      localStorage.setItem('modulo', JSON.stringify(data));
+    }
+
+
+  }
+
+  getDataModulo(): {modulo?: string} {
+    const raw = localStorage.getItem('modulo');
+   if (!raw) return {};
+
+    try {
+      const data = JSON.parse(raw);
+      return {
+        modulo: data.modulo,
+      };
+    } catch {
+      return {};
+    }
+
+  }
+
   clearAllAppData(): void {
     const keys = ['dc', 'data_dma', 'data_dmmc', 'data_dmmo', 'data_dmmp'];
     keys.forEach((k) => localStorage.removeItem(k));

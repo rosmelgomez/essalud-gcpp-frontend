@@ -1,5 +1,5 @@
 <div class="main">
-  <div class="modules-container">
+  <div class="modules-container" *ngIf="modulo == 'Consulta Externa'">
     <div class="modules-header" >
       <h1 class="modules-title">Módulos disponibles de Consulta externa</h1>
       <p class="modules-subtitle">
@@ -8,7 +8,7 @@
     </div>
 
     <div class="modules-menu">
-      <a href="/dashboard-medicas" class="module">
+      <a href="/dashboard-medicas" class="module" >
         <img src="/images/medicas.png" alt="Médicas" />
         <span>Médicas</span>
       </a>
@@ -22,6 +22,28 @@
         <img src="/images/odontologicas.png" alt="Odontológicas" />
         <span>Odontológicas</span>
       </a>
+    </div>
+  </div>
+  <div class="modules-container" *ngIf="modulo == 'Centro Quirúrgico'">
+    <div class="modules-header" >
+      <h1 class="modules-title">Módulos disponibles de Centro Quirurgicos</h1>
+      <p class="modules-subtitle">
+        Elige el módulo que deseas explorar para ver los indicadores disponibles.
+      </p>
+    </div>
+
+    <div class="modules-menu">
+      <a href="/dashboard-intervenciones-quirurgicas" class="module" >
+        <img src="/images/medicas.png" alt="Médicas" />
+        <span>Intervenciones quirurgicas por complejidad </span>
+      </a>
+
+      <a href="/dashboard-no-medicas" class="module">
+        <img src="/images/no-medicas.png" alt="No Médicas" />
+        <span>Transplate</span>
+      </a>
+
+
     </div>
   </div>
 </div>

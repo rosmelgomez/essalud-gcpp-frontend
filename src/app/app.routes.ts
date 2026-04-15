@@ -56,6 +56,9 @@ import { DnmTotalAtencionesEn } from './pages/Indicadores/dashboard-no-medicas/e
 import { DnmTotalAtencionesNu } from './pages/Indicadores/dashboard-no-medicas/nutricion/dnm-total-atenciones-nu/dnm-total-atenciones-nu';
 import { DnmTotalAtencionesTs } from './pages/Indicadores/dashboard-no-medicas/trabajo social/dnm-total-atenciones-ts/dnm-total-atenciones-ts';
 import { DnmTotalAtencionesPt } from './pages/Indicadores/dashboard-no-medicas/procedimientos terapeuticos/dnm-total-atenciones-pt/dnm-total-atenciones-pt';
+
+import { ReportDashboardIntervencionesQuirurgicas } from './pages/report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
+
 import { ReportDashboardReporteador } from './pages/report-dashboard-reporteador/report-dashboard-reporteador';
 import { ReportDashboardOdontologicas } from './pages/report-dashboard-odontologicas/report-dashboard-odontologicas';
 import { Encuesta } from './pages/encuesta/encuesta';
@@ -167,6 +170,9 @@ export const routes: Routes = [
     { path: 'ate-prioridad4', component: AtenTopicos4, canActivate: [authenticateGuard] },
     { path: 'ate-prioridad5', component: AtenTopicos5, canActivate: [authenticateGuard] },
 
+
+    ///Dashboard de intervenciones quirurgicas
+    {path:'dashboard-intervenciones-quirurgicas', component: ReportDashboardIntervencionesQuirurgicas, canActivate: [authenticateGuard]},
 
 
     ///dashboard-reporteador

@@ -14,7 +14,7 @@ import { forkJoin } from 'rxjs';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatCardModule } from '@angular/material/card';
 import { ReportDashboardMedicasService } from '../../../../../services/report-dashboard-medicas-service';
-import { DataImport } from '../../../../../services/data-import';
+import { DataImport } from '../../../../../services/localstorage-service';
 
 // Configuración centralizada de estilos
 const STYLE_CONFIG = {

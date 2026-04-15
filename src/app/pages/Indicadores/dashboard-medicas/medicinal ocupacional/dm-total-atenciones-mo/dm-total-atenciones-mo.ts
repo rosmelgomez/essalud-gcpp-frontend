@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
-import { DataImport } from '../../../../../services/data-import';
+import { DataImport } from '../../../../../services/localstorage-service';
 import { ReportDashboardMedicasService } from '../../../../../services/report-dashboard-medicas-service';
 
 

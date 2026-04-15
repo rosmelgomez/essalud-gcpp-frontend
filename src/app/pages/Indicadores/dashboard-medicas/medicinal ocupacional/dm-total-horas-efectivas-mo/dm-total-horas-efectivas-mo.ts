@@ -17,7 +17,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
 import { ReportDashboardMedicasService } from '../../../../../services/report-dashboard-medicas-service';
-import { DataImport } from '../../../../../services/data-import';
+import { DataImport } from '../../../../../services/localstorage-service';
 import { FormsModule } from '@angular/forms';
 
 

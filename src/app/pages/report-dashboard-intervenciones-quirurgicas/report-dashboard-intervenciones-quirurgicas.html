@@ -1,1 +1,185 @@
-<p>report-dashboard-intervenciones-quirurgicas works!</p>
+<div class="main">
+  <!-- Header con logo y título -->
+  <div class="header">
+    <div class="header-content">
+      <h2 class="title">Centro Quirúrgico - Intervenciones Quirúrgicas por grado de complejidad</h2>
+      <p class="subtitle">
+        Información actualizada al {{ currentDate }} | centro de atención: {{ centroAtencion }}
+      </p>
+    </div>
+
+    <div class="header-content header-content-actions">
+      <button class="btn-download btn-ficha-tecnica" >
+        <i class="bi bi-file-earmark-pdf"></i>
+        Ficha Técnica
+      </button>
+    </div>
+  </div>
+  <!-- TABS -->
+
+
+  <div class="tabs">
+    <button class="tab-button" [class.active]="activeTab === 'Grado de Complejidad'"
+      (click)="setActiveTab('Grado de Complejidad')">
+      Grado de Complejidad
+    </button>
+  </div>
+
+  <!-- CONTENIDO TABS -->
+  <!-- Tab Atenciones Medicas -->
+  <div *ngIf="activeTab === 'Grado de Complejidad'" class="tab-content">
+
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anio_gc" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodo_gc" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_asegurado_gc" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button (click)="loadGradoComplejidad()" class="btn-search">Buscar</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Estado Loading-->
+    <div *ngIf="loadingGC" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Selecciona Periodo -->
+    <div *ngIf="selectPeriodoGC && !loadingGC" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de grado de complejidad</p>
+    </div>
+
+    <!-- Estado de Error -->
+    <div *ngIf="errorGC" class="alert alert-danger">
+      {{ errorGC }}
+    </div>
+
+    <!-- Contenido de Atenciones Medicas -->
+    <div *ngIf="!loadingGC && !errorGC && !selectPeriodoGC" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Complejidad A</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(complejidadA) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+            </div>
+             <div class="contend_right">
+              <div *ngFor="let item of dataComplejidadA" class="item-data">
+                <span> {{ item.area }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Complejidad B</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(complejidadB) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataComplejidadB" class="item-data">
+                 <span> {{ item.area }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="'/dm-total-atenciones-am'" class="card-link">
+                <h5 class="card-title">Complejidad C</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(complejidadC) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataComplejidadC" class="item-data">
+                <span> {{ item.area }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="'/dm-total-medicos-am'" class="card-link">
+                <h5 class="card-title">Complejidad D</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(complejidadD) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataComplejidadD" class="item-data">
+                <span> {{ item.area }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 3-->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="'/dm-total-deserciones-am'" class="card-link">
+                <h5 class="card-title">Complejidad E</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(complejidadE) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataComplejidadE" class="item-data">
+                 <span> {{ item.area }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+

@@ -3,7 +3,7 @@ import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { OnInit } from '@angular/core';
 import { User } from '../../model/user';
-import { DataImport } from '../../services/data-import';
+import { DataImport } from '../../services/localstorage-service';
 import { RouteLogger } from '../../services/route-logger';
 
 @Component({

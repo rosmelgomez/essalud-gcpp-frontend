@@ -7,7 +7,7 @@ import { AuthLogin } from '../../services/auth-login';
 import { Auth } from '../../model/auth';
 import { UsersService } from '../../services/users-service';
 import { RouteLogger } from '../../services/route-logger';
-import { DataImport } from '../../services/data-import';
+import { DataImport } from '../../services/localstorage-service';
 
 @Component({
   selector: 'app-login',

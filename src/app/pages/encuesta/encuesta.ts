@@ -1,4 +1,4 @@
-import { DataImport } from './../../services/data-import';
+import { DataImport } from '../../services/localstorage-service';
 import { Component, OnInit, inject, ChangeDetectionStrategy, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';

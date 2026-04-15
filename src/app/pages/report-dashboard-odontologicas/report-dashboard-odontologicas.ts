@@ -2,7 +2,7 @@ import { logoutGuard } from './../../guards/logout-guard';
 import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataImport } from '../../services/data-import';
+import { DataImport } from '../../services/localstorage-service';
 import { FileService } from '../../services/file-service';
 import { ReportDashboardOdontologicasService } from '../../services/report-dashboard-odontologicas-service';
 import { forkJoin } from 'rxjs';

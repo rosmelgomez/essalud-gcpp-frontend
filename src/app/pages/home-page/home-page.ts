@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { User } from '../../model/user';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EstablecimientoService } from '../../services/establecimiento-service';
-import { DataImport } from '../../services/data-import';
+import { DataImport } from '../../services/localstorage-service';
 
 @Component({
   selector: 'app-home-page',
@@ -450,5 +450,10 @@ export class HomePage implements OnInit {
         console.log('Error al obtener los centros', err);
       },
     });
+  }
+
+
+  saveModulo(modulo : string) {
+    this.dataImport.saveDataModulo(modulo);
   }
 }
