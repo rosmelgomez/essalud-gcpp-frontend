@@ -58,6 +58,12 @@ import { DnmTotalAtencionesTs } from './pages/Indicadores/dashboard-no-medicas/t
 import { DnmTotalAtencionesPt } from './pages/Indicadores/dashboard-no-medicas/procedimientos terapeuticos/dnm-total-atenciones-pt/dnm-total-atenciones-pt';
 
 import { ReportDashboardIntervencionesQuirurgicas } from './pages/report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
+import { DiqComplejidadAGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-a-gc/diq-complejidad-a-gc';
+import { DiqComplejidadBGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-b-gc/diq-complejidad-b-gc';
+import { DiqComplejidadCGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-c-gc/diq-complejidad-c-gc';
+import { DiqComplejidadDGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-d-gc/diq-complejidad-d-gc';
+import { DiqComplejidadEGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-e-gc/diq-complejidad-e-gc';
+import { DiqSinComplejidadGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-sin-complejidad-gc/diq-sin-complejidad-gc';
 
 import { ReportDashboardReporteador } from './pages/report-dashboard-reporteador/report-dashboard-reporteador';
 import { ReportDashboardOdontologicas } from './pages/report-dashboard-odontologicas/report-dashboard-odontologicas';
@@ -173,7 +179,16 @@ export const routes: Routes = [
 
     ///Dashboard de intervenciones quirurgicas
     {path:'dashboard-intervenciones-quirurgicas', component: ReportDashboardIntervencionesQuirurgicas, canActivate: [authenticateGuard]},
+    {path:'diq-complejidad-a-gc', component: DiqComplejidadAGc, canActivate: [authenticateGuard]},
+    {path:'diq-complejidad-b-gc', component: DiqComplejidadBGc, canActivate: [authenticateGuard]},
+    {path:'diq-complejidad-c-gc', component: DiqComplejidadCGc, canActivate: [authenticateGuard]},
+    {path:'diq-complejidad-d-gc', component: DiqComplejidadDGc, canActivate: [authenticateGuard]},
+    {path:'diq-complejidad-e-gc', component: DiqComplejidadEGc, canActivate: [authenticateGuard]},
+    {path:'diq-sin-complejidad-gc', component: DiqSinComplejidadGc, canActivate: [authenticateGuard]},
 
+
+    ///indicadores de intervenciones quirurgicas por grado de complejidad
+    {path:'diq-complejidad-a-gc', component: DiqComplejidadAGc, canActivate: [authenticateGuard]},
 
     ///dashboard-reporteador
     {path:'dashboard-reporteador', component: ReportDashboardReporteador, canActivate: [authenticateGuard]},

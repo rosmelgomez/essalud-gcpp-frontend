@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core';
 import { ReportDashboardIntervencionesQuirurgicasService } from '../../services/report-dashboard-intervenciones-quirurgicas-service';
 import { DataImport } from '../../services/localstorage-service';
+import { forkJoin } from 'rxjs';
+import { CdkTableModule } from "@angular/cdk/table";
 //import { FileService } from 'src/app/services/file.service';
 
 @Component({
   selector: 'app-report-dashboard-intervenciones-quirurgicas',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CdkTableModule],
   templateUrl: './report-dashboard-intervenciones-quirurgicas.html',
   styleUrl: './report-dashboard-intervenciones-quirurgicas.css',
 })
@@ -38,6 +40,10 @@ export class ReportDashboardIntervencionesQuirurgicas {
   complejidadC: number = 0;
   complejidadD: number = 0;
   complejidadE: number = 0;
+  sinComplejidad: number = 0;
+  intervacionesEmergencia: number = 0;
+  horasQuirurgicasElectivas: number = 0;
+  horasQuirurgicasEmergencia: number = 0;
 
 
   //data indicadores grado de complejidad
@@ -46,6 +52,8 @@ export class ReportDashboardIntervencionesQuirurgicas {
   dataComplejidadC: any[] = [];
   dataComplejidadD: any[] = [];
   dataComplejidadE: any[] = [];
+  dataSinComplejidad: any[] = [];
+  dataInternvacionesEmergencia: any[] = [];
 
   constructor(
     private report: ReportDashboardIntervencionesQuirurgicasService,
@@ -79,7 +87,7 @@ export class ReportDashboardIntervencionesQuirurgicas {
     this.selectPeriodoGC = false;
     this.cdr.detectChanges();
 
-    const dataComplejidad = ['A', 'B', 'C', 'D', 'E'];
+    const dataComplejidad = ['A', 'B', 'C', 'D', 'E', 'null'];
 
     dataComplejidad.forEach((tipo) => {
       switch (tipo) {
@@ -212,8 +220,60 @@ export class ReportDashboardIntervencionesQuirurgicas {
             }
           });
           break;
+        case 'null':
+          this.report.getQueryDIQGC(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc, tipo).subscribe({
+            next: (data) => {
+
+              this.sinComplejidad = data.length;
+
+              const areaCountMap = new Map<string, number>();
+
+              for (const row of data) {
+                const area = (row as any).area || 'Sin area';
+                areaCountMap.set(area, (areaCountMap.get(area) || 0) + 1);
+              }
+
+              this.dataSinComplejidad = Array.from(areaCountMap, ([area, total]) => ({
+                area,
+                total,
+              }));
+              this.dataSinComplejidad.sort((a, b) => b.total - a.total);
+
+              this.loadingGC = false;
+              this.cdr.detectChanges();
+            }
+          });
+          break;
       }
     });
+
+    forkJoin({
+      intervencionesEmergencia: this.report.getQueryDIQE(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc),
+      horasQuirurgicasElectivas: this.report.getQueryDIQHQE(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc),
+      horasQuirurgicasEmergencia: this.report.getQueryDIQHQEME(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc),
+    }).subscribe({
+      next: (result) => {
+        this.intervacionesEmergencia = result.intervencionesEmergencia.length;
+
+        const areaCountMap = new Map<string, number>();
+
+        for (const row of result.intervencionesEmergencia) {
+          const area = (row as any).area || 'Sin area';
+          areaCountMap.set(area, (areaCountMap.get(area) || 0) + 1);
+        }
+
+        this.dataInternvacionesEmergencia = Array.from(areaCountMap, ([area, total]) => ({
+          area,
+          total,
+        }));
+        this.dataInternvacionesEmergencia.sort((a, b) => b.total - a.total);
+        this.horasQuirurgicasElectivas = result.horasQuirurgicasElectivas[0].horas_quirurgicas_realizadas_iq_electivas || 0;
+        this.horasQuirurgicasEmergencia = result.horasQuirurgicasEmergencia[0].horas_quirurgicas_realizadas_iq_emergencia || 0;
+        this.cdr.detectChanges();
+      }
+    });
+    this.dataImport.saveDataIQGC(this.anio_gc, this.periodo_gc, this.tipo_asegurado_gc);
+
   }
 
 

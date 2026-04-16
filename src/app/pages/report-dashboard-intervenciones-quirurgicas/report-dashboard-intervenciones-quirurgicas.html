@@ -9,7 +9,7 @@
     </div>
 
     <div class="header-content header-content-actions">
-      <button class="btn-download btn-ficha-tecnica" >
+      <button class="btn-download btn-ficha-tecnica">
         <i class="bi bi-file-earmark-pdf"></i>
         Ficha Técnica
       </button>
@@ -87,13 +87,13 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
+              <a class="card-link" href="diq-complejidad-a-gc">
                 <h5 class="card-title">Complejidad A</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(complejidadA) }}</h2>
               <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
             </div>
-             <div class="contend_right">
+            <div class="contend_right">
               <div *ngFor="let item of dataComplejidadA" class="item-data">
                 <span> {{ item.area }}</span>
                 <span> {{ formatNumber(item.total) }}</span>
@@ -104,7 +104,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
+              <a class="card-link" href="diq-complejidad-b-gc">
                 <h5 class="card-title">Complejidad B</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(complejidadB) }}</h2>
@@ -112,7 +112,7 @@
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataComplejidadB" class="item-data">
-                 <span> {{ item.area }}</span>
+                <span> {{ item.area }}</span>
                 <span> {{ formatNumber(item.total) }}</span>
               </div>
             </div>
@@ -125,7 +125,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a [href]="'/dm-total-atenciones-am'" class="card-link">
+              <a [href]="'diq-complejidad-c-gc'" class="card-link">
                 <h5 class="card-title">Complejidad C</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(complejidadC) }}</h2>
@@ -142,7 +142,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a [href]="'/dm-total-medicos-am'" class="card-link">
+              <a [href]="'diq-complejidad-d-gc'" class="card-link">
                 <h5 class="card-title">Complejidad D</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(complejidadD) }}</h2>
@@ -163,7 +163,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a [href]="'/dm-total-deserciones-am'" class="card-link">
+              <a [href]="'diq-complejidad-e-gc'" class="card-link">
                 <h5 class="card-title">Complejidad E</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(complejidadE) }}</h2>
@@ -171,15 +171,83 @@
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataComplejidadE" class="item-data">
-                 <span> {{ item.area }}</span>
+                <span> {{ item.area }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a [href]="'diq-sin-complejidad-gc'" class="card-link">
+                <h5 class="card-title">Sin Complejidad</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(sinComplejidad) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataSinComplejidad" class="item-data">
+                <span> {{ item.area }}</span>
                 <span> {{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Fila 4-->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Intervenciones Quirúrgicas Ejecutadas Emergencia</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(intervacionesEmergencia) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataInternvacionesEmergencia" class="item-data">
+                <span> {{ item.area }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Horas quirúrgicas realizadas IQ electivas</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasQuirurgicasElectivas) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 5-->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Horas quirúrgicas realizadas IQ emergencia</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(horasQuirurgicasEmergencia) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+
+
     </div>
   </div>
 
 </div>
-

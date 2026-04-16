@@ -601,6 +601,40 @@ export class DataImport {
     }
   }
 
+
+
+  ///guardar datos de filtros de dashboard-intervenciones-quirurgicas
+  saveDataIQGC(anio?: string, periodo?: string, codasegu?: string): void {
+    const data: { a?: string; p?: string; c?: string } = {};
+
+    if (anio?.trim()) {
+      data.a = anio;
+    }
+    if (periodo?.trim()) {
+      data.p = periodo;
+    }
+    if (codasegu?.trim()) {
+      data.c = codasegu;
+    }
+    if (Object.keys(data).length > 0) {
+      localStorage.setItem('data_iqgc', JSON.stringify(data));
+    }
+  }
+  getDataIQGC(): { anio?: string; periodo?: string; codasegu?: string } {
+    const raw = localStorage.getItem('data_iqgc');
+    if (!raw) return {};
+    try {
+      const data = JSON.parse(raw);
+      return {
+        anio: data.a,
+        periodo: data.p,
+        codasegu: data.c,
+      };
+    } catch {
+      return {};
+    }
+  }
+
   deleteDataIndicadores(): void {
     const keys = [
       'data_dma',
@@ -618,6 +652,7 @@ export class DataImport {
       'data_dnmp',
       'data_dnmpd',
       'data_de',
+      'data_iqgc',
     ];
     keys.forEach((k) => localStorage.removeItem(k));
   }

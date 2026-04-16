@@ -1,0 +1,143 @@
+<div class="main">
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h2>Detalle IQ - Complejidad D</h2>
+      <p>Centro: {{ nameCentro }} | Período: {{ periodo }}</p>
+    </div>
+    <div class="actions">
+      <button class="btn-export" (click)="descargarCSV()"> Exportar CSV</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading">
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- TABS -->
+  <div *ngIf="!loading" class="tabs">
+    <button class="tab-button" [class.active]="activeTab === 'Detalle IQ'" (click)="setActiveTab('Detalle IQ')">
+      Detalle IQ
+    </button>
+  </div>
+
+  <!-- CONTENIDO TABS -->
+
+  <div *ngIf="!loading && activeTab === 'Detalle IQ'" class="tab-content">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Top 10 servicio - Período {{ periodo }}</h3>
+        <div #chartServicio></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Top 10 areas - Período {{ periodo }}</h3>
+        <div #chartAreas></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Tipo de programacion - Período {{ periodo }}</h3>
+        <div #chartTipoProgramacion></div>
+      </div>
+
+    </div>
+
+    <mat-card class="resumen-table">
+      <!-- HEADER -->
+      <div class="resumen-header">
+        <div class="cell area">Area</div>
+        <div class="cell servicio">Servicio</div>
+        <div class="cell cpms"> Cpms</div>
+        <div class="cell cod_complejidad">Complejidad</div>
+        <div class="cell des_tipo_programacion">Tipo Programacion</div>
+        <div class="cell des_tipo_programacion">Sala de Operaciones</div>
+        <div class="cell acto_med">Acto Med</div>
+        <div class="cell num_solicitud">N° de solicitud</div>
+        <div class="cell fec_oper">Fecha</div>
+        <div class="cell anio_edad">Edad</div>
+        <div class="cell sexo">Sexo</div>
+        <div class="cell cod_tipdoc_paciente">Tipo Doc</div>
+        <div class="cell doc_paciente:''">N° Documrto
+
+        </div>
+
+      </div>
+
+      <!-- FILTERS ROW -->
+      <div class="resumen-filters">
+        <input type="text" class="filter-input cell area" placeholder="Buscar area..."
+          (keyup)="filterData('area', $event)">
+        <input type="text" class="filter-input cell servicio" placeholder="Buscar servicio..."
+          (keyup)="filterData('servicio', $event)">
+        <input type="text" class="filter-input cell cpms" placeholder="Buscar cpms..."
+          (keyup)="filterData('cpms', $event)">
+        <input type="text" class="filter-input cell cod_complejidad" placeholder="Buscar complejidad..."
+          (keyup)="filterData('cod_complejidad', $event)">
+        <input type="text" class="filter-input cell des_tipo_programacion" placeholder="Buscar tipo de programacion..."
+          (keyup)="filterData('des_tipo_programacion', $event)">
+        <input type="text" class="filter-input cell cod_sala" placeholder="Buscar codugi sala..."
+          (keyup)="filterData('cod_sala', $event)">
+        <input type="text" class="filter-input cell acto_med" placeholder="Buscar Acto Med..."
+          (keyup)="filterData('acto_med', $event)">
+        <input type="text" class="filter-input cell num_solicitud" placeholder="Buscar num solucitud..."
+          (keyup)="filterData('num_solicitud', $event)">
+        <input type="text" class="filter-input cell fec_oper" placeholder="Buscar fecha..."
+          (keyup)="filterData('fec_oper', $event)">
+        <input type="text" class="filter-input cell anio_edad" placeholder="Buscar edad..."
+          (keyup)="filterData('anio_edad', $event)">
+        <input type="text" class="filter-input cell sexo" placeholder="Buscar sexo..."
+          (keyup)="filterData('sexo', $event)">
+        <input type="text" class="filter-input cell cod_tipdoc_paciente" placeholder="Buscar tipo doc paciente..."
+          (keyup)="filterData('cod_tipdoc_paciente', $event)">
+        <input type="text" class="filter-input cell doc_paciente" placeholder="Buscar doc paciente..."
+          (keyup)="filterData('doc_paciente', $event)">
+
+
+
+      </div>
+
+      <!-- WRAPPER PARA SCROLL HORIZONTAL -->
+      <div class="resumen-wrapper">
+        <!-- VIRTUAL SCROLL -->
+        <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+          <div *cdkVirtualFor="let row of query0Data" class="resumen-row">
+            <div class="cell area">{{ row.area }}</div>
+            <div class="cell servicio">{{ row.servicio }}</div>
+            <div class="cell agrupador">{{ row.cpms }}</div>
+            <div class="cell cod_complejidad">{{ row.cod_complejidad }}</div>
+            <div class="cell des_tipo_programacion">{{ row.des_tipo_programacion }}</div>
+            <div class="cell cod_sala">{{ row.cod_sala }}</div>
+            <div class="cell acto_med">{{ row.acto_med }}</div>
+            <div class="cell num_solicitud">{{ row.num_solicitud }}</div>
+            <div class="cell fec_oper">{{ row.fec_oper }}</div>
+            <div class="cell anio_edad">{{ row.anio_edad }}</div>
+            <div class="cell sexo">{{ row.sexo }}</div>
+            <div class="cell cod_tipdoc_paciente">{{ row.cod_tipdoc_paciente }}</div>
+            <div class="cell  doc_paciente">{{ row. doc_paciente }}</div>
+          </div>
+        </cdk-virtual-scroll-viewport>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="table-footer">
+        <div class="footer-left"><strong>Total Filas:</strong></div>
+        <div class="footer-right num">
+          <strong>{{query0Data.length}}</strong>
+        </div>
+      </div>
+    </mat-card>
+
+    <ng-template #noTable>
+      <div class="no-data">Sin datos producción por médico.</div>
+    </ng-template>
+
+
+
+  </div>
+</div>

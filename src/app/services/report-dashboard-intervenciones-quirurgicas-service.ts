@@ -14,7 +14,20 @@ export class ReportDashboardIntervencionesQuirurgicasService {
   /* Intervenciones quirúrgicas */
   /// Grado de complejidad
   getQueryDIQGC(anio: string, periodo: string, codcas: string, codasegu: string, complejidad: string) {
-    return this.http.get<any>(base_url + `/queryDIQGC/${anio}/${periodo}/${codcas}/${codasegu}/${complejidad}`, { withCredentials: true });
+    return this.http.get<any[]>(base_url + `/queryDIQGC/${anio}/${periodo}/${codcas}/${codasegu}/${complejidad}`, { withCredentials: true });
   }
 
+  /// Intervenciones de emergencia
+  getQueryDIQE(anio: string, periodo: string, codcas: string, codasegu: string) {
+    return this.http.get<any[]>(base_url + `/queryDIQE/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+  }
+
+   ///horas quirurgicas electivas
+    getQueryDIQHQE(anio: string, periodo: string, codcas: string, codasegu: string) {
+    return this.http.get<any[]>(base_url + `/queryDIQHQE/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+  }
+  ///horas quirurgicas emergencia
+  getQueryDIQHQEME(anio: string, periodo: string, codcas: string, codasegu: string) {
+    return this.http.get<any[]>(base_url + `/queryDIQHQEME/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+  }
 }
