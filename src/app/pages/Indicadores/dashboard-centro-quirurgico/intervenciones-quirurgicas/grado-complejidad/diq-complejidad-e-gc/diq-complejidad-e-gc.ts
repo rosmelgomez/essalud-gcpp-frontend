@@ -108,7 +108,7 @@ export class DiqComplejidadEGc  implements OnInit, AfterViewInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.report.getQueryDIQGC(anio, periodo, codcas, codasegu, 'E').subscribe({
+    this.report.getQueryDIQIGC(anio, periodo, codcas, codasegu, 'E').subscribe({
       next: (response) => {
         this.query0Data = response;
         this.query0DataOriginal = response;

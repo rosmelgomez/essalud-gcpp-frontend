@@ -30,4 +30,11 @@ export class ReportDashboardIntervencionesQuirurgicasService {
   getQueryDIQHQEME(anio: string, periodo: string, codcas: string, codasegu: string) {
     return this.http.get<any[]>(base_url + `/queryDIQHQEME/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
+
+  ///Indicadores de grado de complejidad
+  getQueryDIQIGC(anio: string, periodo: string, codcas: string, codasegu: string, complejidad: string) {
+    return this.http.get<any[]>(base_url + `/queryDIQIGC/${anio}/${periodo}/${codcas}/${codasegu}/${complejidad}`, { withCredentials: true });
+  }
+
+
 }

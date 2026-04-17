@@ -126,64 +126,73 @@
     </div>
 
     <div class="modules-menu">
-      <!-- Módulo 1: Consulta externa (activo) -->
+      <!-- Consulta externa -->
       <a href="/dashboard" class="module" (click)="saveModulo('Consulta Externa')">
         <img src="/images/RCS2.png" alt="Consulta externa" />
         <span>Consulta externa</span>
       </a>
 
-      <!-- Módulo 2: Emergencia (activo) -->
+      <!-- Emergencia -->
       <a href="/dashboard-eme" class="module">
         <img src="/images/RSC1.png" alt="Emergencia" />
         <span>Emergencia</span>
       </a>
 
 
-      <!-- Módulo 3: Centro quirúrgico  -->
+      <!-- Centro quirúrgico  -->
       <a href="/dashboard"  class="module" (click)="saveModulo('Centro Quirúrgico')">
         <img src="/images/cirugia.png" alt="Centro quirúrgico" />
         <span>Centro quirúrgico</span>
       </a>
 
-      <!-- Módulo 4: Hospitalización (inactivo) -->
+      <!-- Procedimientos-->
       <div class="module inactive" title="Módulo no disponible">
-        <img src="/images/hospitalizacion.png" alt="Hospitalización" />
-        <span>Hospitalización</span>
+        <img src="/images/hospitalizacion.png" alt="Procedimientos" />
+        <span>Procedimientos</span>
       </div>
 
+      <!--  Tablas Homologadas -->
+      <a  class="module">
+        <img src="/images/tablas-homologadas.png" alt="Reportes gerenciales" />
+        <span>Tablas Homologadas</span>
+      </a>
 
-      <!-- Módulo 5: Reportes gerenciales (admin) -->
+
+      <!-- Reportes gerenciales (admin) -->
       <a href="/reports-gerenciales" class="module" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/analytics.png" alt="Reportes gerenciales" />
         <span>Reportes gerenciales</span>
       </a>
 
-      <!-- Módulo 6: Reporteador -->
+
+
+
+      <!-- Reporteador -->
       <a href="/dashboard-reporteador" class="module" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/reporteador.png" alt="Reporteador" />
         <span>Reporteador</span>
       </a>
 
-      <!-- Módulo 7: Encuesta -->
+      <!-- Encuesta -->
       <a href="/encuesta" class="module">
         <img src="/images/survey.png" alt="Encuesta" />
         <span>Encuesta de Conformidad</span>
       </a>
 
 
-      <!-- Módulo 8: Dashboard Encuesta (admin) -->
+      <!-- Dashboard Encuesta (admin) -->
       <a href="/dashboard-encuesta" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/respuesta-encuesta.png" alt="Encuesta" />
         <span>Respuesta de Encuestas</span>
       </a>
 
-      <!-- Módulo 9: Auditoría del Sistema (admin) -->
+      <!-- Auditoría del Sistema (admin) -->
       <a href="/solicitud-acceso-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/acceso.png" alt="Auditoría del Sistema" />
         <span>Solicitud de Acceso</span>
       </a>
 
-      <!-- Módulo 10: Auditoría del Sistema (admin) -->
+      <!-- Auditoría del Sistema (admin) -->
       <a href="/logs-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/logs.png" alt="Auditoría del Sistema" />
         <span>Auditoría del Sistema</span>
