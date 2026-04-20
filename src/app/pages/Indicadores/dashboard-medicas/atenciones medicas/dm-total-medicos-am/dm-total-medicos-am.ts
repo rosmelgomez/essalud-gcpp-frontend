@@ -6,7 +6,7 @@ import { forkJoin } from 'rxjs';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatCardModule } from '@angular/material/card';
 import { ReportDashboardMedicasService } from '../../../../../services/report-dashboard-medicas-service';
-import { DataImport } from '../../../../../services/localstorage-service';
+import { LocalStorageService } from '../../../../../services/local-storage-service';
 
 // Configuración centralizada de estilos
 const STYLE_CONFIG = {
@@ -86,7 +86,7 @@ export class DmTotalMedicosAm implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private reportDMS: ReportDashboardMedicasService,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef
   ) { }
 

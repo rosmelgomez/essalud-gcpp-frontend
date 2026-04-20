@@ -3,7 +3,7 @@ import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { OnInit } from '@angular/core';
 import { User } from '../../model/user';
-import { DataImport } from '../../services/localstorage-service';
+import { LocalStorageService } from '../../services/local-storage-service';
 import { RouteLogger } from '../../services/route-logger';
 
 @Component({
@@ -18,7 +18,7 @@ export class Navbar implements OnInit {
   isMenuOpen = false;
 
   constructor(
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private routeLogger: RouteLogger,
   ) {}
 

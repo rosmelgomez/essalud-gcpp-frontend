@@ -4,7 +4,7 @@ import { User } from '../model/user';
 @Injectable({
   providedIn: 'root',
 })
-export class DataImport {
+export class LocalStorageService {
   saveUser(user: User): void {
     localStorage.setItem('user', JSON.stringify(user));
   }

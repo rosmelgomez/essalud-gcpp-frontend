@@ -15,7 +15,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
-import { DataImport } from './../../../../../../services/localstorage-service';
+import { LocalStorageService } from '../../../../../../services/local-storage-service';
 import { ReportDashboardIntervencionesQuirurgicasService } from './../../../../../../services/report-dashboard-intervenciones-quirurgicas-service';
 
 
@@ -67,7 +67,7 @@ export class DiqComplejidadEGc  implements OnInit, AfterViewInit, OnDestroy {
   chartTipoProgramacion: ApexCharts | null = null;
 
   constructor(
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private report: ReportDashboardIntervencionesQuirurgicasService,
     private cdr: ChangeDetectorRef,
   ) { }

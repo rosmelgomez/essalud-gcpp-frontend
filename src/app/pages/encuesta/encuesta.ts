@@ -1,4 +1,4 @@
-import { DataImport } from '../../services/localstorage-service';
+import { LocalStorageService } from '../../services/local-storage-service';
 import { Component, OnInit, inject, ChangeDetectionStrategy, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -61,7 +61,7 @@ export class Encuesta implements OnInit {
 
   constructor(
     private encuestaService: EncuestaService,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
   ) { }
 

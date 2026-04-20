@@ -26,7 +26,7 @@
   </div>
 
   <!-- CONTENIDO TABS -->
-  <!-- Tab Atenciones Medicas -->
+  <!-- Tab Grado de complejidad -->
   <div *ngIf="activeTab === 'Grado de Complejidad'" class="tab-content">
 
     <div class="header">
@@ -80,7 +80,7 @@
       {{ errorGC }}
     </div>
 
-    <!-- Contenido de Atenciones Medicas -->
+    <!-- Contenido de grado de complejidad-->
     <div *ngIf="!loadingGC && !errorGC && !selectPeriodoGC" class="dashboard-content">
       <!-- Fila 1: -->
       <div class="cards-row">

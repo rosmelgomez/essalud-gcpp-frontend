@@ -1,1 +1,110 @@
-<p>report-dashboard-transplate works!</p>
+<div class="main">
+  <!-- Header con logo y título -->
+  <div class="header">
+    <div class="header-content">
+      <h2 class="title">Centro Quirúrgico - Transplantes</h2>
+      <p class="subtitle">
+        Información actualizada al {{ currentDate }} | centro de atención: {{ centroAtencion }}
+      </p>
+    </div>
+
+    <div class="header-content header-content-actions">
+      <button class="btn-download btn-ficha-tecnica">
+        <i class="bi bi-file-earmark-pdf"></i>
+        Ficha Técnica
+      </button>
+    </div>
+  </div>
+  <!-- TABS -->
+
+
+  <div class="tabs">
+    <button class="tab-button" [class.active]="activeTab === 'Transplante'"
+      (click)="setActiveTab('Transplante')">
+      Transplante
+    </button>
+  </div>
+
+  <!-- CONTENIDO TABS -->
+  <!-- Tab Transplante-->
+  <div *ngIf="activeTab === 'Transplante'" class="tab-content">
+
+    <div class="header">
+      <div class="header-actions">
+        <div class="buscar-group">
+          <select [(ngModel)]="anio_trans" class="anio-select">
+            <option value="">Seleccione un Año</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+          <select [(ngModel)]="periodo_trans" class="periodo-select">
+            <option value="">Seleccione un periodo</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select [(ngModel)]="tipo_asegurado_trans" class="tipo-asegurado-select">
+            <option value="">Seleccione tipo de asegurado</option>
+            <option value="1">Asegurado</option>
+            <option value="2">No Asegurado</option>
+            <option value="3">Todos</option>
+          </select>
+          <!-- Botón búsqueda -->
+          <button (click)="loadtransplante()" class="btn-search">Buscar</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Estado Loading-->
+    <div *ngIf="loadingT" class="loading">
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Selecciona Periodo -->
+    <div *ngIf="selectPeriodoT && !loadingT" class="select-periodo">
+      <p>Por favor, seleccione un período para ver la información de grado de complejidad</p>
+    </div>
+
+    <!-- Estado de Error -->
+    <div *ngIf="errorT" class="alert alert-danger">
+      {{ errorT }}
+    </div>
+
+    <!-- Contenido de transplante -->
+    <div *ngIf="!loadingT && !errorT && !selectPeriodoT" class="dashboard-content">
+      <!-- Fila 1: -->
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link" >
+                <h5 class="card-title">Complejidad A</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(complejidadA) }}</h2>
+              <p class="card-subtitle">Periodo {{ anio_trans }}-{{ periodo_trans }} | {{ centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataComplejidadA" class="item-data">
+                <span> {{ item.sala }}</span>
+                <span> {{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+</div>

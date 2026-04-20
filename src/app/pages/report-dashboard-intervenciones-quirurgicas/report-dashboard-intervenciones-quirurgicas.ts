@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core';
 import { ReportDashboardIntervencionesQuirurgicasService } from '../../services/report-dashboard-intervenciones-quirurgicas-service';
-import { DataImport } from '../../services/localstorage-service';
+import { LocalStorageService } from '../../services/local-storage-service';
 import { forkJoin } from 'rxjs';
 import { CdkTableModule } from "@angular/cdk/table";
+import { OnInit } from '@angular/core';
 //import { FileService } from 'src/app/services/file.service';
 
 @Component({
@@ -14,7 +15,7 @@ import { CdkTableModule } from "@angular/cdk/table";
   templateUrl: './report-dashboard-intervenciones-quirurgicas.html',
   styleUrl: './report-dashboard-intervenciones-quirurgicas.css',
 })
-export class ReportDashboardIntervencionesQuirurgicas {
+export class ReportDashboardIntervencionesQuirurgicas implements OnInit {
 
   currentDate: string = '';
 
@@ -58,7 +59,7 @@ export class ReportDashboardIntervencionesQuirurgicas {
   constructor(
     private report: ReportDashboardIntervencionesQuirurgicasService,
     private cdr: ChangeDetectorRef,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     //private fileService: FileService,
   ) { }
 

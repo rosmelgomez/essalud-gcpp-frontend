@@ -1,7 +1,7 @@
 import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataImport } from '../../services/localstorage-service';
+import { LocalStorageService } from '../../services/local-storage-service';
 import { FileService } from '../../services/file-service';
 import { ReportDashboardNoMedicasService } from '../../services/report-dashboard-no-medicas-service';
 import { forkJoin } from 'rxjs';
@@ -216,7 +216,7 @@ export class ReportDashboardNoMedicas implements OnInit {
   dataCredAtenciones: any[] = [];
 
   constructor(
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private RDNMS: ReportDashboardNoMedicasService,
     private fileService: FileService,
     private cdr: ChangeDetectorRef,

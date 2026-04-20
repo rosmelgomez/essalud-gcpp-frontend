@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { User } from '../../model/user';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EstablecimientoService } from '../../services/establecimiento-service';
-import { DataImport } from '../../services/localstorage-service';
+import { LocalStorageService } from '../../services/local-storage-service';
 
 @Component({
   selector: 'app-home-page',
@@ -49,7 +49,7 @@ export class HomePage implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private establecimientoService: EstablecimientoService,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router,

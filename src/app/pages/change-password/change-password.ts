@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UsersService } from '../../services/users-service';
 import { Auth } from '../../model/auth';
-import { DataImport } from '../../services/localstorage-service';
+import { LocalStorageService } from '../../services/local-storage-service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { inject } from '@angular/core';
@@ -24,7 +24,7 @@ export class ChangePassword implements OnInit {
 
   constructor(
     private usersService: UsersService,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private formBuilder: FormBuilder,
   ) {}
 

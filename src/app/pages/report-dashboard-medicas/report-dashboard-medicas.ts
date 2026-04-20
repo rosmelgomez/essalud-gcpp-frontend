@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { OnInit } from '@angular/core';
-import { DataImport } from '../../services/localstorage-service';
+import { LocalStorageService } from '../../services/local-storage-service';
 import { ReportDashboardMedicasService } from '../../services/report-dashboard-medicas-service';
 import { FileService } from '../../services/file-service';
 
@@ -184,7 +184,7 @@ export class ReportDashboardMedicas implements OnInit {
   constructor(
     private report: ReportDashboardMedicasService,
     private cdr: ChangeDetectorRef,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private fileService: FileService,
   ) {}
 

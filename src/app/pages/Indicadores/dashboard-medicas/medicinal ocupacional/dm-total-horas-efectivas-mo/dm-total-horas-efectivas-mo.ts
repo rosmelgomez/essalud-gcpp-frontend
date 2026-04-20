@@ -17,7 +17,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
 import { ReportDashboardMedicasService } from '../../../../../services/report-dashboard-medicas-service';
-import { DataImport } from '../../../../../services/localstorage-service';
+import { LocalStorageService } from '../../../../../services/local-storage-service';
 import { FormsModule } from '@angular/forms';
 
 
@@ -100,7 +100,7 @@ export class DmTotalHorasEfectivasMo implements OnInit, AfterViewInit, OnDestroy
 
   constructor(
     private reportDashboardMedicasService: ReportDashboardMedicasService,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
   ) {}
 

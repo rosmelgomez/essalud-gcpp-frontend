@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataImport } from '../../services/localstorage-service';
+import { LocalStorageService } from '../../services/local-storage-service';
 import { ReportDashboardEmergenciasService } from '../../services/report-dashboard-emergencias-service';
 
 @Component({
@@ -51,7 +51,7 @@ export class ReportDashboardEme implements OnInit {
 
   constructor(
     private reportDashboardEmergenciasService: ReportDashboardEmergenciasService,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
   ) {}
 

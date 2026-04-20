@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
-import { DataImport } from '../../../../../services/localstorage-service';
+import { LocalStorageService } from '../../../../../services/local-storage-service';
 import { ReportDashboardMedicasService } from '../../../../../services/report-dashboard-medicas-service';
 
 
@@ -109,7 +109,7 @@ export class DmTotalAtencionesCai implements OnInit, OnDestroy {
   @ViewChild('chartDiagnostico') chartDiagnosticoEl!: ElementRef<HTMLDivElement>;
   constructor(
     private reporterDashboardMedicasService: ReportDashboardMedicasService,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
   ) { }
 

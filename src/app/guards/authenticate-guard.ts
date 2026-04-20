@@ -1,13 +1,13 @@
 import { CanActivateFn , Router} from '@angular/router';
 import { AuthLogin } from '../services/auth-login';
 import { inject } from '@angular/core';
-import { DataImport } from '../services/localstorage-service';
+import { LocalStorageService } from '../services/local-storage-service';
 
 
 export const authenticateGuard: CanActivateFn = (route, state) => {
 
   const authService = inject( AuthLogin);
-  const dataImport=inject(DataImport);
+  const dataImport=inject(LocalStorageService);
   const router = inject(Router);
 
   // Verificamos si el usuario está autenticado

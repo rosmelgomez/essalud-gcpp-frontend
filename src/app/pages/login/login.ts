@@ -7,7 +7,7 @@ import { AuthLogin } from '../../services/auth-login';
 import { Auth } from '../../model/auth';
 import { UsersService } from '../../services/users-service';
 import { RouteLogger } from '../../services/route-logger';
-import { DataImport } from '../../services/localstorage-service';
+import { LocalStorageService } from '../../services/local-storage-service';
 
 @Component({
   selector: 'app-login',
@@ -28,7 +28,7 @@ export class Login implements OnInit {
     private usersService: UsersService,
     private router: Router,
     private route: ActivatedRoute,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private routeLogger: RouteLogger,
   ) {}
 

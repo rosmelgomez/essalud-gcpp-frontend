@@ -17,7 +17,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
-import { DataImport } from '../../../../../services/localstorage-service';
+import { LocalStorageService } from '../../../../../services/local-storage-service';
 import { ReportDashboardMedicasService } from '../../../../../services/report-dashboard-medicas-service';
 import { forkJoin } from 'rxjs';
 
@@ -68,7 +68,7 @@ export class DmTotalDesercionAm implements OnInit, AfterViewInit, OnDestroy {
   chartEspecialidad: ApexCharts | null = null;
 
   constructor(
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private reportDashboardMedicasService: ReportDashboardMedicasService,
     private cdr: ChangeDetectorRef,
   ) {}

@@ -15,7 +15,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { ReportDashboardEmergenciasService } from '../../../../services/report-dashboard-emergencias-service';
-import { DataImport } from '../../../../services/localstorage-service';
+import { LocalStorageService } from '../../../../services/local-storage-service';
 
 
 @Component({
@@ -43,7 +43,7 @@ export class AtenTopicos5 implements OnInit, OnDestroy{
   @ViewChild('chartTipoPaciNom') chartTipoPaciNomEl!: ElementRef<HTMLDivElement>;
 
   constructor(
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private reportDashboardEmergenciasService: ReportDashboardEmergenciasService,
     private cdr: ChangeDetectorRef,
   ) {}

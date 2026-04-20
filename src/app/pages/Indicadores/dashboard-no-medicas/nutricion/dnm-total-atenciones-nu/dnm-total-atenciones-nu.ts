@@ -16,7 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
-import { DataImport } from '../../../../../services/localstorage-service';
+import { LocalStorageService } from '../../../../../services/local-storage-service';
 import { ReportDashboardNoMedicasService } from '../../../../../services/report-dashboard-no-medicas-service';
 
 
@@ -119,7 +119,7 @@ export class DnmTotalAtencionesNu implements OnInit, OnDestroy {
 
   constructor(
     private report: ReportDashboardNoMedicasService,
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
   ) { }
 

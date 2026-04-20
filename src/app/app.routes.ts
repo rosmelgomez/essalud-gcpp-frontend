@@ -71,6 +71,9 @@ import { Encuesta } from './pages/encuesta/encuesta';
 import { DashboardEncuesta } from './pages/dashboard-encuesta/dashboard-encuesta';
 import { SolicitudAccesoRegistro } from './pages/Solicitud-Acceso/solicitud-acceso-registro/solicitud-acceso-registro';
 import { SolicitudAccesoReports } from './pages/Solicitud-Acceso/solicitud-acceso-reports/solicitud-acceso-reports';
+import { ReportDashboardTransplante } from './pages/report-dashboard-transplante/report-dashboard-transplante';
+
+import { TablasHomologadas } from './pages/tablas-homologadas/tablas-homologadas';
 
 
 export const routes: Routes = [
@@ -179,6 +182,8 @@ export const routes: Routes = [
 
     ///Dashboard de intervenciones quirurgicas
     {path:'dashboard-intervenciones-quirurgicas', component: ReportDashboardIntervencionesQuirurgicas, canActivate: [authenticateGuard]},
+
+     ///indicadores de intervenciones quirurgicas por grado de complejidad
     {path:'diq-complejidad-a-gc', component: DiqComplejidadAGc, canActivate: [authenticateGuard]},
     {path:'diq-complejidad-b-gc', component: DiqComplejidadBGc, canActivate: [authenticateGuard]},
     {path:'diq-complejidad-c-gc', component: DiqComplejidadCGc, canActivate: [authenticateGuard]},
@@ -187,11 +192,17 @@ export const routes: Routes = [
     {path:'diq-sin-complejidad-gc', component: DiqSinComplejidadGc, canActivate: [authenticateGuard]},
 
 
-    ///indicadores de intervenciones quirurgicas por grado de complejidad
-    {path:'diq-complejidad-a-gc', component: DiqComplejidadAGc, canActivate: [authenticateGuard]},
+    ///dashboard- transplante
+    {path:'dashboard-transplante', component: ReportDashboardTransplante, canActivate: [authenticateGuard]},
+
 
     ///dashboard-reporteador
     {path:'dashboard-reporteador', component: ReportDashboardReporteador, canActivate: [authenticateGuard]},
+
+
+
+    ///Tablas homologadas
+    {path:'tablas-homologadas', component: TablasHomologadas, canActivate: [authenticateGuard]},
 
     ///Encuesta
 

@@ -2,7 +2,7 @@ import { logoutGuard } from './../../guards/logout-guard';
 import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataImport } from '../../services/localstorage-service';
+import { LocalStorageService } from '../../services/local-storage-service';
 import { FileService } from '../../services/file-service';
 import { ReportDashboardOdontologicasService } from '../../services/report-dashboard-odontologicas-service';
 import { forkJoin } from 'rxjs';
@@ -48,7 +48,7 @@ export class ReportDashboardOdontologicas implements OnInit {
   dataTotalConsultantesServicioSO: any[] = [];
 
   constructor(
-    private dataImport: DataImport,
+    private dataImport: LocalStorageService,
     private reportDashboardOdonS: ReportDashboardOdontologicasService,
     private fileService: FileService,
     private cdr: ChangeDetectorRef,
