@@ -39,8 +39,9 @@
         <div class="stat-item">
           <div class="stat-icon">🏥</div>
           <div class="stat-text">
-            <span class="stat-value" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">4</span>
-            <span class="stat-value" *ngIf="user?.roles?.includes('ADMIN_RED')">2</span>
+            <span class="stat-value"
+              *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">10</span>
+            <span class="stat-value" *ngIf="user?.roles?.includes('ADMIN_RED')">5</span>
             <span class="stat-label">Módulos activos</span>
           </div>
         </div>
@@ -81,7 +82,8 @@
 
         <div class="form-grid">
           <div class="centro-form-group">
-            <label *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">Centro Asistencial</label>
+            <label *ngIf="(user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA') || user?.roles?.includes('ADMIN_RED') )&& !user?.roles?.includes('USER')">Centro
+              Asistencial</label>
             <div class="custom-dropdown" (mouseleave)="closeDropdown()" (mouseenter)="openDropdown()">
               <input type="text" title="Selecciona un centro" placeholder="Buscar y seleccionar centro..."
                 (input)="filterCentro($event)" (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName"
@@ -140,7 +142,7 @@
 
 
       <!-- Centro quirúrgico  -->
-      <a href="/dashboard"  class="module" (click)="saveModulo('Centro Quirúrgico')">
+      <a href="/dashboard" class="module" (click)="saveModulo('Centro Quirúrgico')">
         <img src="/images/cirugia.png" alt="Centro quirúrgico" />
         <span>Centro quirúrgico</span>
       </a>
@@ -152,14 +154,15 @@
       </div>
 
       <!--  Tablas Homologadas -->
-      <a  class="module" href="/tablas-homologadas">
+      <a class="module" href="/tablas-homologadas">
         <img src="/images/tablas-homologadas.png" alt="Reportes gerenciales" />
         <span>Tablas Homologadas</span>
       </a>
 
 
       <!-- Reportes gerenciales (admin) -->
-      <a href="/reports-gerenciales" class="module" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
+      <a href="/reports-gerenciales" class="module"
+        *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/analytics.png" alt="Reportes gerenciales" />
         <span>Reportes gerenciales</span>
       </a>
@@ -168,7 +171,8 @@
 
 
       <!-- Reporteador -->
-      <a href="/dashboard-reporteador" class="module" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
+      <a href="/dashboard-reporteador" class="module"
+        *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/reporteador.png" alt="Reporteador" />
         <span>Reporteador</span>
       </a>
@@ -177,6 +181,11 @@
       <a href="/encuesta" class="module">
         <img src="/images/survey.png" alt="Encuesta" />
         <span>Encuesta de Conformidad</span>
+      </a>
+
+      <a class="module">
+        <img src="/images/logs.png" alt="Gestion Documentaria" />
+        <span>Gestión Documentaria</span>
       </a>
 
 

@@ -113,7 +113,10 @@ export class HomePage implements OnInit {
   }
 
   getCentro() {
-    if (Array.isArray(this.user?.roles) ? this.user?.roles.includes('ADMIN_RED') : this.user?.roles === 'ADMIN_RED') {
+    const isUser = Array.isArray(this.user?.roles) ? this.user?.roles.includes('USER') : this.user?.roles === 'USER';
+    const isAdminRed = Array.isArray(this.user?.roles) ? this.user?.roles.includes('ADMIN_RED') : this.user?.roles === 'ADMIN_RED';
+
+    if (isAdminRed) {
       this.selectCentro = false;
       const codeRed = this.user?.code_red?.toString() || '';
       this.establecimientoService.getCentrosByRed(codeRed).subscribe({
@@ -127,18 +130,22 @@ export class HomePage implements OnInit {
         },
       });
     } else {
-       this.establecimientoService.getCentros().subscribe({
-      next: (resp) => {
-        this.dataCentro = resp;
-        if (Array.isArray(this.user?.roles) ? this.user?.roles.includes('USER') : this.user?.roles === 'USER') {
-          this.selectCentro = true;
-          const codcas = this.user?.codcas?.toString();
-          this.nameCentro = this.dataCentro.find((centro: any) => centro.cenasicod === codcas)?.cenasides || '';
-          this.dataImport.saveDataCentro(codcas, this.nameCentro);
-        }
-        this.cdr.detectChanges();
+      // Para usuarios USER, establecer selectCentro = true ANTES de la suscripción asincrónica
+      if (isUser) {
+        this.selectCentro = true;
       }
-    });
+
+      this.establecimientoService.getCentros().subscribe({
+        next: (resp) => {
+          this.dataCentro = resp;
+          if (isUser) {
+            const codcas = this.user?.codcas?.toString();
+            this.nameCentro = this.dataCentro.find((centro: any) => centro.cenasicod === codcas)?.cenasides || '';
+            this.dataImport.saveDataCentro(codcas, this.nameCentro);
+          }
+          this.cdr.detectChanges();
+        },
+      });
     }
   }
 

@@ -1,15 +1,17 @@
 .main {
   background-image: url('/images/76824.jpg');
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   background-attachment: fixed;
+  background-repeat: no-repeat;
   width: 100%;
-  min-height: calc(100vh - 120px);
-  padding: 24px;
+  min-height: 100%;
+  padding: 32px;
+  font-family: 'Calibri', 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
   box-sizing: border-box;
-  display: block;
-  position: relative;
 }
+
 
 /* HEADER */
 .header {
