@@ -1,4 +1,3 @@
-import { logoutGuard } from './../../guards/logout-guard';
 import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -74,7 +73,6 @@ export class ReportDashboardOdontologicas implements OnInit {
     downloadFichaTecnica(): void {
     this.fileService.getFile('f_consulta_externa_odo.pdf').subscribe({
       next: (blob: Blob) => {
-        const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = 'FICHA_TECNICA_DASHBOARD_ODONTOLOGICA.pdf';

@@ -1,9 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Navbar } from './components/navbar/navbar';
 import { filter } from 'rxjs';
-import { AuthLogin } from './services/auth-login';
 import { OnInit } from '@angular/core';
 
 @Component({
@@ -26,7 +25,6 @@ export class App implements OnInit {
 
   constructor(
     private router: Router,
-    private auth: AuthLogin
   ) {}
 
   ngOnInit(): void {
@@ -48,6 +46,6 @@ export class App implements OnInit {
   }
 
   showNavbar(): boolean {
-    return this.currentNavbar === 'app' && this.auth.isLoggedIn();
+    return this.currentNavbar === 'app';
   }
 }

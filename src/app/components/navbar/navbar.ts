@@ -51,5 +51,6 @@ export class Navbar implements OnInit {
   logout() {
     this.closeMenu();
     this.routeLogger.logLogout();
+    localStorage.clear();
   }
 }

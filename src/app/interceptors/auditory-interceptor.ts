@@ -10,12 +10,11 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
   const publicRoutes = ['/login', '/solicitar-acceso-registro'];
   const isLogoutRequest = req.url.includes('/logout') || req.url.includes('/log/register');
   const isRefreshRequest = req.url.includes('/refresh-token');
-  const isAccessTokenRequest = req.url.includes('/access-token');
+  const isApiTokenRequest = req.url.includes('/api-token');
   const currentPath = router.url.split('?')[0];
   const isPublicRoute = publicRoutes.includes(currentPath);
 
   const redirectToLogin = () => {
-    auth.clearToken();
     router.navigate(['/'], {
       queryParams: {
         message: 'Su sesión ha expirado. Por favor, inicie sesión de nuevo.',
@@ -40,16 +39,16 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
           return throwError(() => error);
         }
 
-        if (isRefreshRequest) {
+        if (isApiTokenRequest || isRefreshRequest) {
           const errorMessage = error.error?.message || 'No se pudo renovar la sesión. Por favor, inicie sesión nuevamente.';
-          console.error('Error en refresh-token:', errorMessage);
+          console.error('Error validando/renovando sesión:', errorMessage);
 
           redirectToLogin();
           return throwError(() => error);
         }
 
-        if (!isLogoutRequest && !isRefreshRequest && !isAccessTokenRequest && auth.canRefreshToken()) {
-          return auth.accessToken().pipe(
+        if (!isLogoutRequest && !isApiTokenRequest && !isRefreshRequest) {
+          return auth.apiToken().pipe(
             switchMap(() => auth.refreshToken()),
             switchMap(() => next(requestWithCredentials)),
             catchError((recoveryError: HttpErrorResponse) => {

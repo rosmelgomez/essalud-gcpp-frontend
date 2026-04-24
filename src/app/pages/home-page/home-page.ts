@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { User } from '../../model/user';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EstablecimientoService } from '../../services/establecimiento-service';
@@ -51,7 +51,6 @@ export class HomePage implements OnInit {
     private establecimientoService: EstablecimientoService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
-    private route: ActivatedRoute,
     private router: Router,
   ) {}
 
@@ -77,16 +76,16 @@ export class HomePage implements OnInit {
   }
 
   private handleSurveyReminder(): void {
-    const surveyReminder = this.route.snapshot.queryParamMap.get('surveyReminder');
+    const surveyReminderFromNavigation = this.router.getCurrentNavigation()?.extras.state?.['surveyReminder'];
+    const surveyReminderFromHistory = history.state?.surveyReminder;
+    const shouldShowReminder = surveyReminderFromNavigation === '1' || surveyReminderFromHistory === '1';
 
-    if (surveyReminder === '1') {
+    if (shouldShowReminder) {
       this.showSurveyReminder = true;
-      void this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: { surveyReminder: null },
-        queryParamsHandling: 'merge',
-        replaceUrl: true,
-      });
+
+      // Limpiar el state para evitar re-mostrar el recordatorio al refrescar.
+      const { surveyReminder, ...stateWithoutReminder } = history.state || {};
+      history.replaceState(stateWithoutReminder, '', this.router.url);
     }
   }
 

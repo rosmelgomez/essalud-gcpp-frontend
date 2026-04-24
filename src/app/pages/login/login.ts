@@ -6,8 +6,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { AuthLogin } from '../../services/auth-login';
 import { Auth } from '../../model/auth';
 import { UsersService } from '../../services/users-service';
-import { RouteLogger } from '../../services/route-logger';
 import { LocalStorageService } from '../../services/local-storage-service';
+import { RouteLogger } from '../../services/route-logger';
 
 @Component({
   selector: 'app-login',
@@ -33,11 +33,13 @@ export class Login implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Si el usuario ya está autenticado, redirigir al home
-    if (this.authloginService.isLoggedIn()) {
-      this.router.navigate(['/home']);
-      return;
-    }
+    // Si la sesión de api_token sigue activa, redirigir al home.
+    this.authloginService.apiToken().subscribe({
+      next: () => {
+        this.router.navigate(['/home']);
+      },
+      error: () => {},
+    });
 
     // Capturar el mensaje de sesión expirada desde los parámetros de URL
     this.route.queryParams.subscribe((params) => {
@@ -76,19 +78,19 @@ export class Login implements OnInit {
       };
       this.authloginService.login(user).subscribe({
         next: () => {
-          this.routeLogger.logSuccessfulLogin();
+          this.routeLogger.logLogin();
           this.usersService.getUser(user.username).subscribe({
             next: (data) => {
               this.dataImport.saveUser(data);
               this.loginForm.reset();
               this.router.navigate(['/home'], {
-                queryParams: { surveyReminder: '1' },
+                state: { surveyReminder: '1' },
               });
             },
             error: () => {
               this.loginForm.reset();
               this.router.navigate(['/home'], {
-                queryParams: { surveyReminder: '1' },
+                state: { surveyReminder: '1' },
               });
             },
           });

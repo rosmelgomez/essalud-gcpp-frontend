@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { filter } from 'rxjs/operators';
+import { catchError, of, timeout } from 'rxjs';
 import { AuthLogin } from './auth-login';
 import { Backend } from '../model/api';
 
@@ -13,6 +14,7 @@ const log_url = Backend.api + '/log/register';
 export class RouteLogger {
   private readonly LAST_LOGGED_URL_KEY = 'lastLoggedUrl';
   private isLoggingOut = false;
+  private isLogoutInProgress = false;
 
   constructor(
     private router: Router,
@@ -23,8 +25,7 @@ export class RouteLogger {
   }
 
   private initRouteLogging(): void {
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
+    this.router.events.pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
         this.logRouteAccess(event.urlAfterRedirects);
       });
@@ -36,8 +37,8 @@ export class RouteLogger {
       return;
     }
 
-    // No registrar rutas de login antes de autenticarse
-    if (url === '/login' || url === '/' || !this.auth.isLoggedIn()) {
+    // No registrar rutas públicas
+    if (url === '/login' || url === '/') {
       return;
     }
 
@@ -69,8 +70,7 @@ export class RouteLogger {
     });
   }
 
-  // Método para registrar login exitoso
-  logSuccessfulLogin(): void {
+  logLogin(): void {
     const logData = {
       action: 'LOGIN_SUCCESS',
       status: 'SUCCESS',
@@ -88,20 +88,14 @@ export class RouteLogger {
     });
   }
 
-  // Método para registrar logout
   logLogout(): void {
-    // Marcar que estamos en proceso de logout
-    this.isLoggingOut = true;
-
-    // Si el usuario ya no está autenticado, simplemente limpiar y redirigir
-    if (!this.auth.isLoggedIn()) {
-      this.auth.clearToken();
-      sessionStorage.removeItem(this.LAST_LOGGED_URL_KEY);
-      this.router.navigate(['/login']);
-      // Resetear la bandera después de un tiempo
-      setTimeout(() => { this.isLoggingOut = false; }, 500);
+    if (this.isLogoutInProgress) {
       return;
     }
+
+    this.isLogoutInProgress = true;
+    // Marcar que estamos en proceso de logout
+    this.isLoggingOut = true;
 
     const logData = {
       action: 'LOGOUT',
@@ -110,17 +104,16 @@ export class RouteLogger {
       message: 'Acceso a ruta: /logout',
     };
 
-    // Primero enviar el log
-    this.http.post(log_url, logData, { withCredentials: true, responseType: 'text' }).subscribe({
-      next: () => {
-        // Luego llamar al logout del backend para eliminar el token
-        this.performBackendLogout();
-      },
-      error: (err) => {
-        // Si falla el log (incluso con 401), continuar con el logout
+    // Primero intentar enviar el log; con timeout para no bloquear el cierre de sesión.
+    this.http.post(log_url, logData, { withCredentials: true, responseType: 'text' }).pipe(
+      timeout(2500),
+      catchError(() => {
         console.log('Log de logout no pudo ser enviado, continuando con logout local');
-        this.performBackendLogout();
-      },
+        return of(null);
+      }),
+    ).subscribe(() => {
+      // Luego llamar al logout del backend para eliminar el token.
+      this.performBackendLogout();
     });
   }
 
@@ -130,7 +123,7 @@ export class RouteLogger {
         console.log('Logout successful:', resp);
         this.completeLogout();
       },
-      error: (err) => {
+      error: () => {
         // Si el backend falla (401, 403, etc.), aún así completar el logout local
         console.log('Backend logout completado, limpiando sesión local');
         this.completeLogout();
@@ -139,13 +132,13 @@ export class RouteLogger {
   }
 
   private completeLogout(): void {
-    // Limpiar el estado de autenticación local
-    this.auth.clearToken();
+
     // Limpiar la última URL registrada
     sessionStorage.removeItem(this.LAST_LOGGED_URL_KEY);
     // Navegar al login
     this.router.navigate(['/login']);
     // Resetear la bandera después de un tiempo para permitir nuevos logins
     setTimeout(() => { this.isLoggingOut = false; }, 500);
+    this.isLogoutInProgress = false;
   }
 }
