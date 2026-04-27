@@ -207,7 +207,7 @@ export class ReportDashboardMedicas implements OnInit {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'FICHA_TECNICA_DASHBOARD_MEDICAS.pdf';
+        link.download = 'FICHA_TECNICA_MEDICAS.pdf';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

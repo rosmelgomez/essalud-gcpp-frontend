@@ -75,7 +75,7 @@ export class ReportDashboardOdontologicas implements OnInit {
       next: (blob: Blob) => {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'FICHA_TECNICA_DASHBOARD_ODONTOLOGICA.pdf';
+        link.download = 'FICHA_TECNICA_ODONTOLOGICA.pdf';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

@@ -7,7 +7,7 @@ import { LocalStorageService } from '../../services/local-storage-service';
 import { forkJoin } from 'rxjs';
 import { CdkTableModule } from "@angular/cdk/table";
 import { OnInit } from '@angular/core';
-//import { FileService } from 'src/app/services/file.service';
+import { FileService } from '../../services/file-service';
 
 @Component({
   selector: 'app-report-dashboard-intervenciones-quirurgicas',
@@ -60,7 +60,7 @@ export class ReportDashboardIntervencionesQuirurgicas implements OnInit {
     private report: ReportDashboardIntervencionesQuirurgicasService,
     private cdr: ChangeDetectorRef,
     private dataImport: LocalStorageService,
-    //private fileService: FileService,
+    private fileService: FileService,
   ) { }
 
 
@@ -76,6 +76,30 @@ export class ReportDashboardIntervencionesQuirurgicas implements OnInit {
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   }
+
+    downloadFichaTecnica(): void {
+    this.fileService.getFile('f_centro_quirurgico_comp.pdf').subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'FICHA_TECNICA_CENTRO_QUIRURGICO_COMPLEJIDAD.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      },
+      error: (err) => {
+        console.error('Error al descargar la ficha técnica:', err);
+        alert(
+          'Hubo un error al descargar la ficha técnica. Por favor, inténtelo de nuevo más tarde.',
+        );
+      },
+    });
+  }
+
+
+
+
 
   loadGradoComplejidad() {
     if (!this.periodo_gc || !this.anio_gc || !this.tipo_asegurado_gc) {

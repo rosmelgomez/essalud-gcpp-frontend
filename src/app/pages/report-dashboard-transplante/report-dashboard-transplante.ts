@@ -4,6 +4,7 @@ import { ReportTransplante } from '../../services/report-transplante';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkTableModule } from "@angular/cdk/table";
+import { FileService } from '../../services/file-service';
 
 @Component({
   selector: 'app-report-dashboard-transplate',
@@ -42,7 +43,8 @@ export class ReportDashboardTransplante implements OnInit {
   constructor(
     private report: ReportTransplante,
     private cdr: ChangeDetectorRef,
-    private dataImport: LocalStorageService
+    private dataImport: LocalStorageService,
+     private fileService: FileService,
   ) {}
 
   formatDate(date: Date): string {
@@ -57,6 +59,26 @@ export class ReportDashboardTransplante implements OnInit {
     this.currentDate = this.formatDate(new Date());
     this.centroAtencion = this.dataImport.getDataCentro()?.nameCentro || '';
     this.codcas = this.dataImport.getDataCentro()?.codcas || '';
+  }
+
+   downloadFichaTecnica(): void {
+    this.fileService.getFile('f_centro_quirurgico_tras.pdf').subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'FICHA_TECNICA_CENTRO_QUIRURGICO_TRANSPLANTE.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      },
+      error: (err) => {
+        console.error('Error al descargar la ficha técnica:', err);
+        alert(
+          'Hubo un error al descargar la ficha técnica. Por favor, inténtelo de nuevo más tarde.',
+        );
+      },
+    });
   }
 
 
