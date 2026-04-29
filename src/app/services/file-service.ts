@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Backend } from '../model/api';
 import { HttpClient } from '@angular/common/http';
-import { Documento } from '../model/documento';
 
 const base_url = Backend.api + '/file';
 
@@ -15,7 +14,12 @@ export class FileService {
   }
 
 
-  insertfile(documento:Documento) {
-    return this.http.post(base_url, documento, { withCredentials: true });
+  insertfile(documento: FormData) {
+    return this.http.post(base_url+ '/insert-archivo', documento, { withCredentials: true });
+  }
+
+
+  getFiles() {
+    return this.http.get(base_url + '/get-documentos', { withCredentials: true });
   }
 }

@@ -1,1 +1,68 @@
-<p>creacion-documentos works!</p>
+<div class="main">
+  <section class="document-shell">
+    <header class="document-hero">
+      <span class="eyebrow">Gestión documentaria</span>
+      <h1>Registrar documento</h1>
+      <p>Completa los datos del archivo y súbelo en un solo paso.</p>
+    </header>
+
+    <form [formGroup]="registerForm" autocomplete="off" class="register-form" (ngSubmit)="registerDocumento()">
+      <div class="form-grid">
+        <div class="register-form-group">
+          <label for="nombre">Nombre del archivo</label>
+          <input
+            id="nombre"
+            type="text"
+            formControlName="nombre"
+            name="nombre"
+            placeholder="Ej: nombre_file"
+            [class.invalid]="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.invalid"
+            required
+          />
+          <small class="field-error" *ngIf="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.hasError('required')">
+            Ingresa el nombre del archivo.
+          </small>
+        </div>
+
+        <div class="register-form-group">
+          <label for="descripcion">Descripción</label>
+          <input
+            id="descripcion"
+            type="text"
+            formControlName="descripcion"
+            name="descripcion"
+            placeholder="Ej: descripcion"
+            [class.invalid]="registerForm.get('descripcion')?.touched && registerForm.get('descripcion')?.invalid"
+            required
+          />
+          <small class="field-error" *ngIf="registerForm.get('descripcion')?.touched && registerForm.get('descripcion')?.hasError('required')">
+            Describe brevemente el documento.
+          </small>
+        </div>
+      </div>
+
+      <div class="register-form-group file-group">
+        <label for="archivo">Archivo</label>
+        <div class="file-input-wrap">
+          <input
+            id="archivo"
+            type="file"
+            title="Seleccionar archivo"
+            (change)="onFileSelected($event)"
+            accept="*/*"
+            [class.invalid]="registerForm.get('archivo')?.touched && registerForm.get('archivo')?.invalid"
+            required
+          />
+
+        </div>
+        <small class="field-error" *ngIf="registerForm.get('archivo')?.touched && registerForm.get('archivo')?.hasError('required')">
+          Selecciona un archivo para continuar.
+        </small>
+      </div>
+
+      <div class="register-submit">
+        <button type="submit">Guardar archivo</button>
+      </div>
+    </form>
+  </section>
+</div>

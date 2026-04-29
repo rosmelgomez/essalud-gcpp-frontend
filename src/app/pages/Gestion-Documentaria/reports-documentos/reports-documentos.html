@@ -1,1 +1,101 @@
-<p>reports-documentos works!</p>
+<div class="main">
+	<section class="page-shell">
+		<header class="page-header">
+			<div class="header-copy">
+				<p class="eyebrow">Gestión Documentaria</p>
+				<h1>Reporte de documentos</h1>
+				<p class="header-text">
+					Revisa el listado de archivos disponibles y abre cada uno en una ventana flotante sin salir de la pantalla.
+				</p>
+			</div>
+
+			<button class="refresh-button" type="button" (click)="getDocumentos()" [disabled]="loading">
+				{{ loading ? 'Cargando...' : 'Actualizar' }}
+			</button>
+		</header>
+
+		<div class="table-card">
+			<div class="table-head">
+				<div>Documento</div>
+				<div>Descripción</div>
+				<div>Archivo</div>
+				<div>Fechas</div>
+				<div>Acción</div>
+			</div>
+
+			<cdk-virtual-scroll-viewport class="document-viewport" [itemSize]="96">
+				<div
+					class="document-row"
+					*cdkVirtualFor="let documento of documentos; trackBy: trackByDocumento"
+				>
+					<div class="cell primary-cell">
+						<span class="cell-label">Documento</span>
+						<strong>{{ getNombreDocumento(documento) }}</strong>
+					</div>
+
+					<div class="cell description-cell">
+						<span class="cell-label">Descripción</span>
+						<span>{{ documento.descripcion || 'Sin descripción registrada' }}</span>
+					</div>
+
+					<div class="cell file-cell">
+						<span class="cell-label">Archivo</span>
+						<span class="file-name">{{ getArchivoNombre(documento) }}</span>
+						<button
+							class="view-button"
+							type="button"
+							(click)="openArchivo(documento)"
+							[disabled]="getArchivoNombre(documento) === 'Archivo no disponible'"
+						>
+							Ver archivo
+						</button>
+					</div>
+
+					<div class="cell dates-cell">
+						<span class="cell-label">Fechas</span>
+						<span>Creación: {{ documento.date_creation || '---' }}</span>
+						<span>Actualización: {{ documento.date_update || '---' }}</span>
+					</div>
+
+					<div class="cell action-cell">
+						<button class="secondary-button" type="button" (click)="openArchivo(documento)">
+							Abrir
+						</button>
+					</div>
+				</div>
+			</cdk-virtual-scroll-viewport>
+
+			<div class="state-panel empty-state" *ngIf="!loading && documentos.length === 0">
+				No hay documentos disponibles para mostrar.
+			</div>
+
+			<div class="state-panel info-state" *ngIf="loading">Cargando documentos...</div>
+
+			<div class="state-panel error-state" *ngIf="errorMessage">{{ errorMessage }}</div>
+		</div>
+	</section>
+
+	<div class="preview-backdrop" *ngIf="previewVisible" (click)="closePreview()">
+		<section class="preview-modal" (click)="$event.stopPropagation()">
+			<header class="preview-header">
+				<div>
+					<p class="preview-eyebrow">Vista previa</p>
+					<h2>{{ previewName }}</h2>
+				</div>
+
+				<button class="close-button" type="button" aria-label="Cerrar vista previa" (click)="closePreview()">
+					×
+				</button>
+			</header>
+
+			<div class="preview-body">
+				<iframe
+					*ngIf="previewSafeUrl"
+					class="preview-frame"
+					[src]="previewSafeUrl"
+					title="Vista previa del archivo"
+				></iframe>
+			</div>
+		</section>
+	</div>
+</div>

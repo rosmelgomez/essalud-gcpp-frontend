@@ -23,10 +23,8 @@ import {
   ApexStroke,
   ApexLegend,
   ApexPlotOptions,
-  ApexTooltip,
   ApexNoData,
   ApexResponsive,
-  ApexFill,
 } from 'ng-apexcharts';
 
 interface DashboardFilters {

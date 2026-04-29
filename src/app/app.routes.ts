@@ -74,6 +74,8 @@ import { SolicitudAccesoReports } from './pages/Solicitud-Acceso/solicitud-acces
 import { ReportDashboardTransplante } from './pages/report-dashboard-transplante/report-dashboard-transplante';
 
 import { TablasHomologadas } from './pages/tablas-homologadas/tablas-homologadas';
+import { CreacionDocumentos } from './pages/Gestion-Documentaria/creacion-documentos/creacion-documentos';
+import { ReportsDocumentos } from './pages/Gestion-Documentaria/reports-documentos/reports-documentos';
 
 
 export const routes: Routes = [
@@ -208,6 +210,16 @@ export const routes: Routes = [
 
     {path:'encuesta', component:Encuesta, canActivate: [authenticateGuard]},
     {path:'dashboard-encuesta',component:DashboardEncuesta, canActivate: [authenticateGuard]},
+
+
+    //Gestion de documentos
+    {path:'creacion-documento', component:CreacionDocumentos, canActivate: [authenticateGuard]},
+    {path:'report-documentos', component: ReportsDocumentos, canActivate: [authenticateGuard]},
+
+
+
+
+
 
 
 ];

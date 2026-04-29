@@ -1,0 +1,337 @@
+.main {
+  min-height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 40px 20px;
+  background:
+    linear-gradient(135deg, rgba(10, 15, 30, 0.82), rgba(10, 15, 30, 0.62)),
+    url('/images/76824.jpg') center/cover no-repeat;
+  font-family: Manrope, 'Segoe UI', sans-serif;
+  animation: fadeIn 0.35s ease-out;
+}
+
+.page-shell {
+  width: min(1400px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  background: rgba(8, 12, 24, 0.72);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+.header-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow,
+.preview-eyebrow,
+.cell-label {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: rgba(198, 216, 255, 0.82);
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #f5f8ff;
+  font-size: clamp(1.8rem, 4vw, 2.65rem);
+  line-height: 1.05;
+}
+
+.header-text {
+  margin: 0;
+  max-width: 760px;
+  color: rgba(232, 238, 255, 0.82);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.refresh-button,
+.view-button,
+.secondary-button,
+.close-button {
+  border: none;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.refresh-button {
+  min-width: 138px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #8ad3ff, #3c7cff);
+  color: #07111f;
+  font-weight: 800;
+  box-shadow: 0 14px 28px rgba(60, 124, 255, 0.24);
+}
+
+.refresh-button:hover:not(:disabled),
+.view-button:hover:not(:disabled),
+.secondary-button:hover:not(:disabled),
+.close-button:hover {
+  transform: translateY(-1px);
+}
+
+.refresh-button:disabled,
+.view-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.table-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  overflow: hidden;
+  background: rgba(7, 12, 24, 0.76);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 28px 68px rgba(0, 0, 0, 0.3);
+}
+
+.table-head,
+.document-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.25fr 1fr 0.9fr 0.55fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.table-head {
+  padding: 18px 24px;
+  color: rgba(225, 233, 255, 0.8);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.document-viewport {
+  height: min(68vh, 760px);
+}
+
+.document-row {
+  padding: 18px 24px;
+  min-height: 96px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: #edf3ff;
+}
+
+.document-row:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.primary-cell strong,
+.file-name {
+  color: #ffffff;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.description-cell,
+.dates-cell {
+  color: rgba(232, 238, 255, 0.82);
+  line-height: 1.45;
+}
+
+.file-cell {
+  align-items: flex-start;
+}
+
+.view-button,
+.secondary-button {
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #eef4ff;
+  font-weight: 700;
+}
+
+.view-button {
+  margin-top: 2px;
+  background: linear-gradient(135deg, rgba(99, 183, 255, 0.9), rgba(64, 117, 255, 0.9));
+  color: #07111f;
+}
+
+.action-cell {
+  align-items: flex-start;
+}
+
+.state-panel {
+  padding: 16px 24px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: rgba(232, 238, 255, 0.86);
+}
+
+.empty-state,
+.info-state,
+.error-state {
+  font-weight: 600;
+}
+
+.error-state {
+  color: #ffb8b8;
+}
+
+.preview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 6, 16, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.preview-modal {
+  width: min(1100px, 100%);
+  max-height: min(90vh, 920px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 26px;
+  background: rgba(9, 15, 28, 0.96);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.46);
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.preview-header h2 {
+  margin: 6px 0 0;
+  color: #f8fbff;
+  font-size: 1.1rem;
+  word-break: break-word;
+}
+
+.close-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.preview-body {
+  position: relative;
+  flex: 1;
+  min-height: 420px;
+  background: #05080f;
+}
+
+.preview-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  min-height: 420px;
+  background: #ffffff;
+}
+
+@media (max-width: 1100px) {
+  .table-head,
+  .document-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .table-head div:nth-child(3),
+  .table-head div:nth-child(4),
+  .table-head div:nth-child(5) {
+    display: none;
+  }
+
+  .document-row {
+    row-gap: 14px;
+  }
+
+  .file-cell,
+  .action-cell {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .main {
+    padding: 20px 12px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+  }
+
+  .refresh-button {
+    width: 100%;
+  }
+
+  .table-head,
+  .document-row {
+    grid-template-columns: 1fr;
+  }
+
+  .table-head {
+    display: none;
+  }
+
+  .document-row {
+    padding: 18px 18px 20px;
+  }
+
+  .document-viewport {
+    height: 72vh;
+  }
+
+  .preview-modal {
+    max-height: 94vh;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
