@@ -103,6 +103,22 @@ export class ReportsDocumentos implements OnInit, OnDestroy {
     });
   }
 
+  getArchivo(id: number | string): void {
+    this.fileService.getArchivo(id).subscribe({
+      next: (blob: Blob) => {
+        this.clearPreviewUrl();
+        this.previewName = `Archivo_${id}`;
+        this.previewUrl = URL.createObjectURL(blob);
+        this.previewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.previewUrl);
+        this.previewVisible = true;
+      },
+      error: (error) => {
+        console.error('Error al abrir el archivo', error);
+        this.errorMessage = 'No se pudo abrir el archivo solicitado.';
+      }
+    });
+  }
+
   closePreview(): void {
     this.previewVisible = false;
     this.clearPreviewUrl();

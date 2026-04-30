@@ -22,4 +22,8 @@ export class FileService {
   getFiles() {
     return this.http.get(base_url + '/get-documentos', { withCredentials: true });
   }
+
+  getArchivo(id: number | string) {
+    return this.http.get(base_url + `/documento/${id}`, { withCredentials: true, responseType: 'blob' });
+  }
 }

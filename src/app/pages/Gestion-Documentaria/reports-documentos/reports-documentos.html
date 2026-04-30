@@ -40,11 +40,11 @@
 
 					<div class="cell file-cell">
 						<span class="cell-label">Archivo</span>
-						<span class="file-name">{{ getArchivoNombre(documento) }}</span>
+						<span class="file-name">{{ documento.nombre }}</span>
 						<button
 							class="view-button"
 							type="button"
-							(click)="openArchivo(documento)"
+							(click)="getArchivo(documento.id)"
 							[disabled]="getArchivoNombre(documento) === 'Archivo no disponible'"
 						>
 							Ver archivo
@@ -58,7 +58,7 @@
 					</div>
 
 					<div class="cell action-cell">
-						<button class="secondary-button" type="button" (click)="openArchivo(documento)">
+						<button class="secondary-button" type="button" (click)="getArchivo(documento.id)">
 							Abrir
 						</button>
 					</div>
