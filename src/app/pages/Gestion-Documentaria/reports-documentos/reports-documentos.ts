@@ -68,6 +68,32 @@ export class ReportsDocumentos implements OnInit, OnDestroy {
     });
   }
 
+  updateDocumentos(): void {
+
+
+
+
+    this.getDocumentos();
+  }
+
+  deleteDocumento(documento: ReporteDocumento): void {
+    if (!documento.id) {
+      this.errorMessage = 'No se puede eliminar un documento.';
+      return;
+    }
+
+    this.fileService.deleteArchivo(documento.id).subscribe({
+      next: () => {
+        this.documentos = this.documentos.filter(doc => doc.id !== documento.id);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al eliminar el documento', error);
+        this.errorMessage = 'No se pudo eliminar el documento solicitado.';
+      }
+    });
+  }
+
   trackByDocumento(index: number, documento: ReporteDocumento): number | string {
     return documento.id ?? documento.archivo ?? documento.nombre ?? index;
   }

@@ -10,32 +10,22 @@
       <div class="form-grid">
         <div class="register-form-group">
           <label for="nombre">Nombre del archivo</label>
-          <input
-            id="nombre"
-            type="text"
-            formControlName="nombre"
-            name="nombre"
-            placeholder="Ej: nombre_file"
-            [class.invalid]="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.invalid"
-            required
-          />
-          <small class="field-error" *ngIf="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.hasError('required')">
+          <input id="nombre" type="text" formControlName="nombre" name="nombre" placeholder="Ej: nombre_file"
+            [class.invalid]="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.invalid" required />
+          <small class="field-error"
+            *ngIf="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.hasError('required')">
             Ingresa el nombre del archivo.
           </small>
         </div>
 
         <div class="register-form-group">
           <label for="descripcion">Descripción</label>
-          <input
-            id="descripcion"
-            type="text"
-            formControlName="descripcion"
-            name="descripcion"
+          <input id="descripcion" type="text" formControlName="descripcion" name="descripcion"
             placeholder="Ej: descripcion"
             [class.invalid]="registerForm.get('descripcion')?.touched && registerForm.get('descripcion')?.invalid"
-            required
-          />
-          <small class="field-error" *ngIf="registerForm.get('descripcion')?.touched && registerForm.get('descripcion')?.hasError('required')">
+            required />
+          <small class="field-error"
+            *ngIf="registerForm.get('descripcion')?.touched && registerForm.get('descripcion')?.hasError('required')">
             Describe brevemente el documento.
           </small>
         </div>
@@ -44,18 +34,12 @@
       <div class="register-form-group file-group">
         <label for="archivo">Archivo</label>
         <div class="file-input-wrap">
-          <input
-            id="archivo"
-            type="file"
-            title="Seleccionar archivo"
-            (change)="onFileSelected($event)"
-            accept="*/*"
-            [class.invalid]="registerForm.get('archivo')?.touched && registerForm.get('archivo')?.invalid"
-            required
-          />
+          <input id="archivo" type="file" title="Seleccionar archivo" (change)="onFileSelected($event)" accept="*/*"
+            [class.invalid]="registerForm.get('archivo')?.touched && registerForm.get('archivo')?.invalid" required />
 
         </div>
-        <small class="field-error" *ngIf="registerForm.get('archivo')?.touched && registerForm.get('archivo')?.hasError('required')">
+        <small class="field-error"
+          *ngIf="registerForm.get('archivo')?.touched && registerForm.get('archivo')?.hasError('required')">
           Selecciona un archivo para continuar.
         </small>
       </div>
@@ -64,5 +48,67 @@
         <button type="submit">Guardar archivo</button>
       </div>
     </form>
+
+    <section class="documents-list">
+      <h2>Documentos registrados</h2>
+
+      <div *ngIf="loading">Cargando documentos...</div>
+      <div *ngIf="errorMessage" class="field-error">{{ errorMessage }}</div>
+
+      <table class="documents-table" *ngIf="!loading">
+        <thead>
+          <tr>
+            <th>
+              Nombre
+              <input type="text" placeholder="Filtrar" (input)="onFilterChange('nombre', $event.target.value)" />
+            </th>
+            <th>
+              Descripción
+              <input type="text" placeholder="Filtrar" (input)="onFilterChange('descripcion', $event.target.value)" />
+            </th>
+            <th>
+              Archivo
+              <input type="text" placeholder="Filtrar" (input)="onFilterChange('archivo', $event.target.value)" />
+            </th>
+            <th>
+              Usuario
+              <input type="text" placeholder="Filtrar"
+                (input)="onFilterChange('usuario_creation', $event.target.value)" />
+            </th>
+            <th>
+              Fecha
+              <input type="text" placeholder="Filtrar" (input)="onFilterChange('date_creation', $event.target.value)" />
+            </th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of filteredDocumentos(); let i = index">
+            <td>{{ doc.nombre }}</td>
+            <td>{{ doc.descripcion }}</td>
+            <td>
+              <span *ngIf="doc.archivo">{{ doc.archivo }}</span>
+              <span *ngIf="!doc.archivo">-</span>
+            </td>
+            <td>{{ doc.usuario_creation }}</td>
+            <td>{{ doc.date_creation }}</td>
+            <td class="actions">
+              <button type="button" (click)="openArchivo(doc)">Ver archivo</button>
+              <button type="button" (click)="editarDocumento(doc)">Modificar</button>
+              <button type="button" (click)="eliminarDocumento(doc)">Eliminar</button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredDocumentos().length === 0">
+            <td colspan="6">No hay documentos que coincidan con los filtros.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="preview" *ngIf="previewVisible">
+        <h3>Preview: {{ previewName }}</h3>
+        <iframe [src]="previewSafeUrl" width="100%" height="480"></iframe>
+        <div style="text-align:right;margin-top:8px;"><button (click)="closePreview()">Cerrar</button></div>
+      </div>
+    </section>
   </section>
 </div>
