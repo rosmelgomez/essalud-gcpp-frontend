@@ -1,55 +1,66 @@
 import { LocalStorageService } from './../../../services/local-storage-service';
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { FileService } from '../../../services/file-service';
 import { FormGroup } from '@angular/forms';
 import { FormBuilder, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { OnInit } from '@angular/core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+
+// Mapeo de extensiones a MIME types para archivos que podrían no detectarse correctamente
+const MIME_TYPES_MAP: { [key: string]: string } = {
+  'doc': 'application/msword',
+  'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'xls': 'application/vnd.ms-excel',
+  'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'ppt': 'application/vnd.ms-powerpoint',
+  'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'pdf': 'application/pdf',
+  'txt': 'text/plain',
+  'csv': 'text/csv',
+  'jpg': 'image/jpeg',
+  'jpeg': 'image/jpeg',
+  'png': 'image/png',
+  'gif': 'image/gif',
+  'webp': 'image/webp',
+  'mp4': 'video/mp4',
+  'avi': 'video/x-msvideo',
+  'mov': 'video/quicktime',
+  'zip': 'application/zip',
+  'rar': 'application/x-rar-compressed',
+  '7z': 'application/x-7z-compressed',
+};
 
 @Component({
   selector: 'app-creacion-documentos',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, MatIconModule, MatButtonModule,],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, MatIconModule, MatButtonModule],
   templateUrl: './creacion-documentos.html',
   styleUrl: './creacion-documentos.css',
 })
 export class CreacionDocumentos implements OnInit {
   public registerForm!: FormGroup;
-
-  documentos: any[] = [];
-  loading = false;
-  errorMessage = '';
-
-  filters: { [key: string]: string } = {
-    nombre: '',
-    descripcion: '',
-    archivo: '',
-    usuario_creation: '',
-    date_creation: '',
-  };
-
-  previewVisible = false;
-  previewName = '';
-  previewUrl = '';
-  previewSafeUrl: SafeResourceUrl | null = null;
-
+  public isEditing = false;
+  public creadorLabel = 'Usuario no identificado';
+  public fechaOperacionLabel = '';
+  public formatosPermitidos = '.pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt, .csv, .jpg, .png, .gif, .webp, .mp4, .avi, .mov, .zip, .rar, .7z';
+  private editingDocumentoId: number | string | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
     private fileService: FileService,
     private localStorage: LocalStorageService,
-    private sanitizer: DomSanitizer,
-    private cdr: ChangeDetectorRef,
+    private router: Router,
   ) { }
 
   ngOnInit(): void {
     this.reactiveForm();
-    this.loadDocumentos();
+    this.loadFormContextInfo();
+    this.loadDocumentoFromNavigation();
   }
 
   reactiveForm() {
@@ -76,150 +87,111 @@ export class CreacionDocumentos implements OnInit {
     }
 
     const user = this.localStorage.getUser();
-
-    const usuario =user?.name + ' ' + user?.lastname;
-
+    const usuario = this.buildUserDisplayName(user);
+    
     const documentoFormData = new FormData();
-    documentoFormData.append('id', '');
+    const archivo = this.registerForm.get('archivo')?.value as File | null;
+
+    // Obtener el tipo MIME correcto del archivo
+    const tipoArchivoCorrect = archivo ? this.getMimeType(archivo) : '';
+
+    // Add all metadata fields as individual form fields
+    documentoFormData.append('id', this.editingDocumentoId?.toString() ?? '');
     documentoFormData.append('nombre', this.registerForm.get('nombre')?.value ?? '');
     documentoFormData.append('descripcion', this.registerForm.get('descripcion')?.value ?? '');
-    documentoFormData.append('date_creation', '');
-    documentoFormData.append('date_update', '');
+    documentoFormData.append('tipo_archivo', tipoArchivoCorrect);
     documentoFormData.append('usuario_creation', usuario);
     documentoFormData.append('usuario_update', usuario);
+    documentoFormData.append('date_creation', '');
+    documentoFormData.append('date_update', '');
 
-    const archivo = this.registerForm.get('archivo')?.value as File | null;
+    // Add file if present
     if (archivo) {
       documentoFormData.append('archivo', archivo);
     }
 
-    this.fileService.insertfile(documentoFormData).subscribe(
+    const request = this.isEditing
+      ? this.fileService.updateArchivo(documentoFormData)
+      : this.fileService.insertfile(documentoFormData);
+
+    request.subscribe(
       (response) => {
-        console.log('Archivo subido exitosamente', response);
+        console.log(this.isEditing ? 'Archivo actualizado exitosamente' : 'Archivo subido exitosamente', response);
         this.registerForm.reset();
-        this.loadDocumentos();
+        this.isEditing = false;
+        this.editingDocumentoId = null;
+        void this.router.navigate(['/report-documentos']);
       },
       (error) => {
-        console.error('Error al subir el archivo', error);
+        console.error(this.isEditing ? 'Error al actualizar el archivo' : 'Error al subir el archivo', error);
       }
     );
   }
 
-  loadDocumentos(): void {
-    this.loading = true;
-    this.errorMessage = '';
+  /**
+   * Detecta el MIME type correcto basado en la extensión del archivo
+   * Fallback a archivo.type si no se encuentra en el mapa
+   */
+  private getMimeType(file: File): string {
+    // Intentar usar el tipo MIME nativo del archivo primero
+    if (file.type && file.type !== '') {
+      return file.type;
+    }
 
-    this.fileService.getFiles().subscribe({
-      next: (response: any) => {
-        const raw = Array.isArray(response) ? response : response?.data ?? response?.documentos ?? response?.items ?? response?.result ?? [];
-        this.documentos = raw.map((d: any) => ({
-          ...d,
-          nombre: d?.nombre ?? d?.name ?? d?.titulo ?? d?.fileName ?? d?.archivo ?? '',
-          descripcion: d?.descripcion ?? d?.description ?? '',
-          archivo: d?.archivo ?? d?.fileName ?? d?.nameFile ?? d?.nombreArchivo ?? d?.rutaArchivo ?? '',
-          date_creation: d?.date_creation ?? d?.createdAt ?? '',
-          usuario_creation: d?.usuario_creation ?? d?.creator ?? '',
-          id: d?.id ?? d?.pk ?? ''
-        }));
+    // Si no tiene tipo MIME, extraer la extensión y buscar en el mapa
+    const fileName = file.name.toLowerCase();
+    const lastDot = fileName.lastIndexOf('.');
+    
+    if (lastDot === -1) {
+      // Sin extensión, retornar tipo genérico
+      return 'application/octet-stream';
+    }
 
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error al cargar los documentos', error);
-        this.documentos = [];
-        this.loading = false;
-        this.errorMessage = 'No se pudo cargar los documentos.';
-      }
-    });
+    const extension = fileName.substring(lastDot + 1);
+    const mimeType = MIME_TYPES_MAP[extension];
+
+    return mimeType || 'application/octet-stream';
   }
 
-  filteredDocumentos(): any[] {
-    return this.documentos.filter(doc => {
-      return (!this.filters['nombre'] || String(doc['nombre']).toLowerCase().includes(this.filters['nombre'].toLowerCase()))
-        && (!this.filters['descripcion'] || String(doc['descripcion']).toLowerCase().includes(this.filters['descripcion'].toLowerCase()))
-        && (!this.filters['archivo'] || String(doc['archivo']).toLowerCase().includes(this.filters['archivo'].toLowerCase()))
-        && (!this.filters['usuario_creation'] || String(doc['usuario_creation']).toLowerCase().includes(this.filters['usuario_creation'].toLowerCase()))
-        && (!this.filters['date_creation'] || String(doc['date_creation']).toLowerCase().includes(this.filters['date_creation'].toLowerCase()));
-    });
-  }
+  private loadDocumentoFromNavigation(): void {
+    const documento = history.state?.documento;
 
-  onFilterChange(key: string, value: string): void {
-    this.filters[key] = value ?? '';
-  }
-
-  openArchivo(documento: any): void {
-    const archivo = documento.archivo ?? documento.nombre ?? '';
-    if (!archivo) {
-      this.errorMessage = 'Este documento no tiene archivo asociado.';
+    if (!documento) {
       return;
     }
 
-    this.fileService.getFile(archivo).subscribe({
-      next: (blob: Blob) => {
-        this.clearPreviewUrl();
-        this.previewName = archivo;
-        this.previewUrl = URL.createObjectURL(blob);
-        this.previewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.previewUrl);
-        this.previewVisible = true;
-      },
-      error: (error) => {
-        console.error('Error al abrir el archivo', error);
-        this.errorMessage = 'No se pudo abrir el archivo solicitado.';
-      }
+    this.isEditing = true;
+    this.editingDocumentoId = documento.id ?? null;
+    this.registerForm.patchValue({
+      nombre: documento.nombre ?? documento.name ?? documento.titulo ?? documento.fileName ?? '',
+      descripcion: documento.descripcion ?? documento.description ?? '',
     });
   }
 
-  getArchivoById(id: number | string): void {
-    this.fileService.getArchivo(id).subscribe({
-      next: (blob: Blob) => {
-        this.clearPreviewUrl();
-        this.previewName = `Archivo_${id}`;
-        this.previewUrl = URL.createObjectURL(blob);
-        this.previewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.previewUrl);
-        this.previewVisible = true;
-      },
-      error: (error) => {
-        console.error('Error al abrir el archivo', error);
-        this.errorMessage = 'No se pudo abrir el archivo solicitado.';
-      }
-    });
+  private loadFormContextInfo(): void {
+    const user = this.localStorage.getUser();
+
+    this.creadorLabel = this.buildUserDisplayName(user) || 'Usuario no identificado';
+    this.fechaOperacionLabel = this.formatNow();
   }
 
-  closePreview(): void {
-    this.previewVisible = false;
-    this.clearPreviewUrl();
-  }
-
-  private clearPreviewUrl(): void {
-    if (this.previewUrl) {
-      URL.revokeObjectURL(this.previewUrl);
+  private buildUserDisplayName(user: any): string {
+    if (!user) {
+      return '';
     }
 
-    this.previewUrl = '';
-    this.previewSafeUrl = null;
+    const fullName = `${user?.name ?? ''} ${user?.lastname ?? ''}`.trim();
+    return fullName || String(user?.username ?? '').trim();
   }
 
-  editarDocumento(documento: any): void {
-    // Implementar navegación o prefilling del formulario para edición
-    console.log('Editar documento', documento);
-  }
+  private formatNow(): string {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
 
-  eliminarDocumento(documento: any): void {
-    if (!documento.id) {
-      this.errorMessage = 'No se puede eliminar este documento.';
-      return;
-    }
-
-    this.fileService.deleteArchivo(documento.id).subscribe({
-      next: () => {
-        this.documentos = this.documentos.filter(d => d.id !== documento.id);
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error al eliminar el documento', error);
-        this.errorMessage = 'No se pudo eliminar el documento.';
-      }
-    });
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
 }

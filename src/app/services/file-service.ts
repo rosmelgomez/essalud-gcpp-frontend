@@ -22,7 +22,8 @@ export class FileService {
   }
 
   getArchivo(id: number | string) {
-    return this.http.get(base_url + `/documento/${id}`, { withCredentials: true, responseType: 'blob' });
+    // Return full HttpResponse so callers can read headers (Content-Type, Content-Disposition)
+    return this.http.get(base_url + `/documento/${id}`, { withCredentials: true, responseType: 'blob', observe: 'response' as 'response' });
   }
 
   updateArchivo(documento: FormData) {

@@ -7,6 +7,25 @@
     </header>
 
     <form [formGroup]="registerForm" autocomplete="off" class="register-form" (ngSubmit)="registerDocumento()">
+      <section class="context-card" aria-label="Información del registro">
+        <div class="context-item">
+          <span class="context-label">Usuario que crea</span>
+          <strong class="context-value">{{ creadorLabel }}</strong>
+        </div>
+        <div class="context-item">
+          <span class="context-label">Fecha de operación</span>
+          <strong class="context-value">{{ fechaOperacionLabel }}</strong>
+        </div>
+        <div class="context-item">
+          <span class="context-label">Modo</span>
+          <strong class="context-value">{{ isEditing ? 'Edición de documento' : 'Creación de documento' }}</strong>
+        </div>
+        <div class="context-item context-item-wide">
+          <span class="context-label">Formatos sugeridos</span>
+          <strong class="context-value">{{ formatosPermitidos }}</strong>
+        </div>
+      </section>
+
       <div class="form-grid">
         <div class="register-form-group">
           <label for="nombre">Nombre del archivo</label>
@@ -45,70 +64,8 @@
       </div>
 
       <div class="register-submit">
-        <button type="submit">Guardar archivo</button>
+        <button type="submit">{{ isEditing ? 'Actualizar archivo' : 'Guardar archivo' }}</button>
       </div>
     </form>
-
-    <section class="documents-list">
-      <h2>Documentos registrados</h2>
-
-      <div *ngIf="loading">Cargando documentos...</div>
-      <div *ngIf="errorMessage" class="field-error">{{ errorMessage }}</div>
-
-      <table class="documents-table" *ngIf="!loading">
-        <thead>
-          <tr>
-            <th>
-              Nombre
-              <input type="text" placeholder="Filtrar" (input)="onFilterChange('nombre', $event.target.value)" />
-            </th>
-            <th>
-              Descripción
-              <input type="text" placeholder="Filtrar" (input)="onFilterChange('descripcion', $event.target.value)" />
-            </th>
-            <th>
-              Archivo
-              <input type="text" placeholder="Filtrar" (input)="onFilterChange('archivo', $event.target.value)" />
-            </th>
-            <th>
-              Usuario
-              <input type="text" placeholder="Filtrar"
-                (input)="onFilterChange('usuario_creation', $event.target.value)" />
-            </th>
-            <th>
-              Fecha
-              <input type="text" placeholder="Filtrar" (input)="onFilterChange('date_creation', $event.target.value)" />
-            </th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let doc of filteredDocumentos(); let i = index">
-            <td>{{ doc.nombre }}</td>
-            <td>{{ doc.descripcion }}</td>
-            <td>
-              <span *ngIf="doc.archivo">{{ doc.archivo }}</span>
-              <span *ngIf="!doc.archivo">-</span>
-            </td>
-            <td>{{ doc.usuario_creation }}</td>
-            <td>{{ doc.date_creation }}</td>
-            <td class="actions">
-              <button type="button" (click)="openArchivo(doc)">Ver archivo</button>
-              <button type="button" (click)="editarDocumento(doc)">Modificar</button>
-              <button type="button" (click)="eliminarDocumento(doc)">Eliminar</button>
-            </td>
-          </tr>
-          <tr *ngIf="filteredDocumentos().length === 0">
-            <td colspan="6">No hay documentos que coincidan con los filtros.</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="preview" *ngIf="previewVisible">
-        <h3>Preview: {{ previewName }}</h3>
-        <iframe [src]="previewSafeUrl" width="100%" height="480"></iframe>
-        <div style="text-align:right;margin-top:8px;"><button (click)="closePreview()">Cerrar</button></div>
-      </div>
-    </section>
   </section>
 </div>

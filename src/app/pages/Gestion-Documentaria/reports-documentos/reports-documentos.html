@@ -5,7 +5,8 @@
 				<p class="eyebrow">Gestión Documentaria</p>
 				<h1>Reporte de documentos</h1>
 				<p class="header-text">
-					Revisa el listado de archivos disponibles y abre cada uno en una ventana flotante sin salir de la pantalla.
+					Revisa el listado de archivos disponibles y abre cada uno en una ventana flotante sin salir de la
+					pantalla.
 				</p>
 			</div>
 
@@ -15,58 +16,100 @@
 		</header>
 
 		<div class="table-card">
+			<div class="filter-section">
+				<div class="filter-group">
+					<label class="filter-label">Nombre:</label>
+					<input class="filter-control" #nombreInput type="text" placeholder="Buscar nombre" (input)="filtroNombre = nombreInput.value; aplicarFiltro()" />
+				</div>
+				<div class="filter-group">
+					<label class="filter-label">Descripción:</label>
+					<input class="filter-control" #descripcionInput type="text" placeholder="Buscar descripción" (input)="filtroDescripcion = descripcionInput.value; aplicarFiltro()" />
+				</div>
+				<div class="filter-group">
+					<label class="filter-label">Tipo archivo:</label>
+					<select class="filter-control" #tipoSelect [value]="filtroTipoArchivo" (change)="onFiltroTipoArchivoChange(tipoSelect.value)">
+						<option value="">-- Todos --</option>
+						<option *ngFor="let tipo of tiposArchivoDisponibles" [value]="tipo.key">{{ tipo.label }}</option>
+					</select>
+				</div>
+				<div class="filter-group">
+					<label class="filter-label">Usuario creación:</label>
+					<input class="filter-control" #usuarioCreationInput type="text" placeholder="Buscar usuario" (input)="filtroUsuarioCreation = usuarioCreationInput.value; aplicarFiltro()" />
+				</div>
+				<div class="filter-group">
+					<label class="filter-label">Usuario actualización:</label>
+					<input class="filter-control" #usuarioUpdateInput type="text" placeholder="Buscar usuario" (input)="filtroUsuarioUpdate = usuarioUpdateInput.value; aplicarFiltro()" />
+				</div>
+				<div class="filter-count">{{ documentosFiltrados.length }} documento(s)</div>
+			</div>
+
 			<div class="table-head">
+				<div>ID</div>
 				<div>Documento</div>
 				<div>Descripción</div>
-				<div>Archivo</div>
-				<div>Fechas</div>
-				<div>Acción</div>
+				<div>Tipo Archivo</div>
+				<div>Usuario Creación</div>
+				<div>Usuario Actualización</div>
+				<div>Fecha Creación</div>
+				<div>Fecha Actualización</div>
+				<div>Acciones</div>
 			</div>
 
 			<cdk-virtual-scroll-viewport class="document-viewport" [itemSize]="96">
-				<div
-					class="document-row"
-					*cdkVirtualFor="let documento of documentos; trackBy: trackByDocumento"
-				>
+				<div class="document-row" *cdkVirtualFor="let documento of documentosFiltrados; trackBy: trackByDocumento">
+					<div class="cell id-cell">
+						<strong>{{ documento.id || '---' }}</strong>
+					</div>
+
 					<div class="cell primary-cell">
-						<span class="cell-label">Documento</span>
 						<strong>{{ getNombreDocumento(documento) }}</strong>
 					</div>
 
 					<div class="cell description-cell">
-						<span class="cell-label">Descripción</span>
 						<span>{{ documento.descripcion || 'Sin descripción registrada' }}</span>
 					</div>
 
-					<div class="cell file-cell">
-						<span class="cell-label">Archivo</span>
-						<span class="file-name">{{ documento.nombre }}</span>
-						<button
-							class="view-button"
-							type="button"
-							(click)="getArchivo(documento.id)"
-							[disabled]="getArchivoNombre(documento) === 'Archivo no disponible'"
-						>
-							Ver archivo
-						</button>
+					<div class="cell type-cell">
+						<span>{{ documento['tipo_archivo_label'] || documento.tipo_archivo || '---' }}</span>
 					</div>
 
-					<div class="cell dates-cell">
-						<span class="cell-label">Fechas</span>
-						<span>Creación: {{ documento.date_creation || '---' }}</span>
-						<span>Actualización: {{ documento.date_update || '---' }}</span>
+					<div class="cell user-cell">
+						<span>{{ documento.usuario_creation || '---' }}</span>
+					</div>
+
+					<div class="cell user-cell">
+						<span>{{ documento.usuario_update || '---' }}</span>
+					</div>
+
+					<div class="cell date-cell">
+						<span>{{ formatDate(documento.date_creation) }}</span>
+					</div>
+
+					<div class="cell date-cell">
+						<span>{{ formatDate(documento.date_update) }}</span>
 					</div>
 
 					<div class="cell action-cell">
-						<button class="secondary-button" type="button" (click)="getArchivo(documento.id)">
-							Abrir
-						</button>
+						<div class="action-buttons">
+							<button class="view-button" type="button" (click)="openArchivo(documento)">
+								Abrir
+							</button>
+							<button class="secondary-button" type="button" (click)="editDocumento(documento)">
+								Editar
+							</button>
+							<button class="danger-button" type="button" (click)="deleteDocumento(documento)">
+								Eliminar
+							</button>
+							<button class="download-button" type="button" (click)="downloadDocumento(documento)">
+								Descargar
+							</button>
+						</div>
 					</div>
 				</div>
 			</cdk-virtual-scroll-viewport>
 
-			<div class="state-panel empty-state" *ngIf="!loading && documentos.length === 0">
-				No hay documentos disponibles para mostrar.
+			<div class="state-panel empty-state" *ngIf="!loading && documentosFiltrados.length === 0">
+				{{ documentos.length === 0 ? 'No hay documentos disponibles para mostrar.' : 'No hay documentos que coincidan con el filtro seleccionado.' }}
 			</div>
 
 			<div class="state-panel info-state" *ngIf="loading">Cargando documentos...</div>
@@ -89,12 +132,8 @@
 			</header>
 
 			<div class="preview-body">
-				<iframe
-					*ngIf="previewSafeUrl"
-					class="preview-frame"
-					[src]="previewSafeUrl"
-					title="Vista previa del archivo"
-				></iframe>
+				<iframe *ngIf="previewSafeUrl" class="preview-frame" [src]="previewSafeUrl"
+					title="Vista previa del archivo"></iframe>
 			</div>
 		</section>
 	</div>

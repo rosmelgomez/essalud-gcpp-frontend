@@ -204,18 +204,28 @@ export class ReportDashboardMedicas implements OnInit {
   downloadFichaTecnica(): void {
     this.fileService.getFile('f_consulta_externa.pdf').subscribe({
       next: (blob: Blob) => {
+        // Validar que el archivo se descargó correctamente
+        if (!blob || blob.size === 0) {
+          alert(
+            'No se pudo obtener el archivo. Por favor, descárgalo manualmente desde el servidor o contacta al administrador.',
+          );
+          return;
+        }
+
+        // Descargar el archivo directamente en lugar de abrir visualización
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
+        link.href = url;
         link.download = 'FICHA_TECNICA_MEDICAS.pdf';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
       },
       error: (err) => {
         console.error('Error al descargar la ficha técnica:', err);
         alert(
-          'Hubo un error al descargar la ficha técnica. Por favor, inténtelo de nuevo más tarde.',
+          'No se puede visualizar el archivo en línea. Te recomendamos descargarlo localmente. Si persiste el error, contacta al administrador del sistema.',
         );
       },
     });

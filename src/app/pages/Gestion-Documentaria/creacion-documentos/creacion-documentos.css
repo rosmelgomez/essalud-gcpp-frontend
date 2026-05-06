@@ -60,6 +60,43 @@
   gap: 22px;
 }
 
+.context-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(121, 177, 255, 0.26);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.16), rgba(14, 31, 56, 0.58));
+}
+
+.context-item {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.context-item-wide {
+  grid-column: 1 / -1;
+}
+
+.context-label {
+  color: rgba(222, 235, 255, 0.74);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.context-value {
+  color: #f5f8ff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  word-break: break-word;
+}
+
 .form-grid {
   display: grid;
   gap: 18px;
@@ -186,6 +223,10 @@
     grid-template-columns: 1fr;
   }
 
+  .context-card {
+    grid-template-columns: 1fr;
+  }
+
   .register-submit {
     justify-content: stretch;
   }
@@ -194,59 +235,4 @@
     width: 100%;
     min-width: 0;
   }
-}
-
-.documents-list {
-  margin-top: 28px;
-}
-
-.documents-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 12px;
-  background: rgba(255,255,255,0.03);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.documents-table thead th {
-  text-align: left;
-  padding: 10px 12px;
-  font-weight: 700;
-  background: rgba(255,255,255,0.02);
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-
-.documents-table tbody td {
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-}
-
-.documents-table input {
-  margin-top: 6px;
-  width: 100%;
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
-  color: #f4f7fb;
-}
-
-.documents-table .actions button {
-  margin-right: 8px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 0;
-  cursor: pointer;
-}
-
-.documents-table .actions button:nth-child(1) { background: rgba(74,144,226,0.12); }
-.documents-table .actions button:nth-child(2) { background: rgba(255,206,84,0.08); }
-.documents-table .actions button:nth-child(3) { background: rgba(255,88,88,0.08); }
-
-.preview {
-  margin-top: 18px;
-  padding: 12px;
-  background: rgba(255,255,255,0.02);
-  border-radius: 10px;
 }
