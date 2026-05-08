@@ -7,7 +7,6 @@ import { ManageUsers } from './pages/manage-users/manage-users';
 import { HomePage } from './pages/home-page/home-page';
 import { LogsReports } from './pages/logs-reports/logs-reports';
 
-
 import { ReportsGerenciales } from './pages/reports-gerenciales/reports-gerenciales';
 import { authenticateGuard } from './guards/authenticate-guard';
 import { redirectGuard } from './guards/redirect-guard';
@@ -67,8 +66,8 @@ import { DiqSinComplejidadGc } from './pages/Indicadores/dashboard-centro-quirur
 
 import { ReportDashboardReporteador } from './pages/reportes/report-dashboard-reporteador/report-dashboard-reporteador';
 import { ReportDashboardOdontologicas } from './pages/reportes/report-dashboard-odontologicas/report-dashboard-odontologicas';
-import { Encuesta } from './pages/encuesta/encuesta';
-import { DashboardEncuesta } from './pages/dashboard-encuesta/dashboard-encuesta';
+import { Encuesta } from './pages/Encuestas/encuesta/encuesta';
+
 import { SolicitudAccesoRegistro } from './pages/Solicitud-Acceso/solicitud-acceso-registro/solicitud-acceso-registro';
 import { SolicitudAccesoReports } from './pages/Solicitud-Acceso/solicitud-acceso-reports/solicitud-acceso-reports';
 import { ReportDashboardTransplante } from './pages/reportes/report-dashboard-transplante/report-dashboard-transplante';
@@ -77,6 +76,7 @@ import { TablasHomologadas } from './pages/tablas-homologadas/tablas-homologadas
 import { CreacionDocumentos } from './pages/Gestion-Documentaria/creacion-documentos/creacion-documentos';
 import { ReportsDocumentos } from './pages/Gestion-Documentaria/reports-documentos/reports-documentos';
 import { ReportDashboard } from './pages/reportes/report-dashboard/report-dashboard';
+import { DashboardEncuesta } from './pages/Encuestas/dashboard-encuesta/dashboard-encuesta';
 
 
 export const routes: Routes = [
@@ -216,11 +216,5 @@ export const routes: Routes = [
     //Gestion de documentos
     {path:'creacion-documento', component:CreacionDocumentos, canActivate: [authenticateGuard]},
     {path:'report-documentos', component: ReportsDocumentos, canActivate: [authenticateGuard]},
-
-
-
-
-
-
 
 ];

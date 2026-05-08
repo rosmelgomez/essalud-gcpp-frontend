@@ -1,12 +1,9 @@
-import { LocalStorageService } from '../../services/local-storage-service';
+import { LocalStorageService } from '../../../services/local-storage-service';
 import { Component, OnInit, inject, ChangeDetectionStrategy, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
-import { Categoria } from '../../model/categoria';
-import { Modulo } from '../../model/modulo';
-import { Subcategoria } from '../../model/subcategoria';
-import { Variable } from '../../model/variable';
+import { Categoria, Modulo , Subcategoria, Variable } from '../../../model/encuesta';
 import { ChangeDetectorRef } from '@angular/core';
 import {
   MatDialog,
@@ -18,7 +15,7 @@ import {
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { EncuestaService } from '../../services/encuesta/encuesta-service';
+import { EncuestaService } from '../../../services/encuesta/encuesta-service';
 
 @Component({
   selector: 'app-encuesta',

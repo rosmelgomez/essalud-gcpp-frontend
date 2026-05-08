@@ -7,8 +7,8 @@ import { LocalStorageService } from '../../../services/local-storage-service';
 import { forkJoin } from 'rxjs';
 import { CdkTableModule } from "@angular/cdk/table";
 import { OnInit } from '@angular/core';
-import { FileService } from '../../../services/file-service';
 import { ReportDashboardIntervencionesQuirurgicasService } from '../../../services/reportes/report-dashboard-intervenciones-quirurgicas-service';
+import { FileService } from '../../../services/documentos/file-service';
 
 @Component({
   selector: 'app-report-dashboard-intervenciones-quirurgicas',

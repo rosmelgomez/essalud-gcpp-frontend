@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { OnInit } from '@angular/core';
 import { LocalStorageService } from '../../../services/local-storage-service';
-import { FileService } from '../../../services/file-service';
+import { FileService } from '../../../services/documentos/file-service';
 import { ReportDashboardMedicasService } from '../../../services/reportes/report-dashboard-medicas-service';
 
 @Component({

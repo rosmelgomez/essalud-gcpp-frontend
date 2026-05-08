@@ -2,7 +2,7 @@ import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LocalStorageService } from '../../../services/local-storage-service';
-import { FileService } from '../../../services/file-service';
+import { FileService } from '../../../services/documentos/file-service';
 
 import { forkJoin } from 'rxjs';
 import { ReportDashboardOdontologicasService } from '../../../services/reportes/report-dashboard-odontologicas-service';

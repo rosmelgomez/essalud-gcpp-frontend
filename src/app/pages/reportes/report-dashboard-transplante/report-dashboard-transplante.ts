@@ -3,8 +3,8 @@ import { LocalStorageService } from '../../../services/local-storage-service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkTableModule } from "@angular/cdk/table";
-import { FileService } from '../../../services/file-service';
 import { ReportTransplante } from '../../../services/reportes/report-transplante';
+import { FileService } from '../../../services/documentos/file-service';
 
 @Component({
   selector: 'app-report-dashboard-transplate',

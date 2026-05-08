@@ -4,7 +4,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { FileService } from '../../../services/file-service';
+import { FileService } from '../../../services/documentos/file-service';
 import { ChangeDetectorRef } from '@angular/core';
 
 // Tipos de archivo que pueden visualizarse en el navegador

@@ -1,6 +1,6 @@
 import { LocalStorageService } from './../../../services/local-storage-service';
 import { Component } from '@angular/core';
-import { FileService } from '../../../services/file-service';
+import { FileService } from '../../../services/documentos/file-service';
 import { FormGroup } from '@angular/forms';
 import { FormBuilder, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -10,6 +10,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { OnInit } from '@angular/core';
+import { TipoDocumento } from '../../../model/documento';
+import { TipoDocumentoService } from '../../../services/documentos/tipo-documento-service';
 
 // Mapeo de extensiones a MIME types para archivos que podrían no detectarse correctamente
 const MIME_TYPES_MAP: { [key: string]: string } = {
@@ -43,28 +45,46 @@ const MIME_TYPES_MAP: { [key: string]: string } = {
   styleUrl: './creacion-documentos.css',
 })
 export class CreacionDocumentos implements OnInit {
-  public registerForm!: FormGroup;
+  public registerDocumentoForm!: FormGroup;
+  public registerVersionDocumentoForm!: FormGroup;
   public isEditing = false;
   public creadorLabel = 'Usuario no identificado';
   public fechaOperacionLabel = '';
   public formatosPermitidos = '.pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt, .csv, .jpg, .png, .gif, .webp, .mp4, .avi, .mov, .zip, .rar, .7z';
   private editingDocumentoId: number | string | null = null;
 
+  private tipo_documento:TipoDocumento [] = [];
+
+
+
   constructor(
     private formBuilder: FormBuilder,
     private fileService: FileService,
     private localStorage: LocalStorageService,
     private router: Router,
+    private tipoDocumentoService: TipoDocumentoService,
   ) { }
 
   ngOnInit(): void {
+    this.getTiposDocumentos();
     this.reactiveForm();
     this.loadFormContextInfo();
     this.loadDocumentoFromNavigation();
   }
 
+  getTiposDocumentos() {
+    this.tipoDocumentoService.getTiposDocumentos().subscribe(
+      (response) => {
+        this.tipo_documento = response;
+      },
+      (error) => {
+        console.error('Error al obtener los tipos de documentos', error);
+      }
+    );
+  }
+
   reactiveForm() {
-    this.registerForm = this.formBuilder.group({
+    this.registerDocumentoForm = this.formBuilder.group({
       nombre: ['', [Validators.required]],
       descripcion: ['', [Validators.required]],
       archivo: [null, [Validators.required]],
@@ -75,14 +95,14 @@ export class CreacionDocumentos implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
 
-    this.registerForm.patchValue({ archivo: file });
-    this.registerForm.get('archivo')?.updateValueAndValidity();
+    this.registerDocumentoForm.patchValue({ archivo: file });
+    this.registerDocumentoForm.get('archivo')?.updateValueAndValidity();
   }
 
 
   registerDocumento() {
-    if (this.registerForm.invalid) {
-      this.registerForm.markAllAsTouched();
+    if (this.registerDocumentoForm.invalid) {
+      this.registerDocumentoForm.markAllAsTouched();
       return;
     }
 
@@ -90,15 +110,15 @@ export class CreacionDocumentos implements OnInit {
     const usuario = this.buildUserDisplayName(user);
     
     const documentoFormData = new FormData();
-    const archivo = this.registerForm.get('archivo')?.value as File | null;
+    const archivo = this.registerDocumentoForm.get('archivo')?.value as File | null;
 
     // Obtener el tipo MIME correcto del archivo
     const tipoArchivoCorrect = archivo ? this.getMimeType(archivo) : '';
 
     // Add all metadata fields as individual form fields
     documentoFormData.append('id', this.editingDocumentoId?.toString() ?? '');
-    documentoFormData.append('nombre', this.registerForm.get('nombre')?.value ?? '');
-    documentoFormData.append('descripcion', this.registerForm.get('descripcion')?.value ?? '');
+    documentoFormData.append('nombre', this.registerDocumentoForm.get('nombre')?.value ?? '');
+    documentoFormData.append('descripcion', this.registerDocumentoForm.get('descripcion')?.value ?? '');
     documentoFormData.append('tipo_archivo', tipoArchivoCorrect);
     documentoFormData.append('usuario_creation', usuario);
     documentoFormData.append('usuario_update', usuario);
@@ -117,7 +137,7 @@ export class CreacionDocumentos implements OnInit {
     request.subscribe(
       (response) => {
         console.log(this.isEditing ? 'Archivo actualizado exitosamente' : 'Archivo subido exitosamente', response);
-        this.registerForm.reset();
+        this.registerDocumentoForm.reset();
         this.isEditing = false;
         this.editingDocumentoId = null;
         void this.router.navigate(['/report-documentos']);
@@ -162,7 +182,7 @@ export class CreacionDocumentos implements OnInit {
 
     this.isEditing = true;
     this.editingDocumentoId = documento.id ?? null;
-    this.registerForm.patchValue({
+    this.registerDocumentoForm.patchValue({
       nombre: documento.nombre ?? documento.name ?? documento.titulo ?? documento.fileName ?? '',
       descripcion: documento.descripcion ?? documento.description ?? '',
     });

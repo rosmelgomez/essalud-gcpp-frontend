@@ -1,14 +1,6 @@
-import { EstablecimientoService } from '../../services/establecimiento-service';
-import { User } from './../../model/user';
-import { Component, OnInit } from '@angular/core';
-import { Categoria } from '../../model/categoria';
-import { Modulo } from '../../model/modulo';
-import { Subcategoria } from '../../model/subcategoria';
-import { Variable } from '../../model/variable';
-import { Encuesta } from '../../model/encuesta';
+
 import { forkJoin } from 'rxjs';
-import { ChangeDetectorRef } from '@angular/core';
-import { UsersService } from '../../services/users-service';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ScrollingModule } from '@angular/cdk/scrolling';
@@ -25,7 +17,12 @@ import {
   ApexNoData,
   ApexResponsive,
 } from 'ng-apexcharts';
-import { EncuestaService } from '../../services/encuesta/encuesta-service';
+import { EncuestaService } from '../../../services/encuesta/encuesta-service';
+import { User } from '../../../model/user';
+import { Categoria, Encuesta, Modulo, Subcategoria, Variable } from '../../../model/encuesta';
+import { EstablecimientoService } from '../../../services/establecimiento-service';
+import { UsersService } from '../../../services/users-service';
+
 
 interface DashboardFilters {
   codcas: string;
