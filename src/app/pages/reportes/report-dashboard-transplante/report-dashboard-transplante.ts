@@ -1,10 +1,10 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { LocalStorageService } from '../../services/local-storage-service';
-import { ReportTransplante } from '../../services/report-transplante';
+import { LocalStorageService } from '../../../services/local-storage-service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkTableModule } from "@angular/cdk/table";
-import { FileService } from '../../services/file-service';
+import { FileService } from '../../../services/file-service';
+import { ReportTransplante } from '../../../services/reportes/report-transplante';
 
 @Component({
   selector: 'app-report-dashboard-transplate',

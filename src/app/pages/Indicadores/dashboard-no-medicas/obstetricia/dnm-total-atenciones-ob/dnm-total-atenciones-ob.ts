@@ -17,7 +17,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { LocalStorageService } from '../../../../../services/local-storage-service';
-import { ReportDashboardNoMedicasService } from '../../../../../services/report-dashboard-no-medicas-service';
+import { ReportDashboardNoMedicasService } from '../../../../../services/reportes/report-dashboard-no-medicas-service';
 
 @Component({
   selector: 'app-dnm-total-atenciones-ob',

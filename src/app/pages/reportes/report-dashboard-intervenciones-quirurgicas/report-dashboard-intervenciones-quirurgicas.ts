@@ -2,12 +2,13 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core';
-import { ReportDashboardIntervencionesQuirurgicasService } from '../../services/report-dashboard-intervenciones-quirurgicas-service';
-import { LocalStorageService } from '../../services/local-storage-service';
+
+import { LocalStorageService } from '../../../services/local-storage-service';
 import { forkJoin } from 'rxjs';
 import { CdkTableModule } from "@angular/cdk/table";
 import { OnInit } from '@angular/core';
-import { FileService } from '../../services/file-service';
+import { FileService } from '../../../services/file-service';
+import { ReportDashboardIntervencionesQuirurgicasService } from '../../../services/reportes/report-dashboard-intervenciones-quirurgicas-service';
 
 @Component({
   selector: 'app-report-dashboard-intervenciones-quirurgicas',

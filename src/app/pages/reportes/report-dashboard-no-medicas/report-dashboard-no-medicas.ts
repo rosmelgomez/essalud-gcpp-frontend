@@ -1,10 +1,11 @@
 import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LocalStorageService } from '../../services/local-storage-service';
-import { FileService } from '../../services/file-service';
-import { ReportDashboardNoMedicasService } from '../../services/report-dashboard-no-medicas-service';
+import { LocalStorageService } from '../../../services/local-storage-service';
+import { FileService } from '../../../services/file-service';
+
 import { forkJoin } from 'rxjs';
+import { ReportDashboardNoMedicasService } from '../../../services/reportes/report-dashboard-no-medicas-service';
 
 @Component({
   selector: 'app-report-dashboard-no-medicas',

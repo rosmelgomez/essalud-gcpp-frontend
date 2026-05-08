@@ -17,7 +17,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { LocalStorageService } from '../../../../../services/local-storage-service';
-import { ReportDashboardMedicasService } from '../../../../../services/report-dashboard-medicas-service';
+import { ReportDashboardMedicasService } from '../../../../../services/reportes/report-dashboard-medicas-service';
 
 @Component({
   selector: 'app-dm-total-atenciones-mp',

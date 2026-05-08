@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatCardModule } from '@angular/material/card';
-import { ReportDashboardMedicasService } from '../../../../../services/report-dashboard-medicas-service';
+import { ReportDashboardMedicasService } from '../../../../../services/reportes/report-dashboard-medicas-service';
 import { LocalStorageService } from '../../../../../services/local-storage-service';
 
 // Configuración centralizada de estilos

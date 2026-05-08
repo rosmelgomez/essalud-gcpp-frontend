@@ -1,6 +1,5 @@
 import { EstablecimientoService } from '../../services/establecimiento-service';
 import { User } from './../../model/user';
-import { EncuestaService } from './../../services/encuesta-service';
 import { Component, OnInit } from '@angular/core';
 import { Categoria } from '../../model/categoria';
 import { Modulo } from '../../model/modulo';
@@ -26,6 +25,7 @@ import {
   ApexNoData,
   ApexResponsive,
 } from 'ng-apexcharts';
+import { EncuestaService } from '../../services/encuesta/encuesta-service';
 
 interface DashboardFilters {
   codcas: string;

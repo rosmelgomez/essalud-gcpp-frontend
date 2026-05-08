@@ -16,7 +16,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
-import { ReportDashboardIntervencionesQuirurgicasService } from './../../../../../../services/report-dashboard-intervenciones-quirurgicas-service';
+import { ReportDashboardIntervencionesQuirurgicasService } from '../../../../../../services/reportes/report-dashboard-intervenciones-quirurgicas-service';
+
 
 
 

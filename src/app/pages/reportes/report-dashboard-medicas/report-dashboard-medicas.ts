@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { OnInit } from '@angular/core';
-import { LocalStorageService } from '../../services/local-storage-service';
-import { ReportDashboardMedicasService } from '../../services/report-dashboard-medicas-service';
-import { FileService } from '../../services/file-service';
+import { LocalStorageService } from '../../../services/local-storage-service';
+import { FileService } from '../../../services/file-service';
+import { ReportDashboardMedicasService } from '../../../services/reportes/report-dashboard-medicas-service';
 
 @Component({
   selector: 'app-report-dashboard-medicas',

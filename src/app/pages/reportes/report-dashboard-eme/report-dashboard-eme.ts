@@ -1,8 +1,9 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LocalStorageService } from '../../services/local-storage-service';
-import { ReportDashboardEmergenciasService } from '../../services/report-dashboard-emergencias-service';
+import { LocalStorageService } from '../../../services/local-storage-service';
+import { ReportDashboardEmergenciasService } from '../../../services/reportes/report-dashboard-emergencias-service';
+
 
 @Component({
   selector: 'app-report-dashboard-eme',

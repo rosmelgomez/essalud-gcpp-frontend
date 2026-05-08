@@ -1,13 +1,13 @@
-import { ReportDashboardReporteadorService } from './../../services/report-dashboard-reporteador-service';
 import { Component } from '@angular/core';
 import { OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { Resporteador } from '../../model/resporteador';
+import { Resporteador } from '../../../model/resporteador';
 import {AfterViewInit, ViewChild} from '@angular/core';
 import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
 import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import { ReportDashboardReporteadorService } from '../../../services/reportes/report-dashboard-reporteador-service';
 
 @Component({
   selector: 'app-report-dashboard-reporteador',
@@ -81,7 +81,9 @@ export class ReportDashboardReporteador implements OnInit , AfterViewInit {
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
   }
-  constructor(private ReportDashboardReporteadorService: ReportDashboardReporteadorService) {
+  constructor(
+    private ReportDashboardReporteadorService: ReportDashboardReporteadorService
+  ) {
     this.currentDate = new Date().toLocaleDateString();
   }
 

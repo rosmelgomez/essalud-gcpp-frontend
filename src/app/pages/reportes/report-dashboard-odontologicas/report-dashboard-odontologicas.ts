@@ -1,10 +1,11 @@
 import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LocalStorageService } from '../../services/local-storage-service';
-import { FileService } from '../../services/file-service';
-import { ReportDashboardOdontologicasService } from '../../services/report-dashboard-odontologicas-service';
+import { LocalStorageService } from '../../../services/local-storage-service';
+import { FileService } from '../../../services/file-service';
+
 import { forkJoin } from 'rxjs';
+import { ReportDashboardOdontologicasService } from '../../../services/reportes/report-dashboard-odontologicas-service';
 
 @Component({
   selector: 'app-report-dashboard-odontologicas',

@@ -14,8 +14,9 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
 import ApexCharts, { ApexOptions } from 'apexcharts';
-import { ReportDashboardEmergenciasService } from '../../../../services/report-dashboard-emergencias-service';
+
 import { LocalStorageService } from '../../../../services/local-storage-service';
+import { ReportDashboardEmergenciasService } from '../../../../services/reportes/report-dashboard-emergencias-service';
 
 @Component({
   selector: 'app-aten-topicos-2',

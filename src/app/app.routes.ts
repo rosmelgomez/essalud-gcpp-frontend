@@ -11,8 +11,8 @@ import { LogsReports } from './pages/logs-reports/logs-reports';
 import { ReportsGerenciales } from './pages/reports-gerenciales/reports-gerenciales';
 import { authenticateGuard } from './guards/authenticate-guard';
 import { redirectGuard } from './guards/redirect-guard';
-import { ReportDashboard } from './pages/report-dashboard/report-dashboard';
-import { ReportDashboardEme } from './pages/report-dashboard-eme/report-dashboard-eme';
+
+import { ReportDashboardEme } from './pages/reportes/report-dashboard-eme/report-dashboard-eme';
 import { DmTotalAtencionesCai } from './pages/Indicadores/dashboard-medicas/consulta de atencion inmediata/dm-total-atenciones-cai/dm-total-atenciones-cai';
 import { DmTotalAtencionesAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-atenciones-am/dm-total-atenciones-am';
 import { DmTotalAtendidosAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-atendidos-am/dm-total-atendidos-am';
@@ -21,8 +21,8 @@ import { DmTotalDesercionAm } from './pages/Indicadores/dashboard-medicas/atenci
 import { DmTotalHorasEfectivasAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-horas-efectivas-am/dm-total-horas-efectivas-am';
 import { DmTotalHorasProgramadasAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-horas-programadas-am/dm-total-horas-programadas-am';
 import { DmTotalCitadosAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-citados-am/dm-total-citados-am';
-import { ReportDashboardNoMedicas } from './pages/report-dashboard-no-medicas/report-dashboard-no-medicas';
-import { ReportDashboardMedicas } from './pages/report-dashboard-medicas/report-dashboard-medicas';
+import { ReportDashboardNoMedicas } from './pages/reportes/report-dashboard-no-medicas/report-dashboard-no-medicas';
+import { ReportDashboardMedicas } from './pages/reportes/report-dashboard-medicas/report-dashboard-medicas';
 import { DmTotalAtencionesMc } from './pages/Indicadores/dashboard-medicas/medicina complementaria/dm-total-atenciones-mc/dm-total-atenciones-mc';
 import { DmTotalMedicosMc } from './pages/Indicadores/dashboard-medicas/medicina complementaria/dm-total-medicos-mc/dm-total-medicos-mc';
 import { DmTotalHorasEfectivasCad } from './pages/Indicadores/dashboard-medicas/consulta apoyo desc/dm-total-horas-efectivas-cad/dm-total-horas-efectivas-cad';
@@ -57,7 +57,7 @@ import { DnmTotalAtencionesNu } from './pages/Indicadores/dashboard-no-medicas/n
 import { DnmTotalAtencionesTs } from './pages/Indicadores/dashboard-no-medicas/trabajo social/dnm-total-atenciones-ts/dnm-total-atenciones-ts';
 import { DnmTotalAtencionesPt } from './pages/Indicadores/dashboard-no-medicas/procedimientos terapeuticos/dnm-total-atenciones-pt/dnm-total-atenciones-pt';
 
-import { ReportDashboardIntervencionesQuirurgicas } from './pages/report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
+import { ReportDashboardIntervencionesQuirurgicas } from './pages/reportes/report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
 import { DiqComplejidadAGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-a-gc/diq-complejidad-a-gc';
 import { DiqComplejidadBGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-b-gc/diq-complejidad-b-gc';
 import { DiqComplejidadCGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-c-gc/diq-complejidad-c-gc';
@@ -65,17 +65,18 @@ import { DiqComplejidadDGc } from './pages/Indicadores/dashboard-centro-quirurgi
 import { DiqComplejidadEGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-e-gc/diq-complejidad-e-gc';
 import { DiqSinComplejidadGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-sin-complejidad-gc/diq-sin-complejidad-gc';
 
-import { ReportDashboardReporteador } from './pages/report-dashboard-reporteador/report-dashboard-reporteador';
-import { ReportDashboardOdontologicas } from './pages/report-dashboard-odontologicas/report-dashboard-odontologicas';
+import { ReportDashboardReporteador } from './pages/reportes/report-dashboard-reporteador/report-dashboard-reporteador';
+import { ReportDashboardOdontologicas } from './pages/reportes/report-dashboard-odontologicas/report-dashboard-odontologicas';
 import { Encuesta } from './pages/encuesta/encuesta';
 import { DashboardEncuesta } from './pages/dashboard-encuesta/dashboard-encuesta';
 import { SolicitudAccesoRegistro } from './pages/Solicitud-Acceso/solicitud-acceso-registro/solicitud-acceso-registro';
 import { SolicitudAccesoReports } from './pages/Solicitud-Acceso/solicitud-acceso-reports/solicitud-acceso-reports';
-import { ReportDashboardTransplante } from './pages/report-dashboard-transplante/report-dashboard-transplante';
+import { ReportDashboardTransplante } from './pages/reportes/report-dashboard-transplante/report-dashboard-transplante';
 
 import { TablasHomologadas } from './pages/tablas-homologadas/tablas-homologadas';
 import { CreacionDocumentos } from './pages/Gestion-Documentaria/creacion-documentos/creacion-documentos';
 import { ReportsDocumentos } from './pages/Gestion-Documentaria/reports-documentos/reports-documentos';
+import { ReportDashboard } from './pages/reportes/report-dashboard/report-dashboard';
 
 
 export const routes: Routes = [

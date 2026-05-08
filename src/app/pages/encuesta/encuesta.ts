@@ -3,7 +3,6 @@ import { Component, OnInit, inject, ChangeDetectionStrategy, Inject } from '@ang
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
-import { EncuestaService } from '../../services/encuesta-service';
 import { Categoria } from '../../model/categoria';
 import { Modulo } from '../../model/modulo';
 import { Subcategoria } from '../../model/subcategoria';
@@ -19,6 +18,7 @@ import {
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { EncuestaService } from '../../services/encuesta/encuesta-service';
 
 @Component({
   selector: 'app-encuesta',
