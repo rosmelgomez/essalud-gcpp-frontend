@@ -47,6 +47,10 @@ const MIME_TYPES_MAP: { [key: string]: string } = {
 export class CreacionDocumentos implements OnInit {
   public registerDocumentoForm!: FormGroup;
   public registerVersionDocumentoForm!: FormGroup;
+  // Alias for templates using `registerForm`
+  public get registerForm(): FormGroup {
+    return this.registerDocumentoForm;
+  }
   public isEditing = false;
   public creadorLabel = 'Usuario no identificado';
   public fechaOperacionLabel = '';
