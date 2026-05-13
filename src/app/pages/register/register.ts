@@ -472,7 +472,7 @@ export class Register implements OnInit {
         username: this.registerForm.value.username,
         password: this.registerForm.value.password,
         roles: rol,
-        code_red: rol === 'ADMIN_RED' ? this.registerForm.value.code_red : '',
+        codred: rol === 'ADMIN_RED' ? this.registerForm.value.code_red : '',
         date_creation: "",
         date_update: "",
         flag: true

@@ -11,7 +11,7 @@ const base_url = Backend.api + '/documento';
 export class DocumentoService {
   constructor(private http: HttpClient) { }
 
-  saveDocumento(documento: FormData) {
+  saveDocumento(documento: Documento) {
     return this.http.post(base_url + '/save', documento, { withCredentials: true });
   }
 

@@ -7,7 +7,7 @@ import { User } from '../model/user';
 export class LocalStorageService {
 
   saveUser(user: User): void {
-    user.id = 0;
+    //user.id = 0;
     user.date_creation='';
     user.date_update='';
     localStorage.setItem('user', JSON.stringify(user));

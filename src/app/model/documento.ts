@@ -17,8 +17,8 @@ export interface Documento {
   descripcion: string;
   codcas: string;
   codred: string;
-  date_creation: Date;
-  date_update: Date;
+  date_creation: string;
+  date_update: string;
   flag: boolean;
   id_user_creation: number;
   id_tipo_documento: number;

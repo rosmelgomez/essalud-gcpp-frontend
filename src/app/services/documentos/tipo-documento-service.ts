@@ -3,7 +3,7 @@ import { Backend } from '../../model/api';
 import { HttpClient } from '@angular/common/http';
 import { TipoDocumento } from '../../model/documento';
 
-const base_url = Backend.api + '/file';
+const base_url = Backend.api + '/tipo-documento';
 
 @Injectable({
   providedIn: 'root',

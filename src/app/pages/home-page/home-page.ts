@@ -117,7 +117,7 @@ export class HomePage implements OnInit {
 
     if (isAdminRed) {
       this.selectCentro = false;
-      const codeRed = this.user?.code_red?.toString() || '';
+      const codeRed = this.user?.codred?.toString() || '';
       this.establecimientoService.getCentrosByRed(codeRed).subscribe({
         next: (resp) => {
           this.dataCentro = resp;

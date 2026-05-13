@@ -45,4 +45,10 @@ export class UsersService {
   getAllUsers() {
     return this.http.get<User[]>(base_url + `/getUsers`, { withCredentials: true });
   }
+
+  getAllUsersByCodred(codred: string) {
+    return this.http.get<User[]>(base_url + `/getUserByCodred/${codred}`, { withCredentials: true });
+  }
+
+
 }

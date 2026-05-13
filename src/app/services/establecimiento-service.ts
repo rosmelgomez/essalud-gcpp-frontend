@@ -25,4 +25,8 @@ export class EstablecimientoService {
   getCentrosByRed(code_red: string) {
     return this.http.get<any[]>(base_url + `/getCentroAsistencialByRed/${code_red}`, { withCredentials: true });
   }
+
+  getCentroWithRedByCodcas(codcas: string) {
+    return this.http.get<any>(base_url + `/getredeswithcentrosbycodcas/${codcas}`, { withCredentials: true });
+  }
 }

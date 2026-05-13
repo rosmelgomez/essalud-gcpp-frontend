@@ -1,14 +1,14 @@
 export interface User {
   id: number;
-  name: String;
-  lastname: String;
-  dni: String;
-  codcas: String;
-  code_red: String;
-  username: String;
-  password: String;
-  date_creation: String;
-  date_update: String;
+  name: string;
+  lastname: string;
+  dni: string;
+  codcas: string;
+  codred: string;
+  username: string;
+  password: string;
+  date_creation: string;
+  date_update: string;
   flag: boolean;
   roles: String[];
 }
