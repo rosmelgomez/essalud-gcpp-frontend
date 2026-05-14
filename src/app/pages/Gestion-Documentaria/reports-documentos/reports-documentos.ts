@@ -1,4 +1,3 @@
-
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ScrollingModule } from '@angular/cdk/scrolling';
@@ -6,6 +5,9 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { FileService } from '../../../services/documentos/file-service';
 import { ChangeDetectorRef } from '@angular/core';
+import { VersionDocumentoService } from '../../../services/documentos/version-documento-service';
+import { LocalStorageService } from '../../../services/local-storage-service';
+import { VersionDocumento } from '../../../model/documento';
 
 // Tipos de archivo que pueden visualizarse en el navegador
 const TIPOS_VISUALIZABLES = [
@@ -65,6 +67,8 @@ interface ReporteDocumento {
 export class ReportsDocumentos implements OnInit, OnDestroy {
   documentos: ReporteDocumento[] = [];
   documentosFiltrados: ReporteDocumento[] = [];
+
+  versionesDocumentos: VersionDocumento[] = [];
   loading = false;
   errorMessage = '';
 
@@ -87,14 +91,42 @@ export class ReportsDocumentos implements OnInit, OnDestroy {
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
     private router: Router,
-  ) {}
+    private localStorageService: LocalStorageService,
+    private versionDocumentoService: VersionDocumentoService
+  ) { }
 
   ngOnInit(): void {
     this.getDocumentos();
+    this.getVersionesDocumentoUser();
   }
 
   ngOnDestroy(): void {
     this.clearPreviewUrl();
+  }
+
+  getVersionesDocumentoUser(): void {
+    this.loading = true;
+    this.errorMessage = '';
+    const user = this.localStorageService.getUser();
+    if (!user || !user.id) {
+      this.errorMessage = 'No se pudo obtener la información del usuario. Asegúrate de haber iniciado sesión correctamente.';
+      this.loading = false;
+      return;
+    }
+
+    this.versionDocumentoService.getVersionDocumentoByUser(user.id).subscribe({
+      next: (response: VersionDocumento[]) => {
+        this.versionesDocumentos = response;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar las versiones de documentos', error);
+        this.versionesDocumentos = [];
+        this.loading = false;
+        this.errorMessage = 'No se pudo cargar las versiones de documentos del usuario.';
+      },
+    });
   }
 
   getDocumentos(): void {
@@ -205,7 +237,7 @@ export class ReportsDocumentos implements OnInit, OnDestroy {
   getArchivoNombreConExtension(documento: ReporteDocumento): string {
     const nombreBase = documento.nombre ?? documento.archivo ?? `Archivo_${documento.id}`;
     const tipoArchivo = documento.tipo_archivo || '';
-    
+
     return this.generarNombreDescargaConExtension(nombreBase, tipoArchivo);
   }
 
@@ -248,7 +280,7 @@ export class ReportsDocumentos implements OnInit, OnDestroy {
 
     try {
       const date = new Date(dateString);
-      
+
       if (isNaN(date.getTime())) {
         return '---';
       }
@@ -266,7 +298,7 @@ export class ReportsDocumentos implements OnInit, OnDestroy {
     }
   }
 
-  
+
 
   openArchivo(documento: ReporteDocumento): void {
     if (!documento.id) {

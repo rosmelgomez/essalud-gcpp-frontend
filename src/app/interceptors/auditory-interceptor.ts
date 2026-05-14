@@ -1,8 +1,10 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpContextToken, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthLogin } from '../services/auth-login';
 import { catchError, switchMap, throwError } from 'rxjs';
+
+const AUTH_RETRY_DONE = new HttpContextToken<boolean>(() => false);
 
 export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthLogin);
@@ -15,23 +17,19 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
   const isPublicRoute = publicRoutes.includes(currentPath);
 
   const redirectToLogin = () => {
-    router.navigate(['/'], {
+    router.navigate(['/login'], {
       queryParams: {
-        message: 'Su sesión ha expirado. Por favor, inicie sesión de nuevo.',
+        message: 'Vuelve a autentificarte de nuevo.',
       },
     });
   };
-
-  const cleanedHeaders = req.headers.has('Authorization')
-    ? req.headers.delete('Authorization')
-    : req.headers;
-
-  const requestWithCredentials = req.clone({
-    withCredentials: true,
-    headers: cleanedHeaders,
+  
+  const requestWithAuthState = req.clone({
+    context: req.context.set(AUTH_RETRY_DONE, true),
   });
 
-  return next(requestWithCredentials).pipe(
+  const hasAlreadyRetried = req.context.get(AUTH_RETRY_DONE);
+  return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       // Manejar errores de autenticación
       if (error.status === 401 || error.status === 403) {
@@ -47,10 +45,15 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
           return throwError(() => error);
         }
 
+        if (hasAlreadyRetried) {
+          redirectToLogin();
+          return throwError(() => error);
+        }
+
         if (!isLogoutRequest && !isApiTokenRequest && !isRefreshRequest) {
           return auth.apiToken().pipe(
             switchMap(() => auth.refreshToken()),
-            switchMap(() => next(requestWithCredentials)),
+            switchMap(() => next(requestWithAuthState)),
             catchError((recoveryError: HttpErrorResponse) => {
               const errorMessage =
                 recoveryError.error?.message ||

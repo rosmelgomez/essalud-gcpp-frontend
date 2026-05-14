@@ -3,7 +3,7 @@ import { Backend } from '../../model/api';
 import { HttpClient } from '@angular/common/http';
 import { VersionDocumento } from '../../model/documento';
 
-const base_url = Backend.api + '/version-documnento';
+const base_url = Backend.api + '/version-documento';
 
 @Injectable({
   providedIn: 'root',
@@ -26,6 +26,10 @@ export class VersionDocumentoService {
 
   getVersionDocumentoByIdDoc(iddoc: number) {
     return this.http.get<VersionDocumento[]>(base_url + `/getvdbyiddoc/${iddoc}`, { withCredentials: true });
+  }
+
+  getVersionDocumentoByUser(idUser: number) {
+    return this.http.get<VersionDocumento[]>(base_url + `/getByUser/${idUser}`, { withCredentials: true });
   }
   
 }

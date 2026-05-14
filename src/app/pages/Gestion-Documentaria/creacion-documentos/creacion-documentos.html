@@ -7,21 +7,24 @@
     </header>
 
     <div class="options">
-      <button class="option-button" *ngIf="user?.roles?.includes('ADMIN')">
+      <button type="button" class="option-button" *ngIf="user?.roles?.includes('ADMIN')" (click)="activeMode = 'tipo'"
+        [class.is-active]="activeMode === 'tipo'">
         <span class="option-icon">📄</span>
         <span class="option-label">Crear Tipo de Documento</span>
       </button>
-      <button class="option-button" (click)="getTiposDocumentos()">
+      <button type="button" class="option-button" (click)="getTiposDocumentos()"
+        [class.is-active]="activeMode === 'documento'">
         <span class="option-icon">📄</span>
         <span class="option-label">Crear Documento</span>
       </button>
-      <button class="option-button" (click)="getDocumentosByUser()">
+      <button type="button" class="option-button" (click)="getDocumentosByUser()"
+        [class.is-active]="activeMode === 'version'">
         <span class="option-icon">📄</span>
         <span class="option-label">Agregar version de documento</span>
       </button>
     </div>
 
-    <!-- Información contextual común -->
+
     <section class="context-card" aria-label="Información del registro">
       <div class="context-item">
         <span class="context-label">Usuario que crea</span>
@@ -31,15 +34,99 @@
         <span class="context-label">Fecha de operación</span>
         <strong class="context-value">{{ fechaOperacionLabel }}</strong>
       </div>
-      <div class="context-item">
-        <span class="context-label">Modo</span>
-        <strong class="context-value">{{ activeMode === 'documento' ? 'Creación de documento' : 'Agregar versión de documento' }}</strong>
-      </div>
-      <div class="context-item context-item-wide">
-        <span class="context-label">Formatos sugeridos</span>
-        <strong class="context-value">{{ formatosPermitidos }}</strong>
-      </div>
+
+
     </section>
+
+    <!-- FORMULARIO DE TIPO DE DOCUMENTO  -->
+    <div class="created-tipo-documento" *ngIf="activeMode === 'tipo' && user?.roles?.includes('ADMIN')">
+      <form [formGroup]="registerTipoDocumentoForm" autocomplete="off" class="register-form"
+        (ngSubmit)="registerTipoDocumento()">
+
+        <div class="form-grid">
+          <div class="register-form-group">
+            <label for="nombre_tipo">Nombre del tipo</label>
+            <input id="nombre_tipo" type="text" formControlName="nombre" name="nombre" placeholder="Ej: Informe médico"
+              [class.invalid]="registerTipoDocumentoForm.get('nombre')?.touched && registerTipoDocumentoForm.get('nombre')?.invalid"
+              required />
+            <small class="field-error"
+              *ngIf="registerTipoDocumentoForm.get('nombre')?.touched && registerTipoDocumentoForm.get('nombre')?.hasError('required')">
+              Ingresa el nombre del tipo de documento.
+            </small>
+          </div>
+
+          <div class="register-form-group">
+            <label for="descripcion_tipo">Descripción</label>
+            <input id="descripcion_tipo" type="text" formControlName="descripcion" name="descripcion"
+              placeholder="Ej: Documentos médicos en general"
+              [class.invalid]="registerTipoDocumentoForm.get('descripcion')?.touched && registerTipoDocumentoForm.get('descripcion')?.invalid"
+              required />
+            <small class="field-error"
+              *ngIf="registerTipoDocumentoForm.get('descripcion')?.touched && registerTipoDocumentoForm.get('descripcion')?.hasError('required')">
+              Describe el tipo de documento.
+            </small>
+          </div>
+
+          <div class="register-form-group">
+            <label for="max_size_mb">Tamaño máximo (MB)</label>
+            <input id="max_size_mb" type="number" min="1" formControlName="max_size_mb" name="max_size_mb"
+              placeholder="Ej: 10"
+              [class.invalid]="registerTipoDocumentoForm.get('max_size_mb')?.touched && registerTipoDocumentoForm.get('max_size_mb')?.invalid"
+              required />
+            <small class="field-error"
+              *ngIf="registerTipoDocumentoForm.get('max_size_mb')?.touched && registerTipoDocumentoForm.get('max_size_mb')?.hasError('required')">
+              Indica el tamaño máximo permitido.
+            </small>
+          </div>
+
+          <div class="register-form-group">
+            <label for="requiere_aprobacion">Requiere aprobación</label>
+            <select id="requiere_aprobacion" formControlName="requiere_aprobacion">
+              <option [ngValue]="false">No</option>
+              <option [ngValue]="true">Sí</option>
+            </select>
+          </div>
+
+          <div class="register-form-group">
+            <label for="flag_tipo">Estado</label>
+            <select id="flag_tipo" formControlName="flag">
+              <option [ngValue]="true">Activo</option>
+              <option [ngValue]="false">Inactivo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="extensions-section">
+          <label>Extensiones permitidas</label>
+          <div class="extension-input-group">
+            <input type="text" #extensionInput (keyup.enter)="addExtension(extensionInput)"
+              placeholder="Ej: pdf, doc, docx" class="extension-input" />
+            <button type="button" (click)="addExtension(extensionInput)" class="add-extension-btn">
+              Agregar
+            </button>
+          </div>
+
+          <div class="chips-container" *ngIf="extensionesChips.length > 0">
+            <mat-chip-set>
+              <mat-chip *ngFor="let ext of extensionesChips" removable (removed)="removeExtension(ext)">
+                {{ ext }}
+                <button matChipRemove>
+                  <mat-icon>close</mat-icon>
+                </button>
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+
+          <small class="field-error" *ngIf="extensionesChips.length === 0">
+            Agrega al menos una extensión permitida.
+          </small>
+        </div>
+
+        <div class="register-submit">
+          <button type="submit">Guardar tipo de documento</button>
+        </div>
+      </form>
+    </div>
 
     <!-- FORMULARIO DE DOCUMENTO -->
     <div class="created-documento" *ngIf="activeMode === 'documento'">
@@ -60,8 +147,7 @@
 
           <div class="register-form-group">
             <label for="titulo">Título</label>
-            <input id="titulo" type="text" formControlName="titulo" name="titulo"
-              placeholder="Ej: titulo del documento"
+            <input id="titulo" type="text" formControlName="titulo" name="titulo" placeholder="Ej: titulo del documento"
               [class.invalid]="registerDocumentoForm.get('titulo')?.touched && registerDocumentoForm.get('titulo')?.invalid"
               required />
             <small class="field-error"
@@ -154,8 +240,7 @@
 
           <div class="register-form-group">
             <label for="version">Versión</label>
-            <input id="version" type="number" min="1" formControlName="version" name="version"
-              placeholder="Ej: 1"
+            <input id="version" type="number" min="1" formControlName="version" name="version" placeholder="Ej: 1"
               [class.invalid]="registerVersionDocumentoForm.get('version')?.touched && registerVersionDocumentoForm.get('version')?.invalid"
               required />
             <small class="field-error"

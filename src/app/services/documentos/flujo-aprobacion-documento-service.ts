@@ -16,10 +16,7 @@ export class FlujoAprobacionDocumentoService {
   }
 
   getFlujoAprobacionByUser(id: number) {
-    return this.http.get(base_url + `/getflujobyuser/${id}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/getflujobyuser/${id}`, { withCredentials: true });
   }
-
-  
-
 
 }

@@ -15,30 +15,49 @@
 			</button>
 		</header>
 
-		<div class="table-card">
+		<div class="options">
+			<button type="button" class="option-button" (click)="activeMode = 'documentos'"
+				[class.is-active]="activeMode === 'tipo'">
+				<span class="option-icon">📄</span>
+				<span class="option-label">Lista de documentos</span>
+			</button>
+			<button type="button" class="option-button" (click)="getTiposDocumentos()"
+				[class.is-active]="activeMode === 'documento'">
+				<span class="option-icon">📄</span>
+				<span class="option-label">Lista de documentos con requerimiento de aprobacion</span>
+			</button>
+		</div>
+
+		<div class="table-documento" *ngIf="activeMode === 'documentos'">
 			<div class="filter-section">
 				<div class="filter-group">
 					<label class="filter-label">Nombre:</label>
-					<input class="filter-control" #nombreInput type="text" placeholder="Buscar nombre" (input)="filtroNombre = nombreInput.value; aplicarFiltro()" />
+					<input class="filter-control" #nombreInput type="text" placeholder="Buscar nombre"
+						(input)="filtroNombre = nombreInput.value; aplicarFiltro()" />
 				</div>
 				<div class="filter-group">
 					<label class="filter-label">Descripción:</label>
-					<input class="filter-control" #descripcionInput type="text" placeholder="Buscar descripción" (input)="filtroDescripcion = descripcionInput.value; aplicarFiltro()" />
+					<input class="filter-control" #descripcionInput type="text" placeholder="Buscar descripción"
+						(input)="filtroDescripcion = descripcionInput.value; aplicarFiltro()" />
 				</div>
 				<div class="filter-group">
 					<label class="filter-label">Tipo archivo:</label>
-					<select class="filter-control" #tipoSelect [value]="filtroTipoArchivo" (change)="onFiltroTipoArchivoChange(tipoSelect.value)">
+					<select class="filter-control" #tipoSelect [value]="filtroTipoArchivo"
+						(change)="onFiltroTipoArchivoChange(tipoSelect.value)">
 						<option value="">-- Todos --</option>
-						<option *ngFor="let tipo of tiposArchivoDisponibles" [value]="tipo.key">{{ tipo.label }}</option>
+						<option *ngFor="let tipo of tiposArchivoDisponibles" [value]="tipo.key">{{ tipo.label }}
+						</option>
 					</select>
 				</div>
 				<div class="filter-group">
 					<label class="filter-label">Usuario creación:</label>
-					<input class="filter-control" #usuarioCreationInput type="text" placeholder="Buscar usuario" (input)="filtroUsuarioCreation = usuarioCreationInput.value; aplicarFiltro()" />
+					<input class="filter-control" #usuarioCreationInput type="text" placeholder="Buscar usuario"
+						(input)="filtroUsuarioCreation = usuarioCreationInput.value; aplicarFiltro()" />
 				</div>
 				<div class="filter-group">
 					<label class="filter-label">Usuario actualización:</label>
-					<input class="filter-control" #usuarioUpdateInput type="text" placeholder="Buscar usuario" (input)="filtroUsuarioUpdate = usuarioUpdateInput.value; aplicarFiltro()" />
+					<input class="filter-control" #usuarioUpdateInput type="text" placeholder="Buscar usuario"
+						(input)="filtroUsuarioUpdate = usuarioUpdateInput.value; aplicarFiltro()" />
 				</div>
 				<div class="filter-count">{{ documentosFiltrados.length }} documento(s)</div>
 			</div>
@@ -56,7 +75,8 @@
 			</div>
 
 			<cdk-virtual-scroll-viewport class="document-viewport" [itemSize]="96">
-				<div class="document-row" *cdkVirtualFor="let documento of documentosFiltrados; trackBy: trackByDocumento">
+				<div class="document-row"
+					*cdkVirtualFor="let documento of documentosFiltrados; trackBy: trackByDocumento">
 					<div class="cell id-cell">
 						<strong>{{ documento.id || '---' }}</strong>
 					</div>
@@ -109,7 +129,127 @@
 			</cdk-virtual-scroll-viewport>
 
 			<div class="state-panel empty-state" *ngIf="!loading && documentosFiltrados.length === 0">
-				{{ documentos.length === 0 ? 'No hay documentos disponibles para mostrar.' : 'No hay documentos que coincidan con el filtro seleccionado.' }}
+				{{ documentos.length === 0 ? 'No hay documentos disponibles para mostrar.' : 'No hay documentos que
+				coincidan con el filtro seleccionado.' }}
+			</div>
+
+			<div class="state-panel info-state" *ngIf="loading">Cargando documentos...</div>
+
+			<div class="state-panel error-state" *ngIf="errorMessage">{{ errorMessage }}</div>
+		</div>
+
+		<div class="table-documento-aprobacion">
+			<div class="filter-section">
+				<div class="filter-group">
+					<label class="filter-label">Nombre:</label>
+					<input class="filter-control" #nombreInput type="text" placeholder="Buscar nombre"
+						(input)="filtroNombre = nombreInput.value; aplicarFiltro()" />
+				</div>
+				<div class="filter-group">
+					<label class="filter-label">Descripción:</label>
+					<input class="filter-control" #descripcionInput type="text" placeholder="Buscar descripción"
+						(input)="filtroDescripcion = descripcionInput.value; aplicarFiltro()" />
+				</div>
+				<div class="filter-group">
+					<label class="filter-label">Tipo archivo:</label>
+					<select class="filter-control" #tipoSelect [value]="filtroTipoArchivo"
+						(change)="onFiltroTipoArchivoChange(tipoSelect.value)">
+						<option value="">-- Todos --</option>
+						<option *ngFor="let tipo of tiposArchivoDisponibles" [value]="tipo.key">{{ tipo.label }}
+						</option>
+					</select>
+				</div>
+				<div class="filter-group">
+					<label class="filter-label">Usuario creación:</label>
+					<input class="filter-control" #usuarioCreationInput type="text" placeholder="Buscar usuario"
+						(input)="filtroUsuarioCreation = usuarioCreationInput.value; aplicarFiltro()" />
+				</div>
+				<div class="filter-group">
+					<label class="filter-label">Usuario actualización:</label>
+					<input class="filter-control" #usuarioUpdateInput type="text" placeholder="Buscar usuario"
+						(input)="filtroUsuarioUpdate = usuarioUpdateInput.value; aplicarFiltro()" />
+				</div>
+				<div class="filter-count">{{ documentosFiltrados.length }} documento(s)</div>
+			</div>
+
+			<div class="table-head">
+				<div>ID</div>
+				<div>Nombre version</div>
+				<div>Descripcion version</div>
+				<div>Version</div>
+				<div>Fecha Creación version</div>
+				<div>Fecha Actualización version</div>
+				<div>Fecha Creación</div>
+				<div>Fecha Actualización</div>
+				<div>Nombre Usuario creacion version</div>
+				<div>Usuario creacion version</div>
+				<div>Usuario aprobador</div>
+				<div>comentario</div>
+				<div>Status</div>
+				<div>Acciones</div>
+			</div>
+
+			<cdk-virtual-scroll-viewport class="document-viewport" [itemSize]="96">
+				<div class="document-row"
+					*cdkVirtualFor="let documento of versionesDocumentos; trackBy: trackByDocumento">
+					<div class="cell id-cell">
+						<strong>{{ documento.id || '---' }}</strong>
+					</div>
+
+					<div class="cell primary-cell">
+						<strong>{{ documento.nombre }}</strong>
+					</div>
+
+					<div class="cell description-cell">
+						<span>{{ documento.descripcion || 'Sin descripción registrada' }}</span>
+					</div>
+
+					<div class="cell type-cell">
+						<span>{{ documento.extencion || '---' }}</span>
+					</div>
+
+					<div class="cell user-cell">
+						<span>{{ documento.version || '---' }}</span>
+					</div>
+
+					<div class="cell user-cell">
+						<span>{{ documento.size || '---' }}</span>
+					</div>
+
+					<div class="cell date-cell">
+						<span>{{ formatDate(documento.date_creation) }}</span>
+					</div>
+
+					<div class="cell date-cell">
+						<span>{{ formatDate(documento.date_update) }}</span>
+					</div>
+
+					<div class="cell date-cell">
+						<span>{{ documento.id_documento }}</span>
+					</div>
+
+					<div class="cell action-cell">
+						<div class="action-buttons">
+							<button class="view-button" type="button" (click)="openArchivo(documento)">
+								Abrir
+							</button>
+							<button class="secondary-button" type="button" (click)="editDocumento(documento)">
+								Editar
+							</button>
+							<button class="danger-button" type="button" (click)="deleteDocumento(documento)">
+								Eliminar
+							</button>
+							<button class="download-button" type="button" (click)="downloadDocumento(documento)">
+								Descargar
+							</button>
+						</div>
+					</div>
+				</div>
+			</cdk-virtual-scroll-viewport>
+
+			<div class="state-panel empty-state" *ngIf="!loading && documentosFiltrados.length === 0">
+				{{ documentos.length === 0 ? 'No hay documentos disponibles para mostrar.' : 'No hay documentos que
+				coincidan con el filtro seleccionado.' }}
 			</div>
 
 			<div class="state-panel info-state" *ngIf="loading">Cargando documentos...</div>

@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
 import { Documento, TipoDocumento, VersionDocumento } from '../../../model/documento';
 import { TipoDocumentoService } from '../../../services/documentos/tipo-documento-service';
 import { User } from '../../../model/user';
@@ -43,16 +44,18 @@ const MIME_TYPES_MAP: { [key: string]: string } = {
 @Component({
   selector: 'app-creacion-documentos',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, MatIconModule, MatButtonModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, MatIconModule, MatButtonModule, MatChipsModule],
   templateUrl: './creacion-documentos.html',
   styleUrl: './creacion-documentos.css',
 })
 export class CreacionDocumentos implements OnInit {
+  public registerTipoDocumentoForm!: FormGroup;
   public registerDocumentoForm!: FormGroup;
   public registerVersionDocumentoForm!: FormGroup;
-  public activeMode: 'documento' | 'version' = 'documento';
+  public activeMode: 'documento' | 'version' | 'tipo' = 'documento';
   public documentoRequiresApproval: boolean = false;
   public versionRequiresApproval: boolean = false;
+  public extensionesChips: string[] = [];
 
   public get registerForm(): FormGroup {
     return this.registerDocumentoForm;
@@ -63,12 +66,12 @@ export class CreacionDocumentos implements OnInit {
   public formatosPermitidos = '.pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt, .csv, .jpg, .png, .gif, .webp, .mp4, .avi, .mov, .zip, .rar, .7z';
   private editingDocumentoId: number | string | null = null;
 
-  tipo_documento:TipoDocumento [] = [];
-  
-  users_aprobadores: User [] = [];
-  domentos: Documento [] = [];
+  tipo_documento: TipoDocumento[] = [];
 
-  documentosByUser: Documento [] = [];
+  users_aprobadores: User[] = [];
+  domentos: Documento[] = [];
+
+  documentosByUser: Documento[] = [];
 
   user: User | null = null;
 
@@ -96,6 +99,7 @@ export class CreacionDocumentos implements OnInit {
   }
 
   private bindFormListeners(): void {
+
     // Cuando cambia el tipo de documento en el formulario de documento
     this.registerDocumentoForm.get('id_tipo_documento')?.valueChanges.subscribe((idTipo: number) => {
       this.updateDocumentoApprovalState(idTipo);
@@ -156,7 +160,7 @@ export class CreacionDocumentos implements OnInit {
         console.error('Error al obtener los usuarios aprobadores', error);
       }
     );
-   
+
   }
 
   getDocumentosByUser() {
@@ -183,6 +187,15 @@ export class CreacionDocumentos implements OnInit {
 
 
   reactiveForm() {
+    this.registerTipoDocumentoForm = this.formBuilder.group({
+      nombre: ['', [Validators.required]],
+      descripcion: ['', [Validators.required]],
+      requiere_aprobacion: [false, [Validators.required]],
+      max_size_mb: [1, [Validators.required, Validators.min(1)]],
+      flag: [true, [Validators.required]],
+    });
+
+
     this.registerDocumentoForm = this.formBuilder.group({
       codigo: ['', [Validators.required]],
       titulo: ['', [Validators.required]],
@@ -201,6 +214,27 @@ export class CreacionDocumentos implements OnInit {
     });
   }
 
+  addExtension(extensionInput: HTMLInputElement): void {
+    const extension = extensionInput.value.trim().toLowerCase();
+    
+    if (!extension) {
+      return;
+    }
+    
+    // Agregar punto si no lo tiene
+    const extensionFormatted = extension.startsWith('.') ? extension : '.' + extension;
+    
+    // Evitar duplicados
+    if (!this.extensionesChips.includes(extensionFormatted)) {
+      this.extensionesChips.push(extensionFormatted);
+      extensionInput.value = '';
+    }
+  }
+
+  removeExtension(extension: string): void {
+    this.extensionesChips = this.extensionesChips.filter(ext => ext !== extension);
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
@@ -209,7 +243,38 @@ export class CreacionDocumentos implements OnInit {
     this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
   }
 
-   registerDocumento() {
+
+  registerTipoDocumento() {
+    if (this.registerTipoDocumentoForm.invalid || this.extensionesChips.length === 0) {
+      this.registerTipoDocumentoForm.markAllAsTouched();
+      return;
+    }
+    const tipoDocumento: TipoDocumento = {  
+      id: 0,
+      nombre: this.registerTipoDocumentoForm.get('nombre')?.value ?? '',
+      descripcion: this.registerTipoDocumentoForm.get('descripcion')?.value ?? '',
+      extension_permitidas: this.extensionesChips.join(', ') ?? '',
+      requiere_aprobacion: this.registerTipoDocumentoForm.get('requiere_aprobacion')?.value ?? false,
+      max_size_mb: this.registerTipoDocumentoForm.get('max_size_mb')?.value ?? 1,
+      flag: this.registerTipoDocumentoForm.get('flag')?.value ?? true,
+      date_creation: new Date(),
+      date_update: new Date(),
+    };
+    this.tipoDocumentoService.saveTipoDocumento(tipoDocumento).subscribe(
+      (response) => {
+        console.log('Tipo de documento guardado exitosamente', response);
+        this.registerTipoDocumentoForm.reset({ requiere_aprobacion: false, flag: true, max_size_mb: 1 });
+        this.extensionesChips = [];
+        this.getTiposDocumentos();
+      },
+      (error) => {
+        console.error('Error al guardar el tipo de documento', error);
+      }
+    );
+  }
+
+
+  registerDocumento() {
     if (this.registerDocumentoForm.invalid) {
       this.registerDocumentoForm.markAllAsTouched();
       return;
@@ -217,7 +282,7 @@ export class CreacionDocumentos implements OnInit {
 
     const user = this.localStorage.getUser();
 
-    const documento : Documento = {
+    const documento: Documento = {
       id: 0,
       codigo: this.registerDocumentoForm.get('codigo')?.value ?? '',
       titulo: this.registerDocumentoForm.get('titulo')?.value ?? '',
@@ -247,7 +312,7 @@ export class CreacionDocumentos implements OnInit {
         console.error('Error al guardar el documento', error);
       }
     );
-    
+
   }
 
   registerVersionDocumento() {
@@ -257,29 +322,26 @@ export class CreacionDocumentos implements OnInit {
     }
 
     const user = this.localStorage.getUser();
-    const usuario = this.buildUserDisplayName(user);
-    
+
     const documentoFormData = new FormData();
     const archivo = this.registerVersionDocumentoForm.get('archivo')?.value as File | null;
     const comentario = this.registerVersionDocumentoForm.get('descripcion')?.value ?? '';
     const version = this.registerVersionDocumentoForm.get('version')?.value ?? 1;
     const idDocumento = this.registerVersionDocumentoForm.get('id_documento')?.value ?? '';
 
-    // Obtener el tipo MIME correcto del archivo
-    const tipoArchivoCorrect = archivo ? this.getMimeType(archivo) : '';
 
     documentoFormData.append('nombre', this.registerVersionDocumentoForm.get('nombre')?.value ?? '');
     documentoFormData.append('descripcion', comentario);
     documentoFormData.append('version', String(version));
 
-   
+
     // Add file if present
     if (archivo) {
       documentoFormData.append('archivo', archivo);
     }
 
-    documentoFormData.append('id_user_creation',String(user?.id ?? 0));
-    documentoFormData.append('id_documento',String(idDocumento));
+    documentoFormData.append('id_user_creation', String(user?.id ?? 0));
+    documentoFormData.append('id_documento', String(idDocumento));
     console.log(documentoFormData)
     const idAprobador = this.registerVersionDocumentoForm.get('id_user_aprobador')?.value;
     if (idAprobador) {
@@ -295,28 +357,6 @@ export class CreacionDocumentos implements OnInit {
         console.error('Error al guardar la versión del documento', error);
       }
     );
-  }
-
-
-  private getMimeType(file: File): string {
-    // Intentar usar el tipo MIME nativo del archivo primero
-    if (file.type && file.type !== '') {
-      return file.type;
-    }
-
-    // Si no tiene tipo MIME, extraer la extensión y buscar en el mapa
-    const fileName = file.name.toLowerCase();
-    const lastDot = fileName.lastIndexOf('.');
-    
-    if (lastDot === -1) {
-      // Sin extensión, retornar tipo genérico
-      return 'application/octet-stream';
-    }
-
-    const extension = fileName.substring(lastDot + 1);
-    const mimeType = MIME_TYPES_MAP[extension];
-
-    return mimeType || 'application/octet-stream';
   }
 
   private loadDocumentoFromNavigation(): void {

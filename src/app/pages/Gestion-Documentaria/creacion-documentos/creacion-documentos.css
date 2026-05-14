@@ -88,6 +88,17 @@
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
 }
 
+.option-button.is-active {
+  border-color: rgba(135, 207, 255, 0.72);
+  background: linear-gradient(180deg, rgba(121, 177, 255, 0.28), rgba(74, 144, 226, 0.18));
+  box-shadow: 0 16px 34px rgba(74, 144, 226, 0.28);
+  color: #ffffff;
+}
+
+.option-button.is-active .option-icon {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .option-icon {
   display: grid;
   place-items: center;
@@ -127,9 +138,7 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-.context-item-wide {
-  grid-column: 1 / -1;
-}
+
 
 .context-label {
   color: rgba(222, 235, 255, 0.74);
@@ -172,8 +181,7 @@
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #f4f7fb;
+  background: #f4f7fb;
   padding: 14px 16px;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
@@ -318,4 +326,122 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Estilos para extensiones y chips */
+.extensions-section {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid rgba(121, 177, 255, 0.26);
+  border-radius: 16px;
+  background: rgba(74, 144, 226, 0.08);
+}
+
+.extensions-section label {
+  color: rgba(244, 247, 251, 0.9);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.extension-input-group {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.extension-input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4f7fb;
+  padding: 12px 14px;
+  outline: none;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.extension-input::placeholder {
+  color: rgba(244, 247, 251, 0.46);
+}
+
+.extension-input:focus {
+  border-color: rgba(121, 177, 255, 0.88);
+  box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.18);
+}
+
+.add-extension-btn {
+  padding: 12px 24px;
+  border: 1px solid rgba(121, 177, 255, 0.36);
+  border-radius: 12px;
+  background: rgba(74, 144, 226, 0.18);
+  color: #b9d7ff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.add-extension-btn:hover {
+  background: rgba(74, 144, 226, 0.28);
+  border-color: rgba(121, 177, 255, 0.56);
+  transform: translateY(-1px);
+}
+
+.chips-container {
+  display: grid;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+::ng-deep .chips-container mat-chip-set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+::ng-deep .chips-container mat-chip {
+  background: linear-gradient(135deg, rgba(121, 177, 255, 0.28), rgba(74, 144, 226, 0.22)) !important;
+  color: #b9d7ff !important;
+  border: 1px solid rgba(121, 177, 255, 0.36) !important;
+  font-weight: 600;
+  padding: 8px 12px !important;
+  border-radius: 20px !important;
+  height: auto !important;
+  min-height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+::ng-deep .chips-container mat-chip mat-icon {
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 18px !important;
+  line-height: 18px !important;
+  color: rgba(244, 247, 251, 0.7) !important;
+  margin-left: 8px !important;
+  margin-right: -4px !important;
+}
+
+::ng-deep .chips-container mat-chip:hover {
+  background: linear-gradient(135deg, rgba(121, 177, 255, 0.38), rgba(74, 144, 226, 0.32)) !important;
+}
+
+::ng-deep .chips-container mat-chip button[matChipRemove] {
+  cursor: pointer;
+}
+
+.created-tipo-documento {
+  animation: fadeIn 0.35s ease-out;
+}
+
+.created-documento {
+  animation: fadeIn 0.35s ease-out;
+}
+
+.created-version {
+  animation: fadeIn 0.35s ease-out;
 }
