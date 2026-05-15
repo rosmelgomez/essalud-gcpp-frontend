@@ -1,5 +1,5 @@
-import { CanActivateFn , Router} from '@angular/router';
-import { AuthLogin } from '../services/auth-login';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthLogin } from '../services/usuario/auth-login';
 import { inject } from '@angular/core';
 import { LocalStorageService } from '../services/local-storage-service';
 import { catchError, map, of } from 'rxjs';
@@ -7,23 +7,40 @@ import { catchError, map, of } from 'rxjs';
 
 export const authenticateGuard: CanActivateFn = (route, state) => {
 
-  const authService = inject( AuthLogin);
-  const dataImport=inject(LocalStorageService);
+  const authService = inject(AuthLogin);
+  const dataImport = inject(LocalStorageService);
   const router = inject(Router);
 
   return authService.apiToken().pipe(
     map(() => {
-      const requiredrols = route.data['rol'] as Array<string>;
-      if (!requiredrols || requiredrols.length === 0) {
+      const requiredRoles = (route.data['role'] || route.data['rol']) as Array<string> | undefined;
+      console.log('[AuthGuard] Route:', route.routeConfig?.path, 'Required roles:', requiredRoles);
+      if (!requiredRoles || requiredRoles.length === 0) {
+        console.log('[AuthGuard] No roles required, allowing access');
         return true;
       }
 
-      const userrols = dataImport.getUser()?.roles || '';
-      const hasRequiredrol = requiredrols.some((rol) => userrols.includes(rol));
+      const user = dataImport.getUser();
+      const userRolesRaw = user?.roles;
+      console.log('[AuthGuard] User roles raw:', userRolesRaw);
+      let userRoles: string[] = [];
 
-      return hasRequiredrol ? true : router.createUrlTree(['/']);
+      if (Array.isArray(userRolesRaw)) {
+        userRoles = userRolesRaw.map((r: any) => (r == null ? '' : String(r)));
+      } else if (typeof userRolesRaw === 'string' && userRolesRaw.trim() !== '') {
+        userRoles = [userRolesRaw.trim()];
+      }
+
+      console.log('[AuthGuard] Normalized user roles:', userRoles);
+      const hasRequired = requiredRoles.some((r) => userRoles.includes(r));
+
+      console.log('[AuthGuard] Has required roles:', hasRequired);
+      return hasRequired ? true : router.createUrlTree(['/']);
     }),
-    catchError(() => of(router.createUrlTree(['/login']))),
+    catchError((err) => {
+      console.error('[AuthGuard] API Token error:', err);
+      return of(router.createUrlTree(['/login']));
+    }),
   );
 
 };

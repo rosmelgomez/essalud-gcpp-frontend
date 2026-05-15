@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UsersService } from '../../services/users-service';
-import { Auth } from '../../model/auth';
-import { LocalStorageService } from '../../services/local-storage-service';
+
+import { LocalStorageService } from '../../../services/local-storage-service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { inject } from '@angular/core';
+import { UsersService } from '../../../services/usuario/users-service';
+import { Auth } from '../../../model/user';
 
 @Component({
   selector: 'app-change-password',

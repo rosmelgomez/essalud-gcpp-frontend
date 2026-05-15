@@ -1,7 +1,7 @@
 import { HttpContextToken, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthLogin } from '../services/auth-login';
+import { AuthLogin } from '../services/usuario/auth-login';
 import { catchError, switchMap, throwError } from 'rxjs';
 
 const AUTH_RETRY_DONE = new HttpContextToken<boolean>(() => false);

@@ -21,7 +21,8 @@ import { EncuestaService } from '../../../services/encuesta/encuesta-service';
 import { User } from '../../../model/user';
 import { Categoria, Encuesta, Modulo, Subcategoria, Variable } from '../../../model/encuesta';
 import { EstablecimientoService } from '../../../services/establecimiento-service';
-import { UsersService } from '../../../services/users-service';
+import { UsersService } from '../../../services/usuario/users-service';
+
 
 
 interface DashboardFilters {

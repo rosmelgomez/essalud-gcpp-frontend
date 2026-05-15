@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Auth } from '../model/auth';
+
 import { catchError, throwError } from 'rxjs';
-import { Backend } from '../model/api';
+import { Backend } from '../../model/api';
+import { Auth } from '../../model/user';
 
 const base_url = Backend.api;
 

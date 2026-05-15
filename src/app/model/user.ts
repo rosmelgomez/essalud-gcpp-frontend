@@ -1,3 +1,8 @@
+export interface Auth{
+    username:string,
+    password:string,
+}
+
 export interface User {
   id: number;
   name: string;
@@ -10,5 +15,14 @@ export interface User {
   date_creation: string;
   date_update: string;
   flag: boolean;
-  roles: String[];
+  roles?: string[] | string;
+}
+
+export interface Rol {
+  id: number;
+  name: string;
+  description: string;
+  date_creation: string;
+  date_update: string;
+  flag: boolean;
 }

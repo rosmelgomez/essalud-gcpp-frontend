@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthLogin } from '../../services/auth-login';
-import { Auth } from '../../model/auth';
-import { UsersService } from '../../services/users-service';
+import { AuthLogin } from '../../services/usuario/auth-login';
+
+
 import { LocalStorageService } from '../../services/local-storage-service';
 import { RouteLogger } from '../../services/route-logger';
+import { UsersService } from '../../services/usuario/users-service';
+import { Auth } from '../../model/user';
 
 @Component({
   selector: 'app-login',

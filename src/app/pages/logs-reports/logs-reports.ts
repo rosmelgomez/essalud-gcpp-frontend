@@ -1,4 +1,3 @@
-import { UsersService } from './../../services/users-service';
 import { Component, ElementRef, OnInit, QueryList, ViewChildren, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +13,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { EstablecimientoService } from '../../services/establecimiento-service';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { User } from '../../model/user';
+import { UsersService } from '../../services/usuario/users-service';
 
 @Component({
   selector: 'app-logs-reports',

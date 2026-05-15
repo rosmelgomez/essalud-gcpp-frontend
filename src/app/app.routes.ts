@@ -1,46 +1,17 @@
 import { Routes } from '@angular/router';
 import { Login } from './pages/login/login';
-import { Register } from './pages/register/register';
-import { ChangePassword } from './pages/change-password/change-password';
-import { ManageUsers } from './pages/manage-users/manage-users';
+import { Register } from './pages/Usuarios/register/register';
+import { ChangePassword } from './pages/Usuarios/change-password/change-password';
+import { ManageUsers } from './pages/Usuarios/manage-users/manage-users';
 
 import { HomePage } from './pages/home-page/home-page';
 import { LogsReports } from './pages/logs-reports/logs-reports';
 
-import { ReportsGerenciales } from './pages/reports-gerenciales/reports-gerenciales';
+import { ReportsGerenciales } from './pages/Resportes/reports-gerenciales/reports-gerenciales';
 import { authenticateGuard } from './guards/authenticate-guard';
 import { redirectGuard } from './guards/redirect-guard';
 
-import { ReportDashboardEme } from './pages/reportes/report-dashboard-eme/report-dashboard-eme';
-import { DmTotalAtencionesCai } from './pages/Indicadores/dashboard-medicas/consulta de atencion inmediata/dm-total-atenciones-cai/dm-total-atenciones-cai';
-import { DmTotalAtencionesAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-atenciones-am/dm-total-atenciones-am';
-import { DmTotalAtendidosAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-atendidos-am/dm-total-atendidos-am';
-import { DmTotalMedicosAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-medicos-am/dm-total-medicos-am';
-import { DmTotalDesercionAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-desercion-am/dm-total-desercion-am';
-import { DmTotalHorasEfectivasAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-horas-efectivas-am/dm-total-horas-efectivas-am';
-import { DmTotalHorasProgramadasAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-horas-programadas-am/dm-total-horas-programadas-am';
-import { DmTotalCitadosAm } from './pages/Indicadores/dashboard-medicas/atenciones medicas/dm-total-citados-am/dm-total-citados-am';
-import { ReportDashboardNoMedicas } from './pages/reportes/report-dashboard-no-medicas/report-dashboard-no-medicas';
-import { ReportDashboardMedicas } from './pages/reportes/report-dashboard-medicas/report-dashboard-medicas';
-import { DmTotalAtencionesMc } from './pages/Indicadores/dashboard-medicas/medicina complementaria/dm-total-atenciones-mc/dm-total-atenciones-mc';
-import { DmTotalMedicosMc } from './pages/Indicadores/dashboard-medicas/medicina complementaria/dm-total-medicos-mc/dm-total-medicos-mc';
-import { DmTotalHorasEfectivasCad } from './pages/Indicadores/dashboard-medicas/consulta apoyo desc/dm-total-horas-efectivas-cad/dm-total-horas-efectivas-cad';
-import { DmTotalHorasEfectivasMc } from './pages/Indicadores/dashboard-medicas/medicina complementaria/dm-total-horas-efectivas-mc/dm-total-horas-efectivas-mc';
-import { DmTotalHorasProgramadasMc } from './pages/Indicadores/dashboard-medicas/medicina complementaria/dm-total-horas-programadas-mc/dm-total-horas-programadas-mc';
-import { DmTotalAtencionesMo } from './pages/Indicadores/dashboard-medicas/medicinal ocupacional/dm-total-atenciones-mo/dm-total-atenciones-mo';
-import { DmTotalMedicosMo } from './pages/Indicadores/dashboard-medicas/medicinal ocupacional/dm-total-medicos-mo/dm-total-medicos-mo';
-import { DmTotalHorasEfectivasMo } from './pages/Indicadores/dashboard-medicas/medicinal ocupacional/dm-total-horas-efectivas-mo/dm-total-horas-efectivas-mo';
-import { DmTotalHorasProgramadasMo } from './pages/Indicadores/dashboard-medicas/medicinal ocupacional/dm-total-horas-programadas-mo/dm-total-horas-programadas-mo';
-import { DmTotalHorasProgramadasCai } from './pages/Indicadores/dashboard-medicas/consulta de atencion inmediata/dm-total-horas-programadas-cai/dm-total-horas-programadas-cai';
-import { DmTotalHorasEfectivasCai } from './pages/Indicadores/dashboard-medicas/consulta de atencion inmediata/dm-total-horas-efectivas-cai/dm-total-horas-efectivas-cai';
-import { DmTotalMedicosCai } from './pages/Indicadores/dashboard-medicas/consulta de atencion inmediata/dm-total-medicos-cai/dm-total-medicos-cai';
-import { DmTotalHorasProgramadasCad } from './pages/Indicadores/dashboard-medicas/consulta apoyo desc/dm-total-horas-programadas-cad/dm-total-horas-programadas-cad';
-import { DmTotalMedicosCad } from './pages/Indicadores/dashboard-medicas/consulta apoyo desc/dm-total-medicos-cad/dm-total-medicos-cad';
-import { DmTotalAtencionesCad } from './pages/Indicadores/dashboard-medicas/consulta apoyo desc/dm-total-atenciones-cad/dm-total-atenciones-cad';
-import { DmTotalHorasProgramadasMp } from './pages/Indicadores/dashboard-medicas/medico de personal/dm-total-horas-programadas-mp/dm-total-horas-programadas-mp';
-import { DmTotalHorasEfectivasMp } from './pages/Indicadores/dashboard-medicas/medico de personal/dm-total-horas-efectivas-mp/dm-total-horas-efectivas-mp';
-import { DmTotalMedicosMp } from './pages/Indicadores/dashboard-medicas/medico de personal/dm-total-medicos-mp/dm-total-medicos-mp';
-import { DmTotalAtencionesMp } from './pages/Indicadores/dashboard-medicas/medico de personal/dm-total-atenciones-mp/dm-total-atenciones-mp';
+
 import { AtenTopicos1 } from './pages/Indicadores/dashboard-emergencia/aten-topicos-1/aten-topicos-1';
 import { AtenTopicos2 } from './pages/Indicadores/dashboard-emergencia/aten-topicos-2/aten-topicos-2';
 import { AtenTopicos3 } from './pages/Indicadores/dashboard-emergencia/aten-topicos-3/aten-topicos-3';
@@ -56,7 +27,7 @@ import { DnmTotalAtencionesNu } from './pages/Indicadores/dashboard-no-medicas/n
 import { DnmTotalAtencionesTs } from './pages/Indicadores/dashboard-no-medicas/trabajo social/dnm-total-atenciones-ts/dnm-total-atenciones-ts';
 import { DnmTotalAtencionesPt } from './pages/Indicadores/dashboard-no-medicas/procedimientos terapeuticos/dnm-total-atenciones-pt/dnm-total-atenciones-pt';
 
-import { ReportDashboardIntervencionesQuirurgicas } from './pages/reportes/report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
+import { ReportDashboardIntervencionesQuirurgicas } from './pages/Resportes/report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
 import { DiqComplejidadAGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-a-gc/diq-complejidad-a-gc';
 import { DiqComplejidadBGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-b-gc/diq-complejidad-b-gc';
 import { DiqComplejidadCGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-c-gc/diq-complejidad-c-gc';
@@ -64,26 +35,26 @@ import { DiqComplejidadDGc } from './pages/Indicadores/dashboard-centro-quirurgi
 import { DiqComplejidadEGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-e-gc/diq-complejidad-e-gc';
 import { DiqSinComplejidadGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-sin-complejidad-gc/diq-sin-complejidad-gc';
 
-import { ReportDashboardReporteador } from './pages/reportes/report-dashboard-reporteador/report-dashboard-reporteador';
-import { ReportDashboardOdontologicas } from './pages/reportes/report-dashboard-odontologicas/report-dashboard-odontologicas';
-import { Encuesta } from './pages/Encuestas/encuesta/encuesta';
+import { ReportDashboardReporteador } from './pages/Resportes/report-dashboard-reporteador/report-dashboard-reporteador';
+import { ReportDashboardOdontologicas } from './pages/Resportes/report-dashboard-odontologicas/report-dashboard-odontologicas';
 
 import { SolicitudAccesoRegistro } from './pages/Solicitud-Acceso/solicitud-acceso-registro/solicitud-acceso-registro';
 import { SolicitudAccesoReports } from './pages/Solicitud-Acceso/solicitud-acceso-reports/solicitud-acceso-reports';
-import { ReportDashboardTransplante } from './pages/reportes/report-dashboard-transplante/report-dashboard-transplante';
+import { ReportDashboardTransplante } from './pages/Resportes/report-dashboard-transplante/report-dashboard-transplante';
 
 import { TablasHomologadas } from './pages/tablas-homologadas/tablas-homologadas';
-import { CreacionDocumentos } from './pages/Gestion-Documentaria/creacion-documentos/creacion-documentos';
-import { ReportsDocumentos } from './pages/Gestion-Documentaria/reports-documentos/reports-documentos';
-import { ReportDashboard } from './pages/reportes/report-dashboard/report-dashboard';
-import { DashboardEncuesta } from './pages/Encuestas/dashboard-encuesta/dashboard-encuesta';
+import { ReportDashboard } from './pages/Resportes/report-dashboard/report-dashboard';
+import { encuestaRoutes } from './pages/Encuestas/encuesta.router';
+import { documentoRoutes } from './pages/Gestion-Documentaria/documento.router';
+import { reportesRoutes } from './pages/Resportes/reportes.router';
+import { indicadoresRoutes } from './pages/Indicadores/indicadores.router';
 
 
 export const routes: Routes = [
     { path: '', pathMatch: 'full', canActivate: [redirectGuard], children: [] },
 
     //solicitud de acceso
-    { path: 'solicitar-acceso-registro',component:SolicitudAccesoRegistro },
+    { path: 'solicitar-acceso-registro', component: SolicitudAccesoRegistro },
     { path: 'solicitud-acceso-reports', component: SolicitudAccesoReports, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
 
 
@@ -95,85 +66,46 @@ export const routes: Routes = [
     { path: 'logs-reports', component: LogsReports, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
     { path: 'reports-gerenciales', component: ReportsGerenciales, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
 
-    { path: 'dashboard', component: ReportDashboard, canActivate: [authenticateGuard] },
 
-    ///dashboard-medicas
-    { path: 'dashboard-medicas', component: ReportDashboardMedicas, canActivate: [authenticateGuard] },
+    { path: 'reporte', children:reportesRoutes, canActivate: [authenticateGuard] },
 
-    //indicadores atenciones medicas
-    { path: 'dm-total-atenciones-am', component: DmTotalAtencionesAm, canActivate: [authenticateGuard] },
-    { path: 'dm-total-pacientes-atendidos-am', component: DmTotalAtendidosAm, canActivate: [authenticateGuard] },
-    { path: 'dm-total-medicos-am', component: DmTotalMedicosAm, canActivate: [authenticateGuard] },
-    { path: 'dm-total-horas-efectivas-am', component: DmTotalHorasEfectivasAm, canActivate: [authenticateGuard] },
-    { path: 'dm-total-horas-programadas-am', component: DmTotalHorasProgramadasAm, canActivate: [authenticateGuard] },
-    { path: 'dm-total-citados-am', component: DmTotalCitadosAm, canActivate: [authenticateGuard] },
-    { path: 'dm-total-deserciones-am', component: DmTotalDesercionAm, canActivate: [authenticateGuard] },
-
-    //indicadores medicina complementaria
-    {path: 'dm-total-atenciones-mc', component: DmTotalAtencionesMc, canActivate: [authenticateGuard] },
-    {path: 'dm-total-medicos-mc', component: DmTotalMedicosMc, canActivate: [authenticateGuard]},
-    {path: 'dm-total-horas-efectivas-mc', component: DmTotalHorasEfectivasMc, canActivate: [authenticateGuard]},
-    {path: 'dm-total-horas-programadas-mc', component: DmTotalHorasProgramadasMc, canActivate: [authenticateGuard]},
-
-    //indicadores medicina ocupacional
-    {path:'dm-total-atenciones-mo', component: DmTotalAtencionesMo, canActivate: [authenticateGuard]},
-    {path:'dm-total-medicos-mo', component: DmTotalMedicosMo, canActivate: [authenticateGuard]},
-    {path:'dm-total-horas-efectivas-mo', component: DmTotalHorasEfectivasMo, canActivate: [authenticateGuard]},
-    {path:'dm-total-horas-programadas-mo', component: DmTotalHorasProgramadasMo, canActivate: [authenticateGuard]},
-
-    //Indicadores de medicos de personal
-    {path:'dm-total-atenciones-mp', component: DmTotalAtencionesMp, canActivate: [authenticateGuard]},
-    {path:'dm-total-medicos-mp', component: DmTotalMedicosMp, canActivate: [authenticateGuard]},
-    {path:'dm-total-horas-efectivas-mp', component: DmTotalHorasEfectivasMp, canActivate: [authenticateGuard]},
-    {path:'dm-total-horas-programadas-mp', component: DmTotalHorasProgramadasMp, canActivate: [authenticateGuard]},
-
-    //Indicadores de consulta atencion inmediata
-    {path:'dm-total-atenciones-cai', component: DmTotalAtencionesCai, canActivate: [authenticateGuard]},
-    {path:'dm-total-medicos-cai', component: DmTotalMedicosCai, canActivate: [authenticateGuard]},
-    {path:'dm-total-horas-efectivas-cai', component: DmTotalHorasEfectivasCai, canActivate: [authenticateGuard]},
-    {path:'dm-total-horas-programadas-cai', component: DmTotalHorasProgramadasCai, canActivate: [authenticateGuard]},
-
-    //indicadores consulta apoyo desc
-    {path:'dm-total-atenciones-cad', component: DmTotalAtencionesCad, canActivate: [authenticateGuard]},
-    {path:'dm-total-medicos-cad', component: DmTotalMedicosCad, canActivate: [authenticateGuard]},
-    {path:'dm-total-horas-efectivas-cad', component: DmTotalHorasEfectivasCad, canActivate: [authenticateGuard]},
-    {path:'dm-total-horas-programadas-cad', component: DmTotalHorasProgramadasCad, canActivate: [authenticateGuard]},
-
+    ///indicadores
+    {path: 'indicador', children: indicadoresRoutes, canActivate: [authenticateGuard] },
 
 
     ///dashboard-no-medicas
-    { path: 'dashboard-no-medicas', component: ReportDashboardNoMedicas, canActivate: [authenticateGuard] },
+    //{ path: 'dashboard-no-medicas', component: ReportDashboardNoMedicas, canActivate: [authenticateGuard] },
 
     //indicadores de obstetricia
-    {path:'dnm-total-atenciones-ob', component: DnmTotalAtencionesOb, canActivate: [authenticateGuard]},
+    { path: 'dnm-total-atenciones-ob', component: DnmTotalAtencionesOb, canActivate: [authenticateGuard] },
 
     //indicadores de preventivo promocional
-    {path:'dnm-total-atenciones-pp', component: DnmTotalAtencionesPp, canActivate: [authenticateGuard]},
+    { path: 'dnm-total-atenciones-pp', component: DnmTotalAtencionesPp, canActivate: [authenticateGuard] },
 
     //indicadores de nutricion
-    {path:'dnm-total-atenciones-nu', component: DnmTotalAtencionesNu, canActivate: [authenticateGuard]},
+    { path: 'dnm-total-atenciones-nu', component: DnmTotalAtencionesNu, canActivate: [authenticateGuard] },
 
     //indicadores de enfermeria
-    {path:'dnm-total-atenciones-en', component: DnmTotalAtencionesEn, canActivate: [authenticateGuard]},
+    { path: 'dnm-total-atenciones-en', component: DnmTotalAtencionesEn, canActivate: [authenticateGuard] },
 
     //indicadores de psicologia
-    {path:'dnm-total-atenciones-ps', component: DnmTotalAtencionesPs, canActivate: [authenticateGuard]},
+    { path: 'dnm-total-atenciones-ps', component: DnmTotalAtencionesPs, canActivate: [authenticateGuard] },
 
     //indicadores de trabajo social
-    {path:'dnm-total-atenciones-ts', component: DnmTotalAtencionesTs, canActivate: [authenticateGuard]},
+    { path: 'dnm-total-atenciones-ts', component: DnmTotalAtencionesTs, canActivate: [authenticateGuard] },
 
     //indicadores de procedimientos terapeuticos
-    {path:'dnm-total-atenciones-pt', component: DnmTotalAtencionesPt, canActivate: [authenticateGuard]},
+    { path: 'dnm-total-atenciones-pt', component: DnmTotalAtencionesPt, canActivate: [authenticateGuard] },
 
     //indicadores de procedimientos diagnosticos
-    {path:'dnm-total-atenciones-pd', component: DnmTotalAtencionesPd, canActivate: [authenticateGuard]},
+    { path: 'dnm-total-atenciones-pd', component: DnmTotalAtencionesPd, canActivate: [authenticateGuard] },
 
     ///Dashboard de odontologicas
-    {path:'dashboard-odontologicas', component: ReportDashboardOdontologicas, canActivate: [authenticateGuard]},
+    { path: 'dashboard-odontologicas', component: ReportDashboardOdontologicas, canActivate: [authenticateGuard] },
 
 
     ///dashboard-emergencia
-    { path: 'dashboard-eme', component: ReportDashboardEme, canActivate: [authenticateGuard] },
+    //{ path: 'dashboard-eme', component: ReportDashboardEme, canActivate: [authenticateGuard] },
 
     ///atenciones por prioridad
     { path: 'ate-prioridad1', component: AtenTopicos1, canActivate: [authenticateGuard] },
@@ -184,37 +116,34 @@ export const routes: Routes = [
 
 
     ///Dashboard de intervenciones quirurgicas
-    {path:'dashboard-intervenciones-quirurgicas', component: ReportDashboardIntervencionesQuirurgicas, canActivate: [authenticateGuard]},
+    { path: 'dashboard-intervenciones-quirurgicas', component: ReportDashboardIntervencionesQuirurgicas, canActivate: [authenticateGuard] },
 
-     ///indicadores de intervenciones quirurgicas por grado de complejidad
-    {path:'diq-complejidad-a-gc', component: DiqComplejidadAGc, canActivate: [authenticateGuard]},
-    {path:'diq-complejidad-b-gc', component: DiqComplejidadBGc, canActivate: [authenticateGuard]},
-    {path:'diq-complejidad-c-gc', component: DiqComplejidadCGc, canActivate: [authenticateGuard]},
-    {path:'diq-complejidad-d-gc', component: DiqComplejidadDGc, canActivate: [authenticateGuard]},
-    {path:'diq-complejidad-e-gc', component: DiqComplejidadEGc, canActivate: [authenticateGuard]},
-    {path:'diq-sin-complejidad-gc', component: DiqSinComplejidadGc, canActivate: [authenticateGuard]},
+    ///indicadores de intervenciones quirurgicas por grado de complejidad
+    { path: 'diq-complejidad-a-gc', component: DiqComplejidadAGc, canActivate: [authenticateGuard] },
+    { path: 'diq-complejidad-b-gc', component: DiqComplejidadBGc, canActivate: [authenticateGuard] },
+    { path: 'diq-complejidad-c-gc', component: DiqComplejidadCGc, canActivate: [authenticateGuard] },
+    { path: 'diq-complejidad-d-gc', component: DiqComplejidadDGc, canActivate: [authenticateGuard] },
+    { path: 'diq-complejidad-e-gc', component: DiqComplejidadEGc, canActivate: [authenticateGuard] },
+    { path: 'diq-sin-complejidad-gc', component: DiqSinComplejidadGc, canActivate: [authenticateGuard] },
 
 
     ///dashboard- transplante
-    {path:'dashboard-transplante', component: ReportDashboardTransplante, canActivate: [authenticateGuard]},
+    //{ path: 'dashboard-transplante', component: ReportDashboardTransplante, canActivate: [authenticateGuard] },
 
 
     ///dashboard-reporteador
-    {path:'dashboard-reporteador', component: ReportDashboardReporteador, canActivate: [authenticateGuard]},
-
+    { path: 'dashboard-reporteador', component: ReportDashboardReporteador, canActivate: [authenticateGuard] },
 
 
     ///Tablas homologadas
-    {path:'tablas-homologadas', component: TablasHomologadas, canActivate: [authenticateGuard]},
+    { path: 'tablas-homologadas', component: TablasHomologadas, canActivate: [authenticateGuard] },
 
     ///Encuesta
 
-    {path:'encuesta', component:Encuesta, canActivate: [authenticateGuard]},
-    {path:'dashboard-encuesta',component:DashboardEncuesta, canActivate: [authenticateGuard]},
-
+    { path: 'encuesta', children: encuestaRoutes, canActivateChild: [authenticateGuard] },
 
     //Gestion de documentos
-    {path:'creacion-documento', component:CreacionDocumentos, canActivate: [authenticateGuard]},
-    {path:'report-documentos', component: ReportsDocumentos, canActivate: [authenticateGuard]},
+    {path:'documentos', children: documentoRoutes, canActivate: [authenticateGuard]  },
+
 
 ];

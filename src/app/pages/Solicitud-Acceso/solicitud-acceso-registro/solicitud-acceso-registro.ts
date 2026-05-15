@@ -1,4 +1,3 @@
-import { UsersService } from '../../../services/users-service';
 import { EstablecimientoService } from '../../../services/establecimiento-service';
 import { SolicitudAccesoService } from '../../../services/solicitud-acceso-service';
 import { Component, ElementRef, OnInit, QueryList, ViewChildren, inject } from '@angular/core';
@@ -8,6 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { User } from '../../../model/user';
 import { SolicitudAcceso as SolicitudAccesoPayload } from '../../../model/SolicitudAcceso';
 import { RouterModule } from '@angular/router';
+import { UsersService } from '../../../services/usuario/users-service';
 
 
 @Component({

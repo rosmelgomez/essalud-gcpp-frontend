@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Backend } from '../model/api';
 import { HttpClient } from '@angular/common/http';
-import { User } from '../model/user';
-import { Auth } from '../model/auth';
+import { Auth, Rol, User } from '../../model/user';
+import { Backend } from '../../model/api';
+
 
 const base_url = Backend.api + '/user';
 
@@ -50,5 +50,8 @@ export class UsersService {
     return this.http.get<User[]>(base_url + `/getUserByCodred/${codred}`, { withCredentials: true });
   }
 
+  getRoles() {
+    return this.http.get<Rol[]>(base_url + `/getRoles`, { withCredentials: true });
+  }
 
 }

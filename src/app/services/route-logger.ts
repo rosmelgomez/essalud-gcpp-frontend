@@ -3,7 +3,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { filter } from 'rxjs/operators';
 import { catchError, of, timeout } from 'rxjs';
-import { AuthLogin } from './auth-login';
+import { AuthLogin } from './usuario/auth-login';
 import { Backend } from '../model/api';
 
 const log_url = Backend.api + '/log/register';

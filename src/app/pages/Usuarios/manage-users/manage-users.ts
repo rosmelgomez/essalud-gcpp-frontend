@@ -2,11 +2,11 @@ import { Component, inject, ChangeDetectionStrategy, HostListener, Inject, OnIni
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { UsersService } from '../../services/users-service';
+
 import { ChangeDetectorRef } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { forkJoin } from 'rxjs';
-import { EstablecimientoService } from '../../services/establecimiento-service';
+import { EstablecimientoService } from '../../../services/establecimiento-service';
 import {
   MatDialog,
   MatDialogActions,
@@ -15,7 +15,8 @@ import {
   MatDialogTitle,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
-import { User } from '../../model/user';
+import { User } from '../../../model/user';
+import { UsersService } from '../../../services/usuario/users-service';
 
 
 @Component({

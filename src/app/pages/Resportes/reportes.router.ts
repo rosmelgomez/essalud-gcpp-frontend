@@ -1,0 +1,28 @@
+import { Routes } from '@angular/router';
+import { ReportDashboard } from './report-dashboard/report-dashboard';
+import { ReportDashboardMedicas } from './report-dashboard-medicas/report-dashboard-medicas';
+import { ReportDashboardNoMedicas } from './report-dashboard-no-medicas/report-dashboard-no-medicas';
+import { ReportDashboardEme } from './report-dashboard-eme/report-dashboard-eme';
+import { ReportDashboardIntervencionesQuirurgicas } from './report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
+import { ReportDashboardTransplante } from './report-dashboard-transplante/report-dashboard-transplante';
+import { authenticateGuard } from '../../guards/authenticate-guard';
+
+export const reportesRoutes: Routes = [
+
+    { path: 'select', component: ReportDashboard, canActivate: [authenticateGuard] },
+
+    ///dashboard-medicas
+    { path: 'dashboard-medicas', component: ReportDashboardMedicas, canActivate: [authenticateGuard] },
+
+    ///dashboard-no-medicas
+    { path: 'dashboard-no-medicas', component: ReportDashboardNoMedicas, canActivate: [authenticateGuard] },
+
+    ///dashboard-emergencia
+    { path: 'dashboard-eme', component: ReportDashboardEme, canActivate: [authenticateGuard] },
+
+    ///Dashboard de intervenciones quirurgicas
+    { path: 'dashboard-intervenciones-quirurgicas', component: ReportDashboardIntervencionesQuirurgicas, canActivate: [authenticateGuard] },
+
+    ///dashboard- transplante
+    { path: 'dashboard-transplante', component: ReportDashboardTransplante, canActivate: [authenticateGuard] },
+];

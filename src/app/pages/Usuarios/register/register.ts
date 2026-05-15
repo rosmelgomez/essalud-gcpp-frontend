@@ -1,16 +1,16 @@
 import { Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UsersService } from '../../services/users-service';
 import { MatIconModule } from '@angular/material/icon';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
-import { User } from '../../model/user';
-import { EstablecimientoService } from '../../services/establecimiento-service';
+import { User } from '../../../model/user';
+import { EstablecimientoService } from '../../../services/establecimiento-service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { inject } from '@angular/core';
 import { signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { UsersService } from '../../../services/usuario/users-service';
 
 @Component({
   selector: 'app-register',

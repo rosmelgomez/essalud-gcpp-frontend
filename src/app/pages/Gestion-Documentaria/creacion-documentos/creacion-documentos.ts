@@ -12,10 +12,10 @@ import { MatChipsModule } from '@angular/material/chips';
 import { Documento, TipoDocumento, VersionDocumento } from '../../../model/documento';
 import { TipoDocumentoService } from '../../../services/documentos/tipo-documento-service';
 import { User } from '../../../model/user';
-import { UsersService } from '../../../services/users-service';
 import { DocumentoService } from '../../../services/documentos/documento-service';
 import { VersionDocumentoService } from '../../../services/documentos/version-documento-service';
 import { EstablecimientoService } from '../../../services/establecimiento-service';
+import { UsersService } from '../../../services/usuario/users-service';
 
 // Mapeo de extensiones a MIME types para archivos que podrían no detectarse correctamente
 const MIME_TYPES_MAP: { [key: string]: string } = {

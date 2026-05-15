@@ -1,6 +1,6 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { AuthLogin } from '../services/auth-login';
+import { AuthLogin } from '../services/usuario/auth-login';
 
 export const logoutGuard: CanActivateFn = () => {
 

@@ -129,20 +129,20 @@
 
     <div class="modules-menu">
       <!-- Consulta externa -->
-      <a href="/dashboard" class="module" (click)="saveModulo('Consulta Externa')">
+      <a href="/reporte/select" class="module" (click)="saveModulo('Consulta Externa')">
         <img src="/images/RCS2.png" alt="Consulta externa" />
         <span>Consulta externa</span>
       </a>
 
       <!-- Emergencia -->
-      <a href="/dashboard-eme" class="module">
+      <a href="/reporte/dashboard-eme" class="module">
         <img src="/images/RSC1.png" alt="Emergencia" />
         <span>Emergencia</span>
       </a>
 
 
       <!-- Centro quirúrgico  -->
-      <a href="/dashboard" class="module" (click)="saveModulo('Centro Quirúrgico')">
+      <a href="/reporte/select" class="module" (click)="saveModulo('Centro Quirúrgico')">
         <img src="/images/cirugia.png" alt="Centro quirúrgico" />
         <span>Centro quirúrgico</span>
       </a>
@@ -161,7 +161,7 @@
 
 
       <!-- Reportes gerenciales (admin) -->
-      <a href="/reports-gerenciales" class="module"
+      <a href="/reporte/reports-gerenciales" class="module"
         *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/analytics.png" alt="Reportes gerenciales" />
         <span>Reportes gerenciales</span>
@@ -171,7 +171,7 @@
 
 
       <!-- Reporteador -->
-      <a href="/dashboard-reporteador" class="module"
+      <a href="/reporte/dashboard-reporteador" class="module"
         *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/reporteador.png" alt="Reporteador" />
         <span>Reporteador</span>
