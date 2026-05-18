@@ -70,7 +70,7 @@ export class DnmTotalAtencionesPs implements OnInit, OnDestroy {
     descripcion_servicio: '',
     descripcion_especialidad: '',
     descripcion_tipo_consulta: '',
-    dni_medico: '',
+    dni_medico: '', 
     doc_paciente: '',
     anio_edad: '',
     cod_tipdoc_paciente: '',

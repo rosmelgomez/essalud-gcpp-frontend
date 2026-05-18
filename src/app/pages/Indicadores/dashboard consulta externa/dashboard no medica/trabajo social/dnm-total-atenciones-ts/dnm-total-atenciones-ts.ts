@@ -58,7 +58,7 @@ export class DnmTotalAtencionesTs implements OnInit, OnDestroy {
   query2TotalAtencionesFilter: any[] = [];
 
   // Filtros
-  filters = {
+  filters = { 
     cod_servicio: '',
     cod_especialidad: '',
     cenasides: '',
