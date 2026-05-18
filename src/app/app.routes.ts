@@ -12,20 +12,7 @@ import { authenticateGuard } from './guards/authenticate-guard';
 import { redirectGuard } from './guards/redirect-guard';
 
 
-import { AtenTopicos1 } from './pages/Indicadores/dashboard-emergencia/aten-topicos-1/aten-topicos-1';
-import { AtenTopicos2 } from './pages/Indicadores/dashboard-emergencia/aten-topicos-2/aten-topicos-2';
-import { AtenTopicos3 } from './pages/Indicadores/dashboard-emergencia/aten-topicos-3/aten-topicos-3';
-import { AtenTopicos4 } from './pages/Indicadores/dashboard-emergencia/aten-topicos-4/aten-topicos-4';
-import { AtenTopicos5 } from './pages/Indicadores/dashboard-emergencia/aten-topicos-5/aten-topicos-5';
 
-import { DnmTotalAtencionesOb } from './pages/Indicadores/dashboard-no-medicas/obstetricia/dnm-total-atenciones-ob/dnm-total-atenciones-ob';
-import { DnmTotalAtencionesPs } from './pages/Indicadores/dashboard-no-medicas/psicologia/dnm-total-atenciones-ps/dnm-total-atenciones-ps';
-import { DnmTotalAtencionesPd } from './pages/Indicadores/dashboard-no-medicas/procedimientos diagnosticos/dnm-total-atenciones-pd/dnm-total-atenciones-pd';
-import { DnmTotalAtencionesPp } from './pages/Indicadores/dashboard-no-medicas/preventivo promocional/dnm-total-atenciones-pp/dnm-total-atenciones-pp';
-import { DnmTotalAtencionesEn } from './pages/Indicadores/dashboard-no-medicas/enfermeria/dnm-total-atenciones-en/dnm-total-atenciones-en';
-import { DnmTotalAtencionesNu } from './pages/Indicadores/dashboard-no-medicas/nutricion/dnm-total-atenciones-nu/dnm-total-atenciones-nu';
-import { DnmTotalAtencionesTs } from './pages/Indicadores/dashboard-no-medicas/trabajo social/dnm-total-atenciones-ts/dnm-total-atenciones-ts';
-import { DnmTotalAtencionesPt } from './pages/Indicadores/dashboard-no-medicas/procedimientos terapeuticos/dnm-total-atenciones-pt/dnm-total-atenciones-pt';
 
 import { ReportDashboardIntervencionesQuirurgicas } from './pages/Resportes/report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
 import { DiqComplejidadAGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-a-gc/diq-complejidad-a-gc';
@@ -48,6 +35,8 @@ import { encuestaRoutes } from './pages/Encuestas/encuesta.router';
 import { documentoRoutes } from './pages/Gestion-Documentaria/documento.router';
 import { reportesRoutes } from './pages/Resportes/reportes.router';
 import { indicadoresRoutes } from './pages/Indicadores/indicadores.router';
+import { DnmTotalAtencionesPd } from './pages/Indicadores/dashboard consulta externa/dashboard no medica/procedimientos diagnosticos/dnm-total-atenciones-pd/dnm-total-atenciones-pd';
+import { DnmTotalAtencionesPt } from './pages/Indicadores/dashboard consulta externa/dashboard no medica/procedimientos terapeuticos/dnm-total-atenciones-pt/dnm-total-atenciones-pt';
 
 
 export const routes: Routes = [
@@ -74,25 +63,6 @@ export const routes: Routes = [
 
 
     ///dashboard-no-medicas
-    //{ path: 'dashboard-no-medicas', component: ReportDashboardNoMedicas, canActivate: [authenticateGuard] },
-
-    //indicadores de obstetricia
-    { path: 'dnm-total-atenciones-ob', component: DnmTotalAtencionesOb, canActivate: [authenticateGuard] },
-
-    //indicadores de preventivo promocional
-    { path: 'dnm-total-atenciones-pp', component: DnmTotalAtencionesPp, canActivate: [authenticateGuard] },
-
-    //indicadores de nutricion
-    { path: 'dnm-total-atenciones-nu', component: DnmTotalAtencionesNu, canActivate: [authenticateGuard] },
-
-    //indicadores de enfermeria
-    { path: 'dnm-total-atenciones-en', component: DnmTotalAtencionesEn, canActivate: [authenticateGuard] },
-
-    //indicadores de psicologia
-    { path: 'dnm-total-atenciones-ps', component: DnmTotalAtencionesPs, canActivate: [authenticateGuard] },
-
-    //indicadores de trabajo social
-    { path: 'dnm-total-atenciones-ts', component: DnmTotalAtencionesTs, canActivate: [authenticateGuard] },
 
     //indicadores de procedimientos terapeuticos
     { path: 'dnm-total-atenciones-pt', component: DnmTotalAtencionesPt, canActivate: [authenticateGuard] },
@@ -102,17 +72,6 @@ export const routes: Routes = [
 
     ///Dashboard de odontologicas
     { path: 'dashboard-odontologicas', component: ReportDashboardOdontologicas, canActivate: [authenticateGuard] },
-
-
-    ///dashboard-emergencia
-    //{ path: 'dashboard-eme', component: ReportDashboardEme, canActivate: [authenticateGuard] },
-
-    ///atenciones por prioridad
-    { path: 'ate-prioridad1', component: AtenTopicos1, canActivate: [authenticateGuard] },
-    { path: 'ate-prioridad2', component: AtenTopicos2, canActivate: [authenticateGuard] },
-    { path: 'ate-prioridad3', component: AtenTopicos3, canActivate: [authenticateGuard] },
-    { path: 'ate-prioridad4', component: AtenTopicos4, canActivate: [authenticateGuard] },
-    { path: 'ate-prioridad5', component: AtenTopicos5, canActivate: [authenticateGuard] },
 
 
     ///Dashboard de intervenciones quirurgicas

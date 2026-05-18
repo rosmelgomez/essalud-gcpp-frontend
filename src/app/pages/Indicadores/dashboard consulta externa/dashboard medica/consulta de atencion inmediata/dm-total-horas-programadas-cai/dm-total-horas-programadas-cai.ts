@@ -1,0 +1,715 @@
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  AfterViewInit,
+  ChangeDetectorRef,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
+import ApexCharts, { ApexOptions } from 'apexcharts';
+import { MatSort } from '@angular/material/sort';
+import { CommonModule } from '@angular/common';
+import { MatTableModule } from '@angular/material/table';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+import { MatSortModule } from '@angular/material/sort';
+import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { LocalStorageService } from '../../../../../../services/local-storage-service';
+import { FormsModule } from '@angular/forms';
+
+interface MedicoRow {
+  descripcion_servicio: string;
+  dni_medico: string;
+  fecha_atencion: string;
+  atenciones: number;
+}
+interface PivotRow {
+  dni_medico: string;
+  cells: Record<string, number>;
+  total: number;
+}
+
+
+@Component({
+  selector: 'app-dm-total-horas-programadas-cai',
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatTableModule,
+    MatCardModule,
+    MatButtonModule,
+    MatPaginatorModule,
+    MatSortModule,
+    ScrollingModule,
+  ],
+  templateUrl: './dm-total-horas-programadas-cai.html',
+  styleUrl: './dm-total-horas-programadas-cai.css',
+})
+export class DmTotalHorasProgramadasCai implements OnInit, AfterViewInit, OnDestroy{
+  nameCentro: String = '';
+
+  periodo: string = '';
+  loading: boolean = false;
+  error: string | null = null;
+  dataLoaded: boolean = false;
+  viewReady: boolean = false;
+
+  // Datos de consultas
+  query0Data: any[] = []; // Servicios
+  query0DataOriginal: any[] = []; // Almacenar datos originales
+
+  newtableData: any[] = [];
+
+  //Filtros
+  filters = {
+    cod_servicio: '',
+    cod_especialidad: '',
+    cenasides: '',
+    cod_tipdoc_medico: '',
+    dni_medico: '',
+    actividad: '',
+    agrupador: '',
+    detalle_subactividad: '',
+    descripcion_servicio: '',
+    descripcion_especialidad: '',
+    total_horas: '',
+    fecha_prog: '',
+  };
+
+  pivotHeaders: string[] = []; // fechas
+  pivotRows: Array<{ dni_medico: string; cells: Record<string, number>; total: number }> = [];
+  pivotRowsFiltered: Array<{ dni_medico: string; cells: Record<string, number>; total: number }> =
+    [];
+  pivotColumnTotals: Record<string, number> = {};
+  pivotColumnTotalsFiltered: Record<string, number> = {};
+  pivotGrandTotal = 0;
+  pivotGrandTotalFiltered = 0;
+  pivotFilters = {
+    dni_medico: '',
+    total: '' as string,
+    columns: {} as Record<string, string>,
+  };
+
+  // Gráficos
+  chartServicio: ApexCharts | null = null;
+  chartSubactividad: ApexCharts | null = null;
+  chartAgrupador: ApexCharts | null = null;
+  chartEspecialidad: ApexCharts | null = null;
+  tableRows: MedicoRow[] = [];
+
+  constructor(
+    private reportDashboardMedicasService: ReportDashboardMedicasService,
+    private dataImport: LocalStorageService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  @ViewChild(MatSort) sort!: MatSort;
+
+  @ViewChild('chartServicio') chartServicioEl!: ElementRef<HTMLDivElement>;
+  @ViewChild('chartSubactividad') chartSubactividadEl!: ElementRef<HTMLDivElement>;
+  @ViewChild('chartAgrupador') chartAgrupadorEl!: ElementRef<HTMLDivElement>;
+  @ViewChild('chartEspecialidad') chartEspecialidadEl!: ElementRef<HTMLDivElement>;
+
+  activeTab: 'Horas Programadas' = 'Horas Programadas';
+
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  ngAfterViewInit(): void {
+    this.viewReady = true;
+    if (this.dataLoaded) {
+      setTimeout(() => this.buildAllCharts(), 150);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyAllCharts();
+  }
+
+  loadData(): void {
+    this.nameCentro = this.dataImport.getDataCentro().nameCentro || '';
+
+    const codcas = this.dataImport.getDataCentro().codcas;
+    const anio = this.dataImport.getDataDMCAI().anio;
+    const periodo = this.dataImport.getDataDMCAI().periodo;
+    this.periodo = anio + '-' + periodo;
+
+    if (!codcas || !periodo || !anio) {
+      this.error = 'Código CAS o período no proporcionado.';
+      return;
+    }
+    this.loading = true;
+    this.error = null;
+    this.reportDashboardMedicasService.getQueryDMCAITHP(anio, periodo, codcas).subscribe({
+      next: (data) => {
+        this.query0Data = data;
+
+        // Construir tabla agrupada por descripcion_servicio, subactividad, sexo, cod_diag, descripcion_diagnostico
+        const groupMap = new Map<
+          string,
+          {
+            fecha_prog: string;
+            dni_medico: string;
+            descripcion_servicio: string;
+            detalle_subactividad: string;
+            agrupador: string;
+            descripcion_especialidad: string;
+            total_horas: number;
+          }
+        >();
+
+        for (const row of data) {
+          const fecha_prog = (row as any).fecha_prog || 'Sin descripción';
+          const dni_medico = (row as any).dni_medico || 'Sin dni_medico';
+          const descripcion_servicio = (row as any).descripcion_servicio || 'Sin descripción servicio';
+          const detalle_subactividad = (row as any).detalle_subactividad || 'Sin descripción subactividad';
+          const agrupador = (row as any).agrupador || 'Sin cod_diag';
+          const descripcion_especialidad = (row as any).descripcion_especialidad || 'Sin descripción especialidad';
+          const key = `${fecha_prog}||${dni_medico}||${descripcion_servicio}||${detalle_subactividad}||${agrupador}||${descripcion_especialidad}`;
+          if (!groupMap.has(key)) {
+            groupMap.set(key, {
+              fecha_prog,
+              dni_medico,
+              descripcion_servicio,
+              detalle_subactividad,
+              agrupador,
+              descripcion_especialidad,
+              total_horas: Number((row as any).total_horas ?? 0),
+            });
+          } else {
+            groupMap.get(key)!.total_horas += Number((row as any).total_horas ?? 0);
+          }
+        }
+
+        this.newtableData = Array.from(groupMap.values());
+        this.query0DataOriginal = this.newtableData;
+
+
+        this.loading = false;
+        this.dataLoaded = true;
+        this.cdr.detectChanges();
+        if (this.viewReady) {
+          setTimeout(() => this.buildAllCharts(), 150);
+        }
+        this.buildPivotTable();
+        this.TotalHorasProgramadas();
+      },
+      error: (err) => {
+        this.error = 'Error al cargar los datos: ' + err.message;
+        this.loading = false;
+        console.error(err);
+      },
+    });
+  }
+
+  private buildAllCharts(): void {
+    this.buildBarServicioChart();
+    this.buildBarSubactividadChart();
+    this.buildBarAgrupadorChart();
+    this.buildBarEspecialidadChart();
+  }
+
+  buildBarServicioChart(): void {
+    setTimeout(() => {
+      this.renderTopBarChart(
+        this.query0Data,
+        (d) => d.descripcion_servicio,
+        this.chartServicioEl?.nativeElement,
+        this.chartServicio,
+        (chart) => {
+          this.chartServicio = chart;
+        },
+      );
+    }, 100);
+  }
+
+  buildBarSubactividadChart(): void {
+    setTimeout(() => {
+      this.renderTopBarChart(
+        this.query0Data,
+        (d) => d.detalle_subactividad,
+        this.chartSubactividadEl?.nativeElement,
+        this.chartSubactividad,
+        (chart) => {
+          this.chartSubactividad = chart;
+        },
+      );
+    }, 100);
+  }
+
+  buildBarAgrupadorChart(): void {
+    setTimeout(() => {
+      this.renderTopBarChart(
+        this.query0Data,
+        (d) => d.agrupador,
+        this.chartAgrupadorEl?.nativeElement,
+        this.chartAgrupador,
+        (chart) => {
+          this.chartAgrupador = chart;
+        },
+      );
+    }, 100);
+  }
+
+  buildBarEspecialidadChart(): void {
+    setTimeout(() => {
+      this.renderTopBarChart(
+        this.query0Data,
+        (d) => d.descripcion_especialidad,
+        this.chartEspecialidadEl?.nativeElement,
+        this.chartEspecialidad,
+        (chart) => {
+          this.chartEspecialidad = chart;
+        },
+      );
+    }, 100);
+  }
+
+  private renderTopBarChart<T>(
+    data: T[] = [],
+    labelFn: (item: T) => string | undefined,
+    container: HTMLDivElement | undefined,
+    currentChart: ApexCharts | null,
+    assign: (chart: ApexCharts) => void,
+  ): void {
+    if (!container) {
+      return;
+    }
+
+   const aggregatedAll = this.aggregateByLabel(data, labelFn, (d) =>
+      Number((d as any).total_horas ?? 0),
+    )
+
+    const aggregated = aggregatedAll
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+
+    this.destroyChart(currentChart);
+
+    if (!aggregated.length) {
+      return;
+    }
+
+    const total = aggregatedAll.reduce((acc, item) => acc + item.total, 0);
+    const colors = this.buildGradientColors(aggregated.length);
+    const options = this.createHorizontalBarOptions(
+      aggregated.map((d) => d.label),
+      aggregated.map((d) => d.total),
+      total,
+      colors,
+    );
+
+    this.renderApexChart(container, options, assign);
+  }
+
+  private createHorizontalBarOptions(
+    categories: string[],
+    values: number[],
+    total: number,
+    colors: string[],
+  ): ApexOptions {
+    const formatPct = (value: number) => {
+      const percentage = total ? ((value / total) * 100).toFixed(1) : '0.0';
+      return `${value.toLocaleString()} (${percentage}%)`;
+    };
+
+    return {
+      chart: {
+        type: 'bar',
+        height: 300,
+        toolbar: { show: false },
+      },
+      series: [
+        {
+          name: 'Horas Efectivas',
+          data: values,
+        },
+      ],
+      plotOptions: {
+        bar: {
+          horizontal: true,
+          distributed: true,
+          barHeight: '70%',
+        },
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: (val) => formatPct(Number(val)),
+        style: {
+          fontSize: '9px',
+          fontWeight: 700,
+          colors: ['#1f2937'],
+        },
+      },
+      colors,
+      xaxis: {
+        categories,
+        labels: {
+          formatter: (val) => Math.round(Number(val)).toLocaleString(),
+        },
+      },
+      yaxis: {
+        labels: {
+          style: {
+            fontSize: '9px',
+          },
+        },
+      },
+      grid: {
+        borderColor: '#E8EAED',
+        xaxis: { lines: { show: true } },
+        yaxis: { lines: { show: false } },
+      },
+      tooltip: {
+        y: {
+          formatter: (val) => formatPct(Number(val)),
+        },
+      },
+      legend: {
+        show: false,
+      },
+      noData: {
+        text: 'Sin datos',
+      },
+    };
+  }
+
+  private buildGradientColors(count: number): string[] {
+    if (!count) {
+      return [];
+    }
+
+    return Array.from({ length: count }, (_, idx) => {
+      const gradient = idx / count;
+      return `rgba(0, 100, 175, ${0.6 + gradient * 0.4})`;
+    });
+  }
+
+  private aggregateByLabel<T>(
+    data: T[] = [],
+    labelFn: (item: T) => string | undefined,
+    valueFn?: (item: T) => number | undefined,
+  ): { label: string; total: number }[] {
+    const totals = new Map<string, number>();
+
+    data.forEach((item) => {
+      const label = (labelFn(item) || 'Sin dato').trim();
+      const value = valueFn ? (valueFn(item) ?? 0) : 1;
+      totals.set(label, (totals.get(label) ?? 0) + value);
+    });
+
+    return Array.from(totals.entries()).map(([label, total]) => ({ label, total }));
+  }
+
+  private renderApexChart(
+    container: HTMLElement,
+    options: ApexOptions,
+    assign: (chart: ApexCharts) => void,
+    retries: number = 6,
+  ): void {
+    const tryRender = () => {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      if (!width || !height) {
+        if (retries > 0) {
+          setTimeout(() => this.renderApexChart(container, options, assign, retries - 1), 50);
+        }
+        return;
+      }
+
+      const chart = new ApexCharts(container, options);
+      assign(chart);
+      chart.render();
+    };
+
+    requestAnimationFrame(tryRender);
+  }
+
+  private destroyChart(chart: ApexCharts | null): void {
+    if (chart) {
+      chart.destroy();
+    }
+  }
+
+  private destroyAllCharts(): void {
+    this.destroyChart(this.chartServicio);
+    this.destroyChart(this.chartSubactividad);
+    this.destroyChart(this.chartAgrupador);
+    this.destroyChart(this.chartEspecialidad);
+  }
+
+  buildPivotTable(): void {
+    if (!this.query0Data?.length) {
+      this.pivotHeaders = [];
+      this.pivotRows = [];
+      this.pivotColumnTotals = {};
+      this.pivotGrandTotal = 0;
+      return;
+    }
+    // Determinar el campo de fecha disponible (prefiere `fecha_prog`) y
+    // construir lista de fechas únicas ordenadas (de menor a mayor)
+    const dateField = this.query0Data.some((r: any) => r.fecha_prog)
+      ? 'fecha_prog'
+      : 'fecha_atencion';
+    const fechas = (
+      Array.from(new Set(this.query0Data.map((r: any) => r[dateField] || 'Sin fecha'))) as string[]
+    )
+      .filter((f: string) => f && f !== 'Sin fecha')
+      .sort((a, b) => this.parseDate(a) - this.parseDate(b));
+
+    // Agrupar por médico y fecha (SUMAR `total_horas`)
+    const rowsMap = new Map<string, Record<string, number>>();
+    for (const row of this.query0Data) {
+      const dni = row.dni_medico || 'Sin DNI';
+      const fecha = row[dateField] || 'Sin fecha';
+      const horas = Number(row.total_horas ?? 0) || 0;
+      const bucket = rowsMap.get(dni) || {};
+      bucket[fecha] = (bucket[fecha] || 0) + horas;
+      rowsMap.set(dni, bucket);
+    }
+
+    // Construir filas con totales (suma de horas por fila)
+    const pivotRows = Array.from(rowsMap.entries()).map(([dni, cells]) => {
+      const total = fechas.reduce((sum, f) => sum + (cells[f] || 0), 0);
+      return { dni_medico: dni, cells, total };
+    });
+
+    // Ordenar por total desc
+    pivotRows.sort((a, b) => b.total - a.total);
+
+    // Totales por columna (suma de horas) y total general
+    const columnTotals: Record<string, number> = {};
+    let grandTotal = 0;
+    for (const fecha of fechas) {
+      const colSum = pivotRows.reduce((sum, r) => sum + (r.cells[fecha] || 0), 0);
+      columnTotals[fecha] = colSum;
+      grandTotal += colSum;
+    }
+
+    this.pivotHeaders = fechas;
+    this.pivotRows = pivotRows;
+    this.pivotRowsFiltered = pivotRows;
+    this.pivotColumnTotals = columnTotals;
+    this.pivotColumnTotalsFiltered = columnTotals;
+    this.pivotGrandTotal = grandTotal;
+    this.pivotGrandTotalFiltered = grandTotal;
+
+    // Inicializar filtros de columnas
+    this.pivotFilters.columns = {};
+    fechas.forEach((f) => (this.pivotFilters.columns[f] = ''));
+  }
+
+  getCellClass(value: number): string {
+    if (!value || value === 0) return '';
+    return 'cell-highlight';
+  }
+
+  trackByString(_index: number, item: string): string {
+    return item;
+  }
+
+  trackByPivotRow(_index: number, row: PivotRow): string {
+    return row.dni_medico;
+  }
+
+  filterPivotByDni(): void {
+    this.applyAllPivotFilters();
+  }
+
+  filterPivotByTotal(): void {
+    this.applyAllPivotFilters();
+  }
+
+  filterPivotByColumn(_fecha: string): void {
+    this.applyAllPivotFilters();
+  }
+
+  private applyAllPivotFilters(): void {
+    let filtered = [...this.pivotRows];
+
+    const dniFilter = this.pivotFilters.dni_medico.trim().toLowerCase();
+    if (dniFilter) {
+      filtered = filtered.filter((row) => row.dni_medico.toLowerCase().includes(dniFilter));
+    }
+
+    const totalFilter = this.pivotFilters.total.trim().toLowerCase();
+    if (totalFilter) {
+      filtered = filtered.filter((row) => String(row.total).toLowerCase().includes(totalFilter));
+    }
+
+    for (const fecha of this.pivotHeaders) {
+      const colFilter = (this.pivotFilters.columns[fecha] || '').trim().toLowerCase();
+      if (colFilter) {
+        filtered = filtered.filter((row) =>
+          String(row.cells[fecha] || 0)
+            .toLowerCase()
+            .includes(colFilter),
+        );
+      }
+    }
+
+    this.pivotRowsFiltered = filtered;
+    this.recalculatePivotTotals();
+  }
+
+  private recalculatePivotTotals(): void {
+    // Recalcular totales por columna basados en las filas filtradas
+    const columnTotals: Record<string, number> = {};
+    let grandTotal = 0;
+
+    for (const fecha of this.pivotHeaders) {
+      const colSum = this.pivotRowsFiltered.reduce((sum, r) => sum + (r.cells[fecha] || 0), 0);
+      columnTotals[fecha] = colSum;
+      grandTotal += colSum;
+    }
+
+    this.pivotColumnTotalsFiltered = columnTotals;
+    this.pivotGrandTotalFiltered = grandTotal;
+  }
+
+  private parseDate(fecha: string): number {
+    const ts = Date.parse(fecha);
+    return Number.isNaN(ts) ? Number.POSITIVE_INFINITY : ts;
+  }
+
+  totalHorasProgramadas: number = 0;
+
+  TotalHorasProgramadas(): void {
+    const data = this.newtableData || [];
+    this.totalHorasProgramadas = data.reduce(
+      (sum: number, row: any) => sum + Number(row.total_horas ?? 0),
+      0,
+    );
+  }
+
+  setActiveTab(tab: 'Horas Programadas'): void {
+    this.activeTab = tab;
+    // Reconstruir los gráficos al cambiar de pestaña
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      if (tab === 'Horas Programadas') {
+        this.buildBarServicioChart();
+        this.buildBarSubactividadChart();
+        this.buildBarAgrupadorChart();
+        this.buildBarEspecialidadChart();
+      }
+    }, 100);
+  }
+
+  /// Filtrar datos de la tabla por columna
+
+  filterData(column: keyof typeof this.filters, event: any): void {
+    const filterValue = event.target.value.toLowerCase().trim();
+    this.filters[column] = filterValue;
+
+    // Filtrar los datos originales
+    const filtered = this.query0DataOriginal.filter((row) => {
+      return this.applyAllFilters(row);
+    });
+
+    // Actualizar los datos mostrados
+    this.newtableData = filtered;
+    this.TotalHorasProgramadas();
+  }
+
+  ///Aplicar todos los filtros activos a una fila
+
+  private applyAllFilters(row: any): boolean {
+    // Filtro fecha
+    if (
+      this.filters.fecha_prog &&
+      !String(row.fecha_prog).toLowerCase().includes(this.filters.fecha_prog)
+    ) {
+      return false;
+    }
+
+    // Filtro dni
+    if (
+      this.filters.dni_medico &&
+      !row.dni_medico.toLowerCase().includes(this.filters.dni_medico)
+    ) {
+      return false;
+    }
+
+    // Filtro Agrupador
+    if (this.filters.agrupador && !row.agrupador.toLowerCase().includes(this.filters.agrupador)) {
+      return false;
+    }
+
+    // Filtro servicio
+    if (
+      this.filters.descripcion_servicio &&
+      !row.descripcion_servicio.toLowerCase().includes(this.filters.descripcion_servicio)
+    ) {
+      return false;
+    }
+
+    // Filtro Subactividad
+    if (
+      this.filters.detalle_subactividad &&
+      !row.detalle_subactividad.toLowerCase().includes(this.filters.detalle_subactividad)
+    ) {
+      return false;
+    }
+
+    // Filtro Agrupador
+    if (this.filters.agrupador && !row.agrupador.toLowerCase().includes(this.filters.agrupador)) {
+      return false;
+    }
+    // Filtro Especialidad
+    if (
+      this.filters.descripcion_especialidad &&
+      !row.descripcion_especialidad.toLowerCase().includes(this.filters.descripcion_especialidad)
+    ) {
+      return false;
+    }
+
+    // Filtro Horas
+    if (
+      this.filters.total_horas &&
+      !String(row.total_horas).toLowerCase().includes(this.filters.total_horas)
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  downloadCSV(): void {
+    const data = this.query0Data || [];
+    this.downloadTableCSV(
+      data,
+      'am_total_horas_efectivas_' + this.periodo + '_' + this.nameCentro + '.csv',
+    );
+  }
+
+  downloadTableCSV(data: any[], fileName: string): void {
+    if (!data || data.length === 0) {
+      console.warn('No hay datos para descargar');
+      return;
+    }
+
+    const headers = Object.keys(data[0]);
+
+    let csv = headers.join(';') + '\n';
+
+    for (const row of data) {
+      csv += headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';') + '\n';
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName.endsWith('.csv') ? fileName : `${fileName}.csv`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+}

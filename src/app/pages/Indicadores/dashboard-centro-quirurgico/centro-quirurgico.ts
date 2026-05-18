@@ -4,6 +4,7 @@ import { ReportDashboardIntervencionesQuirurgicas } from '../../Resportes/report
 
 export const indicadoresRoutes: Routes = [
     
+    // ruta padre /indicador/..
     { path: 'dashboard-intervenciones-quirurgicas', component: ReportDashboardIntervencionesQuirurgicas},
     
 ];
