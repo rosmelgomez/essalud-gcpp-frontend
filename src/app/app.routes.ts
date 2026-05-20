@@ -11,9 +11,6 @@ import { ReportsGerenciales } from './pages/Resportes/reports-gerenciales/report
 import { authenticateGuard } from './guards/authenticate-guard';
 import { redirectGuard } from './guards/redirect-guard';
 
-
-
-
 import { ReportDashboardIntervencionesQuirurgicas } from './pages/Resportes/report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
 import { DiqComplejidadAGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-a-gc/diq-complejidad-a-gc';
 import { DiqComplejidadBGc } from './pages/Indicadores/dashboard-centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-b-gc/diq-complejidad-b-gc';

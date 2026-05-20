@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import { ReportDashboardIntervencionesQuirurgicas } from '../../Resportes/report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
+import { intervencionesQuirurgicasRoutes } from './intervenciones-quirurgicas/intervenciones-quirurgicas.router';
 
 
-export const indicadoresRoutes: Routes = [
+export const centroQuirurgicoRoutes: Routes = [
     
-    // ruta padre /indicador/..
-    { path: 'dashboard-intervenciones-quirurgicas', component: ReportDashboardIntervencionesQuirurgicas},
+    // ruta padre /indicador/centro-quirurgico/..
+    { path: 'intervenciones-quirurgicas', children: intervencionesQuirurgicasRoutes},
     
 ];

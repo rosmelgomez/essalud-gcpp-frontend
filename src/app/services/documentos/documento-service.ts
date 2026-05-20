@@ -31,5 +31,13 @@ export class DocumentoService {
     return this.http.get<Documento[]>(base_url + `/getdocbyuser/${iduser}`, { withCredentials: true });
   }
 
+  getDocumentoById(iddoc: number) {
+    return this.http.get<Documento>(base_url + `/getdocbyid/${iddoc}`, { withCredentials: true });
+  }
+
+  getDocumentoByVersion(idversion: number) {
+    return this.http.get<Documento[]>(base_url + `/getdocbyversion/${idversion}`, { withCredentials: true });
+  }
+
 
 }

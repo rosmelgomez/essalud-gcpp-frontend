@@ -7,15 +7,14 @@ import { DiqComplejidadEGc } from './diq-complejidad-e-gc/diq-complejidad-e-gc';
 import { DiqSinComplejidadGc } from './diq-sin-complejidad-gc/diq-sin-complejidad-gc';    
 
 
-export const indicadoresRoutes: Routes = [
+export const gradoComplejidadRoutes: Routes = [
 
-    ///indicadores de intervenciones quirurgicas por grado de complejidad
+    // ruta padre /indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/..
     { path: 'diq-complejidad-a-gc', component: DiqComplejidadAGc},
     { path: 'diq-complejidad-b-gc', component: DiqComplejidadBGc},
     { path: 'diq-complejidad-c-gc', component: DiqComplejidadCGc},
     { path: 'diq-complejidad-d-gc', component: DiqComplejidadDGc},
     { path: 'diq-complejidad-e-gc', component: DiqComplejidadEGc},
     { path: 'diq-sin-complejidad-gc', component: DiqSinComplejidadGc},
-
 
 ];
