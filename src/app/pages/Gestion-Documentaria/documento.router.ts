@@ -4,7 +4,6 @@ import { ReportDashboard } from '../Resportes/report-dashboard/report-dashboard'
 
 
 export const documentoRoutes: Routes = [
-    {path: '', pathMatch: 'full', redirectTo: 'reports' },
     {path: 'creacion', component: CreacionDocumentos },
     {path: 'dashboard', component: ReportDashboard },
 ];

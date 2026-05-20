@@ -2,7 +2,7 @@ export interface TipoDocumento {
   id: number;
   nombre: string;
   descripcion: string;
-  extension_permitidas: string;
+  extensiones_permitidas: string;
   requiere_aprobacion: boolean;
   max_size_mb: number;
   flag: boolean;

@@ -253,13 +253,14 @@ export class CreacionDocumentos implements OnInit {
       id: 0,
       nombre: this.registerTipoDocumentoForm.get('nombre')?.value ?? '',
       descripcion: this.registerTipoDocumentoForm.get('descripcion')?.value ?? '',
-      extension_permitidas: this.extensionesChips.join(', ') ?? '',
+      extensiones_permitidas: this.extensionesChips.join(', ') ?? '',
       requiere_aprobacion: this.registerTipoDocumentoForm.get('requiere_aprobacion')?.value ?? false,
       max_size_mb: this.registerTipoDocumentoForm.get('max_size_mb')?.value ?? 1,
       flag: this.registerTipoDocumentoForm.get('flag')?.value ?? true,
       date_creation: new Date(),
       date_update: new Date(),
     };
+    console.log('Registrando tipo de documento:', tipoDocumento);
     this.tipoDocumentoService.saveTipoDocumento(tipoDocumento).subscribe(
       (response) => {
         console.log('Tipo de documento guardado exitosamente', response);
