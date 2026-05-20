@@ -3,7 +3,7 @@ import { AuthLogin } from '../services/usuario/auth-login';
 import { inject } from '@angular/core';
 import { catchError, map, of } from 'rxjs';
 
-export const redirectGuard: CanActivateFn = (route, state) => {
+export const redirectGuard: CanActivateFn = () => {
   const authService = inject(AuthLogin);
   const router = inject(Router);
 

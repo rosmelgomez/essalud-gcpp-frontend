@@ -88,6 +88,12 @@ export class LocalStorageService {
     keys.forEach((k) => localStorage.removeItem(k));
   }
 
+  clearFrontendSession(): void {
+    this.clearAllAppData();
+    localStorage.clear();
+    sessionStorage.clear();
+  }
+
   ///datos de filtros de dashboard medicas (DM)
   ///guardar datos de filtros de dashboard-medicas-atenciones
   saveDataDMA(anio?: string, periodo?: string, codasegu?: string): void {
