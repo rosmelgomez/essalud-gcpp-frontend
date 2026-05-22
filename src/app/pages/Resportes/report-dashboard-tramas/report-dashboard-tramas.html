@@ -1,0 +1,238 @@
+<div class="main">
+
+    <!-- Header con logo y título -->
+    <div class="header">
+        <div class="header-content">
+            <h2 class="title">Tramas B1 y B2 — SUSALUD</h2>
+            <p class="subtitle">
+                Información actualizada al {{ currentDate }} | centro de atención: {{ centroAtencion }}
+            </p>
+        </div>
+
+    </div>
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-button" [class.active]="activeTab === 'Tramas Tabla B1'"
+            (click)="setActiveTab('Tramas Tabla B1')">
+            Tramas Tabla B1
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'Tramas Tabla B2'"
+            (click)="setActiveTab('Tramas Tabla B2')">
+            Tramas Tabla B2
+        </button>
+    </div>
+
+    <!-- CONTENIDO TABS -->
+    <!-- Tab tramas Tabla B1 -->
+    <div *ngIf="activeTab === 'Tramas Tabla B1'" class="tab-content">
+        <div class="header">
+            <div class="header-actions">
+                <div class="buscar-group">
+
+                    <label for="fechaInicioB1">Fecha Inicio:</label>
+                    <input type="date" id="fechaInicioB1" [(ngModel)]="fechaInicioB1">
+
+                    <label for="fechaFinB1">Fecha Fin:</label>
+                    <input type="date" id="fechaFinB1" [(ngModel)]="fechaFinB1">
+
+                    <select [(ngModel)]="codcasB1" class="codcas-select">
+                        <option value="">Seleccione un CAS</option>
+                        <option *ngFor="let centro of centros" [value]="centro.cenasicod">
+                            {{ centro.cenasides }}
+                        </option>
+                    </select>
+
+                    <button (click)="loadQueryTablaB1(fechaInicioB1,fechaFinB1,codcasB1)" class="btn-search">
+                        Buscar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Estado Loading-->
+        <div *ngIf="loadingTTB1" class="loading">
+            <p>Cargando datos...</p>
+        </div>
+
+        <!-- Selecciona año inicio y año fin y centro    -->
+        <div *ngIf="!selectFiltroTTB1 && !loadingTTB1" class="select-filtro">
+            <p>Por favor, seleccione Fecha de Inicio y Fin y Centro para ver la información de la tabla B1</p>
+        </div>
+
+        <!-- Estado de Error -->
+        <div *ngIf="errorTTB1" class="alert alert-danger">
+            {{ errorTTB1 }}
+        </div>
+
+        <mat-card *ngIf="selectFiltroTTB1 && !loadingTTB1" class="resumen-table">
+            <h3>
+                Muestra de datos — {{ tramasTablaB1.length }} filas totales · mostrando {{ tramasTablaB1muestra.length}}
+            </h3>
+            <!-- HEADER -->
+            <div class="resumen-header">
+                <div class="cell ORIGEN">ORIGEN</div>
+                <div class="cell CENTRO">CENTRO</div>
+                <div class="cell PERIODO">PERIODO</div>
+                <div class="cell SEXO">SEXO</div>
+                <div class="cell GETAREO">GETAREO</div>
+                <div class="cell PACSECNUM">PACSECNUM</div>
+                <div class="cell CODSER">CODSER</div>
+                <div class="cell TIPPROF">TIPPROF</div>
+                <div class="cell ORIGEN_TIPO">ORIGEN_TIPO</div>
+            </div>
+
+            <!-- FILTERS ROW 
+            <div class="resumen-filters">
+                <input type="text" class="filter-input cell descripcion_servicio" placeholder="Buscar Servicio..."
+                    (keyup)="filterData('descripcion_servicio', $event)" />
+                <input type="text" class="filter-input cell subactividad" placeholder="Buscar Subactividad..."
+                    (keyup)="filterData('subactividad', $event)" />
+                <input type="text" class="filter-input cell sexo" placeholder="Buscar Sexo..."
+                    (keyup)="filterData('sexo', $event)" />
+                <input type="text" class="filter-input cell cod_diag" placeholder="Buscar CodDiag..."
+                    (keyup)="filterData('cod_diag', $event)" />
+                <input type="text" class="filter-input cell descripcion_diagnostico" placeholder="Buscar Diagnóstico..."
+                    (keyup)="filterData('descripcion_diagnostico', $event)" />
+                <input type="text" class="filter-input cell total_atenciones" placeholder="Buscar atenciones.."
+                    (keyup)="filterData('total_atenciones', $event)" />
+            </div>
+            -->
+
+            <!-- WRAPPER PARA SCROLL HORIZONTAL -->
+            <div class="resumen-wrapper">
+                <!-- VIRTUAL SCROLL -->
+                <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+                    <div *cdkVirtualFor="let row of tramasTablaB1muestra" class="resumen-row">
+                        <div class="cell ORIGEN">{{ row.ORIGEN }}</div>
+                        <div class="cell CENTRO">{{ row.CENTRO }}</div>
+                        <div class="cell PERIODO">{{ row.PERIODO }}</div>
+                        <div class="cell SEXO">{{ row.SEXO }}</div>
+                        <div class="cell GETAREO" num>{{ row.GETAREO }}</div>
+                        <div class="cell PACSECNUM num">{{ row.PACSECNUM }}</div>
+                        <div class="cell CODSER">{{ row.CODSER }}</div>
+                        <div class="cell TIPPROF">{{ row.TIPPROF }}</div>
+                        <div class="cell ORIGEN_TIPO">{{ row.ORIGEN_TIPO }}</div>
+                    </div>
+                </cdk-virtual-scroll-viewport>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="table-footer">
+                <div class="footer-left"><strong>Total de tramas:</strong></div>
+                <div class="footer-right num">
+                    <strong>{{ tramasTablaB1.length }}</strong>
+                </div>
+            </div>
+        </mat-card>
+    </div>
+
+    <!-- Tab tramas Tabla B2 -->
+    <div *ngIf="activeTab === 'Tramas Tabla B2'" class="tab-content">
+        <div class="header">
+            <div class="header-actions">
+                <div class="buscar-group">
+
+                    <label for="fechaInicioB2">Fecha Inicio:</label>
+                    <input type="date" id="fechaInicioB2" [(ngModel)]="fechaInicioB2">
+
+                    <label for="fechaFinB2">Fecha Fin:</label>
+                    <input type="date" id="fechaFinB2" [(ngModel)]="fechaFinB2">
+
+                    <select [(ngModel)]="codcasB2" class="codcas-select">
+                        <option value="">Seleccione un CAS</option>
+                        <option *ngFor="let centro of centros" [value]="centro.cenasicod">
+                            {{ centro.cenasides }}
+                        </option>
+                    </select>
+
+                    <button (click)="loadQueryTablaB2(fechaInicioB2,fechaFinB2,codcasB2)" class="btn-search">
+                        Buscar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Estado Loading-->
+        <div *ngIf="loadingTTB2" class="loading">
+            <p>Cargando datos...</p>
+        </div>
+
+        <!-- Selecciona año inicio y año fin y centro    -->
+        <div *ngIf="!selectFiltroTTB2 && !loadingTTB2" class="select-filtro">
+            <p>Por favor, seleccione Fecha de Inicio y Fin y Centro para ver la información de la tabla B2</p>
+        </div>
+
+        <!-- Estado de Error -->
+        <div *ngIf="errorTTB2" class="alert alert-danger">
+            {{ errorTTB2 }}
+        </div>
+
+
+        <mat-card *ngIf="selectFiltroTTB2 && !loadingTTB2" class="resumen-table">
+            <h3>
+                Muestra de datos — {{ tramasTablaB2.length }} filas totales · mostrando {{ tramasTablaB2muestra.length}}
+            </h3>
+            <!-- HEADER -->
+            <div class="resumen-header">
+                <div class="cell ORIGEN">ORIGEN</div>
+                <div class="cell CENTRO">CENTRO</div>
+                <div class="cell PERIODO">PERIODO</div>
+                <div class="cell SEXO">SEXO</div>
+                <div class="cell GETAREO">GETAREO</div>
+                <div class="cell PACSECNUM">PACSECNUM</div>
+                <div class="cell CODSER">CODSER</div>
+                <div class="cell TIPPROF">TIPPROF</div>
+                <div class="cell ORIGEN_TIPO">ORIGEN_TIPO</div>
+            </div>
+
+            <!-- FILTERS ROW 
+            <div class="resumen-filters">
+                <input type="text" class="filter-input cell descripcion_servicio" placeholder="Buscar Servicio..."
+                    (keyup)="filterData('descripcion_servicio', $event)" />
+                <input type="text" class="filter-input cell subactividad" placeholder="Buscar Subactividad..."
+                    (keyup)="filterData('subactividad', $event)" />
+                <input type="text" class="filter-input cell sexo" placeholder="Buscar Sexo..."
+                    (keyup)="filterData('sexo', $event)" />
+                <input type="text" class="filter-input cell cod_diag" placeholder="Buscar CodDiag..."
+                    (keyup)="filterData('cod_diag', $event)" />
+                <input type="text" class="filter-input cell descripcion_diagnostico" placeholder="Buscar Diagnóstico..."
+                    (keyup)="filterData('descripcion_diagnostico', $event)" />
+                <input type="text" class="filter-input cell total_atenciones" placeholder="Buscar atenciones.."
+                    (keyup)="filterData('total_atenciones', $event)" />
+            </div>
+            -->
+
+            <!-- WRAPPER PARA SCROLL HORIZONTAL -->
+            <div class="resumen-wrapper">
+                <!-- VIRTUAL SCROLL -->
+                <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+                    <div *cdkVirtualFor="let row of tramasTablaB2muestra" class="resumen-row">
+                        <div class="cell ORIGEN">{{ row.ORIGEN }}</div>
+                        <div class="cell CENTRO">{{ row.CENTRO }}</div>
+                        <div class="cell PERIODO">{{ row.PERIODO }}</div>
+                        <div class="cell SEXO">{{ row.SEXO }}</div>
+                        <div class="cell GETAREO" num>{{ row.GETAREO }}</div>
+                        <div class="cell PACSECNUM num">{{ row.PACSECNUM }}</div>
+                        <div class="cell CODSER">{{ row.CODSER }}</div>
+                        <div class="cell TIPPROF">{{ row.TIPPROF }}</div>
+                        <div class="cell ORIGEN_TIPO">{{ row.ORIGEN_TIPO }}</div>
+                    </div>
+                </cdk-virtual-scroll-viewport>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="table-footer">
+                <div class="footer-left"><strong>Total de tramas:</strong></div>
+                <div class="footer-right num">
+                    <strong>{{ tramasTablaB2.length }}</strong>
+                </div>
+            </div>
+        </mat-card>
+
+
+
+    </div>
+
+</div>
