@@ -1,1 +1,236 @@
-<p>reports-documento works!</p>
+<div class="dashboard-wrapper">
+  <!-- Cabecera Premium -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <span class="eyebrow">MÓDULO DE GESTIÓN DOCUMENTAL</span>
+      <h1>Repositorio Documental Estadístico</h1>
+      <p>Búsqueda, organización por categorías, control de versiones e historial inmutable de aprobaciones.</p>
+    </div>
+  </header>
+
+  <!-- Panel de Control y Filtros -->
+  <section class="control-panel">
+    <div class="search-box">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input type="text" [(ngModel)]="filterSearch" (ngModelChange)="applyFilters()" placeholder="Buscar por código, título o descripción..." />
+    </div>
+
+    <div class="filters-group">
+      <div class="filter-select-wrapper">
+        <label for="categoryFilter">Categoría Temática</label>
+        <select id="categoryFilter" [(ngModel)]="filterCategory" (change)="applyFilters()">
+          <option value="">Todas las categorías</option>
+          <option *ngFor="let cat of categorias" [value]="cat.id">{{ cat.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="filter-select-wrapper">
+        <label for="statusFilter">Estado de Aprobación</label>
+        <select id="statusFilter" [(ngModel)]="filterStatus" (change)="applyFilters()">
+          <option value="">Todos los estados</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="Aprobado">Aprobado</option>
+          <option value="Rechazado">Rechazado</option>
+          <option value="SIN_APROBACION">No Requiere Aprobación</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenedor Principal de la Tabla -->
+  <section class="table-container">
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Título / Descripción</th>
+          <th>Tipo</th>
+          <th>Categoría</th>
+          <th>Última Versión</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let doc of filteredDocumentos" class="table-row">
+          <td class="col-code">
+            <span class="code-badge">{{ doc.codigo }}</span>
+          </td>
+          <td class="col-title">
+            <div class="doc-title">{{ doc.titulo }}</div>
+            <div class="doc-desc">{{ doc.descripcion || 'Sin descripción detallada' }}</div>
+          </td>
+          <td>
+            <span class="type-badge">{{ getTipoNombre(doc.id_tipo_documento) }}</span>
+          </td>
+          <td>
+            <span class="cat-badge">{{ getCategoriaNombre(doc.id_categoria) }}</span>
+          </td>
+          <td>
+            <span class="version-badge" *ngIf="activeVersionMap[doc.id]">v{{ activeVersionMap[doc.id]?.version }}</span>
+            <span class="no-version" *ngIf="!activeVersionMap[doc.id]">Sin archivos</span>
+          </td>
+          <td>
+            <ng-container *ngIf="activeFlowMap[doc.id]; else noFlow">
+              <span class="status-chip" [ngClass]="{
+                'status-pending': activeFlowMap[doc.id].status === 'Pendiente',
+                'status-approved': activeFlowMap[doc.id].status === 'Aprobado',
+                'status-rejected': activeFlowMap[doc.id].status === 'Rechazado'
+              }">
+                {{ activeFlowMap[doc.id].status }}
+              </span>
+            </ng-container>
+            <ng-template #noFlow>
+              <span class="status-chip status-none">No Requiere</span>
+            </ng-template>
+          </td>
+          <td class="col-actions">
+            <!-- Descargar Archivo -->
+            <button class="action-btn download-btn" *ngIf="activeVersionMap[doc.id]" (click)="descargarArchivo(activeVersionMap[doc.id]!)" title="Descargar versión activa">
+              <mat-icon>download</mat-icon>
+            </button>
+            
+            <!-- Historial e Hilos de Cambios -->
+            <button class="action-btn history-btn" (click)="abrirHistorial(doc)" title="Ver historial de cambios y versiones">
+              <mat-icon>history</mat-icon>
+            </button>
+
+            <!-- Decisión de Aprobador -->
+            <button class="action-btn approve-btn" *ngIf="puedeAprobar(doc)" (click)="abrirAprobacion(doc)" title="Evaluar y aprobar documento">
+              <mat-icon>gavel</mat-icon>
+            </button>
+
+            <!-- Soft Delete para Administradores -->
+            <button class="action-btn delete-btn" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('ADMIN_RED')" (click)="eliminarDocumento(doc)" title="Eliminar documento (Soft-delete)">
+              <mat-icon>delete_sweep</mat-icon>
+            </button>
+          </td>
+        </tr>
+
+        <!-- Mensaje de no hay resultados -->
+        <tr *ngIf="filteredDocumentos.length === 0">
+          <td colspan="7" class="empty-table-state">
+            <div class="empty-content">
+              <mat-icon class="empty-icon">folder_open</mat-icon>
+              <h3>No se encontraron documentos</h3>
+              <p>Intente modificar los criterios de búsqueda o filtros seleccionados.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- MODAL DE TIMELINE (Línea de Tiempo de Versiones e Historial de Revisiones) -->
+  <div class="premium-modal-overlay" *ngIf="showTimelineModal">
+    <div class="premium-modal-card timeline-card">
+      <header class="modal-header">
+        <h2>Historial y Línea de Tiempo de Revisiones</h2>
+        <button class="close-modal-btn" (click)="cerrarModales()">&times;</button>
+      </header>
+      
+      <div class="modal-body-split">
+        <!-- Sidebar: Lista de Versiones -->
+        <div class="versions-sidebar">
+          <h3>Versiones Disponibles</h3>
+          <div class="versions-list">
+            <button *ngFor="let ver of versionsMap[selectedDoc?.id ?? 0]" 
+              class="version-item-btn" 
+              [class.is-active]="selectedVersion?.id === ver.id"
+              (click)="onTimelineVersionChange(ver)">
+              <span class="ver-label">Versión {{ ver.version }}</span>
+              <span class="ver-date">{{ ver.date_creation | date:'dd/MM/yyyy HH:mm' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main: Línea de Tiempo de Acciones de Aprobación -->
+        <div class="timeline-main">
+          <div class="version-details-card" *ngIf="selectedVersion">
+            <h4>Detalles de la Versión</h4>
+            <div class="details-grid">
+              <div><strong>Nombre de Archivo:</strong> {{ selectedVersion.nombre }}</div>
+              <div><strong>Tamaño:</strong> {{ selectedVersion.size | number:'1.2-2' }} MB</div>
+              <div><strong>Extensión:</strong> {{ selectedVersion.extencion }}</div>
+              <div><strong>Descripción / Notas:</strong> {{ selectedVersion.comentario || 'Sin descripción' }}</div>
+            </div>
+            
+            <div class="details-download-action">
+              <button class="download-action-btn" (click)="descargarArchivo(selectedVersion)">
+                <mat-icon>download</mat-icon> Descargar esta versión
+              </button>
+            </div>
+          </div>
+
+          <div class="timeline-trail-section">
+            <h4>Trazabilidad de Acciones</h4>
+            
+            <div class="timeline-trail" *ngIf="historialAcciones.length > 0; else emptyTimeline">
+              <div class="timeline-item" *ngFor="let action of historialAcciones">
+                <div class="timeline-dot" [ngClass]="{
+                  'dot-pending': action.estado_nuevo === 'Pendiente',
+                  'dot-approved': action.estado_nuevo === 'Aprobado',
+                  'dot-rejected': action.estado_nuevo === 'Rechazado'
+                }"></div>
+                <div class="timeline-content-bubble">
+                  <div class="timeline-meta">
+                    <strong class="action-user">{{ action.usuario_nombre }}</strong>
+                    <span class="action-time">{{ action.fecha_accion | date:'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                  <div class="timeline-state-change">
+                    Estado: <span class="state-old">{{ action.estado_anterior || 'Inicio' }}</span> &rarr; 
+                    <span class="state-new" [ngClass]="{
+                      'txt-pending': action.estado_nuevo === 'Pendiente',
+                      'txt-approved': action.estado_nuevo === 'Aprobado',
+                      'txt-rejected': action.estado_nuevo === 'Rechazado'
+                    }">{{ action.estado_nuevo }}</span>
+                  </div>
+                  <p class="action-comment">Observations: {{ action.comentario || 'Sin observaciones ingresadas.' }}</p>
+                </div>
+              </div>
+            </div>
+
+            <ng-template #emptyTimeline>
+              <div class="empty-timeline-state">
+                <p>No se encontraron registros de aprobación históricos para esta versión. (No requiere aprobación previa o no se han realizado revisiones).</p>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE DECISIÓN (Panel de Aprobación/Rechazo de Documento) -->
+  <div class="premium-modal-overlay" *ngIf="showDecisionModal">
+    <div class="premium-modal-card decision-card">
+      <header class="modal-header">
+        <h2>Evaluar y Resolver Versión de Documento</h2>
+        <button class="close-modal-btn" (click)="cerrarModales()">&times;</button>
+      </header>
+
+      <div class="modal-body">
+        <div class="doc-preview-summary" *ngIf="selectedDoc">
+          <div class="preview-item"><strong>Documento:</strong> {{ selectedDoc.titulo }} ({{ selectedDoc.codigo }})</div>
+          <div class="preview-item"><strong>Versión a Evaluar:</strong> v{{ selectedVersion?.version }} - {{ selectedVersion?.nombre }}</div>
+          <div class="preview-item"><strong>Descripción Versión:</strong> {{ selectedVersion?.comentario || 'Sin descripción' }}</div>
+        </div>
+
+        <div class="decision-form-group">
+          <label for="reviewComments">Observaciones de la Evaluación</label>
+          <textarea id="reviewComments" [(ngModel)]="observacion" rows="5" placeholder="Escriba aquí los motivos de su aprobación, rechazo, o comentarios de revisión técnica..."></textarea>
+        </div>
+
+        <div class="decision-actions-row">
+          <button class="decision-btn reject-submit-btn" (click)="procesarDecision('Rechazado')">
+            <mat-icon>close</mat-icon> Rechazar Documento
+          </button>
+          
+          <button class="decision-btn approve-submit-btn" (click)="procesarDecision('Aprobado')">
+            <mat-icon>check</mat-icon> Aprobar Documento
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

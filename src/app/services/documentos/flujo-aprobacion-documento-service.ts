@@ -19,4 +19,15 @@ export class FlujoAprobacionDocumentoService {
     return this.http.get<any>(base_url + `/getflujobyuser/${id}`, { withCredentials: true });
   }
 
+  updateFlujoAprobacion(dto: any) {
+    return this.http.put(base_url + '/update', dto, { withCredentials: true });
+  }
+
+  getHistorial(flujoId: number) {
+    return this.http.get<any[]>(base_url + `/historial/${flujoId}`, { withCredentials: true });
+  }
+
+  getFlujoByVersionId(versionId: number) {
+    return this.http.get<any[]>(base_url + `/version/${versionId}`, { withCredentials: true });
+  }
 }

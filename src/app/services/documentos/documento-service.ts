@@ -39,5 +39,9 @@ export class DocumentoService {
     return this.http.get<Documento[]>(base_url + `/getdocbyversion/${idversion}`, { withCredentials: true });
   }
 
+  deleteDocumento(id: number, userId: number) {
+    return this.http.delete(base_url + `/delete/${id}/${userId}`, { withCredentials: true });
+  }
+
 
 }

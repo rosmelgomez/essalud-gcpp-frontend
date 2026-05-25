@@ -9,8 +9,9 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
-import { Documento, TipoDocumento, VersionDocumento } from '../../../model/documento';
+import { Documento, TipoDocumento, VersionDocumento, CategoriaDocumento } from '../../../model/documento';
 import { TipoDocumentoService } from '../../../services/documentos/tipo-documento-service';
+import { CategoriaDocumentoService } from '../../../services/documentos/categoria-documento-service';
 import { User } from '../../../model/user';
 import { DocumentoService } from '../../../services/documentos/documento-service';
 import { VersionDocumentoService } from '../../../services/documentos/version-documento-service';
@@ -52,10 +53,12 @@ export class CreacionDocumentos implements OnInit {
   public registerTipoDocumentoForm!: FormGroup;
   public registerDocumentoForm!: FormGroup;
   public registerVersionDocumentoForm!: FormGroup;
-  public activeMode: 'documento' | 'version' | 'tipo' = 'documento';
+  public registerCategoriaForm!: FormGroup;
+  public activeMode: 'documento' | 'version' | 'tipo' | 'categoria' = 'documento';
   public documentoRequiresApproval: boolean = false;
   public versionRequiresApproval: boolean = false;
   public extensionesChips: string[] = [];
+  public categorias: CategoriaDocumento[] = [];
 
   public get registerForm(): FormGroup {
     return this.registerDocumentoForm;
@@ -86,7 +89,8 @@ export class CreacionDocumentos implements OnInit {
     private userService: UsersService,
     private documentoService: DocumentoService,
     private versionDocumentoService: VersionDocumentoService,
-    private establecimientoService: EstablecimientoService
+    private establecimientoService: EstablecimientoService,
+    private categoriaService: CategoriaDocumentoService
   ) { }
 
   ngOnInit(): void {
@@ -131,6 +135,7 @@ export class CreacionDocumentos implements OnInit {
 
   getTiposDocumentos() {
     this.activeMode = 'documento';
+    this.loadCategorias();
     this.tipoDocumentoService.getTiposDocumentos().subscribe(
       (response) => {
         this.tipo_documento = response;
@@ -142,6 +147,44 @@ export class CreacionDocumentos implements OnInit {
       },
       (error) => {
         console.error('Error al obtener los tipos de documentos', error);
+      }
+    );
+  }
+
+  loadCategorias() {
+    this.categoriaService.getCategorias().subscribe(
+      (response) => {
+        this.categorias = response;
+      },
+      (error) => {
+        console.error('Error al obtener las categorías', error);
+      }
+    );
+  }
+
+  getCategoriasAndSwitchMode() {
+    this.activeMode = 'categoria';
+    this.loadCategorias();
+  }
+
+  registerCategoria() {
+    if (this.registerCategoriaForm.invalid) {
+      this.registerCategoriaForm.markAllAsTouched();
+      return;
+    }
+    const category: CategoriaDocumento = {
+      nombre: this.registerCategoriaForm.get('nombre')?.value ?? '',
+      descripcion: this.registerCategoriaForm.get('descripcion')?.value ?? '',
+      flag: true
+    };
+    this.categoriaService.saveCategoria(category).subscribe(
+      () => {
+        this.registerCategoriaForm.reset();
+        this.loadCategorias();
+        this.activeMode = 'documento'; // switch to document creation after creating category
+      },
+      (error) => {
+        console.error('Error al registrar la categoría', error);
       }
     );
   }
@@ -195,12 +238,17 @@ export class CreacionDocumentos implements OnInit {
       flag: [true, [Validators.required]],
     });
 
+    this.registerCategoriaForm = this.formBuilder.group({
+      nombre: ['', [Validators.required]],
+      descripcion: [''],
+    });
 
     this.registerDocumentoForm = this.formBuilder.group({
       codigo: ['', [Validators.required]],
       titulo: ['', [Validators.required]],
       descripcion: ['', [Validators.required]],
       id_tipo_documento: ['', [Validators.required]],
+      id_categoria: ['', [Validators.required]],
       id_user_aprobador: [{ value: null, disabled: true }],
       flag: [true, [Validators.required]],
     });
@@ -216,14 +264,14 @@ export class CreacionDocumentos implements OnInit {
 
   addExtension(extensionInput: HTMLInputElement): void {
     const extension = extensionInput.value.trim().toLowerCase();
-    
+
     if (!extension) {
       return;
     }
-    
+
     // Agregar punto si no lo tiene
     const extensionFormatted = extension.startsWith('.') ? extension : '.' + extension;
-    
+
     // Evitar duplicados
     if (!this.extensionesChips.includes(extensionFormatted)) {
       this.extensionesChips.push(extensionFormatted);
@@ -239,6 +287,49 @@ export class CreacionDocumentos implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
 
+    if (!file) {
+      this.registerVersionDocumentoForm.patchValue({ archivo: null });
+      this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
+      return;
+    }
+
+    const idDoc = this.registerVersionDocumentoForm.get('id_documento')?.value;
+    if (!idDoc) {
+      alert('Por favor, seleccione primero el Documento base para poder validar las restricciones del archivo.');
+      input.value = '';
+      this.registerVersionDocumentoForm.patchValue({ archivo: null });
+      this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
+      return;
+    }
+
+    const doc = this.documentosByUser.find(d => d.id === Number(idDoc));
+    if (doc) {
+      // Si tipo_documento no está cargado, cargar todos primero
+      const tipo = this.tipo_documento.find(t => t.id === Number(doc.id_tipo_documento));
+      if (tipo) {
+        // Validar tamaño máximo
+        const maxSize = (tipo.max_size_mb || 1) * 1024 * 1024;
+        if (file.size > maxSize) {
+          alert(`El archivo seleccionado excede el tamaño máximo permitido de ${tipo.max_size_mb} MB.`);
+          input.value = '';
+          this.registerVersionDocumentoForm.patchValue({ archivo: null });
+          this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
+          return;
+        }
+
+        // Validar extensión
+        const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+        const allowedExtensions = tipo.extensiones_permitidas.toLowerCase().split(',').map(e => e.trim());
+        if (!allowedExtensions.includes(ext)) {
+          alert(`El formato de archivo '${ext}' no está permitido. Formatos válidos: ${tipo.extensiones_permitidas}`);
+          input.value = '';
+          this.registerVersionDocumentoForm.patchValue({ archivo: null });
+          this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
+          return;
+        }
+      }
+    }
+
     this.registerVersionDocumentoForm.patchValue({ archivo: file });
     this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
   }
@@ -249,7 +340,7 @@ export class CreacionDocumentos implements OnInit {
       this.registerTipoDocumentoForm.markAllAsTouched();
       return;
     }
-    const tipoDocumento: TipoDocumento = {  
+    const tipoDocumento: TipoDocumento = {
       id: 0,
       nombre: this.registerTipoDocumentoForm.get('nombre')?.value ?? '',
       descripcion: this.registerTipoDocumentoForm.get('descripcion')?.value ?? '',
@@ -290,11 +381,13 @@ export class CreacionDocumentos implements OnInit {
       descripcion: this.registerDocumentoForm.get('descripcion')?.value ?? '',
       codcas: user?.codcas ?? '',
       codred: user?.codred ?? '',
+      publico: this.registerDocumentoForm.get('publico')?.value ?? false,
       date_creation: '',
       date_update: '',
       flag: this.registerDocumentoForm.get('flag')?.value ?? true,
       id_user_creation: user?.id ?? 0,
       id_tipo_documento: this.registerDocumentoForm.get('id_tipo_documento')?.value ?? 0,
+      id_categoria: this.registerDocumentoForm.get('id_categoria')?.value ?? 0,
     };
 
     // Si el tipo de documento requiere aprobación adjuntar id_user_aprobador

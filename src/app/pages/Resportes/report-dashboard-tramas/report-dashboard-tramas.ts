@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { TramasService } from '../../../services/tramas-service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,10 +19,22 @@ import { MatSortModule } from '@angular/material/sort';
 })
 export class ReportDashboardTramas implements OnInit {
 
-
   currentDate: string = '';
 
   centroAtencion: string = 'Red Asistencial Rebagliati';
+
+  // Datos para el dropdown de Centro Asistencial
+  dataCentro: any = [];
+  dataCentroCompleto: any[] = [];
+  filteredCentro: any = [];
+  searchCentro: string = '';
+  isDropdownOpen: boolean = false;
+  selectedCentroName: string = '';
+  activeCentroIndex: number = -1;
+  showSurveyReminder: boolean = false;
+  surveyReminderError: string = '';
+
+  @ViewChildren('centroOption') centroOptions!: QueryList<ElementRef<HTMLElement>>;
 
   /// data establecimiento
   centros: any[] = []
@@ -73,6 +85,126 @@ export class ReportDashboardTramas implements OnInit {
     });
   }
 
+  // Métodos para Centro Asistencial
+  filterCentro(event: any) {
+    const searchValue = event.target.value.toLowerCase();
+    this.searchCentro = searchValue;
+    this.isDropdownOpen = true;
+
+    if (searchValue.trim() === '') {
+      this.filteredCentro = this.dataCentro;
+    } else {
+      this.filteredCentro = this.dataCentro.filter((centro: any) =>
+        centro.cenasides.toLowerCase().includes(searchValue),
+      );
+    }
+    const centroOptions = this.getCentroOptions();
+    this.activeCentroIndex = centroOptions.length > 0 ? 0 : -1;
+    this.scrollActiveCentroIntoView();
+  }
+
+  openDropdown() {
+    this.isDropdownOpen = true;
+    this.filteredCentro = this.dataCentro;
+    this.activeCentroIndex = this.filteredCentro.length > 0 ? 0 : -1;
+    this.scrollActiveCentroIntoView();
+  }
+
+  closeDropdown() {
+    this.isDropdownOpen = false;
+    this.searchCentro = '';
+    this.activeCentroIndex = -1;
+  }
+
+  selectDropdownOption(centro: any) {
+    this.selectedCentroName = centro.cenasides;
+    //this.centroForm.patchValue({ centro: centro.cenasicod });
+    this.isDropdownOpen = false;
+    this.searchCentro = '';
+    this.activeCentroIndex = -1;
+  }
+
+  private restoreAllCentros() {
+    if (this.dataCentroCompleto.length > 0) {
+      this.dataCentro = this.dataCentroCompleto;
+      this.filteredCentro = this.dataCentroCompleto;
+    }
+  }
+
+  private getCentroOptions(): any[] {
+    return this.searchCentro ? this.filteredCentro : this.dataCentro;
+  }
+
+
+  handleCentroKeydown(event: KeyboardEvent) {
+    const key = event.key;
+
+    if (key === 'ArrowDown') {
+      event.preventDefault();
+      if (!this.isDropdownOpen) {
+        this.openDropdown();
+      }
+      const options = this.getCentroOptions();
+      if (options.length === 0) {
+        this.activeCentroIndex = -1;
+        return;
+      }
+      this.activeCentroIndex = Math.min(this.activeCentroIndex + 1, options.length - 1);
+      this.scrollActiveCentroIntoView();
+      return;
+    }
+
+    if (key === 'ArrowUp') {
+      event.preventDefault();
+      if (!this.isDropdownOpen) {
+        this.openDropdown();
+      }
+      const options = this.getCentroOptions();
+      if (options.length === 0) {
+        this.activeCentroIndex = -1;
+        return;
+      }
+      this.activeCentroIndex = Math.max(this.activeCentroIndex - 1, 0);
+      this.scrollActiveCentroIntoView();
+      return;
+    }
+
+    if (key === 'Enter') {
+      if (!this.isDropdownOpen) {
+        return;
+      }
+      event.preventDefault();
+      const options = this.getCentroOptions();
+      const index = this.activeCentroIndex >= 0 ? this.activeCentroIndex : 0;
+      if (options.length > 0 && options[index]) {
+        this.selectDropdownOption(options[index]);
+      }
+      return;
+    }
+
+    if (key === 'Escape') {
+      this.closeDropdown();
+    }
+  }
+
+
+  private scrollActiveCentroIntoView() {
+    if (!this.isDropdownOpen || this.activeCentroIndex < 0) {
+      return;
+    }
+    setTimeout(() => {
+      const items = this.centroOptions?.toArray();
+      const target = items?.[this.activeCentroIndex]?.nativeElement;
+      target?.scrollIntoView({ block: 'nearest' });
+    }, 0);
+  }
+
+
+
+
+
+
+
   formatDateToDDMMYYYY(dateStr: string): string {
     if (!dateStr) return '';
     const parts = dateStr.split('-');
@@ -120,8 +252,6 @@ export class ReportDashboardTramas implements OnInit {
       );
     }
   }
-
-
 
   loadQueryTablaB2(fechaInicioB2: string, fechaFinB2: string, codcasB2: string) {
 

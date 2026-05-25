@@ -55,7 +55,7 @@ export class HomePage implements OnInit {
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.reactiveForm();
@@ -461,8 +461,7 @@ export class HomePage implements OnInit {
     });
   }
 
-
-  saveModulo(modulo : string) {
+  saveModulo(modulo: string) {
     this.dataImport.saveDataModulo(modulo);
   }
 }

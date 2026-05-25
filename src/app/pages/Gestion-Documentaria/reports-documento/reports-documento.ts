@@ -1,66 +1,323 @@
-import { Component } from '@angular/core';
-import { Documento } from '../../../model/documento';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Documento, CategoriaDocumento, VersionDocumento } from '../../../model/documento';
 import { DocumentoService } from '../../../services/documentos/documento-service';
+import { CategoriaDocumentoService } from '../../../services/documentos/categoria-documento-service';
+import { VersionDocumentoService } from '../../../services/documentos/version-documento-service';
+import { FlujoAprobacionDocumentoService } from '../../../services/documentos/flujo-aprobacion-documento-service';
+import { TipoDocumentoService } from '../../../services/documentos/tipo-documento-service';
 import { LocalStorageService } from '../../../services/local-storage-service';
+import { User } from '../../../model/user';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-reports-documento',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule, FormsModule, MatIconModule, MatButtonModule],
   templateUrl: './reports-documento.html',
   styleUrl: './reports-documento.css',
 })
-export class ReportsDocumento {
-
+export class ReportsDocumento implements OnInit {
   documentos: Documento[] = [];
+  filteredDocumentos: Documento[] = [];
+  categorias: CategoriaDocumento[] = [];
+  tiposDocumento: any[] = [];
+  user: User | null = null;
+
+  // Filtros
+  filterSearch: string = '';
+  filterCategory: string = '';
+  filterStatus: string = '';
+
+  // Diccionarios para detalles de documentos
+  versionsMap: { [docId: number]: VersionDocumento[] } = {};
+  activeVersionMap: { [docId: number]: VersionDocumento | null } = {};
+  activeFlowMap: { [docId: number]: any | null } = {};
+
+  // Estado de los Modales
+  showTimelineModal: boolean = false;
+  showDecisionModal: boolean = false;
+  selectedDoc: Documento | null = null;
+  selectedVersion: VersionDocumento | null = null;
+  selectedFlow: any | null = null;
+  observacion: string = '';
+  historialAcciones: any[] = [];
 
   constructor(
     private lsService: LocalStorageService,
     private docService: DocumentoService,
+    private categoriaService: CategoriaDocumentoService,
+    private versionService: VersionDocumentoService,
+    private flujoService: FlujoAprobacionDocumentoService,
+    private tipoDocumentoService: TipoDocumentoService
   ) { }
 
+  ngOnInit(): void {
+    this.user = this.lsService.getUser();
+    this.loadCategorias();
+    this.loadTiposDocumentos();
+    this.getDocumentos();
+  }
+
+  loadCategorias() {
+    this.categoriaService.getCategorias().subscribe(
+      (data) => {
+        this.categorias = data;
+      },
+      (error) => {
+        console.error('Error al cargar categorías:', error);
+      }
+    );
+  }
+
+  loadTiposDocumentos() {
+    this.tipoDocumentoService.getTiposDocumentos().subscribe(
+      (data) => {
+        this.tiposDocumento = data;
+      },
+      (error) => {
+        console.error('Error al cargar tipos de documentos:', error);
+      }
+    );
+  }
+
   getDocumentos() {
-    this.docService.getDocumentos().subscribe(
-      (data) => {
-        this.documentos = data;
+    // Si el usuario es de red, cargar solo sus documentos correspondientes (si aplica en backend)
+    // De lo contrario, usar getDocumentos del servicio general
+    const codred = this.user?.codred;
+    const codcas = this.user?.codcas;
+    
+    if (this.user?.roles?.includes('ADMIN')) {
+      this.docService.getDocumentos().subscribe(
+        (data) => this.setDocumentos(data),
+        (error) => console.error('Error al obtener documentos:', error)
+      );
+    } else if (codred && this.user?.roles?.includes('ADMIN_RED')) {
+      this.docService.getDocumentosByCodred(codred).subscribe(
+        (data) => this.setDocumentos(data),
+        (error) => console.error('Error al obtener documentos por red:', error)
+      );
+    } else if (codcas) {
+      this.docService.getDocumentoByCodcas(codcas).subscribe(
+        (data) => this.setDocumentos(data),
+        (error) => console.error('Error al obtener documentos por cas:', error)
+      );
+    } else {
+      this.docService.getDocumentos().subscribe(
+        (data) => this.setDocumentos(data),
+        (error) => console.error('Error al obtener documentos:', error)
+      );
+    }
+  }
+
+  setDocumentos(data: Documento[]) {
+    this.documentos = data || [];
+    this.filteredDocumentos = [...this.documentos];
+    
+    // Cargar detalles para cada documento de manera asíncrona
+    this.documentos.forEach(doc => {
+      this.loadDocumentDetails(doc);
+    });
+  }
+
+  loadDocumentDetails(doc: Documento) {
+    this.versionService.getVersionDocumentoByIdDoc(doc.id).subscribe(
+      (versions) => {
+        if (versions && versions.length > 0) {
+          // Ordenar versiones por número descendente
+          versions.sort((a, b) => b.version - a.version);
+          this.versionsMap[doc.id] = versions;
+          const activeVer = versions[0];
+          this.activeVersionMap[doc.id] = activeVer;
+
+          this.flujoService.getFlujoByVersionId(activeVer.id).subscribe(
+            (flows: any[]) => {
+              this.activeFlowMap[doc.id] = flows && flows.length > 0 ? flows[0] : null;
+              this.applyFilters();
+            },
+            () => {
+              this.activeFlowMap[doc.id] = null;
+              this.applyFilters();
+            }
+          );
+        } else {
+          this.versionsMap[doc.id] = [];
+          this.activeVersionMap[doc.id] = null;
+          this.activeFlowMap[doc.id] = null;
+          this.applyFilters();
+        }
       },
       (error) => {
-        console.error('Error al obtener los documentos:', error);
+        console.error(`Error al cargar versiones del documento ${doc.id}:`, error);
       }
     );
   }
 
-  getDocumentosByCodred(codred: string) {
-    this.docService.getDocumentosByCodred(codred).subscribe(
-      (data) => {
-        this.documentos = data;
+  applyFilters() {
+    this.filteredDocumentos = this.documentos.filter(doc => {
+      // 1. Filtro de Texto (Código, Título, Descripción)
+      const query = this.filterSearch.toLowerCase().trim();
+      const matchSearch = !query || 
+        doc.titulo.toLowerCase().includes(query) ||
+        doc.codigo.toLowerCase().includes(query) ||
+        (doc.descripcion && doc.descripcion.toLowerCase().includes(query));
+      
+      // 2. Filtro de Categoría
+      const matchCategory = !this.filterCategory || doc.id_categoria === Number(this.filterCategory);
+      
+      // 3. Filtro de Estado
+      const flow = this.activeFlowMap[doc.id];
+      const status = flow ? flow.status : 'No Requiere Aprobación';
+      
+      let matchStatus = true;
+      if (this.filterStatus) {
+        if (this.filterStatus === 'SIN_APROBACION') {
+          matchStatus = status === 'No Requiere Aprobación';
+        } else {
+          matchStatus = status.toLowerCase() === this.filterStatus.toLowerCase();
+        }
+      }
+
+      return matchSearch && matchCategory && matchStatus;
+    });
+  }
+
+  getTipoNombre(idTipo: number): string {
+    const tipo = this.tiposDocumento.find(t => t.id === idTipo);
+    return tipo ? tipo.nombre : 'Desconocido';
+  }
+
+  getCategoriaNombre(idCat?: number): string {
+    if (!idCat) return 'Sin Categoría';
+    const cat = this.categorias.find(c => c.id === idCat);
+    return cat ? cat.nombre : 'Sin Categoría';
+  }
+
+  descargarArchivo(version: VersionDocumento) {
+    this.versionService.getArchivo(version.id).subscribe(
+      (response) => {
+        const blob = response.body;
+        if (blob) {
+          const contentType = response.headers.get('content-type') || 'application/octet-stream';
+          const fileBlob = new Blob([blob], { type: contentType });
+          const url = window.URL.createObjectURL(fileBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = version.nombre || 'archivo';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.createObjectURL(fileBlob);
+          a.remove();
+        }
       },
       (error) => {
-        console.error('Error al obtener los documentos por codred:', error);
+        console.error('Error al descargar archivo:', error);
+        alert('Acceso Denegado: La versión del documento no ha sido aprobada o no cuenta con los permisos necesarios para realizar la descarga.');
       }
     );
   }
 
-  getDocumentosByCodcas(codcas: string) {
-    this.docService.getDocumentoByCodcas(codcas).subscribe(
-      (data) => {
-        this.documentos = data;
-      },
-      (error) => {
-        console.error('Error al obtener los documentos por codcas:', error);
+  eliminarDocumento(doc: Documento) {
+    if (confirm(`¿Está seguro que desea eliminar permanentemente el documento "${doc.titulo}"? (Esta acción realiza un borrado lógico para auditorías)`)) {
+      this.docService.deleteDocumento(doc.id, this.user?.id || 0).subscribe(
+        () => {
+          alert('Documento eliminado con éxito.');
+          this.getDocumentos();
+        },
+        (error) => {
+          console.error('Error al eliminar documento:', error);
+          alert('Ocurrió un error al eliminar el documento.');
+        }
+      );
+    }
+  }
+
+  // Modales y Timeline Lógica
+  abrirHistorial(doc: Documento) {
+    this.selectedDoc = doc;
+    const versions = this.versionsMap[doc.id] || [];
+    this.selectedVersion = this.activeVersionMap[doc.id];
+    this.showTimelineModal = true;
+    this.historialAcciones = [];
+    if (this.selectedVersion) {
+      this.cargarHistorialDeVersion(this.selectedVersion);
+    }
+  }
+
+  onTimelineVersionChange(version: VersionDocumento) {
+    this.selectedVersion = version;
+    this.cargarHistorialDeVersion(version);
+  }
+
+  cargarHistorialDeVersion(version: VersionDocumento) {
+    this.historialAcciones = [];
+    this.flujoService.getFlujoByVersionId(version.id).subscribe(
+      (flows: any[]) => {
+        const flow = flows && flows.length > 0 ? flows[0] : null;
+        if (flow) {
+          this.flujoService.getHistorial(flow.id).subscribe(
+            (hist) => {
+              this.historialAcciones = hist || [];
+            },
+            (err) => {
+              console.error('Error al cargar historial:', err);
+            }
+          );
+        }
       }
     );
   }
 
-  getDocumentosByUser(iduser: number) {
+  abrirAprobacion(doc: Documento) {
+    this.selectedDoc = doc;
+    this.selectedVersion = this.activeVersionMap[doc.id];
+    this.selectedFlow = this.activeFlowMap[doc.id];
+    this.observacion = '';
+    this.showDecisionModal = true;
+  }
 
-    this.docService.getDocumentoByUser(iduser).subscribe(
-      (data) => {
-        this.documentos = data;
+  procesarDecision(nuevoEstado: 'Aprobado' | 'Rechazado') {
+    if (!this.selectedFlow || !this.selectedVersion || !this.selectedDoc) return;
+    
+    const dto = {
+      id: this.selectedFlow.id,
+      comentario: this.observacion || `Revisión: Documento ${nuevoEstado.toLowerCase()}`,
+      status: nuevoEstado,
+      id_version_documento: this.selectedVersion.id,
+      id_user_aprobador: this.user?.id
+    };
+
+    this.flujoService.updateFlujoAprobacion(dto).subscribe(
+      () => {
+        alert(`Estado actualizado a: ${nuevoEstado}`);
+        this.showDecisionModal = false;
+        if (this.selectedDoc) {
+          this.loadDocumentDetails(this.selectedDoc);
+        }
       },
       (error) => {
-        console.error('Error al obtener los documentos por usuario:', error);
+        console.error('Error al actualizar flujo de aprobación:', error);
+        alert('Ocurrió un error al guardar la decisión de aprobación.');
       }
     );
   }
 
+  puedeAprobar(doc: Documento): boolean {
+    const flow = this.activeFlowMap[doc.id];
+    if (!flow || flow.status !== 'Pendiente') return false;
+    // Si es admin o si su id_user_aprobador coincide con el usuario logueado
+    return this.user?.roles?.includes('ADMIN') || flow.id_user_aprobador === this.user?.id;
+  }
+
+  cerrarModales() {
+    this.showTimelineModal = false;
+    this.showDecisionModal = false;
+    this.selectedDoc = null;
+    this.selectedVersion = null;
+    this.selectedFlow = null;
+    this.observacion = '';
+    this.historialAcciones = [];
+  }
 }
