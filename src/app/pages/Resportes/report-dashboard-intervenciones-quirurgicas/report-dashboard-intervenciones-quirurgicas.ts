@@ -78,7 +78,7 @@ export class ReportDashboardIntervencionesQuirurgicas implements OnInit {
     return `${day}/${month}/${year}`;
   }
 
-    downloadFichaTecnica(): void {
+  downloadFichaTecnica(): void {
     this.fileService.getFile('f_centro_quirurgico_comp.pdf').subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);

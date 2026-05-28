@@ -2,12 +2,12 @@ import { Injectable } from '@angular/core';
 import { Backend } from '../../model/api';
 import { HttpClient } from '@angular/common/http';
 
-const base_url = Backend.api + '/eme';
+const base_url = Backend.api + '/emergencia';
 @Injectable({
   providedIn: 'root',
 })
 export class ReportDashboardEmergenciasService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
   ///Dashboard Emergencias
   /* Prioridad */
   getQueryDEP(anio: string, periodo: string, codcas: string, codasegu: string, prioridad: number) {
