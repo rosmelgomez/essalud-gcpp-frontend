@@ -8,7 +8,7 @@ import { AtenTopicos1 } from "./aten-topicos-1/aten-topicos-1";
 
 export const emergenciaRoutes: Routes = [
 
-    // Ruta padre /indicador/dashboard-emergencia/..
+    // Ruta padre /indicador/emergencia/..
     { path: 'ate-prioridad1', component: AtenTopicos1 },
     { path: 'ate-prioridad2', component: AtenTopicos2 },
     { path: 'ate-prioridad3', component: AtenTopicos3 },

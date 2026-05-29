@@ -9,8 +9,8 @@ const base_url = Backend.api + '/procedimiento';
 export class ProcedimientosService {
   constructor(private http: HttpClient) { }
 
-  getqueryDP(anio: string, periodo: string, codcas: string, codasegu: string, codes: string) {
-    return this.http.get<any[]>(base_url + `/queryDP/${anio}/${periodo}/${codcas}/${codasegu}/${codes}`);
+  getqueryDP(anio: string, periodo: string, codcas: string, codasegu: string, codes: number) {
+    return this.http.get<any[]>(base_url + `/queryDP/${anio}/${periodo}/${codcas}/${codasegu}/${codes}`, { withCredentials: true });
   }
 
 }

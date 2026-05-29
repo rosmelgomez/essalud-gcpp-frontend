@@ -1,0 +1,112 @@
+<div class="main">
+
+    <!-- Header con logo y título -->
+    <div class="header">
+        <div class="header-content">
+            <h2 class="title">Consulta externa - Médicas</h2>
+            <p class="subtitle">
+                Información actualizada al {{ currentDate }} | centro de atención: {{ centroAtencion }}
+            </p>
+        </div>
+
+        <div class="header-content header-content-actions">
+            <button class="btn-download btn-ficha-tecnica">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Ficha Técnica
+            </button>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-button" [class.active]="activeTab === 'Egresos Hospitalarios'"
+            (click)="setActiveTab('Egresos Hospitalarios')">
+            Egresos Hospitalarios
+        </button>
+    </div>
+
+    <!-- CONTENIDO TABS -->
+    <!-- Tab Atenciones Medicas -->
+    <div *ngIf="activeTab === 'Egresos Hospitalarios'" class="tab-content">
+
+        <div class="header">
+            <div class="header-actions">
+                <div class="buscar-group">
+                    <select [(ngModel)]="anioE" class="anio-select">
+                        <option value="">Seleccione un Año</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                    <select [(ngModel)]="periodoE" class="periodo-select">
+                        <option value="">Seleccione un periodo</option>
+                        <option value="01">Enero</option>
+                        <option value="02">Febrero</option>
+                        <option value="03">Marzo</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Mayo</option>
+                        <option value="06">Junio</option>
+                        <option value="07">Julio</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                    <select [(ngModel)]="tipo_aseguradoE" class="tipo-asegurado-select">
+                        <option value="">Seleccione tipo de asegurado</option>
+                        <option value="1">Asegurado</option>
+                        <option value="2">No Asegurado</option>
+                        <option value="3">Todos</option>
+                    </select>
+                    <!-- Botón búsqueda -->
+                    <button (click)="loadDataEgresos()" class="btn-search">Buscar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado Loading-->
+        <div *ngIf="loadingE" class="loading">
+            <p>Cargando datos...</p>
+        </div>
+
+        <!-- Selecciona Periodo -->
+        <div *ngIf="selectPeriodoE && !loadingE" class="select-periodo">
+            <p>Por favor, seleccione un período para ver la información egresos hospitalarios</p>
+        </div>
+
+        <!-- Estado de Error -->
+        <div *ngIf="errorE" class="alert alert-danger">
+            {{ errorE }}
+        </div>
+
+        <!-- Contenido de Atenciones Medicas -->
+        <div *ngIf="!loadingE && !errorE && !selectPeriodoE" class="dashboard-content">
+            <!-- Fila 1: -->
+            <div class="cards-row">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="contend_left">
+                            <a class="card-link">
+                                <h5 class="card-title">Total de egresos hospitalarios</h5>
+                            </a>
+                            <h2 class="card-value">{{ formatNumber(totalEgresos) }}</h2>
+                            <p class="card-subtitle">Periodo {{ anioE }}-{{ periodoE }} | {{ centroAtencion }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="contend_left">
+                            <a class="card-link">
+                                <h5 class="card-title">Total de días estancia hospitalaria</h5>
+                            </a>
+                            <h2 class="card-value">{{ formatNumber(totalDiasEstancia) }}</h2>
+                            <p class="card-subtitle">Periodo {{ anioE }}-{{ periodoE }} | {{ centroAtencion }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>

@@ -1,1 +1,108 @@
-<p>dashboard-procedimientos works!</p>
+<div class="main">
+    <!-- Header con logo y título -->
+    <div class="header">
+        <div class="header-content">
+            <h2 class="title">Total Procedimientos Realizados</h2>
+            <p class="subtitle">
+                Información actualizada al {{ currentDate }} | centro de atención: {{ centroAtencion }}
+            </p>
+        </div>
+
+        <div class="header-content header-content-actions">
+            <button class="btn-download btn-ficha-tecnica">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Ficha Técnica
+            </button>
+        </div>
+    </div>
+    <!-- TABS -->
+    <div class="tabs" style="display: none;">
+        <button class="tab-button" [class.active]="activeTab === 'Total Procedimientos Realizados'"
+            (click)="setActiveTab('Total Procedimientos Realizados')">
+            Total Procedimientos Realizados
+        </button>
+    </div>
+
+    <!-- CONTENIDO TABS -->
+    <!-- Tab Total Procedimientos Realizados -->
+    <div *ngIf="activeTab === 'Total Procedimientos Realizados'" class="tab-content">
+        <div class="header">
+            <div class="header-actions">
+                <div class="buscar-group">
+                    <select [(ngModel)]="anioP" class="anio-select">
+                        <option value="">Seleccione un Año</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                    <select [(ngModel)]="periodoP" class="periodo-select">
+                        <option value="">Seleccione un periodo</option>
+                        <option value="01">Enero</option>
+                        <option value="02">Febrero</option>
+                        <option value="03">Marzo</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Mayo</option>
+                        <option value="06">Junio</option>
+                        <option value="07">Julio</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                    <select [(ngModel)]="tipo_aseguradoP" class="tipo-asegurado-select">
+                        <option value="">Seleccione tipo de asegurado</option>
+                        <option value="1">Asegurado</option>
+                        <option value="2">No Asegurado</option>
+                        <option value="3">Todos</option>
+                    </select>
+                    <!-- Botón búsqueda -->
+                    <button (click)="loadDashboardProcedimientos()" class="btn-search">Buscar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado Loading-->
+        <div *ngIf="loadingP" class="loading">
+            <p>Cargando datos...</p>
+        </div>
+
+        <!-- Selecciona Periodo -->
+        <div *ngIf="selectPeriodoP && !loadingP" class="select-periodo">
+            <p>Por favor, seleccione un período para ver la información de procedimientos realizados</p>
+        </div>
+
+        <!-- Estado de Error -->
+        <div *ngIf="errorP" class="alert alert-danger">
+            {{ errorP }}
+        </div>
+
+        <!-- Contenido de Procedimientos -->
+        <div *ngIf="!loadingP && !errorP && !selectPeriodoP" class="dashboard-content">
+            <!-- Grid de Tarjetas de Procedimientos -->
+            <div class="cards-row">
+                <div *ngFor="let item of informacion" class="card">
+                    <div class="card-body">
+                        <!-- Izquierda: Nombre de Procedimiento e Indicador General -->
+                        <div class="contend_left">
+                            <h5 class="card-title">{{ item.nombre }}</h5>
+                            <h2 class="card-value">{{ formatNumber(item.total) }}</h2>
+                            <p class="card-subtitle">Periodo {{ anioP }}-{{ periodoP }} | {{ centroAtencion }}</p>
+                        </div>
+                        <!-- Derecha: Muestra el desglose por servicio de los primeros registros -->
+                        <div class="contend_right" style="max-height: 150px; overflow-y: auto; padding-right: 4px;">
+                            <div *ngFor="let row of item.data | slice:0:4" class="item-data"
+                                style="margin-bottom: 6px;">
+                                <span>{{ row.servicio || 'Sin Servicio' }}</span>
+                                <span>{{ formatNumber(row.total || 1) }}</span>
+                            </div>
+                            <div *ngIf="item.data.length === 0"
+                                style="color: #999; font-size: 13px; text-align: center; margin-top: 30px; font-weight: 500;">
+                                <i class="bi bi-info-circle" style="margin-right: 4px;"></i> Sin registros
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

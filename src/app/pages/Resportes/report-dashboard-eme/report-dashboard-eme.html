@@ -41,11 +41,7 @@
           <button (click)="getTotalPrioridad()" class="btn-search">Buscar</button>
         </div>
         <!-- Botón descargar CSV -->
-        <button
-          *ngIf="!loading && !error && !selectPeriodo"
-          (click)="downloadCSV()"
-          class="btn-download"
-        >
+        <button *ngIf="!loading && !error && !selectPeriodo" (click)="downloadCSV()" class="btn-download">
           <i class="bi bi-download"></i> Descargar CSV
         </button>
       </div>
@@ -73,7 +69,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link"  [href]="'/indicador/dashboard-emergencia/ate-prioridad1'">
+              <a class="card-link" [href]="'/indicador/emergencia/ate-prioridad1'">
                 <h5 class="card-title">Total de Atenciones Prioridad I</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(numberPrioridad1) }}</h2>
@@ -90,7 +86,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link"  [href]="'/indicador/dashboard-emergencia/ate-prioridad2'">
+              <a class="card-link" [href]="'/indicador/emergencia/ate-prioridad2'">
                 <h5 class="card-title">Total de Atenciones Prioridad II</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(numberPrioridad2) }}</h2>
@@ -112,7 +108,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link"  [href]="'/indicador/dashboard-emergencia/ate-prioridad3'">
+              <a class="card-link" [href]="'/indicador/emergencia/ate-prioridad3'">
                 <h5 class="card-title">Total de Atenciones Prioridad III</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(numberPrioridad3) }}</h2>
@@ -129,7 +125,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link"  [href]="'/indicador/dashboard-emergencia/ate-prioridad4'">
+              <a class="card-link" [href]="'/indicador/emergencia/ate-prioridad4'">
                 <h5 class="card-title">Total de Atenciones Prioridad IV</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(numberPrioridad4) }}</h2>
@@ -150,7 +146,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link"  [href]="'/indicador/dashboard-emergencia/ate-prioridad5'">
+              <a class="card-link" [href]="'/indicador/emergencia/ate-prioridad5'">
                 <h5 class="card-title">Total de Atenciones Prioridad V</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(numberPrioridad5) }}</h2>

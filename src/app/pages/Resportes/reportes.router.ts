@@ -7,6 +7,8 @@ import { ReportDashboardIntervencionesQuirurgicas } from './report-dashboard-int
 import { ReportDashboardTransplante } from './report-dashboard-transplante/report-dashboard-transplante';
 import { authenticateGuard } from '../../guards/authenticate-guard';
 import { ReportDashboardTramas } from './report-dashboard-tramas/report-dashboard-tramas';
+import { DashboardProcedimientos } from './dashboard-procedimientos/dashboard-procedimientos';
+import { DashboardHospitalizacion } from './dashboard-hospitalizacion/dashboard-hospitalizacion';
 
 export const reportesRoutes: Routes = [
 
@@ -29,5 +31,11 @@ export const reportesRoutes: Routes = [
 
     ///dashboard-tramas
     { path: 'dashboard-tramas', component: ReportDashboardTramas, canActivate: [authenticateGuard] },
+
+    //Hospitalizacion
+    { path: 'dashboard-hospitalizacion', component: DashboardHospitalizacion, canActivate: [authenticateGuard] },
+
+    ///dashboard-procedimientos
+    { path: 'dashboard-procedimientos', component: DashboardProcedimientos, canActivate: [authenticateGuard] },
 
 ];
