@@ -27,6 +27,6 @@ export class EstablecimientoService {
   }
 
   getCentroWithRedByCodcas(codcas: string) {
-    return this.http.get<any>(base_url + `/getredeswithcentrosbycodcas/${codcas}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/getredwithcentrosbycodcas/${codcas}`, { withCredentials: true });
   }
 }

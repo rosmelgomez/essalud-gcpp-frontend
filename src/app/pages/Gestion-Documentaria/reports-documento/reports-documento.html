@@ -1,5 +1,4 @@
 <div class="dashboard-wrapper">
-  <!-- Cabecera Premium -->
   <header class="dashboard-header">
     <div class="header-content">
       <span class="eyebrow">MÓDULO DE GESTIÓN DOCUMENTAL</span>
@@ -8,7 +7,7 @@
     </div>
   </header>
 
-  <!-- Tarjetas de Métricas Premium -->
+  <!-- Tarjetas de Métricas-->
   <section class="metrics-grid">
     <div class="metric-card glass-card">
       <div class="metric-header">
@@ -18,7 +17,7 @@
       <div class="metric-value">{{ totalCount }}</div>
       <div class="metric-footer">Registrados en el repositorio</div>
     </div>
-    
+
     <div class="metric-card glass-card approved-card">
       <div class="metric-header">
         <span class="metric-title">Aprobados</span>
@@ -27,7 +26,7 @@
       <div class="metric-value">{{ approvedCount }}</div>
       <div class="metric-footer">Listos para descarga pública</div>
     </div>
-    
+
     <div class="metric-card glass-card pending-card">
       <div class="metric-header">
         <span class="metric-title">Pendientes / En revisión</span>
@@ -36,7 +35,7 @@
       <div class="metric-value">{{ pendingCount }}</div>
       <div class="metric-footer">Requieren atención de aprobador</div>
     </div>
-    
+
     <div class="metric-card glass-card no-approval-card">
       <div class="metric-header">
         <span class="metric-title">Sin Aprobación</span>
@@ -51,7 +50,8 @@
   <section class="control-panel">
     <div class="search-box">
       <mat-icon class="search-icon">search</mat-icon>
-      <input type="text" [(ngModel)]="filterSearch" (ngModelChange)="applyFilters()" placeholder="Buscar por código, título o descripción..." />
+      <input type="text" [(ngModel)]="filterSearch" (ngModelChange)="applyFilters()"
+        placeholder="Buscar por código, título o descripción..." />
     </div>
 
     <div class="filters-group">
@@ -123,27 +123,34 @@
           </td>
           <td class="col-actions">
             <!-- Descargar Archivo -->
-            <button class="action-btn download-btn" *ngIf="activeVersionMap[doc.id]" (click)="descargarArchivo(activeVersionMap[doc.id]!)" title="Descargar versión activa">
+            <button class="action-btn download-btn" *ngIf="activeVersionMap[doc.id]"
+              (click)="descargarArchivo(activeVersionMap[doc.id]!)" title="Descargar versión activa">
               <mat-icon>download</mat-icon>
             </button>
-            
+
             <!-- Historial e Hilos de Cambios -->
-            <button class="action-btn history-btn" (click)="abrirHistorial(doc)" title="Ver historial de cambios y versiones">
+            <button class="action-btn history-btn" (click)="abrirHistorial(doc)"
+              title="Ver historial de cambios y versiones">
               <mat-icon>history</mat-icon>
             </button>
 
             <!-- Editar Documento -->
-            <button class="action-btn download-btn" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('ADMIN_RED') || user?.id === doc.id_user_creation" (click)="editarDocumento(doc)" title="Editar documento">
+            <button class="action-btn download-btn"
+              *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('ADMIN_RED') || user?.id === doc.id_user_creation"
+              (click)="editarDocumento(doc)" title="Editar documento">
               <mat-icon>edit</mat-icon>
             </button>
 
             <!-- Decisión de Aprobador -->
-            <button class="action-btn approve-btn" *ngIf="puedeAprobar(doc)" (click)="abrirAprobacion(doc)" title="Evaluar y aprobar documento">
+            <button class="action-btn approve-btn" *ngIf="puedeAprobar(doc)" (click)="abrirAprobacion(doc)"
+              title="Evaluar y aprobar documento">
               <mat-icon>gavel</mat-icon>
             </button>
 
             <!-- Soft Delete para Administradores -->
-            <button class="action-btn delete-btn" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('ADMIN_RED')" (click)="eliminarDocumento(doc)" title="Eliminar documento (Soft-delete)">
+            <button class="action-btn delete-btn"
+              *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('ADMIN_RED')"
+              (click)="eliminarDocumento(doc)" title="Eliminar documento (Soft-delete)">
               <mat-icon>delete_sweep</mat-icon>
             </button>
           </td>
@@ -170,16 +177,14 @@
         <h2>Historial y Línea de Tiempo de Revisiones</h2>
         <button class="close-modal-btn" (click)="cerrarModales()">&times;</button>
       </header>
-      
+
       <div class="modal-body-split">
         <!-- Sidebar: Lista de Versiones -->
         <div class="versions-sidebar">
           <h3>Versiones Disponibles</h3>
           <div class="versions-list">
-            <button *ngFor="let ver of versionsMap[selectedDoc?.id ?? 0]" 
-              class="version-item-btn" 
-              [class.is-active]="selectedVersion?.id === ver.id"
-              (click)="onTimelineVersionChange(ver)">
+            <button *ngFor="let ver of versionsMap[selectedDoc?.id ?? 0]" class="version-item-btn"
+              [class.is-active]="selectedVersion?.id === ver.id" (click)="onTimelineVersionChange(ver)">
               <span class="ver-label">Versión {{ ver.version }}</span>
               <span class="ver-date">{{ ver.date_creation | date:'dd/MM/yyyy HH:mm' }}</span>
             </button>
@@ -197,25 +202,29 @@
                 <div><strong>Extensión:</strong> {{ selectedVersion.extencion }}</div>
                 <div><strong>Descripción / Notas:</strong> {{ selectedVersion.comentario || 'Sin descripción' }}</div>
               </div>
-              
+
               <div class="details-download-action">
                 <!-- Previsualizar -->
-                <button class="download-action-btn view-action-btn" (click)="visualizarArchivo(selectedVersion)" title="Ver en el navegador">
+                <button class="download-action-btn view-action-btn" (click)="visualizarArchivo(selectedVersion)"
+                  title="Ver en el navegador">
                   <mat-icon>visibility</mat-icon> Previsualizar
                 </button>
-                
+
                 <!-- Descargar (Solo autorizados) -->
-                <button class="download-action-btn" *ngIf="puedeDescargarFisico(selectedVersion)" (click)="descargarArchivoFisico(selectedVersion)" title="Descargar archivo en disco">
+                <button class="download-action-btn" *ngIf="puedeDescargarFisico(selectedVersion)"
+                  (click)="descargarArchivoFisico(selectedVersion)" title="Descargar archivo en disco">
                   <mat-icon>download</mat-icon> Descargar
                 </button>
 
                 <!-- Editar Notas (Dueño o Admin) -->
-                <button class="download-action-btn edit-action-btn" *ngIf="puedeEditarVersion(selectedVersion)" (click)="abrirEditarVersion(selectedVersion)" title="Editar notas de la versión">
+                <button class="download-action-btn edit-action-btn" *ngIf="puedeEditarVersion(selectedVersion)"
+                  (click)="abrirEditarVersion(selectedVersion)" title="Editar notas de la versión">
                   <mat-icon>edit</mat-icon> Editar
                 </button>
 
                 <!-- Eliminar (Admin/Admin_red) -->
-                <button class="download-action-btn delete-action-btn" *ngIf="puedeEliminarVersion(selectedVersion)" (click)="eliminarVersion(selectedVersion)" title="Eliminar lógicamente esta versión">
+                <button class="download-action-btn delete-action-btn" *ngIf="puedeEliminarVersion(selectedVersion)"
+                  (click)="eliminarVersion(selectedVersion)" title="Eliminar lógicamente esta versión">
                   <mat-icon>delete</mat-icon> Eliminar
                 </button>
               </div>
@@ -231,10 +240,11 @@
                 </div>
                 <div class="edit-form-group">
                   <label for="edit_ver_comentario">Descripción / Notas</label>
-                  <textarea id="edit_ver_comentario" [(ngModel)]="editVersionComentario" class="edit-ver-textarea" rows="3"></textarea>
+                  <textarea id="edit_ver_comentario" [(ngModel)]="editVersionComentario" class="edit-ver-textarea"
+                    rows="3"></textarea>
                 </div>
               </div>
-              
+
               <div class="details-download-action">
                 <button class="download-action-btn cancel-action-btn" (click)="showEditVersionForm = false">
                   Cancelar
@@ -248,7 +258,7 @@
 
           <div class="timeline-trail-section">
             <h4>Trazabilidad de Acciones</h4>
-            
+
             <div class="timeline-trail" *ngIf="historialAcciones.length > 0; else emptyTimeline">
               <div class="timeline-item" *ngFor="let action of historialAcciones">
                 <div class="timeline-dot" [ngClass]="{
@@ -262,21 +272,23 @@
                     <span class="action-time">{{ action.fecha_accion | date:'dd/MM/yyyy HH:mm' }}</span>
                   </div>
                   <div class="timeline-state-change">
-                    Estado: <span class="state-old">{{ action.estado_anterior || 'Inicio' }}</span> &rarr; 
+                    Estado: <span class="state-old">{{ action.estado_anterior || 'Inicio' }}</span> &rarr;
                     <span class="state-new" [ngClass]="{
                       'txt-pending': action.estado_nuevo === 'Pendiente',
                       'txt-approved': action.estado_nuevo === 'Aprobado',
                       'txt-rejected': action.estado_nuevo === 'Rechazado'
                     }">{{ action.estado_nuevo }}</span>
                   </div>
-                  <p class="action-comment">Observations: {{ action.comentario || 'Sin observaciones ingresadas.' }}</p>
+                  <p class="action-comment">Observaciones: {{ action.comentario || 'Sin observaciones ingresadas.' }}
+                  </p>
                 </div>
               </div>
             </div>
 
             <ng-template #emptyTimeline>
               <div class="empty-timeline-state">
-                <p>No se encontraron registros de aprobación históricos para esta versión. (No requiere aprobación previa o no se han realizado revisiones).</p>
+                <p>No se encontraron registros de aprobación históricos para esta versión. (No requiere aprobación
+                  previa o no se han realizado revisiones).</p>
               </div>
             </ng-template>
           </div>
@@ -295,21 +307,25 @@
 
       <div class="modal-body">
         <div class="doc-preview-summary" *ngIf="selectedDoc">
-          <div class="preview-item"><strong>Documento:</strong> {{ selectedDoc.titulo }} ({{ selectedDoc.codigo }})</div>
-          <div class="preview-item"><strong>Versión a Evaluar:</strong> v{{ selectedVersion?.version }} - {{ selectedVersion?.nombre }}</div>
-          <div class="preview-item"><strong>Descripción Versión:</strong> {{ selectedVersion?.comentario || 'Sin descripción' }}</div>
+          <div class="preview-item"><strong>Documento:</strong> {{ selectedDoc.titulo }} ({{ selectedDoc.codigo }})
+          </div>
+          <div class="preview-item"><strong>Versión a Evaluar:</strong> v{{ selectedVersion?.version }} - {{
+            selectedVersion?.nombre }}</div>
+          <div class="preview-item"><strong>Descripción Versión:</strong> {{ selectedVersion?.descripcion || 'Sin
+            descripción' }}</div>
         </div>
 
         <div class="decision-form-group">
           <label for="reviewComments">Observaciones de la Evaluación</label>
-          <textarea id="reviewComments" [(ngModel)]="observacion" rows="5" placeholder="Escriba aquí los motivos de su aprobación, rechazo, o comentarios de revisión técnica..."></textarea>
+          <textarea id="reviewComments" [(ngModel)]="observacion" rows="5"
+            placeholder="Escriba aquí los motivos de su aprobación, rechazo, o comentarios de revisión técnica..."></textarea>
         </div>
 
         <div class="decision-actions-row">
           <button class="decision-btn reject-submit-btn" (click)="procesarDecision('Rechazado')">
             <mat-icon>close</mat-icon> Rechazar Documento
           </button>
-          
+
           <button class="decision-btn approve-submit-btn" (click)="procesarDecision('Aprobado')">
             <mat-icon>check</mat-icon> Aprobar Documento
           </button>

@@ -947,3 +947,52 @@
   font-weight: 700;
   font-size: 0.85rem;
 }
+
+/* Selector de Secciones (Públicos / Privados) */
+.sections-tab-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.4);
+  padding: 0.5rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+  width: fit-content;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-light);
+  background: transparent;
+  border: none;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.tab-btn .tab-icon {
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-btn:hover {
+  color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.tab-btn.is-active {
+  color: white;
+  background: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(26, 84, 144, 0.25);
+}

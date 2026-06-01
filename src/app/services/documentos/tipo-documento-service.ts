@@ -9,7 +9,7 @@ const base_url = Backend.api + '/tipo-documento';
   providedIn: 'root',
 })
 export class TipoDocumentoService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   saveTipoDocumento(tipoDocumento: TipoDocumento) {
     return this.http.post(base_url + '/save', tipoDocumento, { withCredentials: true });
@@ -23,9 +23,5 @@ export class TipoDocumentoService {
   updateTipoDocumento(tipoDocumento: TipoDocumento) {
     return this.http.put(base_url + '/update', tipoDocumento, { withCredentials: true });
   }
-  
 
-
-
-  
 }

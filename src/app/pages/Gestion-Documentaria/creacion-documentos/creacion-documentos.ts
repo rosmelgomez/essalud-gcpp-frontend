@@ -17,30 +17,6 @@ import { VersionDocumentoService } from '../../../services/documentos/version-do
 import { EstablecimientoService } from '../../../services/establecimiento-service';
 import { UsersService } from '../../../services/usuario/users-service';
 
-// Mapeo de extensiones a MIME types para archivos que podrían no detectarse correctamente
-const MIME_TYPES_MAP: { [key: string]: string } = {
-  'doc': 'application/msword',
-  'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'xls': 'application/vnd.ms-excel',
-  'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'ppt': 'application/vnd.ms-powerpoint',
-  'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'pdf': 'application/pdf',
-  'txt': 'text/plain',
-  'csv': 'text/csv',
-  'jpg': 'image/jpeg',
-  'jpeg': 'image/jpeg',
-  'png': 'image/png',
-  'gif': 'image/gif',
-  'webp': 'image/webp',
-  'mp4': 'video/mp4',
-  'avi': 'video/x-msvideo',
-  'mov': 'video/quicktime',
-  'zip': 'application/zip',
-  'rar': 'application/x-rar-compressed',
-  '7z': 'application/x-7z-compressed',
-};
-
 @Component({
   selector: 'app-creacion-documentos',
   standalone: true,
@@ -59,6 +35,7 @@ export class CreacionDocumentos implements OnInit {
   public get registerForm(): FormGroup {
     return this.registerDocumentoForm;
   }
+
   public isEditing = false;
   public creadorLabel = 'Usuario no identificado';
   public fechaOperacionLabel = '';
@@ -87,14 +64,15 @@ export class CreacionDocumentos implements OnInit {
     private versionDocumentoService: VersionDocumentoService,
     private establecimientoService: EstablecimientoService,
     private cdr: ChangeDetectorRef
-  ) { }
+  ) {
+    this.user = this.localStorage.getUser();
+    this.getRedCentro();
+  }
 
   ngOnInit(): void {
     this.reactiveForm();
     this.loadDocumentoFromNavigation();
     this.loadFormContextInfo();
-    this.getRedCentro();
-    this.user = this.localStorage.getUser();
     this.bindFormListeners();
   }
 
@@ -114,7 +92,9 @@ export class CreacionDocumentos implements OnInit {
     }
     this.establecimientoService.getCentroWithRedByCodcas(codcas).subscribe(
       (response) => {
+        console.log(response);
         this.codred = response?.redasiscod ?? '';
+        console.log(this.codred);
         this.getTiposDocumentos();
         this.getUsersAprobadores();
         this.getDocumentosByUser();
@@ -122,7 +102,6 @@ export class CreacionDocumentos implements OnInit {
       }
     );
   }
-
 
   getTiposDocumentos() {
     this.activeMode = 'documento';
@@ -137,8 +116,6 @@ export class CreacionDocumentos implements OnInit {
     );
   }
 
-
-
   getUsersAprobadores() {
     const codcas = this.localStorage.getUser()?.codcas;
 
@@ -147,20 +124,11 @@ export class CreacionDocumentos implements OnInit {
       return;
     }
 
-    this.establecimientoService.getCentroWithRedByCodcas(codcas).subscribe(
-      (response) => {
-        this.codred = response?.redasiscod ?? '';
-        if (!this.codred) {
-          console.error('No se encontró el codred del usuario en el almacenamiento local');
-          return;
-        }
-        this.cdr.detectChanges();
-      }
-    );
 
-    this.userService.getAllUsersByCodred(this.codred).subscribe(
+    this.userService.getUsersByCodred(this.codred).subscribe(
       (response) => {
         this.users_aprobadores = response;
+        console.log("users-aprobadores " + this.users_aprobadores[0].id);
         this.cdr.detectChanges();
       },
       (error) => {
@@ -192,7 +160,6 @@ export class CreacionDocumentos implements OnInit {
       }
     );
   }
-
 
   reactiveForm() {
     this.registerTipoDocumentoForm = this.formBuilder.group({
@@ -331,7 +298,6 @@ export class CreacionDocumentos implements OnInit {
     );
   }
 
-
   registerDocumento() {
     if (this.registerDocumentoForm.invalid) {
       this.registerDocumentoForm.markAllAsTouched();
@@ -346,7 +312,7 @@ export class CreacionDocumentos implements OnInit {
       titulo: this.registerDocumentoForm.get('titulo')?.value ?? '',
       descripcion: this.registerDocumentoForm.get('descripcion')?.value ?? '',
       codcas: user?.codcas ?? '',
-      codred: user?.codred ?? '',
+      codred: this.codred ?? '',
       publico: this.registerDocumentoForm.get('publico')?.value ?? false,
       date_creation: '',
       date_update: '',

@@ -11,6 +11,7 @@ import { LocalStorageService } from '../../../services/local-storage-service';
 import { User } from '../../../model/user';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { EstablecimientoService } from '../../../services/establecimiento-service';
 
 @Component({
   selector: 'app-reports-documento',
@@ -32,10 +33,15 @@ export class ReportsDocumento implements OnInit {
   pendingCount: number = 0;
   noApprovalCount: number = 0;
 
+  // Secciones / Tabs
+  activeTab: 'publicos' | 'privados' | 'por_aprobar' = 'publicos';
+  redes: any[] = [];
+
   // Filtros
   filterSearch: string = '';
   filterTipo: string = '';
   filterStatus: string = '';
+  filterCodred: string = '';
 
   // Diccionarios para detalles de documentos
   versionsMap: { [docId: number]: VersionDocumento[] } = {};
@@ -62,6 +68,7 @@ export class ReportsDocumento implements OnInit {
     private versionService: VersionDocumentoService,
     private flujoService: FlujoAprobacionDocumentoService,
     private tipoDocumentoService: TipoDocumentoService,
+    private establecimientoService: EstablecimientoService,
     private cdr: ChangeDetectorRef,
     private router: Router
   ) { }
@@ -69,6 +76,26 @@ export class ReportsDocumento implements OnInit {
   ngOnInit(): void {
     this.user = this.lsService.getUser();
     this.loadTiposDocumentos();
+    this.loadRedes();
+  }
+
+  loadRedes() {
+    this.establecimientoService.getRed().subscribe(
+      (data) => {
+        this.redes = data || [];
+        this.cdr.detectChanges();
+      },
+      (error) => {
+        console.error('Error al cargar redes:', error);
+      }
+    );
+  }
+
+  setActiveTab(tab: 'publicos' | 'privados' | 'por_aprobar') {
+    this.activeTab = tab;
+    this.filterCodred = ''; // Resetear filtro de red al cambiar de sección
+    this.applyFilters();
+    this.updateCounters();
   }
 
   loadTiposDocumentos() {
@@ -177,6 +204,22 @@ export class ReportsDocumento implements OnInit {
 
   applyFilters() {
     this.filteredDocumentos = this.documentos.filter(doc => {
+      // Filtro de sección (Públicos / Privados / Por Aprobar)
+      let matchPublico = false;
+      if (this.activeTab === 'publicos') {
+        matchPublico = doc.publico === true;
+      } else if (this.activeTab === 'privados') {
+        matchPublico = (doc.publico !== true) && (this.user ? doc.id_user_creation === this.user.id : false);
+      } else if (this.activeTab === 'por_aprobar') {
+        matchPublico = this.puedeAprobar(doc);
+      }
+
+      // Filtro por Red Asistencial (solo para públicos si se selecciona)
+      let matchCodred = true;
+      if (this.activeTab === 'publicos' && this.filterCodred) {
+        matchCodred = doc.codred === this.filterCodred;
+      }
+
       // 1. Filtro de Texto (Código, Título, Descripción)
       const query = this.filterSearch.toLowerCase().trim();
       const matchSearch = !query ||
@@ -200,18 +243,31 @@ export class ReportsDocumento implements OnInit {
         }
       }
 
-      return matchSearch && matchTipo && matchStatus;
+      return matchPublico && matchCodred && matchSearch && matchTipo && matchStatus;
     });
     this.cdr.detectChanges();
   }
 
   updateCounters() {
-    this.totalCount = this.documentos.length;
+    this.totalCount = 0;
     this.approvedCount = 0;
     this.pendingCount = 0;
     this.noApprovalCount = 0;
 
-    this.documentos.forEach(doc => {
+    const filteredByTab = this.documentos.filter(doc => {
+      if (this.activeTab === 'publicos') {
+        return doc.publico === true;
+      } else if (this.activeTab === 'privados') {
+        return (doc.publico !== true) && (this.user ? doc.id_user_creation === this.user.id : false);
+      } else if (this.activeTab === 'por_aprobar') {
+        return this.puedeAprobar(doc);
+      }
+      return false;
+    });
+
+    this.totalCount = filteredByTab.length;
+
+    filteredByTab.forEach(doc => {
       const flow = this.activeFlowMap[doc.id];
       const status = flow ? flow.status : 'No Requiere Aprobación';
       if (status === 'Aprobado') {
@@ -396,9 +452,9 @@ export class ReportsDocumento implements OnInit {
   }
 
   puedeEditarVersion(version: VersionDocumento): boolean {
-    return !!(this.user?.roles?.includes('ADMIN') || 
-           this.user?.roles?.includes('ADMIN_RED') || 
-           version.id_user_creation === this.user?.id);
+    return !!(this.user?.roles?.includes('ADMIN') ||
+      this.user?.roles?.includes('ADMIN_RED') ||
+      version.id_user_creation === this.user?.id);
   }
 
   puedeEliminarVersion(version: VersionDocumento): boolean {
@@ -450,7 +506,7 @@ export class ReportsDocumento implements OnInit {
   abrirEditarVersion(version: VersionDocumento) {
     this.selectedVersion = version;
     this.editVersionNombre = version.nombre;
-    this.editVersionComentario = version.comentario || '';
+    this.editVersionComentario = version.descripcion || '';
     this.showEditVersionForm = true;
     this.cdr.detectChanges();
   }
@@ -472,7 +528,7 @@ export class ReportsDocumento implements OnInit {
         if (this.selectedDoc) {
           this.loadDocumentDetails(this.selectedDoc);
           this.selectedVersion!.nombre = this.editVersionNombre;
-          this.selectedVersion!.comentario = this.editVersionComentario;
+          this.selectedVersion!.descripcion = this.editVersionComentario;
         }
         this.cdr.detectChanges();
       },

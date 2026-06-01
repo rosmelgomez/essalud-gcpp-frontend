@@ -28,7 +28,7 @@ export interface Documento {
 export interface VersionDocumento {
   id: number;
   nombre: string;
-  comentario: string;
+  descripcion: string;
   extencion: string;
   version: number;
   size: number;

@@ -46,8 +46,8 @@ export class UsersService {
     return this.http.get<User[]>(base_url + `/getUsers`, { withCredentials: true });
   }
 
-  getAllUsersByCodred(codred: string) {
-    return this.http.get<User[]>(base_url + `/getUserByCodred/${codred}`, { withCredentials: true });
+  getUsersByCodred(codred: string) {
+    return this.http.get<User[]>(base_url + `/getUsersByCodred/${codred}`, { withCredentials: true });
   }
 
   getRoles() {
