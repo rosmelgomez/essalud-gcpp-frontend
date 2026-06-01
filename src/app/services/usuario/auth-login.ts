@@ -33,15 +33,6 @@ export class AuthLogin {
       );
   }
 
-  refreshToken() {
-    return this.http.post(base_url + `/refresh-token`, {}, { withCredentials: true, responseType: 'text' })
-      .pipe(
-        catchError((err) => {
-          return throwError(() => err);
-        }),
-      );
-  }
-
   logout() {
     return this.http.post(base_url + `/logout-user`, {}, { withCredentials: true, responseType: 'text' });
   }

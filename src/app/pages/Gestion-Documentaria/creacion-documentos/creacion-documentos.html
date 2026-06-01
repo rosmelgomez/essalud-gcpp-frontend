@@ -12,12 +12,7 @@
         <span class="option-icon">📄</span>
         <span class="option-label">Crear Tipo de Documento</span>
       </button>
-      <button type="button" class="option-button"
-        *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('ADMIN_RED')"
-        (click)="getCategoriasAndSwitchMode()" [class.is-active]="activeMode === 'categoria'">
-        <span class="option-icon">📁</span>
-        <span class="option-label">Crear Categoría</span>
-      </button>
+
       <button type="button" class="option-button" (click)="getTiposDocumentos()"
         [class.is-active]="activeMode === 'documento'">
         <span class="option-icon">📄</span>
@@ -134,35 +129,6 @@
       </form>
     </div>
 
-    <!-- FORMULARIO DE CATEGORIA -->
-    <div class="created-categoria"
-      *ngIf="activeMode === 'categoria' && (user?.roles?.includes('ADMIN') || user?.roles?.includes('ADMIN_RED'))">
-      <form [formGroup]="registerCategoriaForm" autocomplete="off" class="register-form"
-        (ngSubmit)="registerCategoria()">
-        <div class="form-grid">
-          <div class="register-form-group">
-            <label for="nombre_categoria">Nombre de la categoría</label>
-            <input id="nombre_categoria" type="text" formControlName="nombre" placeholder="Ej: Estadísticas Mensuales"
-              [class.invalid]="registerCategoriaForm.get('nombre')?.touched && registerCategoriaForm.get('nombre')?.invalid"
-              required />
-            <small class="field-error"
-              *ngIf="registerCategoriaForm.get('nombre')?.touched && registerCategoriaForm.get('nombre')?.hasError('required')">
-              Ingresa el nombre de la categoría.
-            </small>
-          </div>
-
-          <div class="register-form-group">
-            <label for="descripcion_categoria">Descripción</label>
-            <input id="descripcion_categoria" type="text" formControlName="descripcion"
-              placeholder="Ej: Categoría para informes de tramas estadísticas" />
-          </div>
-        </div>
-
-        <div class="register-submit">
-          <button type="submit">Guardar categoría</button>
-        </div>
-      </form>
-    </div>
 
     <!-- FORMULARIO DE DOCUMENTO -->
     <div class="created-documento" *ngIf="activeMode === 'documento'">
@@ -219,19 +185,6 @@
             </small>
           </div>
 
-          <div class="register-form-group">
-            <label for="id_categoria">Categoría Temática</label>
-            <select id="id_categoria" formControlName="id_categoria"
-              [class.invalid]="registerDocumentoForm.get('id_categoria')?.touched && registerDocumentoForm.get('id_categoria')?.invalid"
-              required>
-              <option [ngValue]="''" disabled>Selecciona una categoría</option>
-              <option *ngFor="let cat of categorias" [ngValue]="cat.id">{{ cat.nombre }}</option>
-            </select>
-            <small class="field-error"
-              *ngIf="registerDocumentoForm.get('id_categoria')?.touched && registerDocumentoForm.get('id_categoria')?.hasError('required')">
-              Selecciona la categoría temática.
-            </small>
-          </div>
 
           <div class="register-form-group">
             <label for="flag">Estado</label>
@@ -249,13 +202,7 @@
             </select>
           </div>
 
-          <div *ngIf="documentoRequiresApproval" class="register-form-group">
-            <label for="id_user_aprobador_doc">Usuario aprobador</label>
-            <select id="id_user_aprobador_doc" formControlName="id_user_aprobador">
-              <option [ngValue]="null" disabled>Selecciona un aprobador</option>
-              <option *ngFor="let u of users_aprobadores" [ngValue]="u.id">{{ u.name }} {{ u.lastname }}</option>
-            </select>
-          </div>
+
         </div>
 
         <div class="register-submit">

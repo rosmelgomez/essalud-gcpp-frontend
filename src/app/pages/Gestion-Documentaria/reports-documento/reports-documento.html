@@ -4,9 +4,48 @@
     <div class="header-content">
       <span class="eyebrow">MÓDULO DE GESTIÓN DOCUMENTAL</span>
       <h1>Repositorio Documental Estadístico</h1>
-      <p>Búsqueda, organización por categorías, control de versiones e historial inmutable de aprobaciones.</p>
+      <p>Búsqueda, control de versiones y flujo de aprobación seguro para documentos estadísticos.</p>
     </div>
   </header>
+
+  <!-- Tarjetas de Métricas Premium -->
+  <section class="metrics-grid">
+    <div class="metric-card glass-card">
+      <div class="metric-header">
+        <span class="metric-title">Total Documentos</span>
+        <mat-icon class="metric-icon-mat">folder</mat-icon>
+      </div>
+      <div class="metric-value">{{ totalCount }}</div>
+      <div class="metric-footer">Registrados en el repositorio</div>
+    </div>
+    
+    <div class="metric-card glass-card approved-card">
+      <div class="metric-header">
+        <span class="metric-title">Aprobados</span>
+        <mat-icon class="metric-icon-mat">check_circle</mat-icon>
+      </div>
+      <div class="metric-value">{{ approvedCount }}</div>
+      <div class="metric-footer">Listos para descarga pública</div>
+    </div>
+    
+    <div class="metric-card glass-card pending-card">
+      <div class="metric-header">
+        <span class="metric-title">Pendientes / En revisión</span>
+        <mat-icon class="metric-icon-mat">hourglass_empty</mat-icon>
+      </div>
+      <div class="metric-value">{{ pendingCount }}</div>
+      <div class="metric-footer">Requieren atención de aprobador</div>
+    </div>
+    
+    <div class="metric-card glass-card no-approval-card">
+      <div class="metric-header">
+        <span class="metric-title">Sin Aprobación</span>
+        <mat-icon class="metric-icon-mat">assignment</mat-icon>
+      </div>
+      <div class="metric-value">{{ noApprovalCount }}</div>
+      <div class="metric-footer">Acceso directo sin flujos</div>
+    </div>
+  </section>
 
   <!-- Panel de Control y Filtros -->
   <section class="control-panel">
@@ -17,10 +56,10 @@
 
     <div class="filters-group">
       <div class="filter-select-wrapper">
-        <label for="categoryFilter">Categoría Temática</label>
-        <select id="categoryFilter" [(ngModel)]="filterCategory" (change)="applyFilters()">
-          <option value="">Todas las categorías</option>
-          <option *ngFor="let cat of categorias" [value]="cat.id">{{ cat.nombre }}</option>
+        <label for="tipoFilter">Tipo de Documento</label>
+        <select id="tipoFilter" [(ngModel)]="filterTipo" (change)="applyFilters()">
+          <option value="">Todos los tipos</option>
+          <option *ngFor="let t of tiposDocumento" [value]="t.id">{{ t.nombre }}</option>
         </select>
       </div>
 
@@ -45,7 +84,7 @@
           <th>Código</th>
           <th>Título / Descripción</th>
           <th>Tipo</th>
-          <th>Categoría</th>
+
           <th>Última Versión</th>
           <th>Estado</th>
           <th>Acciones</th>
@@ -63,9 +102,7 @@
           <td>
             <span class="type-badge">{{ getTipoNombre(doc.id_tipo_documento) }}</span>
           </td>
-          <td>
-            <span class="cat-badge">{{ getCategoriaNombre(doc.id_categoria) }}</span>
-          </td>
+
           <td>
             <span class="version-badge" *ngIf="activeVersionMap[doc.id]">v{{ activeVersionMap[doc.id]?.version }}</span>
             <span class="no-version" *ngIf="!activeVersionMap[doc.id]">Sin archivos</span>
@@ -93,6 +130,11 @@
             <!-- Historial e Hilos de Cambios -->
             <button class="action-btn history-btn" (click)="abrirHistorial(doc)" title="Ver historial de cambios y versiones">
               <mat-icon>history</mat-icon>
+            </button>
+
+            <!-- Editar Documento -->
+            <button class="action-btn download-btn" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('ADMIN_RED') || user?.id === doc.id_user_creation" (click)="editarDocumento(doc)" title="Editar documento">
+              <mat-icon>edit</mat-icon>
             </button>
 
             <!-- Decisión de Aprobador -->
@@ -147,19 +189,61 @@
         <!-- Main: Línea de Tiempo de Acciones de Aprobación -->
         <div class="timeline-main">
           <div class="version-details-card" *ngIf="selectedVersion">
-            <h4>Detalles de la Versión</h4>
-            <div class="details-grid">
-              <div><strong>Nombre de Archivo:</strong> {{ selectedVersion.nombre }}</div>
-              <div><strong>Tamaño:</strong> {{ selectedVersion.size | number:'1.2-2' }} MB</div>
-              <div><strong>Extensión:</strong> {{ selectedVersion.extencion }}</div>
-              <div><strong>Descripción / Notas:</strong> {{ selectedVersion.comentario || 'Sin descripción' }}</div>
-            </div>
-            
-            <div class="details-download-action">
-              <button class="download-action-btn" (click)="descargarArchivo(selectedVersion)">
-                <mat-icon>download</mat-icon> Descargar esta versión
-              </button>
-            </div>
+            <ng-container *ngIf="!showEditVersionForm; else editVersionForm">
+              <h4>Detalles de la Versión</h4>
+              <div class="details-grid">
+                <div><strong>Nombre de Archivo:</strong> {{ selectedVersion.nombre }}</div>
+                <div><strong>Tamaño:</strong> {{ selectedVersion.size | number:'1.2-2' }} MB</div>
+                <div><strong>Extensión:</strong> {{ selectedVersion.extencion }}</div>
+                <div><strong>Descripción / Notas:</strong> {{ selectedVersion.comentario || 'Sin descripción' }}</div>
+              </div>
+              
+              <div class="details-download-action">
+                <!-- Previsualizar -->
+                <button class="download-action-btn view-action-btn" (click)="visualizarArchivo(selectedVersion)" title="Ver en el navegador">
+                  <mat-icon>visibility</mat-icon> Previsualizar
+                </button>
+                
+                <!-- Descargar (Solo autorizados) -->
+                <button class="download-action-btn" *ngIf="puedeDescargarFisico(selectedVersion)" (click)="descargarArchivoFisico(selectedVersion)" title="Descargar archivo en disco">
+                  <mat-icon>download</mat-icon> Descargar
+                </button>
+
+                <!-- Editar Notas (Dueño o Admin) -->
+                <button class="download-action-btn edit-action-btn" *ngIf="puedeEditarVersion(selectedVersion)" (click)="abrirEditarVersion(selectedVersion)" title="Editar notas de la versión">
+                  <mat-icon>edit</mat-icon> Editar
+                </button>
+
+                <!-- Eliminar (Admin/Admin_red) -->
+                <button class="download-action-btn delete-action-btn" *ngIf="puedeEliminarVersion(selectedVersion)" (click)="eliminarVersion(selectedVersion)" title="Eliminar lógicamente esta versión">
+                  <mat-icon>delete</mat-icon> Eliminar
+                </button>
+              </div>
+            </ng-container>
+
+            <!-- Formulario de Edición de Versión -->
+            <ng-template #editVersionForm>
+              <h4>Editar Notas de la Versión</h4>
+              <div class="edit-version-grid">
+                <div class="edit-form-group">
+                  <label for="edit_ver_nombre">Nombre del archivo</label>
+                  <input id="edit_ver_nombre" type="text" [(ngModel)]="editVersionNombre" class="edit-ver-input" />
+                </div>
+                <div class="edit-form-group">
+                  <label for="edit_ver_comentario">Descripción / Notas</label>
+                  <textarea id="edit_ver_comentario" [(ngModel)]="editVersionComentario" class="edit-ver-textarea" rows="3"></textarea>
+                </div>
+              </div>
+              
+              <div class="details-download-action">
+                <button class="download-action-btn cancel-action-btn" (click)="showEditVersionForm = false">
+                  Cancelar
+                </button>
+                <button class="download-action-btn save-action-btn" (click)="actualizarVersion()">
+                  Guardar Cambios
+                </button>
+              </div>
+            </ng-template>
           </div>
 
           <div class="timeline-trail-section">

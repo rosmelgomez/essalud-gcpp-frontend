@@ -10,13 +10,6 @@ export interface TipoDocumento {
   date_update: Date;
 }
 
-export interface CategoriaDocumento {
-  id?: number;
-  nombre: string;
-  descripcion: string;
-  flag: boolean;
-}
-
 export interface Documento {
   id: number;
   codigo: string;
@@ -30,7 +23,6 @@ export interface Documento {
   flag: boolean;
   id_user_creation: number;
   id_tipo_documento: number;
-  id_categoria: number;
 }
 
 export interface VersionDocumento {

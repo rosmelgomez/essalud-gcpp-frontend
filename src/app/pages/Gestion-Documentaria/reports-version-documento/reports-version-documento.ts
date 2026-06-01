@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { VersionDocumento } from '../../../model/documento';
 import { LocalStorageService } from '../../../services/local-storage-service';
 import { VersionDocumentoService } from '../../../services/documentos/version-documento-service';
@@ -17,6 +17,7 @@ export class ReportsVersionDocumento {
   constructor(
     private lsService: LocalStorageService,
     private docService: DocumentoService,
-    private vsService: VersionDocumentoService
+    private vsService: VersionDocumentoService,
+    private cdr: ChangeDetectorRef
   ) { }
 }

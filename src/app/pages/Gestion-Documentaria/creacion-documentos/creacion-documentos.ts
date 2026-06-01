@@ -1,5 +1,5 @@
 import { LocalStorageService } from './../../../services/local-storage-service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FormBuilder, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -9,9 +9,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
-import { Documento, TipoDocumento, VersionDocumento, CategoriaDocumento } from '../../../model/documento';
+import { Documento, TipoDocumento, VersionDocumento } from '../../../model/documento';
 import { TipoDocumentoService } from '../../../services/documentos/tipo-documento-service';
-import { CategoriaDocumentoService } from '../../../services/documentos/categoria-documento-service';
 import { User } from '../../../model/user';
 import { DocumentoService } from '../../../services/documentos/documento-service';
 import { VersionDocumentoService } from '../../../services/documentos/version-documento-service';
@@ -53,12 +52,9 @@ export class CreacionDocumentos implements OnInit {
   public registerTipoDocumentoForm!: FormGroup;
   public registerDocumentoForm!: FormGroup;
   public registerVersionDocumentoForm!: FormGroup;
-  public registerCategoriaForm!: FormGroup;
-  public activeMode: 'documento' | 'version' | 'tipo' | 'categoria' = 'documento';
-  public documentoRequiresApproval: boolean = false;
+  public activeMode: 'documento' | 'version' | 'tipo' = 'documento';
   public versionRequiresApproval: boolean = false;
   public extensionesChips: string[] = [];
-  public categorias: CategoriaDocumento[] = [];
 
   public get registerForm(): FormGroup {
     return this.registerDocumentoForm;
@@ -90,7 +86,7 @@ export class CreacionDocumentos implements OnInit {
     private documentoService: DocumentoService,
     private versionDocumentoService: VersionDocumentoService,
     private establecimientoService: EstablecimientoService,
-    private categoriaService: CategoriaDocumentoService
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -103,12 +99,6 @@ export class CreacionDocumentos implements OnInit {
   }
 
   private bindFormListeners(): void {
-
-    // Cuando cambia el tipo de documento en el formulario de documento
-    this.registerDocumentoForm.get('id_tipo_documento')?.valueChanges.subscribe((idTipo: number) => {
-      this.updateDocumentoApprovalState(idTipo);
-    });
-
     // Cuando cambia el documento seleccionado en la versión
     this.registerVersionDocumentoForm.get('id_documento')?.valueChanges.subscribe((idDocumento: number) => {
       this.updateVersionApprovalState(idDocumento);
@@ -128,6 +118,7 @@ export class CreacionDocumentos implements OnInit {
         this.getTiposDocumentos();
         this.getUsersAprobadores();
         this.getDocumentosByUser();
+        this.cdr.detectChanges();
       }
     );
   }
@@ -135,15 +126,10 @@ export class CreacionDocumentos implements OnInit {
 
   getTiposDocumentos() {
     this.activeMode = 'documento';
-    this.loadCategorias();
     this.tipoDocumentoService.getTiposDocumentos().subscribe(
       (response) => {
         this.tipo_documento = response;
-        // Actualizar estado de aprobación si ya hay un valor seleccionado
-        const idTipo = this.registerDocumentoForm.get('id_tipo_documento')?.value;
-        if (idTipo) {
-          this.updateDocumentoApprovalState(idTipo);
-        }
+        this.cdr.detectChanges();
       },
       (error) => {
         console.error('Error al obtener los tipos de documentos', error);
@@ -151,53 +137,31 @@ export class CreacionDocumentos implements OnInit {
     );
   }
 
-  loadCategorias() {
-    this.categoriaService.getCategorias().subscribe(
-      (response) => {
-        this.categorias = response;
-      },
-      (error) => {
-        console.error('Error al obtener las categorías', error);
-      }
-    );
-  }
 
-  getCategoriasAndSwitchMode() {
-    this.activeMode = 'categoria';
-    this.loadCategorias();
-  }
-
-  registerCategoria() {
-    if (this.registerCategoriaForm.invalid) {
-      this.registerCategoriaForm.markAllAsTouched();
-      return;
-    }
-    const category: CategoriaDocumento = {
-      nombre: this.registerCategoriaForm.get('nombre')?.value ?? '',
-      descripcion: this.registerCategoriaForm.get('descripcion')?.value ?? '',
-      flag: true
-    };
-    this.categoriaService.saveCategoria(category).subscribe(
-      () => {
-        this.registerCategoriaForm.reset();
-        this.loadCategorias();
-        this.activeMode = 'documento'; // switch to document creation after creating category
-      },
-      (error) => {
-        console.error('Error al registrar la categoría', error);
-      }
-    );
-  }
 
   getUsersAprobadores() {
+    const codcas = this.localStorage.getUser()?.codcas;
 
-    if (!this.codred) {
-      console.error('No se encontró el codred del usuario en el almacenamiento local');
+    if (!codcas) {
+      console.error('No se encontró el codcas del usuario en el almacenamiento local');
       return;
     }
+
+    this.establecimientoService.getCentroWithRedByCodcas(codcas).subscribe(
+      (response) => {
+        this.codred = response?.redasiscod ?? '';
+        if (!this.codred) {
+          console.error('No se encontró el codred del usuario en el almacenamiento local');
+          return;
+        }
+        this.cdr.detectChanges();
+      }
+    );
+
     this.userService.getAllUsersByCodred(this.codred).subscribe(
       (response) => {
         this.users_aprobadores = response;
+        this.cdr.detectChanges();
       },
       (error) => {
         console.error('Error al obtener los usuarios aprobadores', error);
@@ -221,6 +185,7 @@ export class CreacionDocumentos implements OnInit {
         if (idDoc) {
           this.updateVersionApprovalState(idDoc);
         }
+        this.cdr.detectChanges();
       },
       (error) => {
         console.error('Error al obtener los documentos del usuario', error);
@@ -238,18 +203,11 @@ export class CreacionDocumentos implements OnInit {
       flag: [true, [Validators.required]],
     });
 
-    this.registerCategoriaForm = this.formBuilder.group({
-      nombre: ['', [Validators.required]],
-      descripcion: [''],
-    });
-
     this.registerDocumentoForm = this.formBuilder.group({
       codigo: ['', [Validators.required]],
       titulo: ['', [Validators.required]],
       descripcion: ['', [Validators.required]],
       id_tipo_documento: ['', [Validators.required]],
-      id_categoria: ['', [Validators.required]],
-      id_user_aprobador: [{ value: null, disabled: true }],
       flag: [true, [Validators.required]],
     });
     this.registerVersionDocumentoForm = this.formBuilder.group({
@@ -276,11 +234,13 @@ export class CreacionDocumentos implements OnInit {
     if (!this.extensionesChips.includes(extensionFormatted)) {
       this.extensionesChips.push(extensionFormatted);
       extensionInput.value = '';
+      this.cdr.detectChanges();
     }
   }
 
   removeExtension(extension: string): void {
     this.extensionesChips = this.extensionesChips.filter(ext => ext !== extension);
+    this.cdr.detectChanges();
   }
 
   onFileSelected(event: Event): void {
@@ -290,6 +250,7 @@ export class CreacionDocumentos implements OnInit {
     if (!file) {
       this.registerVersionDocumentoForm.patchValue({ archivo: null });
       this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
+      this.cdr.detectChanges();
       return;
     }
 
@@ -299,6 +260,7 @@ export class CreacionDocumentos implements OnInit {
       input.value = '';
       this.registerVersionDocumentoForm.patchValue({ archivo: null });
       this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
+      this.cdr.detectChanges();
       return;
     }
 
@@ -314,6 +276,7 @@ export class CreacionDocumentos implements OnInit {
           input.value = '';
           this.registerVersionDocumentoForm.patchValue({ archivo: null });
           this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
+          this.cdr.detectChanges();
           return;
         }
 
@@ -325,6 +288,7 @@ export class CreacionDocumentos implements OnInit {
           input.value = '';
           this.registerVersionDocumentoForm.patchValue({ archivo: null });
           this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
+          this.cdr.detectChanges();
           return;
         }
       }
@@ -332,6 +296,7 @@ export class CreacionDocumentos implements OnInit {
 
     this.registerVersionDocumentoForm.patchValue({ archivo: file });
     this.registerVersionDocumentoForm.get('archivo')?.updateValueAndValidity();
+    this.cdr.detectChanges();
   }
 
 
@@ -358,6 +323,7 @@ export class CreacionDocumentos implements OnInit {
         this.registerTipoDocumentoForm.reset({ requiere_aprobacion: false, flag: true, max_size_mb: 1 });
         this.extensionesChips = [];
         this.getTiposDocumentos();
+        this.cdr.detectChanges();
       },
       (error) => {
         console.error('Error al guardar el tipo de documento', error);
@@ -387,7 +353,6 @@ export class CreacionDocumentos implements OnInit {
       flag: this.registerDocumentoForm.get('flag')?.value ?? true,
       id_user_creation: user?.id ?? 0,
       id_tipo_documento: this.registerDocumentoForm.get('id_tipo_documento')?.value ?? 0,
-      id_categoria: this.registerDocumentoForm.get('id_categoria')?.value ?? 0,
     };
 
     // Si el tipo de documento requiere aprobación adjuntar id_user_aprobador
@@ -400,6 +365,7 @@ export class CreacionDocumentos implements OnInit {
       (response) => {
         console.log('Documento guardado exitosamente', response);
         this.registerDocumentoForm.reset({ flag: true });
+        this.cdr.detectChanges();
         void this.router.navigate(['/report-documentos']);
       },
       (error) => {
@@ -445,6 +411,7 @@ export class CreacionDocumentos implements OnInit {
       (response) => {
         console.log('Versión de documento guardada exitosamente', response);
         this.registerVersionDocumentoForm.reset({ version: 1 });
+        this.cdr.detectChanges();
         void this.router.navigate(['/report-documentos']);
       },
       (error) => {
@@ -467,6 +434,7 @@ export class CreacionDocumentos implements OnInit {
       nombre: documento.nombre ?? documento.name ?? documento.titulo ?? documento.fileName ?? '',
       descripcion: documento.descripcion ?? documento.description ?? '',
     });
+    this.cdr.detectChanges();
   }
 
   private loadFormContextInfo(): void {
@@ -474,6 +442,7 @@ export class CreacionDocumentos implements OnInit {
 
     this.creadorLabel = this.buildUserDisplayName(user) || 'Usuario no identificado';
     this.fechaOperacionLabel = this.formatNow();
+    this.cdr.detectChanges();
   }
 
   private buildUserDisplayName(user: any): string {
@@ -483,20 +452,6 @@ export class CreacionDocumentos implements OnInit {
 
     const fullName = `${user?.name ?? ''} ${user?.lastname ?? ''}`.trim();
     return fullName || String(user?.username ?? '').trim();
-  }
-
-  private updateDocumentoApprovalState(idTipo: number | null | undefined): void {
-    const tipo = this.tipo_documento.find(t => t.id === Number(idTipo));
-    const requires = !!tipo && tipo.requiere_aprobacion === true;
-    this.documentoRequiresApproval = requires;
-
-    const control = this.registerDocumentoForm.get('id_user_aprobador');
-    if (requires) {
-      control?.enable?.();
-    } else {
-      control?.setValue(null);
-      control?.disable?.();
-    }
   }
 
   private updateVersionApprovalState(idDocumento: number | null | undefined): void {
@@ -513,6 +468,7 @@ export class CreacionDocumentos implements OnInit {
       control?.setValue(null);
       control?.disable?.();
     }
+    this.cdr.detectChanges();
   }
 
   private formatNow(): string {

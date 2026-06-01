@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { TipoDocumento } from '../../../model/documento';
 import { TipoDocumentoService } from '../../../services/documentos/tipo-documento-service';
 
@@ -14,7 +14,8 @@ export class ReportsTipoDocumento {
   tipo_documentos: TipoDocumento[] = [];
 
   constructor(
-    private tdService: TipoDocumentoService
+    private tdService: TipoDocumentoService,
+    private cdr: ChangeDetectorRef
   ) { }
 
 
@@ -22,6 +23,7 @@ export class ReportsTipoDocumento {
     this.tdService.getTiposDocumentos().subscribe(
       (data) => {
         this.tipo_documentos = data;
+        this.cdr.detectChanges();
       },
       (error) => {
         console.error('Error al obtener los tipos de documentos:', error);

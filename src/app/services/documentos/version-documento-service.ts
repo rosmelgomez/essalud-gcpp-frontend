@@ -20,8 +20,12 @@ export class VersionDocumentoService {
     return this.http.get<VersionDocumento[]>(base_url + '/getall', { withCredentials: true });
   }
 
-  getArchivo(id: number) {
-    return this.http.get<Blob>(base_url + `/archivo/${id}`, { withCredentials: true, observe: 'response' as 'response' });
+  getArchivo(id: number, download: boolean = false) {
+    return this.http.get<Blob>(base_url + `/archivo/${id}?download=${download}`, {
+      withCredentials: true,
+      observe: 'response' as 'response',
+      responseType: 'blob' as 'json'
+    });
   }
 
   getVersionDocumentoByIdDoc(iddoc: number) {
@@ -32,8 +36,12 @@ export class VersionDocumentoService {
     return this.http.get<VersionDocumento[]>(base_url + `/getbyuser/${idUser}`, { withCredentials: true });
   }
 
-  updateVersionDocumento(documento: FormData) {
-    return this.http.post(base_url + '/update', documento, { withCredentials: true });
+  updateVersionDocumento(version: any) {
+    return this.http.put(base_url + '/update', version, { withCredentials: true });
+  }
+
+  deleteVersionDocumento(id: number, userId: number) {
+    return this.http.delete(base_url + `/delete/${id}/${userId}`, { withCredentials: true });
   }
 
   getVersionDocumentoByCodcas(codcas: string) {
