@@ -9,6 +9,8 @@ import { authenticateGuard } from '../../guards/authenticate-guard';
 import { ReportDashboardTramas } from './report-dashboard-tramas/report-dashboard-tramas';
 import { DashboardProcedimientos } from './dashboard-procedimientos/dashboard-procedimientos';
 import { DashboardHospitalizacion } from './dashboard-hospitalizacion/dashboard-hospitalizacion';
+import { ReportsGerenciales } from './reports-gerenciales/reports-gerenciales';
+import { ReportDashboardOdontologicas } from './report-dashboard-odontologicas/report-dashboard-odontologicas';
 
 export const reportesRoutes: Routes = [
 
@@ -19,6 +21,9 @@ export const reportesRoutes: Routes = [
 
     ///dashboard-no-medicas
     { path: 'dashboard-no-medicas', component: ReportDashboardNoMedicas, canActivate: [authenticateGuard] },
+
+    ///dashboard-odontologicas
+    { path: 'dashboard-odontologicas', component: ReportDashboardOdontologicas, canActivate: [authenticateGuard] },
 
     ///dashboard-emergencia
     { path: 'dashboard-eme', component: ReportDashboardEme, canActivate: [authenticateGuard] },
@@ -37,5 +42,8 @@ export const reportesRoutes: Routes = [
 
     ///dashboard-procedimientos
     { path: 'dashboard-procedimientos', component: DashboardProcedimientos, canActivate: [authenticateGuard] },
+
+    ///reports-gerenciales
+    { path: 'reports-gerenciales', component: ReportsGerenciales, canActivate: [authenticateGuard] },
 
 ];

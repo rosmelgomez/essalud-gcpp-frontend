@@ -52,7 +52,7 @@ export class ReportDashboardOdontologicas implements OnInit {
     private reportDashboardOdonS: ReportDashboardOdontologicasService,
     private fileService: FileService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.currentDate = this.formatDate(new Date());
@@ -71,7 +71,7 @@ export class ReportDashboardOdontologicas implements OnInit {
     return new Intl.NumberFormat('es-PE').format(num);
   }
 
-    downloadFichaTecnica(): void {
+  downloadFichaTecnica(): void {
     this.fileService.getFile('f_consulta_externa_odo.pdf').subscribe({
       next: (blob: Blob) => {
         const link = document.createElement('a');
@@ -176,7 +176,7 @@ export class ReportDashboardOdontologicas implements OnInit {
           0,
         );
         //data horas programadas por agrupador
-         const horasProgramadasCountMap = new Map<string, number>();
+        const horasProgramadasCountMap = new Map<string, number>();
         for (const row of results.horasProgramadas) {
           const agrupador = (row as any).agrupador || 'Sin agrupador';
           horasProgramadasCountMap.set(

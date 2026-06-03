@@ -11,7 +11,7 @@ import { ChangeDetectorRef } from '@angular/core';
   styleUrl: './reports-gerenciales.css',
 })
 export class ReportsGerenciales {
-  showReporte =  true;
+  showReporte = true;
   showHistorico = false;
 
   showViewer = false;
@@ -20,14 +20,17 @@ export class ReportsGerenciales {
   data_urls = [
     { atenciones_ce: 'https://app.powerbi.com/view?r=eyJrIjoiZDU3ODFkZjMtMDlkMi00YjgxLWE2MGYtNWRhMzA2ZWI2NmRjIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
     { atendidos_ce: 'https://app.powerbi.com/view?r=eyJrIjoiMjkzNzY3YzYtNDYyMy00MTdhLTlmZDYtMGE4NjYxNGFlYTI5IiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
-    { atendidos_topico_eme:'https://app.powerbi.com/view?r=eyJrIjoiYjhlMzQ1NGEtNjhlNy00NTA2LTlmOWQtMzQzM2YzYTAyMjcxIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9'},
-    { resumen_ce_2023:'https://app.powerbi.com/view?r=eyJrIjoiMjNkMTQ0MjMtMTIyYi00NjhkLThlMmMtZTg1ZDk5ZTYxM2QzIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9'},
-    { resumen_ce_2024:'https://app.powerbi.com/view?r=eyJrIjoiMjg4MDMzNmMtMjhhZS00ODlkLWI0YjMtOWYxYTc1NWE1NzY1IiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9'},
-    { resumen_ce_2025:'https://app.powerbi.com/view?r=eyJrIjoiN2Q3OTk3YjEtOTVkYy00MjJkLWI4ZGYtNmNlODM3YTc2ZTg5IiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9'}
-
+    { atendidos_topico_eme: 'https://app.powerbi.com/view?r=eyJrIjoiYjhlMzQ1NGEtNjhlNy00NTA2LTlmOWQtMzQzM2YzYTAyMjcxIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
+    { resumen_ce_2023: 'https://app.powerbi.com/view?r=eyJrIjoiMjNkMTQ0MjMtMTIyYi00NjhkLThlMmMtZTg1ZDk5ZTYxM2QzIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
+    { resumen_ce_2024: 'https://app.powerbi.com/view?r=eyJrIjoiMjg4MDMzNmMtMjhhZS00ODlkLWI0YjMtOWYxYTc1NWE1NzY1IiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
+    { resumen_ce_2025: 'https://app.powerbi.com/view?r=eyJrIjoiN2Q3OTk3YjEtOTVkYy00MjJkLWI4ZGYtNmNlODM3YTc2ZTg5IiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
+    { intervenciones_quirurgicas: 'https://app.powerbi.com/view?r=eyJrIjoiOTJkZjBjZGItMzk0OC00NDlmLWExZjYtODY0NTBhNzIwODZkIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
+    { cambios_ses: 'https://app.powerbi.com/view?r=eyJrIjoiOTZhMzAxM2ItZTNhYS00MWMyLWE3MDQtOTRmOGJkYWJjNmZjIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
+    { accidentes: 'https://app.powerbi.com/view?r=eyJrIjoiZGU0YTAxMzktMDdiMi00NDEyLThjMmYtMTQ3ZGIwMmQ0MTIyIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
+    { diferimiento_citas_ce: 'https://app.powerbi.com/view?r=eyJrIjoiZjJlZjk2NDgtMjdlMS00ZGRjLWJlMWMtN2QyYjJkNjNiOGU4IiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' }
   ]
 
-  constructor(private sanitizer: DomSanitizer, private cdr: ChangeDetectorRef) {}
+  constructor(private sanitizer: DomSanitizer, private cdr: ChangeDetectorRef) { }
 
   openReport(url: string, event: Event) {
     event.preventDefault();

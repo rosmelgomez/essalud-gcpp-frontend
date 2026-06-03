@@ -35,11 +35,12 @@ export interface VersionDocumento {
   size: number;
   date_creation: Date;
   date_update: Date;
+  date_delete: Date;
   archivo: Blob;
+  visible: boolean;
   id_user_creation: number;
   id_documento: number;
   id_user_aprobador: number | null;
-  visible: boolean;
 }
 
 

@@ -1,14 +1,16 @@
 import { ChangeDetectorRef, Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { TramasService } from '../../../services/tramas-service';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormGroup, FormsModule } from '@angular/forms';
 import { EstablecimientoService } from '../../../services/establecimiento-service';
+import { LocalStorageService } from '../../../services/local-storage-service';
 import { MatTableModule } from '@angular/material/table';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
+import { User } from '../../../model/user';
 
 @Component({
   selector: 'app-report-dashboard-tramas',
@@ -19,9 +21,9 @@ import { MatSortModule } from '@angular/material/sort';
 })
 export class ReportDashboardTramas implements OnInit {
 
-  currentDate: string = '';
+  public centroForm!: FormGroup;
 
-  centroAtencion: string = 'Red Asistencial Rebagliati';
+  currentDate: string = '';
 
   // Datos para el dropdown de Centro Asistencial
   dataCentro: any = [];
@@ -34,10 +36,29 @@ export class ReportDashboardTramas implements OnInit {
   showSurveyReminder: boolean = false;
   surveyReminderError: string = '';
 
+  /// data usuario
+  user: User | null = null;
+
+
   @ViewChildren('centroOption') centroOptions!: QueryList<ElementRef<HTMLElement>>;
+
+  // Datos para el dropdown de Red Asistencial
+  dataRed: any[] = [];
+  filteredRed: any = [];
+  searchRed: string = '';
+  isDropdownRedOpen: boolean = false;
+  selectedRedName: string = '';
+
+  activeRedIndex: number = -1;
+
 
   /// data establecimiento
   centros: any[] = []
+  nameRed: string = '';
+  nameCentro: string = '';
+
+  /* Estados */
+  selectCentro: boolean = false;
 
   //Estados para tramas Tabla B1
   loadingTTB1: boolean = false;
@@ -72,18 +93,90 @@ export class ReportDashboardTramas implements OnInit {
   constructor(
     private tramasService: TramasService,
     private establecimientoService: EstablecimientoService,
+    private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef
-  ) { }
+  ) {
+    this.currentDate = this.formatDate(new Date());
+  }
+
+  formatDate(date: Date): string {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
 
   ngOnInit(): void {
-    this.loadCentros();
+    this.user = this.dataImport.getUser();
+    this.getCentro();
+
+    const selectedCentro = this.dataImport.getDataCentro();
+    if (selectedCentro && selectedCentro.codcas) {
+      this.codcasB1 = selectedCentro.codcas;
+      this.codcasB2 = selectedCentro.codcas;
+      this.selectedCentroName = selectedCentro.nameCentro || '';
+    } else {
+      const isUser = Array.isArray(this.user?.roles) ? this.user?.roles.includes('USER') : this.user?.roles === 'USER';
+      if (isUser && this.user?.codcas) {
+        const codcas = this.user.codcas.toString();
+        this.codcasB1 = codcas;
+        this.codcasB2 = codcas;
+      }
+    }
   }
 
-  loadCentros() {
-    this.establecimientoService.getCentros().subscribe((data) => {
-      this.centros = data;
-    });
+  getCentro() {
+    const isUser = Array.isArray(this.user?.roles) ? this.user?.roles.includes('USER') : this.user?.roles === 'USER';
+    const isAdminRed = Array.isArray(this.user?.roles) ? this.user?.roles.includes('ADMIN_RED') : this.user?.roles === 'ADMIN_RED';
+
+    if (isAdminRed) {
+      this.selectCentro = false;
+      const codeRed = this.user?.codred?.toString() || '';
+      this.establecimientoService.getCentrosByRed(codeRed).subscribe({
+        next: (resp) => {
+          this.dataCentro = resp;
+          this.centros = resp;
+          this.nameRed = resp.length > 0 ? resp[0].redasisdes : '';
+          if (this.codcasB1) {
+            const found = resp.find((centro: any) => centro.cenasicod === this.codcasB1);
+            if (found) {
+              this.selectedCentroName = found.cenasides || '';
+              this.nameCentro = found.cenasides || '';
+            }
+          }
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          console.log('Error al obtener los centros por red');
+        },
+      });
+    } else {
+      // Para usuarios USER, establecer selectCentro = true ANTES de la suscripción asincrónica
+      if (isUser) {
+        this.selectCentro = true;
+      }
+
+      this.establecimientoService.getCentros().subscribe({
+        next: (resp) => {
+          this.dataCentro = resp;
+          this.centros = resp;
+          if (this.codcasB1) {
+            const found = resp.find((centro: any) => centro.cenasicod === this.codcasB1);
+            if (found) {
+              this.selectedCentroName = found.cenasides || '';
+              this.nameCentro = found.cenasides || '';
+            }
+          }
+          if (isUser) {
+            const codcas = this.user?.codcas?.toString();
+            this.nameCentro = this.dataCentro.find((centro: any) => centro.cenasicod === codcas)?.cenasides || '';
+          }
+          this.cdr.detectChanges();
+        },
+      });
+    }
   }
+
 
   // Métodos para Centro Asistencial
   filterCentro(event: any) {
@@ -118,7 +211,7 @@ export class ReportDashboardTramas implements OnInit {
 
   selectDropdownOption(centro: any) {
     this.selectedCentroName = centro.cenasides;
-    //this.centroForm.patchValue({ centro: centro.cenasicod });
+    this.codcasB1 = centro.cenasicod;
     this.isDropdownOpen = false;
     this.searchCentro = '';
     this.activeCentroIndex = -1;
@@ -200,6 +293,24 @@ export class ReportDashboardTramas implements OnInit {
   }
 
 
+  changeCentro() {
+    if (this.dataCentro.length === 0) {
+      this.getCentro();
+    }
+    this.selectCentro = false;
+    this.selectedCentroName = '';
+    this.selectedRedName = '';
+    this.searchCentro = '';
+    this.searchRed = '';
+    this.activeCentroIndex = -1;
+    this.activeRedIndex = -1;
+    this.centroForm.reset();
+
+    // Para admin, al cambiar centro se vuelve al estado sin filtro de red.
+    if (Array.isArray(this.user?.roles) ? this.user?.roles.includes('ADMIN') : this.user?.roles === 'ADMIN') {
+      this.restoreAllCentros();
+    }
+  }
 
 
 

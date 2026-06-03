@@ -5,7 +5,7 @@
         <div class="header-content">
             <h2 class="title">Tramas B1 y B2 — SUSALUD</h2>
             <p class="subtitle">
-                Información actualizada al {{ currentDate }} | centro de atención: {{ centroAtencion }}
+                Información actualizada al {{ currentDate }}
             </p>
         </div>
 
@@ -35,13 +35,6 @@
                     <label for="fechaFinB1">Fecha Fin:</label>
                     <input type="date" id="fechaFinB1" [(ngModel)]="fechaFinB1">
 
-                    <select [(ngModel)]="codcasB1" class="codcas-select">
-                        <option value="">Seleccione un CAS</option>
-                        <option *ngFor="let centro of centros" [value]="centro.cenasicod">
-                            {{ centro.cenasides }}
-                        </option>
-                    </select>
-
                     <div class="form-grid">
                         <div class="centro-form-group">
                             <div class="custom-dropdown" (mouseleave)="closeDropdown()" (mouseenter)="openDropdown()">
@@ -49,7 +42,7 @@
                                     placeholder="Buscar y seleccionar centro..." (input)="filterCentro($event)"
                                     (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName"
                                     class="dropdown-input" />
-                                <div class="dropdown-list" *ngIf="isDropdownOpen" [(ngModel)]="codcasB1">
+                                <div class="dropdown-list" *ngIf="isDropdownOpen">
                                     <div *ngFor="let centro of (searchCentro ? filteredCentro : centros); let i = index"
                                         #centroOption class="dropdown-item" [class.active]="i === activeCentroIndex"
                                         (click)="selectDropdownOption(centro)">
@@ -61,7 +54,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <input type="hidden" />
+                            <input type="hidden" [(ngModel)]="codcasB1" />
                         </div>
                     </div>
 

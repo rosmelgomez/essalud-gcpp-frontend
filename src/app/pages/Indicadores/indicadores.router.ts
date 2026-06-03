@@ -8,5 +8,6 @@ export const indicadoresRoutes: Routes = [
     { path: 'consulta-externa', children: consultaExternaRoutes },
     { path: 'centro-quirurgico', children: centroQuirurgicoRoutes },
     { path: 'emergencia', children: emergenciaRoutes },
+    { path: 'centro-quirurgico', children: centroQuirurgicoRoutes },
 
 ];

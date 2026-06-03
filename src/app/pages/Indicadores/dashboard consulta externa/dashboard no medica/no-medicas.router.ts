@@ -5,6 +5,8 @@ import { nutricionRoutes } from './nutricion/nutricion.router';
 import { enfermeriaRoutes } from './enfermeria/enfermeria.router';
 import { psicologiaRoutes } from './psicologia/psicologia.router';
 import { trabajoSocialRoutes } from './trabajo social/trabajo-social.router';
+import { procedimientoTerapeuticosRoutes } from './procedimientos terapeuticos/procedimiento-promocional.router';
+import { procedimientoPromocionalRoutes } from './procedimientos diagnosticos/procedimiento-promocional.router';
 
 
 export const noMedicasRoutes: Routes = [
@@ -15,4 +17,6 @@ export const noMedicasRoutes: Routes = [
     { path: 'enfermeria', children: enfermeriaRoutes },
     { path: 'psicologia', children: psicologiaRoutes },
     { path: 'trabajo-social', children: trabajoSocialRoutes },
+    { path: 'procedimientos-terapeuticos', children: procedimientoTerapeuticosRoutes },
+    { path: 'procedimientos-promocional', children: procedimientoPromocionalRoutes },
 ];
