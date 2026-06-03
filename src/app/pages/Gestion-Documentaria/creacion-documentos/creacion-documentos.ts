@@ -30,6 +30,7 @@ export class CreacionDocumentos implements OnInit {
   public registerVersionDocumentoForm!: FormGroup;
   public activeMode: 'documento' | 'version' | 'tipo' = 'documento';
   public versionRequiresApproval: boolean = false;
+  public isDocumentoPublico: boolean = false;
   public extensionesChips: string[] = [];
 
   public get registerForm(): FormGroup {
@@ -48,6 +49,7 @@ export class CreacionDocumentos implements OnInit {
   domentos: Documento[] = [];
 
   documentosByUser: Documento[] = [];
+  redes: any[] = [];
 
   user: User | null = null;
 
@@ -74,6 +76,7 @@ export class CreacionDocumentos implements OnInit {
     this.loadDocumentoFromNavigation();
     this.loadFormContextInfo();
     this.bindFormListeners();
+    this.loadRedes();
   }
 
   private bindFormListeners(): void {
@@ -81,6 +84,33 @@ export class CreacionDocumentos implements OnInit {
     this.registerVersionDocumentoForm.get('id_documento')?.valueChanges.subscribe((idDocumento: number) => {
       this.updateVersionApprovalState(idDocumento);
     });
+
+    // Cuando cambia la visibilidad del documento
+    this.registerDocumentoForm.get('publico')?.valueChanges.subscribe((isPublic: boolean) => {
+      if (!isPublic) {
+        this.registerDocumentoForm.patchValue({
+          solo_mi_red: false
+        });
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  setSoloMiRed(val: boolean): void {
+    this.registerDocumentoForm.get('solo_mi_red')?.setValue(val);
+    this.cdr.detectChanges();
+  }
+
+  loadRedes() {
+    this.establecimientoService.getRed().subscribe(
+      (data) => {
+        this.redes = data || [];
+        this.cdr.detectChanges();
+      },
+      (error) => {
+        console.error('Error al cargar redes:', error);
+      }
+    );
   }
 
 
@@ -176,6 +206,8 @@ export class CreacionDocumentos implements OnInit {
       descripcion: ['', [Validators.required]],
       id_tipo_documento: ['', [Validators.required]],
       flag: [true, [Validators.required]],
+      publico: [false, [Validators.required]],
+      solo_mi_red: [false, [Validators.required]],
     });
     this.registerVersionDocumentoForm = this.formBuilder.group({
       nombre: ['', [Validators.required]],
@@ -184,6 +216,7 @@ export class CreacionDocumentos implements OnInit {
       archivo: [null, [Validators.required]],
       id_documento: ['', [Validators.required]],
       id_user_aprobador: [{ value: null, disabled: true }],
+      visible: [true],
     });
   }
 
@@ -305,15 +338,17 @@ export class CreacionDocumentos implements OnInit {
     }
 
     const user = this.localStorage.getUser();
+    const isPublic = this.registerDocumentoForm.get('publico')?.value ?? false;
 
     const documento: Documento = {
-      id: 0,
+      id: Number(this.editingDocumentoId ?? 0),
       codigo: this.registerDocumentoForm.get('codigo')?.value ?? '',
       titulo: this.registerDocumentoForm.get('titulo')?.value ?? '',
       descripcion: this.registerDocumentoForm.get('descripcion')?.value ?? '',
       codcas: user?.codcas ?? '',
       codred: this.codred ?? '',
-      publico: this.registerDocumentoForm.get('publico')?.value ?? false,
+      publico: isPublic,
+      solo_mi_red: isPublic ? (this.registerDocumentoForm.get('solo_mi_red')?.value ?? false) : false,
       date_creation: '',
       date_update: '',
       flag: this.registerDocumentoForm.get('flag')?.value ?? true,
@@ -360,6 +395,9 @@ export class CreacionDocumentos implements OnInit {
     documentoFormData.append('descripcion', comentario);
     documentoFormData.append('version', String(version));
 
+    const isVisible = this.registerVersionDocumentoForm.get('visible')?.value ?? false;
+    documentoFormData.append('visible', String(isVisible));
+
 
     // Add file if present
     if (archivo) {
@@ -394,11 +432,17 @@ export class CreacionDocumentos implements OnInit {
     }
 
     this.isEditing = true;
-    this.activeMode = 'version';
+    this.activeMode = 'documento';
     this.editingDocumentoId = documento.id ?? null;
+
     this.registerDocumentoForm.patchValue({
-      nombre: documento.nombre ?? documento.name ?? documento.titulo ?? documento.fileName ?? '',
-      descripcion: documento.descripcion ?? documento.description ?? '',
+      codigo: documento.codigo ?? '',
+      titulo: documento.titulo ?? '',
+      descripcion: documento.descripcion ?? '',
+      id_tipo_documento: documento.id_tipo_documento ?? '',
+      flag: documento.flag ?? true,
+      publico: documento.publico ?? false,
+      solo_mi_red: documento.solo_mi_red ?? false,
     });
     this.cdr.detectChanges();
   }
@@ -434,6 +478,17 @@ export class CreacionDocumentos implements OnInit {
       control?.setValue(null);
       control?.disable?.();
     }
+
+    this.isDocumentoPublico = documento ? documento.publico === true : false;
+    const visibleControl = this.registerVersionDocumentoForm.get('visible');
+    if (this.isDocumentoPublico) {
+      visibleControl?.enable?.();
+      visibleControl?.setValue(true);
+    } else {
+      visibleControl?.setValue(false);
+      visibleControl?.disable?.();
+    }
+
     this.cdr.detectChanges();
   }
 

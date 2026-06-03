@@ -12,6 +12,7 @@ import { User } from '../../../model/user';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { EstablecimientoService } from '../../../services/establecimiento-service';
+import { UsersService } from '../../../services/usuario/users-service';
 
 @Component({
   selector: 'app-reports-documento',
@@ -21,8 +22,17 @@ import { EstablecimientoService } from '../../../services/establecimiento-servic
   styleUrl: './reports-documento.css',
 })
 export class ReportsDocumento implements OnInit {
-  documentos: Documento[] = [];
-  filteredDocumentos: Documento[] = [];
+  documentos: any[] = [];
+  filteredDocumentos: any[] = [];
+  pagedDocumentos: any[] = [];
+
+  // Paginación
+  currentPage: number = 1;
+  pageSize: number = 10;
+  pageSizeOptions: number[] = [5, 10, 25, 50];
+  activeApprovalSubTab: 'por_mi_aprobar' | 'mis_solicitudes' = 'por_mi_aprobar';
+  activePublicSubTab: 'general' | 'mi_red' = 'general';
+  Math = Math;
 
   tiposDocumento: any[] = [];
   user: User | null = null;
@@ -42,6 +52,7 @@ export class ReportsDocumento implements OnInit {
   filterTipo: string = '';
   filterStatus: string = '';
   filterCodred: string = '';
+  filterPrivacy: string = '';
 
   // Diccionarios para detalles de documentos
   versionsMap: { [docId: number]: VersionDocumento[] } = {};
@@ -51,9 +62,10 @@ export class ReportsDocumento implements OnInit {
   // Estado de los Modales
   showTimelineModal: boolean = false;
   showDecisionModal: boolean = false;
-  selectedDoc: Documento | null = null;
+  selectedDoc: any | null = null;
   selectedVersion: VersionDocumento | null = null;
   selectedFlow: any | null = null;
+  selectedVersionFlow: any | null = null;
   observacion: string = '';
   historialAcciones: any[] = [];
 
@@ -61,6 +73,21 @@ export class ReportsDocumento implements OnInit {
   showEditVersionForm: boolean = false;
   editVersionNombre: string = '';
   editVersionComentario: string = '';
+  editVersionVisible: boolean = true;
+  users_aprobadores: User[] = [];
+  editVersionAprobadorId: number | null = null;
+  editVersionFile: File | null = null;
+
+  // Edición de Documento
+  showEditDocumentModal: boolean = false;
+  editDocId: number | null = null;
+  editDocCodigo: string = '';
+  editDocTitulo: string = '';
+  editDocDescripcion: string = '';
+  editDocPublico: boolean = false;
+  editDocSoloMiRed: boolean = false;
+  editDocIdTipoDocumento: number | null = null;
+  editDocFlag: boolean = true;
 
   constructor(
     private lsService: LocalStorageService,
@@ -69,14 +96,15 @@ export class ReportsDocumento implements OnInit {
     private flujoService: FlujoAprobacionDocumentoService,
     private tipoDocumentoService: TipoDocumentoService,
     private establecimientoService: EstablecimientoService,
+    private userService: UsersService,
     private cdr: ChangeDetectorRef,
     private router: Router
   ) { }
 
   ngOnInit(): void {
     this.user = this.lsService.getUser();
-    this.loadTiposDocumentos();
     this.loadRedes();
+    this.getRedCentro();
   }
 
   loadRedes() {
@@ -91,9 +119,22 @@ export class ReportsDocumento implements OnInit {
     );
   }
 
+  getRedNombre(codred: string): string {
+    if (!codred) return 'Sin Red';
+    const red = this.redes.find(r => r.redasiscod === codred);
+    return red ? red.redasisdes : `Red ${codred}`;
+  }
+
   setActiveTab(tab: 'publicos' | 'privados' | 'por_aprobar') {
     this.activeTab = tab;
     this.filterCodred = ''; // Resetear filtro de red al cambiar de sección
+    this.filterPrivacy = ''; // Resetear filtro de privacidad al cambiar de sección
+    this.currentPage = 1;
+    if (tab === 'publicos') {
+      this.activePublicSubTab = 'general';
+    } else if (tab === 'por_aprobar') {
+      this.activeApprovalSubTab = 'por_mi_aprobar';
+    }
     this.applyFilters();
     this.updateCounters();
   }
@@ -111,39 +152,44 @@ export class ReportsDocumento implements OnInit {
     );
   }
 
-  getDocumentos() {
-    // Si el usuario es de red, cargar solo sus documentos correspondientes (si aplica en backend)
-    // De lo contrario, usar getDocumentos del servicio general
-    const codred = this.user?.codred;
-    const codcas = this.user?.codcas;
+  codred: string = '';
 
-    if (this.user?.roles?.includes('ADMIN')) {
-      this.docService.getDocumentos().subscribe(
-        (data) => this.setDocumentos(data),
-        (error) => console.error('Error al obtener documentos:', error)
-      );
-    } else if (codred && this.user?.roles?.includes('ADMIN_RED')) {
-      this.docService.getDocumentosByCodred(codred).subscribe(
-        (data) => this.setDocumentos(data),
-        (error) => console.error('Error al obtener documentos por red:', error)
-      );
-    } else if (codcas) {
-      this.docService.getDocumentoByCodcas(codcas).subscribe(
-        (data) => this.setDocumentos(data),
-        (error) => console.error('Error al obtener documentos por cas:', error)
-      );
-    } else {
-      this.docService.getDocumentos().subscribe(
-        (data) => this.setDocumentos(data),
-        (error) => console.error('Error al obtener documentos:', error)
-      );
+  getRedCentro() {
+    const codcas = this.user?.codcas;
+    if (!codcas) {
+      console.error('No se encontró el codcas del usuario en el almacenamiento local');
+      this.loadTiposDocumentos();
+      this.loadUsersAprobadores();
+      return;
     }
+    this.establecimientoService.getCentroWithRedByCodcas(codcas).subscribe(
+      (response) => {
+        console.log(response);
+        this.codred = response?.redasiscod ?? '';
+        this.loadTiposDocumentos();
+        this.loadUsersAprobadores();
+        this.cdr.detectChanges();
+      },
+      (error) => {
+        console.error('Error al obtener centro y red:', error);
+        this.loadTiposDocumentos();
+        this.loadUsersAprobadores();
+      }
+    );
   }
 
-  setDocumentos(data: Documento[]) {
+  getDocumentos() {
+    this.docService.getDocumentos().subscribe(
+      (data) => this.setDocumentos(data),
+      (error) => console.error('Error al obtener documentos:', error)
+    );
+  }
+
+  setDocumentos(data: any[]) {
     this.documentos = data || [];
     this.filteredDocumentos = [...this.documentos];
     this.updateCounters();
+    this.applyFilters();
     this.cdr.detectChanges();
 
     // Cargar detalles para cada documento de manera asíncrona
@@ -152,45 +198,118 @@ export class ReportsDocumento implements OnInit {
     });
   }
 
-  loadDocumentDetails(doc: Documento) {
+  hasAccessToVersion(doc: any, version: VersionDocumento): boolean {
+    if (!doc || !version) return false;
+    
+    const isOwner = doc.id_user_creation === this.user?.id || version.id_user_creation === this.user?.id;
+    const isApprover = version.id_user_aprobador === this.user?.id;
+    
+    // Si el documento o la versión es privada/borrador:
+    if (!doc.publico || version.visible === false) {
+      if (isOwner) return true;
+      if (isApprover) return true;
+      // Verificar si es el aprobador en el flujo de esta versión
+      const flow = this.activeFlowMap[version.id];
+      if (flow && flow.id_version_documento === version.id && flow.id_user_aprobador === this.user?.id) {
+        return true;
+      }
+      return false;
+    }
+
+    // Si es público y la versión es pública, validar restricción de red (solo_mi_red)
+    if (doc.solo_mi_red) {
+      return doc.codred === this.codred || isOwner || isApprover;
+    }
+
+    return true;
+  }
+
+  resolveActiveVersion(doc: any): VersionDocumento | null {
+    const versions = this.versionsMap[doc.id];
+    if (!versions || versions.length === 0) {
+      return null;
+    }
+
+    // Si es "Por Aprobar", la versión activa a mostrar en la tabla debería ser la versión pendiente de aprobación
+    if (this.activeTab === 'por_aprobar') {
+      for (const v of versions) {
+        const flow = this.activeFlowMap[v.id];
+        if (flow && flow.status === 'Pendiente') {
+          return v;
+        }
+      }
+    }
+
+    // Buscamos la última versión a la que el usuario tiene acceso
+    for (const v of versions) {
+      if (this.activeTab === 'publicos' && v.visible === false) {
+        continue;
+      }
+      if (this.hasAccessToVersion(doc, v)) {
+        return v;
+      }
+    }
+    return null;
+  }
+
+  shouldShowVersionInTimeline(ver: VersionDocumento): boolean {
+    if (!ver) return false;
+    if (this.activeTab === 'por_aprobar') {
+      const flow = this.activeFlowMap[ver.id];
+      return flow && flow.status === 'Pendiente';
+    }
+    if (this.activeTab === 'publicos') {
+      return ver.visible !== false;
+    }
+    return true;
+  }
+
+  updateActiveVersion(doc: any) {
+    this.activeVersionMap[doc.id] = this.resolveActiveVersion(doc);
+    this.updateCounters();
+    this.applyFilters();
+    this.cdr.detectChanges();
+  }
+
+  loadDocumentDetails(doc: any) {
     this.versionService.getVersionDocumentoByIdDoc(doc.id).subscribe(
       (versions) => {
         if (versions && versions.length > 0) {
-          // Ordenar versiones por número descendente
           versions.sort((a, b) => b.version - a.version);
           this.versionsMap[doc.id] = versions;
-          const activeVer = versions[0];
-          this.activeVersionMap[doc.id] = activeVer;
 
-          // Verificar si el tipo de documento requiere aprobación
           const tipo = this.tiposDocumento.find(t => t.id === doc.id_tipo_documento);
           const requiereAprobacion = tipo ? tipo.requiere_aprobacion : false;
 
           if (requiereAprobacion) {
-            this.flujoService.getFlujoByVersionId(activeVer.id).subscribe(
-              (flows: any[]) => {
-                this.activeFlowMap[doc.id] = flows && flows.length > 0 ? flows[0] : null;
-                this.updateCounters();
-                this.applyFilters();
-                this.cdr.detectChanges();
-              },
-              () => {
-                this.activeFlowMap[doc.id] = null;
-                this.updateCounters();
-                this.applyFilters();
-                this.cdr.detectChanges();
-              }
-            );
+            let loadedCount = 0;
+            versions.forEach(ver => {
+              this.flujoService.getFlujoByVersionId(ver.id).subscribe(
+                (flows: any[]) => {
+                  this.activeFlowMap[ver.id] = flows && flows.length > 0 ? flows[0] : null;
+                  loadedCount++;
+                  if (loadedCount === versions.length) {
+                    this.updateActiveVersion(doc);
+                  }
+                },
+                () => {
+                  this.activeFlowMap[ver.id] = null;
+                  loadedCount++;
+                  if (loadedCount === versions.length) {
+                    this.updateActiveVersion(doc);
+                  }
+                }
+              );
+            });
           } else {
-            this.activeFlowMap[doc.id] = null;
-            this.updateCounters();
-            this.applyFilters();
-            this.cdr.detectChanges();
+            versions.forEach(ver => {
+              this.activeFlowMap[ver.id] = null;
+            });
+            this.updateActiveVersion(doc);
           }
         } else {
           this.versionsMap[doc.id] = [];
           this.activeVersionMap[doc.id] = null;
-          this.activeFlowMap[doc.id] = null;
           this.updateCounters();
           this.applyFilters();
           this.cdr.detectChanges();
@@ -203,15 +322,45 @@ export class ReportsDocumento implements OnInit {
   }
 
   applyFilters() {
+    if (this.documentos) {
+      this.documentos.forEach(doc => {
+        this.activeVersionMap[doc.id] = this.resolveActiveVersion(doc);
+      });
+    }
+
     this.filteredDocumentos = this.documentos.filter(doc => {
       // Filtro de sección (Públicos / Privados / Por Aprobar)
       let matchPublico = false;
       if (this.activeTab === 'publicos') {
-        matchPublico = doc.publico === true;
+        const activeVer = this.activeVersionMap[doc.id];
+        if (!activeVer) {
+          matchPublico = false;
+        } else {
+          if (this.activePublicSubTab === 'general') {
+            matchPublico = doc.publico === true && doc.solo_mi_red === false;
+          } else {
+            matchPublico = doc.publico === true && doc.solo_mi_red === true && doc.codred === this.codred;
+          }
+        }
       } else if (this.activeTab === 'privados') {
-        matchPublico = (doc.publico !== true) && (this.user ? doc.id_user_creation === this.user.id : false);
+        const isMyDoc = this.user ? doc.id_user_creation === this.user.id : false;
+        if (!isMyDoc) {
+          matchPublico = false;
+        } else {
+          if (this.filterPrivacy === 'publico') {
+            matchPublico = doc.publico === true;
+          } else if (this.filterPrivacy === 'privado') {
+            matchPublico = doc.publico !== true;
+          } else {
+            matchPublico = true;
+          }
+        }
       } else if (this.activeTab === 'por_aprobar') {
-        matchPublico = this.puedeAprobar(doc);
+        if (this.activeApprovalSubTab === 'por_mi_aprobar') {
+          matchPublico = this.puedeAprobar(doc);
+        } else {
+          matchPublico = this.isMiSolicitudPendiente(doc);
+        }
       }
 
       // Filtro por Red Asistencial (solo para públicos si se selecciona)
@@ -231,7 +380,8 @@ export class ReportsDocumento implements OnInit {
       const matchTipo = !this.filterTipo || doc.id_tipo_documento === Number(this.filterTipo);
 
       // 3. Filtro de Estado
-      const flow = this.activeFlowMap[doc.id];
+      const activeVer = this.activeVersionMap[doc.id];
+      const flow = activeVer ? this.activeFlowMap[activeVer.id] : null;
       const status = flow ? flow.status : 'No Requiere Aprobación';
 
       let matchStatus = true;
@@ -245,6 +395,7 @@ export class ReportsDocumento implements OnInit {
 
       return matchPublico && matchCodred && matchSearch && matchTipo && matchStatus;
     });
+    this.updatePagedDocumentos();
     this.cdr.detectChanges();
   }
 
@@ -256,19 +407,67 @@ export class ReportsDocumento implements OnInit {
 
     const filteredByTab = this.documentos.filter(doc => {
       if (this.activeTab === 'publicos') {
-        return doc.publico === true;
+        const activeVer = this.activeVersionMap[doc.id];
+        if (!activeVer) return false;
+
+        if (this.activePublicSubTab === 'general') {
+          return doc.publico === true && doc.solo_mi_red === false;
+        } else {
+          return doc.publico === true && doc.solo_mi_red === true && doc.codred === this.codred;
+        }
       } else if (this.activeTab === 'privados') {
-        return (doc.publico !== true) && (this.user ? doc.id_user_creation === this.user.id : false);
+        const isMyDoc = this.user ? doc.id_user_creation === this.user.id : false;
+        if (!isMyDoc) return false;
+        if (this.filterPrivacy === 'publico') {
+          return doc.publico === true;
+        } else if (this.filterPrivacy === 'privado') {
+          return doc.publico !== true;
+        }
+        return true;
       } else if (this.activeTab === 'por_aprobar') {
-        return this.puedeAprobar(doc);
+        if (this.activeApprovalSubTab === 'por_mi_aprobar') {
+          return this.puedeAprobar(doc);
+        } else {
+          return this.isMiSolicitudPendiente(doc);
+        }
       }
       return false;
     });
 
     this.totalCount = filteredByTab.length;
 
-    filteredByTab.forEach(doc => {
-      const flow = this.activeFlowMap[doc.id];
+    if (this.activeTab === 'por_aprobar') {
+      this.pendingCount = this.totalCount;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const filteredByTabForNonApproval = this.documentos.filter(doc => {
+      if (this.activeTab === 'publicos') {
+        const activeVer = this.activeVersionMap[doc.id];
+        if (!activeVer) return false;
+
+        if (this.activePublicSubTab === 'general') {
+          return doc.publico === true && doc.solo_mi_red === false;
+        } else {
+          return doc.publico === true && doc.solo_mi_red === true && doc.codred === this.codred;
+        }
+      } else if (this.activeTab === 'privados') {
+        const isMyDoc = this.user ? doc.id_user_creation === this.user.id : false;
+        if (!isMyDoc) return false;
+        if (this.filterPrivacy === 'publico') {
+          return doc.publico === true;
+        } else if (this.filterPrivacy === 'privado') {
+          return doc.publico !== true;
+        }
+        return true;
+      }
+      return false;
+    });
+
+    filteredByTabForNonApproval.forEach(doc => {
+      const activeVer = this.activeVersionMap[doc.id];
+      const flow = activeVer ? this.activeFlowMap[activeVer.id] : null;
       const status = flow ? flow.status : 'No Requiere Aprobación';
       if (status === 'Aprobado') {
         this.approvedCount++;
@@ -294,8 +493,6 @@ export class ReportsDocumento implements OnInit {
     return tipo ? tipo.nombre : 'Desconocido';
   }
 
-
-
   descargarArchivo(version: VersionDocumento) {
     this.versionService.getArchivo(version.id).subscribe(
       (response) => {
@@ -320,7 +517,11 @@ export class ReportsDocumento implements OnInit {
     );
   }
 
-  eliminarDocumento(doc: Documento) {
+  eliminarDocumento(doc: any) {
+    if (this.user?.id !== doc.id_user_creation) {
+      alert('Acceso denegado: Solo el creador del documento puede eliminarlo.');
+      return;
+    }
     if (confirm(`¿Está seguro que desea eliminar permanentemente el documento "${doc.titulo}"? (Esta acción realiza un borrado lógico para auditorías)`)) {
       this.docService.deleteDocumento(doc.id, this.user?.id || 0).subscribe(
         () => {
@@ -336,10 +537,10 @@ export class ReportsDocumento implements OnInit {
   }
 
   // Modales y Timeline Lógica
-  abrirHistorial(doc: Documento) {
-    this.selectedDoc = doc;
-    const versions = this.versionsMap[doc.id] || [];
-    this.selectedVersion = this.activeVersionMap[doc.id];
+  abrirHistorial(doc: any) {
+    const realDoc = doc.id_documento_real ? this.documentos.find(d => d.id === doc.id_documento_real) : doc;
+    this.selectedDoc = realDoc;
+    this.selectedVersion = doc.version_objeto || this.activeVersionMap[realDoc.id];
     this.showTimelineModal = true;
     this.historialAcciones = [];
     if (this.selectedVersion) {
@@ -356,9 +557,11 @@ export class ReportsDocumento implements OnInit {
 
   cargarHistorialDeVersion(version: VersionDocumento) {
     this.historialAcciones = [];
+    this.selectedVersionFlow = null;
     this.flujoService.getFlujoByVersionId(version.id).subscribe(
       (flows: any[]) => {
         const flow = flows && flows.length > 0 ? flows[0] : null;
+        this.selectedVersionFlow = flow;
         if (flow) {
           this.flujoService.getHistorial(flow.id).subscribe(
             (hist) => {
@@ -370,14 +573,28 @@ export class ReportsDocumento implements OnInit {
             }
           );
         }
+        this.cdr.detectChanges();
       }
     );
   }
 
-  abrirAprobacion(doc: Documento) {
-    this.selectedDoc = doc;
-    this.selectedVersion = this.activeVersionMap[doc.id];
-    this.selectedFlow = this.activeFlowMap[doc.id];
+  descargarDocumentoVersion(doc: any) {
+    const ver = doc.version_objeto || this.activeVersionMap[doc.id];
+    if (ver) {
+      this.descargarArchivo(ver);
+    }
+  }
+
+  abrirAprobacion(doc: any) {
+    if (doc.flujo_objeto) {
+      this.selectedDoc = this.documentos.find(d => d.id === doc.id_documento_real) || doc;
+      this.selectedVersion = doc.version_objeto;
+      this.selectedFlow = doc.flujo_objeto;
+    } else {
+      this.selectedDoc = doc;
+      this.selectedVersion = this.activeVersionMap[doc.id];
+      this.selectedFlow = this.activeVersionMap[doc.id] ? this.activeFlowMap[this.activeVersionMap[doc.id]!.id] : null;
+    }
     this.observacion = '';
     this.showDecisionModal = true;
     this.cdr.detectChanges();
@@ -401,6 +618,9 @@ export class ReportsDocumento implements OnInit {
         if (this.selectedDoc) {
           this.loadDocumentDetails(this.selectedDoc);
         }
+        if (this.selectedVersion) {
+          this.cargarHistorialDeVersion(this.selectedVersion);
+        }
         this.cdr.detectChanges();
       },
       (error) => {
@@ -410,11 +630,60 @@ export class ReportsDocumento implements OnInit {
     );
   }
 
-  puedeAprobar(doc: Documento): boolean {
-    const flow = this.activeFlowMap[doc.id];
+  puedeAprobar(doc: any): boolean {
+    if (doc.flujo_objeto) {
+      return doc.flujo_objeto.status === 'Pendiente' && doc.flujo_objeto.id_user_aprobador === this.user?.id;
+    }
+    const activeVer = this.activeVersionMap[doc.id];
+    if (!activeVer) return false;
+    const flow = this.activeFlowMap[activeVer.id];
     if (!flow || flow.status !== 'Pendiente') return false;
-    // Si es ADMIN, ADMIN_RED o si su id_user_aprobador coincide con el usuario logueado
-    return !!(this.user?.roles?.includes('ADMIN') || this.user?.roles?.includes('ADMIN_RED') || flow.id_user_aprobador === this.user?.id);
+    return flow.id_user_aprobador === this.user?.id;
+  }
+
+  isMiSolicitudPendiente(doc: any): boolean {
+    if (doc.flujo_objeto) {
+      return doc.flujo_objeto.status === 'Pendiente' && doc.id_user_creation === this.user?.id;
+    }
+    const activeVer = this.activeVersionMap[doc.id];
+    if (!activeVer) return false;
+    const flow = this.activeFlowMap[activeVer.id];
+    if (!flow || flow.status !== 'Pendiente') return false;
+    return doc.id_user_creation === this.user?.id;
+  }
+
+  setApprovalSubTab(subTab: 'por_mi_aprobar' | 'mis_solicitudes') {
+    this.activeApprovalSubTab = subTab;
+    this.currentPage = 1;
+    this.applyFilters();
+    this.updateCounters();
+  }
+
+  setPublicSubTab(subTab: 'general' | 'mi_red') {
+    this.activePublicSubTab = subTab;
+    this.currentPage = 1;
+    this.applyFilters();
+    this.updateCounters();
+  }
+
+  updatePagedDocumentos() {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.pagedDocumentos = this.filteredDocumentos.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.updatePagedDocumentos();
+  }
+
+  onPageSizeChange() {
+    this.currentPage = 1;
+    this.updatePagedDocumentos();
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredDocumentos.length / this.pageSize) || 1;
   }
 
   cerrarModales() {
@@ -426,39 +695,129 @@ export class ReportsDocumento implements OnInit {
     this.observacion = '';
     this.historialAcciones = [];
     this.showEditVersionForm = false;
+    this.showEditDocumentModal = false;
+    this.editDocId = null;
+    this.editDocCodigo = '';
+    this.editDocTitulo = '';
+    this.editDocDescripcion = '';
+    this.editDocPublico = false;
+    this.editDocSoloMiRed = false;
+    this.editDocIdTipoDocumento = null;
+    this.editDocFlag = true;
     this.cdr.detectChanges();
   }
 
   // Métodos de Acciones de Edición/Eliminación y Visualización Controlada
 
-  editarDocumento(doc: Documento) {
-    void this.router.navigate(['/creacion'], { state: { documento: doc } });
+  editarDocumento(doc: any) {
+    if (this.user?.id !== doc.id_user_creation) {
+      alert('Acceso denegado: Solo el creador del documento puede editarlo.');
+      return;
+    }
+    this.selectedDoc = doc;
+    this.editDocId = doc.id;
+    this.editDocCodigo = doc.codigo;
+    this.editDocTitulo = doc.titulo;
+    this.editDocDescripcion = doc.descripcion || '';
+    this.editDocPublico = doc.publico === true;
+    this.editDocSoloMiRed = doc.solo_mi_red === true;
+    this.editDocIdTipoDocumento = doc.id_tipo_documento;
+    this.editDocFlag = doc.flag !== false;
+    this.showEditDocumentModal = true;
+    this.cdr.detectChanges();
+  }
+
+  actualizarDocumento() {
+    if (!this.editDocId) return;
+
+    const dto: Documento = {
+      id: this.editDocId,
+      codigo: this.editDocCodigo,
+      titulo: this.editDocTitulo,
+      descripcion: this.editDocDescripcion,
+      publico: this.editDocPublico,
+      solo_mi_red: this.editDocPublico ? this.editDocSoloMiRed : false,
+      id_tipo_documento: this.editDocIdTipoDocumento || 0,
+      flag: this.editDocFlag,
+      codcas: this.selectedDoc.codcas,
+      codred: this.selectedDoc.codred,
+      id_user_creation: this.selectedDoc.id_user_creation,
+      date_creation: this.selectedDoc.date_creation,
+      date_update: ''
+    };
+
+    this.docService.saveDocumento(dto).subscribe(
+      () => {
+        alert('Documento actualizado exitosamente.');
+        this.showEditDocumentModal = false;
+        this.getDocumentos();
+      },
+      (error) => {
+        console.error('Error al actualizar documento:', error);
+        alert('Ocurrió un error al actualizar el documento.');
+      }
+    );
+  }
+
+  getFlowForVersion(version: VersionDocumento): any | null {
+    if (this.selectedVersion && this.selectedVersion.id === version.id) {
+      return this.selectedVersionFlow;
+    }
+    return this.activeFlowMap[version.id];
+  }
+
+  puedeAprobarVersion(version: VersionDocumento): boolean {
+    if (!version) return false;
+    const flow = this.getFlowForVersion(version);
+    if (!flow || (flow.status !== 'Pending' && flow.status !== 'Pendiente')) return false;
+    return flow.id_user_aprobador === this.user?.id;
+  }
+
+  abrirAprobacionVersion(doc: any, version: VersionDocumento, flow: any) {
+    this.selectedDoc = doc;
+    this.selectedVersion = version;
+    this.selectedFlow = flow;
+    this.observacion = '';
+    this.showDecisionModal = true;
+    this.cdr.detectChanges();
   }
 
   puedeDescargarFisico(version: VersionDocumento): boolean {
-    // Solo puede descargar físicamente si es creador, admin o aprobador
-    if (this.user?.roles?.includes('ADMIN') || this.user?.roles?.includes('ADMIN_RED')) {
-      return true;
+    const doc = this.documentos.find(d => d.id === version.id_documento);
+    if (!doc) return false;
+
+    const isOwner = doc.id_user_creation === this.user?.id || version.id_user_creation === this.user?.id;
+    const flow = this.getFlowForVersion(version);
+    const isApprover = (flow && flow.id_user_aprobador === this.user?.id) || version.id_user_aprobador === this.user?.id;
+
+    // Si el documento es privado, solo el dueño o aprobador asignado pueden descargar
+    if (!doc.publico) {
+      return isOwner || !!isApprover;
     }
-    if (version.id_user_creation === this.user?.id) {
-      return true;
+
+    // Si la versión es privada/borrador, solo el creador de la versión o aprobador asignado pueden descargar
+    if (version.visible === false) {
+      return isOwner || !!isApprover;
     }
-    // Aprobador asignado en flujo
-    const flow = this.activeFlowMap[version.id_documento];
-    if (flow && flow.id_user_aprobador === this.user?.id) {
-      return true;
+
+    // Si es público y la versión es pública, validar restricción de red (solo_mi_red)
+    if (doc.solo_mi_red) {
+      return doc.codred === this.codred || isOwner || !!isApprover;
     }
-    return false;
+
+    return true;
+  }
+
+  puedeVisualizarVersion(version: VersionDocumento): boolean {
+    return this.puedeDescargarFisico(version);
   }
 
   puedeEditarVersion(version: VersionDocumento): boolean {
-    return !!(this.user?.roles?.includes('ADMIN') ||
-      this.user?.roles?.includes('ADMIN_RED') ||
-      version.id_user_creation === this.user?.id);
+    return version.id_user_creation === this.user?.id;
   }
 
   puedeEliminarVersion(version: VersionDocumento): boolean {
-    return !!(this.user?.roles?.includes('ADMIN') || this.user?.roles?.includes('ADMIN_RED'));
+    return version.id_user_creation === this.user?.id;
   }
 
   visualizarArchivo(version: VersionDocumento) {
@@ -507,21 +866,64 @@ export class ReportsDocumento implements OnInit {
     this.selectedVersion = version;
     this.editVersionNombre = version.nombre;
     this.editVersionComentario = version.descripcion || '';
+    this.editVersionVisible = version.visible !== false;
+    this.editVersionAprobadorId = version.id_user_aprobador;
+    this.editVersionFile = null;
     this.showEditVersionForm = true;
     this.cdr.detectChanges();
   }
 
+  onEditFileChange(event: any) {
+    const file = event.target.files && event.target.files.length > 0 ? event.target.files[0] : null;
+    this.editVersionFile = file;
+  }
+
+  requiereAprobacionDoc(doc: any): boolean {
+    if (!doc) return false;
+    const tipo = this.tiposDocumento.find(t => t.id === doc.id_tipo_documento);
+    return tipo ? tipo.requiere_aprobacion : false;
+  }
+
+  loadUsersAprobadores() {
+    if (!this.codred) {
+      this.userService.getAllUsers().subscribe(
+        (data) => {
+          this.users_aprobadores = data || [];
+          this.cdr.detectChanges();
+        },
+        (err) => console.error('Error al cargar usuarios aprobadores:', err)
+      );
+      return;
+    }
+    this.userService.getUsersByCodred(this.codred).subscribe(
+      (data) => {
+        this.users_aprobadores = data || [];
+        this.cdr.detectChanges();
+      },
+      (err) => console.error('Error al cargar usuarios aprobadores:', err)
+    );
+  }
+
   actualizarVersion() {
     if (!this.selectedVersion) return;
-    const dto = {
-      id: this.selectedVersion.id,
-      nombre: this.editVersionNombre,
-      descripcion: this.editVersionComentario,
-      version: this.selectedVersion.version,
-      id_documento: this.selectedVersion.id_documento,
-      id_user_creation: this.selectedVersion.id_user_creation
-    };
-    this.versionService.updateVersionDocumento(dto).subscribe(
+
+    const formData = new FormData();
+    formData.append('id', String(this.selectedVersion.id));
+    formData.append('nombre', this.editVersionNombre);
+    formData.append('descripcion', this.editVersionComentario);
+    formData.append('version', String(this.selectedVersion.version));
+    formData.append('id_documento', String(this.selectedVersion.id_documento));
+    formData.append('id_user_creation', String(this.selectedVersion.id_user_creation));
+    formData.append('visible', String(this.editVersionVisible));
+
+    if (this.editVersionFile) {
+      formData.append('archivo', this.editVersionFile, this.editVersionFile.name);
+    }
+    if (this.editVersionAprobadorId !== null) {
+      formData.append('id_user_aprobador', String(this.editVersionAprobadorId));
+    }
+
+    this.versionService.updateVersionDocumento(formData).subscribe(
       () => {
         alert('Versión actualizada exitosamente.');
         this.showEditVersionForm = false;
@@ -529,6 +931,8 @@ export class ReportsDocumento implements OnInit {
           this.loadDocumentDetails(this.selectedDoc);
           this.selectedVersion!.nombre = this.editVersionNombre;
           this.selectedVersion!.descripcion = this.editVersionComentario;
+          this.selectedVersion!.visible = this.editVersionVisible;
+          this.selectedVersion!.id_user_aprobador = this.editVersionAprobadorId;
         }
         this.cdr.detectChanges();
       },

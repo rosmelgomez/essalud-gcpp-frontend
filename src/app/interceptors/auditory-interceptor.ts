@@ -28,12 +28,10 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
         status: error?.status,
       });
 
-      // Manejar errores de autenticación
-      if (error.status === 401 || error.status === 403) {
-        if (!isPublicRoute) {
-          console.warn('[AuthInterceptor] Sesión no válida o expirada. Redirigiendo a Login.');
-          redirectToLogin();
-        }
+      // Solo si la petición de api-token falla, limpiamos la sesión y redirigimos a login
+      if (req.url.includes('/api-token')) {
+        console.warn('[AuthInterceptor] La petición api-token falló. Limpiando sesión y redirigiendo a Login.');
+        redirectToLogin();
       }
 
       return throwError(() => error);

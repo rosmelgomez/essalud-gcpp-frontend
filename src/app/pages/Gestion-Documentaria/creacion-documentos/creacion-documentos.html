@@ -1,299 +1,367 @@
 <div class="main">
-  <section class="document-shell">
-    <header class="document-hero">
-      <span class="eyebrow">Gestión documentaria</span>
-      <h1>Registrar documento</h1>
-      <p>Completa los datos del archivo y súbelo en un solo paso.</p>
-    </header>
+  <div class="document-container-layout">
+    <section class="document-shell">
+      <header class="document-hero">
+        <span class="eyebrow">Gestión documentaria</span>
+        <h1>Registrar documento</h1>
+        <p>Completa los datos del archivo y súbelo en un solo paso.</p>
+      </header>
 
-    <div class="options">
-      <button type="button" class="option-button" *ngIf="user?.roles?.includes('ADMIN')" (click)="activeMode = 'tipo'"
-        [class.is-active]="activeMode === 'tipo'">
-        <span class="option-icon">📄</span>
-        <span class="option-label">Crear Tipo de Documento</span>
-      </button>
+      <div class="options">
+        <button type="button" class="option-button" *ngIf="user?.roles?.includes('ADMIN')" (click)="activeMode = 'tipo'"
+          [class.is-active]="activeMode === 'tipo'">
+          <span class="option-icon">📄</span>
+          <span class="option-label">Crear Tipo de Documento</span>
+        </button>
 
-      <button type="button" class="option-button" (click)="getTiposDocumentos()"
-        [class.is-active]="activeMode === 'documento'">
-        <span class="option-icon">📄</span>
-        <span class="option-label">Crear Documento</span>
-      </button>
-      <button type="button" class="option-button" (click)="getDocumentosByUser()"
-        [class.is-active]="activeMode === 'version'">
-        <span class="option-icon">📄</span>
-        <span class="option-label">Agregar version de documento</span>
-      </button>
-    </div>
-
-
-    <section class="context-card" aria-label="Información del registro">
-      <div class="context-item">
-        <span class="context-label">Usuario que crea</span>
-        <strong class="context-value">{{ creadorLabel }}</strong>
-      </div>
-      <div class="context-item">
-        <span class="context-label">Fecha de operación</span>
-        <strong class="context-value">{{ fechaOperacionLabel }}</strong>
+        <button type="button" class="option-button" (click)="getTiposDocumentos()"
+          [class.is-active]="activeMode === 'documento'">
+          <span class="option-icon">📄</span>
+          <span class="option-label">Crear Documento</span>
+        </button>
+        <button type="button" class="option-button" (click)="getDocumentosByUser()"
+          [class.is-active]="activeMode === 'version'">
+          <span class="option-icon">📄</span>
+          <span class="option-label">Agregar version de documento</span>
+        </button>
       </div>
 
+
+      <section class="context-card" aria-label="Información del registro">
+        <div class="context-item">
+          <span class="context-label">Usuario que crea</span>
+          <strong class="context-value">{{ creadorLabel }}</strong>
+        </div>
+        <div class="context-item">
+          <span class="context-label">Fecha de operación</span>
+          <strong class="context-value">{{ fechaOperacionLabel }}</strong>
+        </div>
+
+
+      </section>
+
+      <!-- FORMULARIO DE TIPO DE DOCUMENTO  -->
+      <div class="created-tipo-documento" *ngIf="activeMode === 'tipo' && user?.roles?.includes('ADMIN')">
+        <form [formGroup]="registerTipoDocumentoForm" autocomplete="off" class="register-form"
+          (ngSubmit)="registerTipoDocumento()">
+
+          <div class="form-grid">
+            <div class="register-form-group">
+              <label for="nombre_tipo">Nombre del tipo</label>
+              <input id="nombre_tipo" type="text" formControlName="nombre" name="nombre" placeholder="Ej: Informe médico"
+                [class.invalid]="registerTipoDocumentoForm.get('nombre')?.touched && registerTipoDocumentoForm.get('nombre')?.invalid"
+                required />
+              <small class="field-error"
+                *ngIf="registerTipoDocumentoForm.get('nombre')?.touched && registerTipoDocumentoForm.get('nombre')?.hasError('required')">
+                Ingresa el nombre del tipo de documento.
+              </small>
+            </div>
+
+            <div class="register-form-group">
+              <label for="descripcion_tipo">Descripción</label>
+              <input id="descripcion_tipo" type="text" formControlName="descripcion" name="descripcion"
+                placeholder="Ej: Documentos médicos en general"
+                [class.invalid]="registerTipoDocumentoForm.get('descripcion')?.touched && registerTipoDocumentoForm.get('descripcion')?.invalid"
+                required />
+              <small class="field-error"
+                *ngIf="registerTipoDocumentoForm.get('descripcion')?.touched && registerTipoDocumentoForm.get('descripcion')?.hasError('required')">
+                Describe el tipo de documento.
+              </small>
+            </div>
+
+            <div class="register-form-group">
+              <label for="max_size_mb">Tamaño máximo (MB)</label>
+              <input id="max_size_mb" type="number" min="1" formControlName="max_size_mb" name="max_size_mb"
+                placeholder="Ej: 10"
+                [class.invalid]="registerTipoDocumentoForm.get('max_size_mb')?.touched && registerTipoDocumentoForm.get('max_size_mb')?.invalid"
+                required />
+              <small class="field-error"
+                *ngIf="registerTipoDocumentoForm.get('max_size_mb')?.touched && registerTipoDocumentoForm.get('max_size_mb')?.hasError('required')">
+                Indica el tamaño máximo permitido.
+              </small>
+            </div>
+
+            <div class="register-form-group">
+              <label for="requiere_aprobacion">Requiere aprobación</label>
+              <select id="requiere_aprobacion" formControlName="requiere_aprobacion">
+                <option [ngValue]="false">No</option>
+                <option [ngValue]="true">Sí</option>
+              </select>
+            </div>
+
+            <div class="register-form-group">
+              <label for="flag_tipo">Estado</label>
+              <select id="flag_tipo" formControlName="flag">
+                <option [ngValue]="true">Activo</option>
+                <option [ngValue]="false">Inactivo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="extensions-section">
+            <label>Extensiones permitidas</label>
+            <div class="extension-input-group">
+              <input type="text" #extensionInput (keyup.enter)="addExtension(extensionInput)"
+                placeholder="Ej: pdf, doc, docx" class="extension-input" />
+              <button type="button" (click)="addExtension(extensionInput)" class="add-extension-btn">
+                Agregar
+              </button>
+            </div>
+
+            <div class="chips-container" *ngIf="extensionesChips.length > 0">
+              <mat-chip-set>
+                <mat-chip *ngFor="let ext of extensionesChips" removable (removed)="removeExtension(ext)">
+                  {{ ext }}
+                  <button matChipRemove>
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+
+            <small class="field-error" *ngIf="extensionesChips.length === 0">
+              Agrega al menos una extensión permitida.
+            </small>
+          </div>
+
+          <div class="register-submit">
+            <button type="submit">Guardar tipo de documento</button>
+          </div>
+        </form>
+      </div>
+
+
+      <!-- FORMULARIO DE DOCUMENTO -->
+      <div class="created-documento" *ngIf="activeMode === 'documento'">
+        <form [formGroup]="registerDocumentoForm" autocomplete="off" class="register-form"
+          (ngSubmit)="registerDocumento()">
+
+          <div class="form-grid">
+            <div class="register-form-group">
+              <label for="codigo">Código del archivo</label>
+              <input id="codigo" type="text" formControlName="codigo" name="codigo" placeholder="Ej: 2026001"
+                [class.invalid]="registerDocumentoForm.get('codigo')?.touched && registerDocumentoForm.get('codigo')?.invalid"
+                required />
+              <small class="field-error"
+                *ngIf="registerDocumentoForm.get('codigo')?.touched && registerDocumentoForm.get('codigo')?.hasError('required')">
+                Ingresa el código del archivo.
+              </small>
+            </div>
+
+            <div class="register-form-group">
+              <label for="titulo">Título</label>
+              <input id="titulo" type="text" formControlName="titulo" name="titulo" placeholder="Ej: titulo del documento"
+                [class.invalid]="registerDocumentoForm.get('titulo')?.touched && registerDocumentoForm.get('titulo')?.invalid"
+                required />
+              <small class="field-error"
+                *ngIf="registerDocumentoForm.get('titulo')?.touched && registerDocumentoForm.get('titulo')?.hasError('required')">
+                Ingresa el título del documento.
+              </small>
+            </div>
+
+            <div class="register-form-group">
+              <label for="descripcion_doc">Descripción</label>
+              <input id="descripcion_doc" type="text" formControlName="descripcion" name="descripcion"
+                placeholder="Ej: descripcion"
+                [class.invalid]="registerDocumentoForm.get('descripcion')?.touched && registerDocumentoForm.get('descripcion')?.invalid"
+                required />
+              <small class="field-error"
+                *ngIf="registerDocumentoForm.get('descripcion')?.touched && registerDocumentoForm.get('descripcion')?.hasError('required')">
+                Describe brevemente el documento.
+              </small>
+            </div>
+
+            <div class="register-form-group">
+              <label for="id_tipo_documento">Tipo de Documento</label>
+              <select id="id_tipo_documento" formControlName="id_tipo_documento"
+                [class.invalid]="registerDocumentoForm.get('id_tipo_documento')?.touched && registerDocumentoForm.get('id_tipo_documento')?.invalid"
+                required>
+                <option [ngValue]="''" disabled>Selecciona un tipo</option>
+                <option *ngFor="let t of tipo_documento" [ngValue]="t.id">{{ t.nombre }} {{ t.requiere_aprobacion ?
+                  '(requiere aprobación)' : '' }}</option>
+              </select>
+              <small class="field-error"
+                *ngIf="registerDocumentoForm.get('id_tipo_documento')?.touched && registerDocumentoForm.get('id_tipo_documento')?.hasError('required')">
+                Selecciona el tipo de documento.
+              </small>
+            </div>
+
+
+            <div class="register-form-group">
+              <label for="flag">Estado</label>
+              <select id="flag" formControlName="flag">
+                <option [ngValue]="true">Activo</option>
+                <option [ngValue]="false">Inactivo</option>
+              </select>
+            </div>
+
+            <div class="register-form-group">
+              <label for="publico">¿Público?</label>
+              <select id="publico" formControlName="publico">
+                <option [ngValue]="true">Público</option>
+                <option [ngValue]="false">Privado</option>
+              </select>
+            </div>
+
+            <div class="register-form-group" *ngIf="registerDocumentoForm.get('publico')?.value === true">
+              <label>Visibilidad por Red</label>
+              <div class="chips-selector">
+                <button type="button" class="select-chip" [class.is-selected]="registerDocumentoForm.get('solo_mi_red')?.value === false" (click)="setSoloMiRed(false)">
+                  🌐 Público en General
+                </button>
+                <button type="button" class="select-chip" [class.is-selected]="registerDocumentoForm.get('solo_mi_red')?.value === true" (click)="setSoloMiRed(true)">
+                  🏢 Mi Red
+                </button>
+              </div>
+            </div>
+
+
+          </div>
+
+          <div class="register-submit">
+            <button type="submit">{{ isEditing ? 'Actualizar archivo' : 'Guardar archivo' }}</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- FORMULARIO DE VERSION DE DOCUMENTO -->
+      <div class="created-version" *ngIf="activeMode === 'version'">
+        <form [formGroup]="registerVersionDocumentoForm" autocomplete="off" class="register-form"
+          (ngSubmit)="registerVersionDocumento()">
+
+          <div class="form-grid">
+            <div class="register-form-group">
+              <label for="id_documento">Documento base</label>
+              <select id="id_documento" formControlName="id_documento"
+                [class.invalid]="registerVersionDocumentoForm.get('id_documento')?.touched && registerVersionDocumentoForm.get('id_documento')?.invalid"
+                required>
+                <option [ngValue]="''" disabled>Selecciona un documento</option>
+                <option *ngFor="let documento of documentosByUser" [ngValue]="documento.id">{{ documento.titulo
+                  || documento.codigo || ('Documento ' + documento.id) }}</option>
+              </select>
+              <small class="field-error"
+                *ngIf="registerVersionDocumentoForm.get('id_documento')?.touched && registerVersionDocumentoForm.get('id_documento')?.hasError('required')">
+                Selecciona el documento al que pertenece la versión.
+              </small>
+            </div>
+
+            <div class="register-form-group">
+              <label for="nombre">Nombre del archivo</label>
+              <input id="nombre" type="text" formControlName="nombre" name="nombre" placeholder="Ej: nombre_file"
+                [class.invalid]="registerVersionDocumentoForm.get('nombre')?.touched && registerVersionDocumentoForm.get('nombre')?.invalid"
+                required />
+              <small class="field-error"
+                *ngIf="registerVersionDocumentoForm.get('nombre')?.touched && registerVersionDocumentoForm.get('nombre')?.hasError('required')">
+                Ingresa el nombre del archivo.
+              </small>
+            </div>
+
+            <div class="register-form-group">
+              <label for="version">Versión</label>
+              <input id="version" type="number" min="1" formControlName="version" name="version" placeholder="Ej: 1"
+                [class.invalid]="registerVersionDocumentoForm.get('version')?.touched && registerVersionDocumentoForm.get('version')?.invalid"
+                required />
+              <small class="field-error"
+                *ngIf="registerVersionDocumentoForm.get('version')?.touched && registerVersionDocumentoForm.get('version')?.hasError('required')">
+                Indica el número de versión.
+              </small>
+            </div>
+
+            <div class="register-form-group">
+              <label for="descripcion_version">Descripción</label>
+              <input id="descripcion_version" type="text" formControlName="descripcion" name="descripcion"
+                placeholder="Ej: descripcion"
+                [class.invalid]="registerVersionDocumentoForm.get('descripcion')?.touched && registerVersionDocumentoForm.get('descripcion')?.invalid"
+                required />
+              <small class="field-error"
+                *ngIf="registerVersionDocumentoForm.get('descripcion')?.touched && registerVersionDocumentoForm.get('descripcion')?.hasError('required')">
+                Describe brevemente la versión.
+              </small>
+            </div>
+
+            <div *ngIf="isDocumentoPublico" class="register-form-group">
+              <label for="version_publica">¿Hacer versión pública?</label>
+              <select id="version_publica" formControlName="visible">
+                <option [ngValue]="true">Sí, visible al público</option>
+                <option [ngValue]="false">No, borrador / privado</option>
+              </select>
+            </div>
+
+            <div *ngIf="versionRequiresApproval" class="register-form-group">
+              <label for="id_user_aprobador_ver">Usuario aprobador</label>
+              <select id="id_user_aprobador_ver" formControlName="id_user_aprobador">
+                <option [ngValue]="null" disabled>Selecciona un aprobador</option>
+                <option *ngFor="let u of users_aprobadores" [ngValue]="u.id">{{ u.name }} {{ u.lastname }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="register-form-group file-group">
+            <label for="archivo">Archivo</label>
+            <div class="file-input-wrap">
+              <input id="archivo" type="file" title="Seleccionar archivo" (change)="onFileSelected($event)"
+                [accept]="formatosPermitidos"
+                [class.invalid]="registerVersionDocumentoForm.get('archivo')?.touched && registerVersionDocumentoForm.get('archivo')?.invalid"
+                required />
+            </div>
+            <small class="field-error"
+              *ngIf="registerVersionDocumentoForm.get('archivo')?.touched && registerVersionDocumentoForm.get('archivo')?.hasError('required')">
+              Selecciona un archivo para continuar.
+            </small>
+          </div>
+
+          <div class="register-submit">
+            <button type="submit">{{ isEditing ? 'Actualizar archivo' : 'Guardar archivo' }}</button>
+          </div>
+        </form>
+      </div>
 
     </section>
 
-    <!-- FORMULARIO DE TIPO DE DOCUMENTO  -->
-    <div class="created-tipo-documento" *ngIf="activeMode === 'tipo' && user?.roles?.includes('ADMIN')">
-      <form [formGroup]="registerTipoDocumentoForm" autocomplete="off" class="register-form"
-        (ngSubmit)="registerTipoDocumento()">
-
-        <div class="form-grid">
-          <div class="register-form-group">
-            <label for="nombre_tipo">Nombre del tipo</label>
-            <input id="nombre_tipo" type="text" formControlName="nombre" name="nombre" placeholder="Ej: Informe médico"
-              [class.invalid]="registerTipoDocumentoForm.get('nombre')?.touched && registerTipoDocumentoForm.get('nombre')?.invalid"
-              required />
-            <small class="field-error"
-              *ngIf="registerTipoDocumentoForm.get('nombre')?.touched && registerTipoDocumentoForm.get('nombre')?.hasError('required')">
-              Ingresa el nombre del tipo de documento.
-            </small>
+    <!-- AYUDA MEMORIA SIDEBAR -->
+    <aside class="helper-sidebar">
+      <div class="helper-card">
+        <header class="helper-header">
+          <span class="helper-icon">💡</span>
+          <h3>Ayuda Memoria</h3>
+        </header>
+        <p class="helper-intro">Guía rápida de flujo para registrar y asociar correctamente los elementos en el sistema.</p>
+        
+        <div class="helper-sections">
+          <!-- Tipo de Documento (ADMIN only) -->
+          <div class="helper-section" *ngIf="user?.roles?.includes('ADMIN')">
+            <h4 class="type-color">Tipo de Documento</h4>
+            <p>Define las <strong>reglas y restricciones</strong> globales de los archivos:</p>
+            <ul>
+              <li><strong>Tamaño Máximo:</strong> Límite de tamaño en megabytes (ej: 10 MB).</li>
+              <li><strong>Extensiones:</strong> Extensiones admitidas (ej: <code>.pdf, .xlsx</code>).</li>
+              <li><strong>Aprobación:</strong> Determina si las versiones de este tipo requieren un flujo de aprobación formal.</li>
+            </ul>
           </div>
 
-          <div class="register-form-group">
-            <label for="descripcion_tipo">Descripción</label>
-            <input id="descripcion_tipo" type="text" formControlName="descripcion" name="descripcion"
-              placeholder="Ej: Documentos médicos en general"
-              [class.invalid]="registerTipoDocumentoForm.get('descripcion')?.touched && registerTipoDocumentoForm.get('descripcion')?.invalid"
-              required />
-            <small class="field-error"
-              *ngIf="registerTipoDocumentoForm.get('descripcion')?.touched && registerTipoDocumentoForm.get('descripcion')?.hasError('required')">
-              Describe el tipo de documento.
-            </small>
+          <!-- Documento -->
+          <div class="helper-section">
+            <h4 class="doc-color">Documento (Cabecera)</h4>
+            <p>Es el <strong>contenedor lógico o carpeta</strong> en el sistema:</p>
+            <ul>
+              <li><strong>Código único:</strong> Identificador único (ej: Código de Informe o Traba).</li>
+              <li><strong>Público/Privado:</strong> Define si será visible a otros usuarios.</li>
+              <li><strong>Visibilidad Red:</strong> Si es público, puedes limitar el acceso solo a tu propia Red Asistencial o dejarlo para público general.</li>
+            </ul>
           </div>
 
-          <div class="register-form-group">
-            <label for="max_size_mb">Tamaño máximo (MB)</label>
-            <input id="max_size_mb" type="number" min="1" formControlName="max_size_mb" name="max_size_mb"
-              placeholder="Ej: 10"
-              [class.invalid]="registerTipoDocumentoForm.get('max_size_mb')?.touched && registerTipoDocumentoForm.get('max_size_mb')?.invalid"
-              required />
-            <small class="field-error"
-              *ngIf="registerTipoDocumentoForm.get('max_size_mb')?.touched && registerTipoDocumentoForm.get('max_size_mb')?.hasError('required')">
-              Indica el tamaño máximo permitido.
-            </small>
-          </div>
-
-          <div class="register-form-group">
-            <label for="requiere_aprobacion">Requiere aprobación</label>
-            <select id="requiere_aprobacion" formControlName="requiere_aprobacion">
-              <option [ngValue]="false">No</option>
-              <option [ngValue]="true">Sí</option>
-            </select>
-          </div>
-
-          <div class="register-form-group">
-            <label for="flag_tipo">Estado</label>
-            <select id="flag_tipo" formControlName="flag">
-              <option [ngValue]="true">Activo</option>
-              <option [ngValue]="false">Inactivo</option>
-            </select>
+          <!-- Versión -->
+          <div class="helper-section">
+            <h4 class="version-color">Versión de Documento</h4>
+            <p>Corresponde al <strong>archivo físico subido</strong> en sí:</p>
+            <ul>
+              <li><strong>Documento Base:</strong> Debes seleccionar el documento lógico creado en el paso anterior.</li>
+              <li><strong>Validación automática:</strong> El archivo se validará con las restricciones de tamaño y extensión del tipo correspondiente.</li>
+              <li><strong>Aprobador:</strong> Si el tipo requiere aprobación, selecciona al aprobador asignado. El flujo iniciará en estado <strong>Pendiente</strong>.</li>
+            </ul>
           </div>
         </div>
-
-        <div class="extensions-section">
-          <label>Extensiones permitidas</label>
-          <div class="extension-input-group">
-            <input type="text" #extensionInput (keyup.enter)="addExtension(extensionInput)"
-              placeholder="Ej: pdf, doc, docx" class="extension-input" />
-            <button type="button" (click)="addExtension(extensionInput)" class="add-extension-btn">
-              Agregar
-            </button>
-          </div>
-
-          <div class="chips-container" *ngIf="extensionesChips.length > 0">
-            <mat-chip-set>
-              <mat-chip *ngFor="let ext of extensionesChips" removable (removed)="removeExtension(ext)">
-                {{ ext }}
-                <button matChipRemove>
-                  <mat-icon>close</mat-icon>
-                </button>
-              </mat-chip>
-            </mat-chip-set>
-          </div>
-
-          <small class="field-error" *ngIf="extensionesChips.length === 0">
-            Agrega al menos una extensión permitida.
-          </small>
-        </div>
-
-        <div class="register-submit">
-          <button type="submit">Guardar tipo de documento</button>
-        </div>
-      </form>
-    </div>
-
-
-    <!-- FORMULARIO DE DOCUMENTO -->
-    <div class="created-documento" *ngIf="activeMode === 'documento'">
-      <form [formGroup]="registerDocumentoForm" autocomplete="off" class="register-form"
-        (ngSubmit)="registerDocumento()">
-
-        <div class="form-grid">
-          <div class="register-form-group">
-            <label for="codigo">Código del archivo</label>
-            <input id="codigo" type="text" formControlName="codigo" name="codigo" placeholder="Ej: 2026001"
-              [class.invalid]="registerDocumentoForm.get('codigo')?.touched && registerDocumentoForm.get('codigo')?.invalid"
-              required />
-            <small class="field-error"
-              *ngIf="registerDocumentoForm.get('codigo')?.touched && registerDocumentoForm.get('codigo')?.hasError('required')">
-              Ingresa el código del archivo.
-            </small>
-          </div>
-
-          <div class="register-form-group">
-            <label for="titulo">Título</label>
-            <input id="titulo" type="text" formControlName="titulo" name="titulo" placeholder="Ej: titulo del documento"
-              [class.invalid]="registerDocumentoForm.get('titulo')?.touched && registerDocumentoForm.get('titulo')?.invalid"
-              required />
-            <small class="field-error"
-              *ngIf="registerDocumentoForm.get('titulo')?.touched && registerDocumentoForm.get('titulo')?.hasError('required')">
-              Ingresa el título del documento.
-            </small>
-          </div>
-
-          <div class="register-form-group">
-            <label for="descripcion_doc">Descripción</label>
-            <input id="descripcion_doc" type="text" formControlName="descripcion" name="descripcion"
-              placeholder="Ej: descripcion"
-              [class.invalid]="registerDocumentoForm.get('descripcion')?.touched && registerDocumentoForm.get('descripcion')?.invalid"
-              required />
-            <small class="field-error"
-              *ngIf="registerDocumentoForm.get('descripcion')?.touched && registerDocumentoForm.get('descripcion')?.hasError('required')">
-              Describe brevemente el documento.
-            </small>
-          </div>
-
-          <div class="register-form-group">
-            <label for="id_tipo_documento">Tipo de Documento</label>
-            <select id="id_tipo_documento" formControlName="id_tipo_documento"
-              [class.invalid]="registerDocumentoForm.get('id_tipo_documento')?.touched && registerDocumentoForm.get('id_tipo_documento')?.invalid"
-              required>
-              <option [ngValue]="''" disabled>Selecciona un tipo</option>
-              <option *ngFor="let t of tipo_documento" [ngValue]="t.id">{{ t.nombre }} {{ t.requiere_aprobacion ?
-                '(requiere aprobación)' : '' }}</option>
-            </select>
-            <small class="field-error"
-              *ngIf="registerDocumentoForm.get('id_tipo_documento')?.touched && registerDocumentoForm.get('id_tipo_documento')?.hasError('required')">
-              Selecciona el tipo de documento.
-            </small>
-          </div>
-
-
-          <div class="register-form-group">
-            <label for="flag">Estado</label>
-            <select id="flag" formControlName="flag">
-              <option [ngValue]="true">Activo</option>
-              <option [ngValue]="false">Inactivo</option>
-            </select>
-          </div>
-
-          <div class="register-form-group">
-            <label for="publico">¿Público?</label>
-            <select id="publico" formControlName="publico">
-              <option [ngValue]="true">Público</option>
-              <option [ngValue]="false">Privado</option>
-            </select>
-          </div>
-
-
-        </div>
-
-        <div class="register-submit">
-          <button type="submit">{{ isEditing ? 'Actualizar archivo' : 'Guardar archivo' }}</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- FORMULARIO DE VERSION DE DOCUMENTO -->
-    <div class="created-version" *ngIf="activeMode === 'version'">
-      <form [formGroup]="registerVersionDocumentoForm" autocomplete="off" class="register-form"
-        (ngSubmit)="registerVersionDocumento()">
-
-        <div class="form-grid">
-          <div class="register-form-group">
-            <label for="id_documento">Documento base</label>
-            <select id="id_documento" formControlName="id_documento"
-              [class.invalid]="registerVersionDocumentoForm.get('id_documento')?.touched && registerVersionDocumentoForm.get('id_documento')?.invalid"
-              required>
-              <option [ngValue]="''" disabled>Selecciona un documento</option>
-              <option *ngFor="let documento of documentosByUser" [ngValue]="documento.id">{{ documento.titulo
-                || documento.codigo || ('Documento ' + documento.id) }}</option>
-            </select>
-            <small class="field-error"
-              *ngIf="registerVersionDocumentoForm.get('id_documento')?.touched && registerVersionDocumentoForm.get('id_documento')?.hasError('required')">
-              Selecciona el documento al que pertenece la versión.
-            </small>
-          </div>
-
-          <div class="register-form-group">
-            <label for="nombre">Nombre del archivo</label>
-            <input id="nombre" type="text" formControlName="nombre" name="nombre" placeholder="Ej: nombre_file"
-              [class.invalid]="registerVersionDocumentoForm.get('nombre')?.touched && registerVersionDocumentoForm.get('nombre')?.invalid"
-              required />
-            <small class="field-error"
-              *ngIf="registerVersionDocumentoForm.get('nombre')?.touched && registerVersionDocumentoForm.get('nombre')?.hasError('required')">
-              Ingresa el nombre del archivo.
-            </small>
-          </div>
-
-          <div class="register-form-group">
-            <label for="version">Versión</label>
-            <input id="version" type="number" min="1" formControlName="version" name="version" placeholder="Ej: 1"
-              [class.invalid]="registerVersionDocumentoForm.get('version')?.touched && registerVersionDocumentoForm.get('version')?.invalid"
-              required />
-            <small class="field-error"
-              *ngIf="registerVersionDocumentoForm.get('version')?.touched && registerVersionDocumentoForm.get('version')?.hasError('required')">
-              Indica el número de versión.
-            </small>
-          </div>
-
-          <div class="register-form-group">
-            <label for="descripcion_version">Descripción</label>
-            <input id="descripcion_version" type="text" formControlName="descripcion" name="descripcion"
-              placeholder="Ej: descripcion"
-              [class.invalid]="registerVersionDocumentoForm.get('descripcion')?.touched && registerVersionDocumentoForm.get('descripcion')?.invalid"
-              required />
-            <small class="field-error"
-              *ngIf="registerVersionDocumentoForm.get('descripcion')?.touched && registerVersionDocumentoForm.get('descripcion')?.hasError('required')">
-              Describe brevemente la versión.
-            </small>
-          </div>
-
-          <div *ngIf="versionRequiresApproval" class="register-form-group">
-            <label for="id_user_aprobador_ver">Usuario aprobador</label>
-            <select id="id_user_aprobador_ver" formControlName="id_user_aprobador">
-              <option [ngValue]="null" disabled>Selecciona un aprobador</option>
-              <option *ngFor="let u of users_aprobadores" [ngValue]="u.id">{{ u.name }} {{ u.lastname }}</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="register-form-group file-group">
-          <label for="archivo">Archivo</label>
-          <div class="file-input-wrap">
-            <input id="archivo" type="file" title="Seleccionar archivo" (change)="onFileSelected($event)"
-              [accept]="formatosPermitidos"
-              [class.invalid]="registerVersionDocumentoForm.get('archivo')?.touched && registerVersionDocumentoForm.get('archivo')?.invalid"
-              required />
-          </div>
-          <small class="field-error"
-            *ngIf="registerVersionDocumentoForm.get('archivo')?.touched && registerVersionDocumentoForm.get('archivo')?.hasError('required')">
-            Selecciona un archivo para continuar.
-          </small>
-        </div>
-
-        <div class="register-submit">
-          <button type="submit">{{ isEditing ? 'Actualizar archivo' : 'Guardar archivo' }}</button>
-        </div>
-      </form>
-    </div>
-
-  </section>
+      </div>
+    </aside>
+  </div>
 </div>

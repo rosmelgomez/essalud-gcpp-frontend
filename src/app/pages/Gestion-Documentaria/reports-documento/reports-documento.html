@@ -46,6 +46,46 @@
     </div>
   </section>
 
+  <!-- Selector de Secciones (Tabs) -->
+  <div class="sections-tab-container">
+    <button type="button" class="tab-btn" [class.is-active]="activeTab === 'publicos'" (click)="setActiveTab('publicos')">
+      <span class="tab-icon">🌎</span>
+      <span>Públicos</span>
+    </button>
+    <button type="button" class="tab-btn" [class.is-active]="activeTab === 'privados'" (click)="setActiveTab('privados')">
+      <span class="tab-icon">📁</span>
+      <span>Mis Documentos</span>
+    </button>
+    <button type="button" class="tab-btn" [class.is-active]="activeTab === 'por_aprobar'" (click)="setActiveTab('por_aprobar')">
+      <span class="tab-icon">⚖️</span>
+      <span>Por Aprobar</span>
+    </button>
+  </div>
+
+  <!-- Selector de Sub-Secciones para Públicos -->
+  <div class="sub-tabs-container" *ngIf="activeTab === 'publicos'">
+    <button type="button" class="sub-tab-btn" [class.is-active]="activePublicSubTab === 'general'" (click)="setPublicSubTab('general')">
+      <span class="tab-icon">🌎</span>
+      <span>Público en General</span>
+    </button>
+    <button type="button" class="sub-tab-btn" [class.is-active]="activePublicSubTab === 'mi_red'" (click)="setPublicSubTab('mi_red')">
+      <span class="tab-icon">🏢</span>
+      <span>Solo mi Red</span>
+    </button>
+  </div>
+
+  <!-- Selector de Sub-Secciones para Por Aprobar -->
+  <div class="sub-tabs-container" *ngIf="activeTab === 'por_aprobar'">
+    <button type="button" class="sub-tab-btn" [class.is-active]="activeApprovalSubTab === 'por_mi_aprobar'" (click)="setApprovalSubTab('por_mi_aprobar')">
+      <span class="tab-icon">⏳</span>
+      <span>Pendientes por mi Aprobación</span>
+    </button>
+    <button type="button" class="sub-tab-btn" [class.is-active]="activeApprovalSubTab === 'mis_solicitudes'" (click)="setApprovalSubTab('mis_solicitudes')">
+      <span class="tab-icon">📨</span>
+      <span>Mis Solicitudes Pendientes</span>
+    </button>
+  </div>
+
   <!-- Panel de Control y Filtros -->
   <section class="control-panel">
     <div class="search-box">
@@ -55,6 +95,25 @@
     </div>
 
     <div class="filters-group">
+      <!-- Filtro de Red Asistencial (solo visible en pestaña de públicos) -->
+      <div class="filter-select-wrapper" *ngIf="activeTab === 'publicos'">
+        <label for="redFilter">Red Asistencial</label>
+        <select id="redFilter" [(ngModel)]="filterCodred" (change)="applyFilters()">
+          <option value="">Todas las redes</option>
+          <option *ngFor="let r of redes" [value]="r.redasiscod">{{ r.redasisdes }}</option>
+        </select>
+      </div>
+
+      <!-- Filtro de Privacidad (solo visible en pestaña de Mis Documentos) -->
+      <div class="filter-select-wrapper" *ngIf="activeTab === 'privados'">
+        <label for="privacyFilter">Privacidad</label>
+        <select id="privacyFilter" [(ngModel)]="filterPrivacy" (change)="applyFilters()">
+          <option value="">Todos</option>
+          <option value="publico">Mis archivos públicos</option>
+          <option value="privado">Mis documentos privados</option>
+        </select>
+      </div>
+
       <div class="filter-select-wrapper">
         <label for="tipoFilter">Tipo de Documento</label>
         <select id="tipoFilter" [(ngModel)]="filterTipo" (change)="applyFilters()">
@@ -76,6 +135,8 @@
     </div>
   </section>
 
+
+
   <!-- Contenedor Principal de la Tabla -->
   <section class="table-container">
     <table class="premium-table">
@@ -84,47 +145,49 @@
           <th>Código</th>
           <th>Título / Descripción</th>
           <th>Tipo</th>
-
+          <th>Creado por</th>
+          <th>Fecha Creación</th>
+          <th>Red</th>
+          <th>Centro</th>
           <th>Última Versión</th>
-          <th>Estado</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let doc of filteredDocumentos" class="table-row">
+        <tr *ngFor="let doc of pagedDocumentos" class="table-row">
           <td class="col-code">
             <span class="code-badge">{{ doc.codigo }}</span>
           </td>
           <td class="col-title">
-            <div class="doc-title">{{ doc.titulo }}</div>
-            <div class="doc-desc">{{ doc.descripcion || 'Sin descripción detallada' }}</div>
+            <div class="doc-title">{{ doc.titulo_display || doc.titulo }}</div>
+            <div class="doc-desc">{{ doc.descripcion_display || doc.descripcion || 'Sin descripción detallada' }}</div>
           </td>
           <td>
             <span class="type-badge">{{ getTipoNombre(doc.id_tipo_documento) }}</span>
           </td>
-
           <td>
-            <span class="version-badge" *ngIf="activeVersionMap[doc.id]">v{{ activeVersionMap[doc.id]?.version }}</span>
-            <span class="no-version" *ngIf="!activeVersionMap[doc.id]">Sin archivos</span>
+            {{ doc.creador_display || doc.nombre_usuario_creador || 'Desconocido' }}
           </td>
           <td>
-            <ng-container *ngIf="activeFlowMap[doc.id]; else noFlow">
-              <span class="status-chip" [ngClass]="{
-                'status-pending': activeFlowMap[doc.id].status === 'Pendiente',
-                'status-approved': activeFlowMap[doc.id].status === 'Aprobado',
-                'status-rejected': activeFlowMap[doc.id].status === 'Rechazado'
-              }">
-                {{ activeFlowMap[doc.id].status }}
-              </span>
+            {{ (doc.fecha_display || doc.date_creation) | date:'dd/MM/yyyy' }}
+          </td>
+          <td>
+            {{ doc.red_nombre || 'Sin Red' }}
+          </td>
+          <td>
+            {{ doc.centro_nombre || 'Sin Centro' }}
+          </td>
+          <td>
+            <span class="version-badge" *ngIf="doc.version_display">{{ doc.version_display }}</span>
+            <ng-container *ngIf="!doc.version_display">
+              <span class="version-badge" *ngIf="activeVersionMap[doc.id]">v{{ activeVersionMap[doc.id]?.version }}</span>
+              <span class="no-version" *ngIf="!activeVersionMap[doc.id]">Sin archivos</span>
             </ng-container>
-            <ng-template #noFlow>
-              <span class="status-chip status-none">No Requiere</span>
-            </ng-template>
           </td>
           <td class="col-actions">
             <!-- Descargar Archivo -->
-            <button class="action-btn download-btn" *ngIf="activeVersionMap[doc.id]"
-              (click)="descargarArchivo(activeVersionMap[doc.id]!)" title="Descargar versión activa">
+            <button class="action-btn download-btn" *ngIf="doc.version_display || activeVersionMap[doc.id]"
+              (click)="descargarDocumentoVersion(doc)" title="Descargar versión activa">
               <mat-icon>download</mat-icon>
             </button>
 
@@ -136,20 +199,14 @@
 
             <!-- Editar Documento -->
             <button class="action-btn download-btn"
-              *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('ADMIN_RED') || user?.id === doc.id_user_creation"
+              *ngIf="user?.id === doc.id_user_creation"
               (click)="editarDocumento(doc)" title="Editar documento">
               <mat-icon>edit</mat-icon>
             </button>
 
-            <!-- Decisión de Aprobador -->
-            <button class="action-btn approve-btn" *ngIf="puedeAprobar(doc)" (click)="abrirAprobacion(doc)"
-              title="Evaluar y aprobar documento">
-              <mat-icon>gavel</mat-icon>
-            </button>
-
             <!-- Soft Delete para Administradores -->
             <button class="action-btn delete-btn"
-              *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('ADMIN_RED')"
+              *ngIf="user?.id === doc.id_user_creation"
               (click)="eliminarDocumento(doc)" title="Eliminar documento (Soft-delete)">
               <mat-icon>delete_sweep</mat-icon>
             </button>
@@ -158,7 +215,7 @@
 
         <!-- Mensaje de no hay resultados -->
         <tr *ngIf="filteredDocumentos.length === 0">
-          <td colspan="7" class="empty-table-state">
+          <td colspan="9" class="empty-table-state">
             <div class="empty-content">
               <mat-icon class="empty-icon">folder_open</mat-icon>
               <h3>No se encontraron documentos</h3>
@@ -168,6 +225,39 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Paginador Premium -->
+    <div class="paginator-container" *ngIf="filteredDocumentos.length > 0">
+      <div class="paginator-left">
+        <span class="paginator-info">
+          Mostrando {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, filteredDocumentos.length) }} de {{ filteredDocumentos.length }}
+        </span>
+        <div class="paginator-page-size">
+          <label for="pageSizeSelect">Filas por página:</label>
+          <select id="pageSizeSelect" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="paginator-right">
+        <button type="button" class="paginator-btn" [disabled]="currentPage === 1" (click)="onPageChange(1)" title="Primera página">
+          <mat-icon>first_page</mat-icon>
+        </button>
+        <button type="button" class="paginator-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)" title="Página anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        
+        <span class="paginator-info">Página {{ currentPage }} de {{ totalPages }}</span>
+
+        <button type="button" class="paginator-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)" title="Página siguiente">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+        <button type="button" class="paginator-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)" title="Última página">
+          <mat-icon>last_page</mat-icon>
+        </button>
+      </div>
+    </div>
   </section>
 
   <!-- MODAL DE TIMELINE (Línea de Tiempo de Versiones e Historial de Revisiones) -->
@@ -183,11 +273,13 @@
         <div class="versions-sidebar">
           <h3>Versiones Disponibles</h3>
           <div class="versions-list">
-            <button *ngFor="let ver of versionsMap[selectedDoc?.id ?? 0]" class="version-item-btn"
-              [class.is-active]="selectedVersion?.id === ver.id" (click)="onTimelineVersionChange(ver)">
-              <span class="ver-label">Versión {{ ver.version }}</span>
-              <span class="ver-date">{{ ver.date_creation | date:'dd/MM/yyyy HH:mm' }}</span>
-            </button>
+            <ng-container *ngFor="let ver of versionsMap[selectedDoc?.id ?? 0]">
+              <button *ngIf="shouldShowVersionInTimeline(ver)" class="version-item-btn"
+                [class.is-active]="selectedVersion?.id === ver.id" (click)="onTimelineVersionChange(ver)">
+                <span class="ver-label">Versión {{ ver.version }}</span>
+                <span class="ver-date">{{ ver.date_creation | date:'dd/MM/yyyy HH:mm' }}</span>
+              </button>
+            </ng-container>
           </div>
         </div>
 
@@ -200,7 +292,7 @@
                 <div><strong>Nombre de Archivo:</strong> {{ selectedVersion.nombre }}</div>
                 <div><strong>Tamaño:</strong> {{ selectedVersion.size | number:'1.2-2' }} MB</div>
                 <div><strong>Extensión:</strong> {{ selectedVersion.extencion }}</div>
-                <div><strong>Descripción / Notas:</strong> {{ selectedVersion.comentario || 'Sin descripción' }}</div>
+                <div><strong>Descripción / Notas:</strong> {{ selectedVersion.descripcion || 'Sin descripción' }}</div>
               </div>
 
               <div class="details-download-action">
@@ -222,6 +314,13 @@
                   <mat-icon>edit</mat-icon> Editar
                 </button>
 
+                <!-- Evaluar (Aprobador) -->
+                <button class="download-action-btn approve-action-btn" *ngIf="puedeAprobarVersion(selectedVersion)"
+                  (click)="abrirAprobacionVersion(selectedDoc, selectedVersion, getFlowForVersion(selectedVersion))"
+                  title="Evaluar y aprobar esta versión">
+                  <mat-icon>gavel</mat-icon> Evaluar
+                </button>
+
                 <!-- Eliminar (Admin/Admin_red) -->
                 <button class="download-action-btn delete-action-btn" *ngIf="puedeEliminarVersion(selectedVersion)"
                   (click)="eliminarVersion(selectedVersion)" title="Eliminar lógicamente esta versión">
@@ -238,7 +337,31 @@
                   <label for="edit_ver_nombre">Nombre del archivo</label>
                   <input id="edit_ver_nombre" type="text" [(ngModel)]="editVersionNombre" class="edit-ver-input" />
                 </div>
+
                 <div class="edit-form-group">
+                  <label for="edit_ver_file">Reemplazar archivo (opcional)</label>
+                  <input id="edit_ver_file" type="file" (change)="onEditFileChange($event)" class="edit-ver-input" />
+                </div>
+
+                <div class="edit-form-group" *ngIf="selectedDoc?.publico === true">
+                  <label for="edit_ver_visible">Visibilidad en Portal Público</label>
+                  <select id="edit_ver_visible" [(ngModel)]="editVersionVisible" class="edit-ver-input">
+                    <option [ngValue]="true">Visible</option>
+                    <option [ngValue]="false">Oculto</option>
+                  </select>
+                </div>
+
+                <div class="edit-form-group" *ngIf="requiereAprobacionDoc(selectedDoc)">
+                  <label for="edit_ver_aprobador">Usuario Aprobador</label>
+                  <select id="edit_ver_aprobador" [(ngModel)]="editVersionAprobadorId" class="edit-ver-input">
+                    <option [ngValue]="null">Seleccione un aprobador</option>
+                    <option *ngFor="let user of users_aprobadores" [ngValue]="user.id">
+                      {{ user.name }} {{ user.lastname }} ({{ user.username }})
+                    </option>
+                  </select>
+                </div>
+
+                <div class="edit-form-group full-width">
                   <label for="edit_ver_comentario">Descripción / Notas</label>
                   <textarea id="edit_ver_comentario" [(ngModel)]="editVersionComentario" class="edit-ver-textarea"
                     rows="3"></textarea>
@@ -328,6 +451,54 @@
 
           <button class="decision-btn approve-submit-btn" (click)="procesarDecision('Aprobado')">
             <mat-icon>check</mat-icon> Aprobar Documento
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE MODIFICAR DOCUMENTO -->
+  <div class="premium-modal-overlay" *ngIf="showEditDocumentModal">
+    <div class="premium-modal-card decision-card">
+      <header class="modal-header">
+        <h2>Modificar Información del Documento</h2>
+        <button class="close-modal-btn" (click)="cerrarModales()">&times;</button>
+      </header>
+      <div class="modal-body">
+        <div class="edit-version-grid">
+          <div class="edit-form-group">
+            <label for="edit_doc_codigo">Código del archivo</label>
+            <input id="edit_doc_codigo" type="text" [(ngModel)]="editDocCodigo" class="edit-ver-input" />
+          </div>
+          <div class="edit-form-group">
+            <label for="edit_doc_titulo">Título</label>
+            <input id="edit_doc_titulo" type="text" [(ngModel)]="editDocTitulo" class="edit-ver-input" />
+          </div>
+          <div class="edit-form-group">
+            <label for="edit_doc_publico">¿Público?</label>
+            <select id="edit_doc_publico" [(ngModel)]="editDocPublico" class="edit-ver-input">
+              <option [ngValue]="true">Público</option>
+              <option [ngValue]="false">Privado</option>
+            </select>
+          </div>
+          <div class="edit-form-group" *ngIf="editDocPublico === true">
+            <label for="edit_doc_solomired">Visibilidad</label>
+            <select id="edit_doc_solomired" [(ngModel)]="editDocSoloMiRed" class="edit-ver-input">
+              <option [ngValue]="false">Público en General</option>
+              <option [ngValue]="true">Solo mi Red</option>
+            </select>
+          </div>
+          <div class="edit-form-group full-width">
+            <label for="edit_doc_descripcion">Descripción</label>
+            <textarea id="edit_doc_descripcion" [(ngModel)]="editDocDescripcion" class="edit-ver-textarea" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="decision-actions-row" style="margin-top: 20px; justify-content: flex-end; gap: 12px;">
+          <button class="decision-btn reject-submit-btn" style="background-color: var(--card-border-color); color: var(--text-muted); border: 1px solid var(--card-border-color);" (click)="cerrarModales()">
+            Cancelar
+          </button>
+          <button class="decision-btn approve-submit-btn" (click)="actualizarDocumento()">
+            Guardar Cambios
           </button>
         </div>
       </div>

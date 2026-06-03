@@ -18,6 +18,7 @@ export interface Documento {
   codcas: string;
   codred: string;
   publico: boolean;
+  solo_mi_red?: boolean;
   date_creation: string;
   date_update: string;
   flag: boolean;
@@ -38,6 +39,7 @@ export interface VersionDocumento {
   id_user_creation: number;
   id_documento: number;
   id_user_aprobador: number | null;
+  visible: boolean;
 }
 
 
