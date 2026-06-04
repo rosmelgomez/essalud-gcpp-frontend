@@ -294,6 +294,20 @@
                 <option *ngFor="let u of users_aprobadores" [ngValue]="u.id">{{ u.name }} {{ u.lastname }}</option>
               </select>
             </div>
+
+            <div *ngIf="versionRequiresApproval" class="register-form-group">
+              <label for="prioridad_ver">Prioridad de Aprobación</label>
+              <select id="prioridad_ver" formControlName="prioridad">
+                <option value="BAJA">Baja</option>
+                <option value="MEDIA">Media</option>
+                <option value="ALTA">Alta</option>
+              </select>
+            </div>
+
+            <div *ngIf="versionRequiresApproval" class="register-form-group full-width">
+              <label for="comentario_solicitud_ver">Motivo / Comentario de Solicitud</label>
+              <textarea id="comentario_solicitud_ver" formControlName="comentarioSolicitud" placeholder="Explique brevemente el motivo de la aprobación..." rows="3"></textarea>
+            </div>
           </div>
 
           <div class="register-form-group file-group">

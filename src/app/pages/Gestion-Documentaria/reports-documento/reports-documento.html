@@ -48,15 +48,18 @@
 
   <!-- Selector de Secciones (Tabs) -->
   <div class="sections-tab-container">
-    <button type="button" class="tab-btn" [class.is-active]="activeTab === 'publicos'" (click)="setActiveTab('publicos')">
+    <button type="button" class="tab-btn" [class.is-active]="activeTab === 'publicos'"
+      (click)="setActiveTab('publicos')">
       <span class="tab-icon">🌎</span>
       <span>Públicos</span>
     </button>
-    <button type="button" class="tab-btn" [class.is-active]="activeTab === 'privados'" (click)="setActiveTab('privados')">
+    <button type="button" class="tab-btn" [class.is-active]="activeTab === 'privados'"
+      (click)="setActiveTab('privados')">
       <span class="tab-icon">📁</span>
       <span>Mis Documentos</span>
     </button>
-    <button type="button" class="tab-btn" [class.is-active]="activeTab === 'por_aprobar'" (click)="setActiveTab('por_aprobar')">
+    <button type="button" class="tab-btn" [class.is-active]="activeTab === 'por_aprobar'"
+      (click)="setActiveTab('por_aprobar')">
       <span class="tab-icon">⚖️</span>
       <span>Por Aprobar</span>
     </button>
@@ -64,11 +67,13 @@
 
   <!-- Selector de Sub-Secciones para Públicos -->
   <div class="sub-tabs-container" *ngIf="activeTab === 'publicos'">
-    <button type="button" class="sub-tab-btn" [class.is-active]="activePublicSubTab === 'general'" (click)="setPublicSubTab('general')">
+    <button type="button" class="sub-tab-btn" [class.is-active]="activePublicSubTab === 'general'"
+      (click)="setPublicSubTab('general')">
       <span class="tab-icon">🌎</span>
       <span>Público en General</span>
     </button>
-    <button type="button" class="sub-tab-btn" [class.is-active]="activePublicSubTab === 'mi_red'" (click)="setPublicSubTab('mi_red')">
+    <button type="button" class="sub-tab-btn" [class.is-active]="activePublicSubTab === 'mi_red'"
+      (click)="setPublicSubTab('mi_red')">
       <span class="tab-icon">🏢</span>
       <span>Solo mi Red</span>
     </button>
@@ -76,11 +81,13 @@
 
   <!-- Selector de Sub-Secciones para Por Aprobar -->
   <div class="sub-tabs-container" *ngIf="activeTab === 'por_aprobar'">
-    <button type="button" class="sub-tab-btn" [class.is-active]="activeApprovalSubTab === 'por_mi_aprobar'" (click)="setApprovalSubTab('por_mi_aprobar')">
+    <button type="button" class="sub-tab-btn" [class.is-active]="activeApprovalSubTab === 'por_mi_aprobar'"
+      (click)="setApprovalSubTab('por_mi_aprobar')">
       <span class="tab-icon">⏳</span>
       <span>Pendientes por mi Aprobación</span>
     </button>
-    <button type="button" class="sub-tab-btn" [class.is-active]="activeApprovalSubTab === 'mis_solicitudes'" (click)="setApprovalSubTab('mis_solicitudes')">
+    <button type="button" class="sub-tab-btn" [class.is-active]="activeApprovalSubTab === 'mis_solicitudes'"
+      (click)="setApprovalSubTab('mis_solicitudes')">
       <span class="tab-icon">📨</span>
       <span>Mis Solicitudes Pendientes</span>
     </button>
@@ -159,7 +166,15 @@
             <span class="code-badge">{{ doc.codigo }}</span>
           </td>
           <td class="col-title">
-            <div class="doc-title">{{ doc.titulo_display || doc.titulo }}</div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <div class="doc-title">{{ doc.titulo_display || doc.titulo }}</div>
+              <span *ngIf="getActiveFlowPriority(doc)" class="priority-badge" [ngClass]="'priority-' + (getActiveFlowPriority(doc)?.toLowerCase() || '')">
+                {{ getActiveFlowPriority(doc) }}
+              </span>
+              <span *ngIf="getActiveFlowStatus(doc)" class="status-badge" [ngClass]="'status-' + (getActiveFlowStatus(doc)?.toLowerCase() || '')">
+                {{ getActiveFlowStatus(doc) }}
+              </span>
+            </div>
             <div class="doc-desc">{{ doc.descripcion_display || doc.descripcion || 'Sin descripción detallada' }}</div>
           </td>
           <td>
@@ -180,7 +195,8 @@
           <td>
             <span class="version-badge" *ngIf="doc.version_display">{{ doc.version_display }}</span>
             <ng-container *ngIf="!doc.version_display">
-              <span class="version-badge" *ngIf="activeVersionMap[doc.id]">v{{ activeVersionMap[doc.id]?.version }}</span>
+              <span class="version-badge" *ngIf="activeVersionMap[doc.id]">v{{ activeVersionMap[doc.id]?.version
+                }}</span>
               <span class="no-version" *ngIf="!activeVersionMap[doc.id]">Sin archivos</span>
             </ng-container>
           </td>
@@ -198,15 +214,13 @@
             </button>
 
             <!-- Editar Documento -->
-            <button class="action-btn download-btn"
-              *ngIf="user?.id === doc.id_user_creation"
+            <button class="action-btn download-btn" *ngIf="user?.id === doc.id_user_creation"
               (click)="editarDocumento(doc)" title="Editar documento">
               <mat-icon>edit</mat-icon>
             </button>
 
             <!-- Soft Delete para Administradores -->
-            <button class="action-btn delete-btn"
-              *ngIf="user?.id === doc.id_user_creation"
+            <button class="action-btn delete-btn" *ngIf="user?.id === doc.id_user_creation"
               (click)="eliminarDocumento(doc)" title="Eliminar documento (Soft-delete)">
               <mat-icon>delete_sweep</mat-icon>
             </button>
@@ -230,7 +244,8 @@
     <div class="paginator-container" *ngIf="filteredDocumentos.length > 0">
       <div class="paginator-left">
         <span class="paginator-info">
-          Mostrando {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, filteredDocumentos.length) }} de {{ filteredDocumentos.length }}
+          Mostrando {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize,
+          filteredDocumentos.length) }} de {{ filteredDocumentos.length }}
         </span>
         <div class="paginator-page-size">
           <label for="pageSizeSelect">Filas por página:</label>
@@ -241,19 +256,23 @@
       </div>
 
       <div class="paginator-right">
-        <button type="button" class="paginator-btn" [disabled]="currentPage === 1" (click)="onPageChange(1)" title="Primera página">
+        <button type="button" class="paginator-btn" [disabled]="currentPage === 1" (click)="onPageChange(1)"
+          title="Primera página">
           <mat-icon>first_page</mat-icon>
         </button>
-        <button type="button" class="paginator-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)" title="Página anterior">
+        <button type="button" class="paginator-btn" [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)" title="Página anterior">
           <mat-icon>chevron_left</mat-icon>
         </button>
-        
+
         <span class="paginator-info">Página {{ currentPage }} de {{ totalPages }}</span>
 
-        <button type="button" class="paginator-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)" title="Página siguiente">
+        <button type="button" class="paginator-btn" [disabled]="currentPage === totalPages"
+          (click)="onPageChange(currentPage + 1)" title="Página siguiente">
           <mat-icon>chevron_right</mat-icon>
         </button>
-        <button type="button" class="paginator-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)" title="Última página">
+        <button type="button" class="paginator-btn" [disabled]="currentPage === totalPages"
+          (click)="onPageChange(totalPages)" title="Última página">
           <mat-icon>last_page</mat-icon>
         </button>
       </div>
@@ -293,6 +312,17 @@
                 <div><strong>Tamaño:</strong> {{ selectedVersion.size | number:'1.2-2' }} MB</div>
                 <div><strong>Extensión:</strong> {{ selectedVersion.extencion }}</div>
                 <div><strong>Descripción / Notas:</strong> {{ selectedVersion.descripcion || 'Sin descripción' }}</div>
+                <div *ngIf="selectedVersionFlow?.prioridad"><strong>Prioridad de Aprobación:</strong>
+                  <span class="priority-badge" [ngClass]="'priority-' + (selectedVersionFlow?.prioridad?.toLowerCase() || '')">
+                    {{ selectedVersionFlow.prioridad }}
+                  </span>
+                </div>
+                <div *ngIf="selectedVersionFlow?.comentarioSolicitud"><strong>Comentario de Solicitud:</strong> {{
+                  selectedVersionFlow.comentarioSolicitud }}</div>
+                <div *ngIf="selectedVersionFlow?.fechaLimite"><strong>Fecha Límite (SLA):</strong> {{
+                  selectedVersionFlow.fechaLimite | date:'dd/MM/yyyy HH:mm' }}</div>
+                <div *ngIf="selectedVersionFlow?.fechaResolucion"><strong>Fecha de Resolución:</strong> {{
+                  selectedVersionFlow.fechaResolucion | date:'dd/MM/yyyy HH:mm' }}</div>
               </div>
 
               <div class="details-download-action">
@@ -436,6 +466,15 @@
             selectedVersion?.nombre }}</div>
           <div class="preview-item"><strong>Descripción Versión:</strong> {{ selectedVersion?.descripcion || 'Sin
             descripción' }}</div>
+          <div class="preview-item" *ngIf="selectedFlow?.prioridad"><strong>Prioridad de Solicitud:</strong>
+            <span class="priority-badge" [ngClass]="'priority-' + (selectedFlow?.prioridad?.toLowerCase() || '')">
+              {{ selectedFlow.prioridad }}
+            </span>
+          </div>
+          <div class="preview-item" *ngIf="selectedFlow?.comentarioSolicitud"><strong>Comentario de Solicitud:</strong>
+            {{ selectedFlow.comentarioSolicitud }}</div>
+          <div class="preview-item" *ngIf="selectedFlow?.fechaLimite"><strong>Fecha Límite (SLA):</strong> {{
+            selectedFlow.fechaLimite | date:'dd/MM/yyyy HH:mm' }}</div>
         </div>
 
         <div class="decision-form-group">
@@ -490,11 +529,14 @@
           </div>
           <div class="edit-form-group full-width">
             <label for="edit_doc_descripcion">Descripción</label>
-            <textarea id="edit_doc_descripcion" [(ngModel)]="editDocDescripcion" class="edit-ver-textarea" rows="3"></textarea>
+            <textarea id="edit_doc_descripcion" [(ngModel)]="editDocDescripcion" class="edit-ver-textarea"
+              rows="3"></textarea>
           </div>
         </div>
         <div class="decision-actions-row" style="margin-top: 20px; justify-content: flex-end; gap: 12px;">
-          <button class="decision-btn reject-submit-btn" style="background-color: var(--card-border-color); color: var(--text-muted); border: 1px solid var(--card-border-color);" (click)="cerrarModales()">
+          <button class="decision-btn reject-submit-btn"
+            style="background-color: var(--card-border-color); color: var(--text-muted); border: 1px solid var(--card-border-color);"
+            (click)="cerrarModales()">
             Cancelar
           </button>
           <button class="decision-btn approve-submit-btn" (click)="actualizarDocumento()">

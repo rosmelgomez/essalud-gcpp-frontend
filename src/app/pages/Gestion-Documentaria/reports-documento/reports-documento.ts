@@ -198,27 +198,37 @@ export class ReportsDocumento implements OnInit {
     });
   }
 
+  requiereAprobacionDoc(doc: any): boolean {
+    const tipo = this.tiposDocumento.find(t => t.id === doc.id_tipo_documento);
+    return tipo ? tipo.requiere_aprobacion : false;
+  }
+
   hasAccessToVersion(doc: any, version: VersionDocumento): boolean {
     if (!doc || !version) return false;
     
     const isOwner = doc.id_user_creation === this.user?.id || version.id_user_creation === this.user?.id;
-    const isApprover = version.id_user_aprobador === this.user?.id;
+    const flow = this.activeFlowMap[version.id];
+    const isApprover = version.id_user_aprobador === this.user?.id || (flow && flow.id_user_aprobador === this.user?.id);
+    const isAdmin = !!(this.user?.roles?.includes('ADMIN') || this.user?.roles?.includes('ADMIN_RED'));
+    
+    // Si requiere aprobación y no está aprobado:
+    if (this.requiereAprobacionDoc(doc)) {
+      const isApproved = flow && flow.status === 'Aprobado';
+      if (!isApproved && !isOwner && !isApprover && !isAdmin) {
+        return false;
+      }
+    }
     
     // Si el documento o la versión es privada/borrador:
     if (!doc.publico || version.visible === false) {
       if (isOwner) return true;
       if (isApprover) return true;
-      // Verificar si es el aprobador en el flujo de esta versión
-      const flow = this.activeFlowMap[version.id];
-      if (flow && flow.id_version_documento === version.id && flow.id_user_aprobador === this.user?.id) {
-        return true;
-      }
       return false;
     }
 
     // Si es público y la versión es pública, validar restricción de red (solo_mi_red)
     if (doc.solo_mi_red) {
-      return doc.codred === this.codred || isOwner || isApprover;
+      return doc.codred === this.codred || isOwner || isApprover || isAdmin;
     }
 
     return true;
@@ -666,6 +676,26 @@ export class ReportsDocumento implements OnInit {
     this.updateCounters();
   }
 
+  getActiveFlowPriority(doc: any): string | null {
+    if (doc.flujo_objeto) {
+      return doc.flujo_objeto.prioridad || 'MEDIA';
+    }
+    const activeVer = this.activeVersionMap[doc.id];
+    if (!activeVer) return null;
+    const flow = this.activeFlowMap[activeVer.id];
+    return flow ? (flow.prioridad || 'MEDIA') : null;
+  }
+
+  getActiveFlowStatus(doc: any): string | null {
+    if (doc.flujo_objeto) {
+      return doc.flujo_objeto.status;
+    }
+    const activeVer = this.activeVersionMap[doc.id];
+    if (!activeVer) return null;
+    const flow = this.activeFlowMap[activeVer.id];
+    return flow ? flow.status : null;
+  }
+
   updatePagedDocumentos() {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = startIndex + this.pageSize;
@@ -743,7 +773,8 @@ export class ReportsDocumento implements OnInit {
       codred: this.selectedDoc.codred,
       id_user_creation: this.selectedDoc.id_user_creation,
       date_creation: this.selectedDoc.date_creation,
-      date_update: ''
+      date_update: '',
+      date_delete: ''
     };
 
     this.docService.saveDocumento(dto).subscribe(
@@ -789,20 +820,29 @@ export class ReportsDocumento implements OnInit {
     const isOwner = doc.id_user_creation === this.user?.id || version.id_user_creation === this.user?.id;
     const flow = this.getFlowForVersion(version);
     const isApprover = (flow && flow.id_user_aprobador === this.user?.id) || version.id_user_aprobador === this.user?.id;
+    const isAdmin = !!(this.user?.roles?.includes('ADMIN') || this.user?.roles?.includes('ADMIN_RED'));
+
+    // Si requiere aprobación y no está aprobado:
+    if (this.requiereAprobacionDoc(doc)) {
+      const isApproved = flow && flow.status === 'Aprobado';
+      if (!isApproved && !isOwner && !isApprover && !isAdmin) {
+        return false;
+      }
+    }
 
     // Si el documento es privado, solo el dueño o aprobador asignado pueden descargar
     if (!doc.publico) {
-      return isOwner || !!isApprover;
+      return isOwner || !!isApprover || isAdmin;
     }
 
     // Si la versión es privada/borrador, solo el creador de la versión o aprobador asignado pueden descargar
     if (version.visible === false) {
-      return isOwner || !!isApprover;
+      return isOwner || !!isApprover || isAdmin;
     }
 
     // Si es público y la versión es pública, validar restricción de red (solo_mi_red)
     if (doc.solo_mi_red) {
-      return doc.codred === this.codred || isOwner || !!isApprover;
+      return doc.codred === this.codred || isOwner || !!isApprover || isAdmin;
     }
 
     return true;
@@ -878,11 +918,7 @@ export class ReportsDocumento implements OnInit {
     this.editVersionFile = file;
   }
 
-  requiereAprobacionDoc(doc: any): boolean {
-    if (!doc) return false;
-    const tipo = this.tiposDocumento.find(t => t.id === doc.id_tipo_documento);
-    return tipo ? tipo.requiere_aprobacion : false;
-  }
+
 
   loadUsersAprobadores() {
     if (!this.codred) {

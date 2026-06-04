@@ -217,6 +217,8 @@ export class CreacionDocumentos implements OnInit {
       id_documento: ['', [Validators.required]],
       id_user_aprobador: [{ value: null, disabled: true }],
       visible: [true],
+      prioridad: [{ value: 'MEDIA', disabled: true }, [Validators.required]],
+      comentarioSolicitud: [{ value: '', disabled: true }],
     });
   }
 
@@ -351,6 +353,7 @@ export class CreacionDocumentos implements OnInit {
       solo_mi_red: isPublic ? (this.registerDocumentoForm.get('solo_mi_red')?.value ?? false) : false,
       date_creation: '',
       date_update: '',
+      date_delete: '',
       flag: this.registerDocumentoForm.get('flag')?.value ?? true,
       id_user_creation: user?.id ?? 0,
       id_tipo_documento: this.registerDocumentoForm.get('id_tipo_documento')?.value ?? 0,
@@ -410,6 +413,14 @@ export class CreacionDocumentos implements OnInit {
     const idAprobador = this.registerVersionDocumentoForm.get('id_user_aprobador')?.value;
     if (idAprobador) {
       documentoFormData.append('id_user_aprobador', String(idAprobador));
+    }
+    const prioridad = this.registerVersionDocumentoForm.get('prioridad')?.value;
+    if (prioridad) {
+      documentoFormData.append('prioridad', prioridad);
+    }
+    const comentarioSolicitud = this.registerVersionDocumentoForm.get('comentarioSolicitud')?.value;
+    if (comentarioSolicitud) {
+      documentoFormData.append('comentarioSolicitud', comentarioSolicitud);
     }
     this.versionDocumentoService.saveVersionDocumento(documentoFormData).subscribe(
       (response) => {
@@ -472,11 +483,19 @@ export class CreacionDocumentos implements OnInit {
     this.versionRequiresApproval = requires;
 
     const control = this.registerVersionDocumentoForm.get('id_user_aprobador');
+    const prioridadCtrl = this.registerVersionDocumentoForm.get('prioridad');
+    const comentarioCtrl = this.registerVersionDocumentoForm.get('comentarioSolicitud');
     if (requires) {
       control?.enable?.();
+      prioridadCtrl?.enable?.();
+      comentarioCtrl?.enable?.();
     } else {
       control?.setValue(null);
       control?.disable?.();
+      prioridadCtrl?.setValue('MEDIA');
+      prioridadCtrl?.disable?.();
+      comentarioCtrl?.setValue('');
+      comentarioCtrl?.disable?.();
     }
 
     this.isDocumentoPublico = documento ? documento.publico === true : false;
