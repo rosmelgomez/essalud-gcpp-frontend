@@ -1,8 +1,15 @@
+export interface CatalogoExtension {
+  id: number;
+  nombre: string;
+  mimeType: string;
+}
+
 export interface TipoDocumento {
   id: number;
   nombre: string;
   descripcion: string;
   extensiones_permitidas: string;
+  id_extensiones?: number[];
   requiere_aprobacion: boolean;
   max_size_mb: number;
   flag: boolean;

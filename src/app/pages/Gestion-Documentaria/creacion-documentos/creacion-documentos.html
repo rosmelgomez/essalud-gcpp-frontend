@@ -99,28 +99,20 @@
           </div>
 
           <div class="extensions-section">
-            <label>Extensiones permitidas</label>
-            <div class="extension-input-group">
-              <input type="text" #extensionInput (keyup.enter)="addExtension(extensionInput)"
-                placeholder="Ej: pdf, doc, docx" class="extension-input" />
-              <button type="button" (click)="addExtension(extensionInput)" class="add-extension-btn">
-                Agregar
+            <label>Extensiones permitidas (Selecciona del catálogo)</label>
+            <div class="catalog-extensions-container">
+              <button type="button" 
+                      *ngFor="let ext of extensionesCatalogo" 
+                      class="extension-chip-btn" 
+                      [class.is-selected]="isExtensionSelected(ext.id)"
+                      (click)="toggleExtension(ext.id)">
+                <span class="chip-dot" *ngIf="isExtensionSelected(ext.id)">✓</span>
+                {{ ext.nombre }}
               </button>
             </div>
 
-            <div class="chips-container" *ngIf="extensionesChips.length > 0">
-              <mat-chip-set>
-                <mat-chip *ngFor="let ext of extensionesChips" removable (removed)="removeExtension(ext)">
-                  {{ ext }}
-                  <button matChipRemove>
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </mat-chip>
-              </mat-chip-set>
-            </div>
-
-            <small class="field-error" *ngIf="extensionesChips.length === 0">
-              Agrega al menos una extensión permitida.
+            <small class="field-error" *ngIf="idExtensionesSeleccionadas.length === 0">
+              Selecciona al menos una extensión permitida.
             </small>
           </div>
 

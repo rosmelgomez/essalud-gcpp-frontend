@@ -612,4 +612,46 @@
   padding: 2px 4px;
   border-radius: 4px;
   font-family: Consolas, Monaco, monospace;
+}
+
+/* Catalog Extensions styles */
+.catalog-extensions-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.extension-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.extension-chip-btn:hover {
+  border-color: #1a5490;
+  background-color: rgba(26, 84, 144, 0.04);
+  color: #1a5490;
+  transform: translateY(-1px);
+}
+
+.extension-chip-btn.is-selected {
+  background-color: #1a5490;
+  color: #ffffff;
+  border-color: #1a5490;
+  box-shadow: 0 4px 10px rgba(26, 84, 144, 0.25);
+}
+
+.chip-dot {
+  font-weight: bold;
 }

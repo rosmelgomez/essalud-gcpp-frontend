@@ -142,8 +142,6 @@
     </div>
   </section>
 
-
-
   <!-- Contenedor Principal de la Tabla -->
   <section class="table-container">
     <table class="premium-table">
@@ -168,10 +166,12 @@
           <td class="col-title">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               <div class="doc-title">{{ doc.titulo_display || doc.titulo }}</div>
-              <span *ngIf="getActiveFlowPriority(doc)" class="priority-badge" [ngClass]="'priority-' + (getActiveFlowPriority(doc)?.toLowerCase() || '')">
+              <span *ngIf="getActiveFlowPriority(doc)" class="priority-badge"
+                [ngClass]="'priority-' + (getActiveFlowPriority(doc)?.toLowerCase() || '')">
                 {{ getActiveFlowPriority(doc) }}
               </span>
-              <span *ngIf="getActiveFlowStatus(doc)" class="status-badge" [ngClass]="'status-' + (getActiveFlowStatus(doc)?.toLowerCase() || '')">
+              <span *ngIf="getActiveFlowStatus(doc)" class="status-badge"
+                [ngClass]="'status-' + (getActiveFlowStatus(doc)?.toLowerCase() || '')">
                 {{ getActiveFlowStatus(doc) }}
               </span>
             </div>
@@ -280,8 +280,8 @@
   </section>
 
   <!-- MODAL DE TIMELINE (Línea de Tiempo de Versiones e Historial de Revisiones) -->
-  <div class="premium-modal-overlay" *ngIf="showTimelineModal">
-    <div class="premium-modal-card timeline-card">
+  <div class="modal-overlay" *ngIf="showTimelineModal">
+    <div class="modal-card timeline-card">
       <header class="modal-header">
         <h2>Historial y Línea de Tiempo de Revisiones</h2>
         <button class="close-modal-btn" (click)="cerrarModales()">&times;</button>
@@ -313,7 +313,8 @@
                 <div><strong>Extensión:</strong> {{ selectedVersion.extencion }}</div>
                 <div><strong>Descripción / Notas:</strong> {{ selectedVersion.descripcion || 'Sin descripción' }}</div>
                 <div *ngIf="selectedVersionFlow?.prioridad"><strong>Prioridad de Aprobación:</strong>
-                  <span class="priority-badge" [ngClass]="'priority-' + (selectedVersionFlow?.prioridad?.toLowerCase() || '')">
+                  <span class="priority-badge"
+                    [ngClass]="'priority-' + (selectedVersionFlow?.prioridad?.toLowerCase() || '')">
                     {{ selectedVersionFlow.prioridad }}
                   </span>
                 </div>
@@ -451,8 +452,8 @@
   </div>
 
   <!-- MODAL DE DECISIÓN (Panel de Aprobación/Rechazo de Documento) -->
-  <div class="premium-modal-overlay" *ngIf="showDecisionModal">
-    <div class="premium-modal-card decision-card">
+  <div class="modal-overlay" *ngIf="showDecisionModal">
+    <div class="modal-card decision-card">
       <header class="modal-header">
         <h2>Evaluar y Resolver Versión de Documento</h2>
         <button class="close-modal-btn" (click)="cerrarModales()">&times;</button>
@@ -497,8 +498,8 @@
   </div>
 
   <!-- MODAL DE MODIFICAR DOCUMENTO -->
-  <div class="premium-modal-overlay" *ngIf="showEditDocumentModal">
-    <div class="premium-modal-card decision-card">
+  <div class="modal-overlay" *ngIf="showEditDocumentModal">
+    <div class="modal-card decision-card">
       <header class="modal-header">
         <h2>Modificar Información del Documento</h2>
         <button class="close-modal-btn" (click)="cerrarModales()">&times;</button>
@@ -546,4 +547,5 @@
       </div>
     </div>
   </div>
+
 </div>

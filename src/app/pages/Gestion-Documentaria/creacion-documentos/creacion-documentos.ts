@@ -9,8 +9,9 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
-import { Documento, TipoDocumento, VersionDocumento } from '../../../model/documento';
+import { Documento, TipoDocumento, VersionDocumento, CatalogoExtension } from '../../../model/documento';
 import { TipoDocumentoService } from '../../../services/documentos/tipo-documento-service';
+import { CatalogoExtensionService } from '../../../services/documentos/catalogo-extension-service';
 import { User } from '../../../model/user';
 import { DocumentoService } from '../../../services/documentos/documento-service';
 import { VersionDocumentoService } from '../../../services/documentos/version-documento-service';
@@ -32,6 +33,8 @@ export class CreacionDocumentos implements OnInit {
   public versionRequiresApproval: boolean = false;
   public isDocumentoPublico: boolean = false;
   public extensionesChips: string[] = [];
+  public extensionesCatalogo: CatalogoExtension[] = [];
+  public idExtensionesSeleccionadas: number[] = [];
 
   public get registerForm(): FormGroup {
     return this.registerDocumentoForm;
@@ -65,6 +68,7 @@ export class CreacionDocumentos implements OnInit {
     private documentoService: DocumentoService,
     private versionDocumentoService: VersionDocumentoService,
     private establecimientoService: EstablecimientoService,
+    private catalogoExtensionService: CatalogoExtensionService,
     private cdr: ChangeDetectorRef
   ) {
     this.user = this.localStorage.getUser();
@@ -77,6 +81,7 @@ export class CreacionDocumentos implements OnInit {
     this.loadFormContextInfo();
     this.bindFormListeners();
     this.loadRedes();
+    this.loadCatalogoExtensiones();
   }
 
   private bindFormListeners(): void {
@@ -222,27 +227,30 @@ export class CreacionDocumentos implements OnInit {
     });
   }
 
-  addExtension(extensionInput: HTMLInputElement): void {
-    const extension = extensionInput.value.trim().toLowerCase();
-
-    if (!extension) {
-      return;
-    }
-
-    // Agregar punto si no lo tiene
-    const extensionFormatted = extension.startsWith('.') ? extension : '.' + extension;
-
-    // Evitar duplicados
-    if (!this.extensionesChips.includes(extensionFormatted)) {
-      this.extensionesChips.push(extensionFormatted);
-      extensionInput.value = '';
-      this.cdr.detectChanges();
-    }
+  loadCatalogoExtensiones(): void {
+    this.catalogoExtensionService.getall().subscribe(
+      (response) => {
+        this.extensionesCatalogo = response || [];
+        this.cdr.detectChanges();
+      },
+      (error) => {
+        console.error('Error al cargar el catálogo de extensiones:', error);
+      }
+    );
   }
 
-  removeExtension(extension: string): void {
-    this.extensionesChips = this.extensionesChips.filter(ext => ext !== extension);
+  toggleExtension(id: number): void {
+    const index = this.idExtensionesSeleccionadas.indexOf(id);
+    if (index > -1) {
+      this.idExtensionesSeleccionadas.splice(index, 1);
+    } else {
+      this.idExtensionesSeleccionadas.push(id);
+    }
     this.cdr.detectChanges();
+  }
+
+  isExtensionSelected(id: number): boolean {
+    return this.idExtensionesSeleccionadas.includes(id);
   }
 
   onFileSelected(event: Event): void {
@@ -303,7 +311,7 @@ export class CreacionDocumentos implements OnInit {
 
 
   registerTipoDocumento() {
-    if (this.registerTipoDocumentoForm.invalid || this.extensionesChips.length === 0) {
+    if (this.registerTipoDocumentoForm.invalid || this.idExtensionesSeleccionadas.length === 0) {
       this.registerTipoDocumentoForm.markAllAsTouched();
       return;
     }
@@ -311,7 +319,8 @@ export class CreacionDocumentos implements OnInit {
       id: 0,
       nombre: this.registerTipoDocumentoForm.get('nombre')?.value ?? '',
       descripcion: this.registerTipoDocumentoForm.get('descripcion')?.value ?? '',
-      extensiones_permitidas: this.extensionesChips.join(', ') ?? '',
+      extensiones_permitidas: '',
+      id_extensiones: this.idExtensionesSeleccionadas,
       requiere_aprobacion: this.registerTipoDocumentoForm.get('requiere_aprobacion')?.value ?? false,
       max_size_mb: this.registerTipoDocumentoForm.get('max_size_mb')?.value ?? 1,
       flag: this.registerTipoDocumentoForm.get('flag')?.value ?? true,
@@ -323,7 +332,7 @@ export class CreacionDocumentos implements OnInit {
       (response) => {
         console.log('Tipo de documento guardado exitosamente', response);
         this.registerTipoDocumentoForm.reset({ requiere_aprobacion: false, flag: true, max_size_mb: 1 });
-        this.extensionesChips = [];
+        this.idExtensionesSeleccionadas = [];
         this.getTiposDocumentos();
         this.cdr.detectChanges();
       },
