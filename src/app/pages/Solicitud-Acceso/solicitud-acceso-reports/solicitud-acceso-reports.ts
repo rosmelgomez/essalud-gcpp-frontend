@@ -32,13 +32,30 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
   selectedCentroFilter: string = '';
   dniFilter: string = '';
 
-  editingState: Record<string, boolean> = {};
-  draftSolicitud: Record<string, SolicitudAcceso> = {};
-  savingState: Record<string, boolean> = {};
-  validationState: Record<string, string> = {};
+  showDecisionModal: boolean = false;
+  selectedSolicitud: SolicitudAcceso | null = null;
+  draftSolicitud: SolicitudAcceso | null = null;
+  savingState: boolean = false;
+  validationMessage: string = '';
 
   isLoadingSolicitudes: boolean = true;
   isLoadingCatalogos: boolean = true;
+
+  get totalSolicitudes(): number {
+    return this.dataSolicitudAcceso.length;
+  }
+
+  get pendientesCount(): number {
+    return this.dataSolicitudAcceso.filter(s => String(s.status).toUpperCase() === 'PENDIENTE').length;
+  }
+
+  get aprobadasCount(): number {
+    return this.dataSolicitudAcceso.filter(s => String(s.status).toUpperCase() === 'APROBADO').length;
+  }
+
+  get rechazadasCount(): number {
+    return this.dataSolicitudAcceso.filter(s => String(s.status).toUpperCase() === 'RECHAZADO').length;
+  }
 
   private dniFilterDebounceHandle: ReturnType<typeof setTimeout> | null = null;
   private readonly dniFilterDebounceMs = 120;
@@ -292,100 +309,100 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
   trackBySolicitud = (_index: number, solicitud: SolicitudAcceso): string => this.getCardKey(solicitud);
 
   isEditing(solicitud: SolicitudAcceso): boolean {
-    return !!this.editingState[this.getCardKey(solicitud)];
+    return this.showDecisionModal && this.selectedSolicitud?.id === solicitud.id;
   }
 
   getDraft(solicitud: SolicitudAcceso): SolicitudAcceso {
-    const key = this.getCardKey(solicitud);
-    return this.draftSolicitud[key] ?? solicitud;
+    return this.draftSolicitud ?? solicitud;
   }
 
   iniciarEdicion(solicitud: SolicitudAcceso): void {
-    const key = this.getCardKey(solicitud);
-    this.editingState[key] = true;
-    this.draftSolicitud[key] = this.normalizeDraftByRoleRules({ ...solicitud });
-    this.validationState[key] = '';
+    this.selectedSolicitud = solicitud;
+    this.draftSolicitud = this.normalizeDraftByRoleRules({ ...solicitud });
+    this.validationMessage = '';
+    this.showDecisionModal = true;
   }
 
-  cancelarEdicion(solicitud: SolicitudAcceso): void {
-    const key = this.getCardKey(solicitud);
-    delete this.editingState[key];
-    delete this.draftSolicitud[key];
-    delete this.savingState[key];
-    delete this.validationState[key];
+  cancelarEdicion(solicitud?: SolicitudAcceso): void {
+    this.showDecisionModal = false;
+    this.selectedSolicitud = null;
+    this.draftSolicitud = null;
+    this.savingState = false;
+    this.validationMessage = '';
   }
 
-  guardarEdicion(solicitud: SolicitudAcceso): void {
-    const key = this.getCardKey(solicitud);
-    const payload = this.draftSolicitud[key];
+  resolverConEstado(status: string): void {
+    if (!this.draftSolicitud) {
+      return;
+    }
+    this.draftSolicitud.status = status;
+    this.guardarEdicion();
+  }
 
-    if (!payload) {
+  guardarEdicion(solicitud?: SolicitudAcceso): void {
+    if (!this.draftSolicitud) {
       return;
     }
 
-    const validationError = this.getValidationError(payload);
+    const validationError = this.getValidationError(this.draftSolicitud);
     if (validationError) {
-      this.validationState[key] = validationError;
+      this.validationMessage = validationError;
       return;
     }
 
-    this.validationState[key] = '';
-
-    this.savingState[key] = true;
-    this.solicitudAccesoService.updateSolicitud(payload).subscribe({
+    this.validationMessage = '';
+    this.savingState = true;
+    this.solicitudAccesoService.updateSolicitud(this.draftSolicitud).subscribe({
       next: () => {
-        this.cancelarEdicion(solicitud);
+        this.cancelarEdicion();
         this.getDataSolicitudAcceso();
         this.cdr.markForCheck();
       },
       error: (err) => {
         console.error(err);
-        this.savingState[key] = false;
+        this.savingState = false;
         this.cdr.markForCheck();
       },
     });
   }
 
-  onRoleEditChange(solicitud: SolicitudAcceso): void {
-    const key = this.getCardKey(solicitud);
-    const draft = this.draftSolicitud[key];
-    if (!draft) {
+  onRoleEditChange(solicitud?: SolicitudAcceso): void {
+    if (!this.draftSolicitud) {
       return;
     }
-
-    this.draftSolicitud[key] = this.normalizeDraftByRoleRules(draft);
-    this.validationState[key] = '';
+    this.draftSolicitud = this.normalizeDraftByRoleRules(this.draftSolicitud);
+    this.validationMessage = '';
   }
 
-  onRedEditChange(solicitud: SolicitudAcceso): void {
-    const key = this.getCardKey(solicitud);
-    const draft = this.draftSolicitud[key];
-    if (!draft) {
+  onRedEditChange(solicitud?: SolicitudAcceso): void {
+    if (!this.draftSolicitud) {
       return;
     }
 
-    const draftRedCode = this.resolveRedCode(draft);
-    const draftCentroCode = this.resolveCentroCode(draft);
+    const draftRedCode = this.resolveRedCode(this.draftSolicitud);
+    const draftCentroCode = this.resolveCentroCode(this.draftSolicitud);
 
-    if (this.isUserRole(draft.rol_solicitud) && draftCentroCode) {
+    if (this.isUserRole(this.draftSolicitud.rol_solicitud) && draftCentroCode) {
       const existsCentro = this.getCentrosByRedCode(draftRedCode).some(
         (centro: any) => String(centro.cenasicod) === String(draftCentroCode),
       );
       if (!existsCentro) {
-        this.setCentroCode(draft, '');
+        this.setCentroCode(this.draftSolicitud, '');
       }
     }
 
-    if (this.isAdminRedRole(draft.rol_solicitud)) {
-      this.setCentroCode(draft, '');
+    if (this.isAdminRedRole(this.draftSolicitud.rol_solicitud)) {
+      this.setCentroCode(this.draftSolicitud, '');
     }
 
-    this.validationState[key] = '';
+    this.validationMessage = '';
   }
 
-  canEditCentro(solicitud: SolicitudAcceso): boolean {
-    const draft = this.getDraft(solicitud);
-    return this.isUserRole(draft.rol_solicitud) && !!String(this.resolveRedCode(draft)).trim();
+  canEditCentro(solicitud?: SolicitudAcceso): boolean {
+    if (!this.draftSolicitud) {
+      return false;
+    }
+    return this.isUserRole(this.draftSolicitud.rol_solicitud) && !!String(this.resolveRedCode(this.draftSolicitud)).trim();
   }
 
   getRoleDescription(role?: string): string {
@@ -420,6 +437,11 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
   private getValidationError(draft: SolicitudAcceso): string {
     const red = String(this.resolveRedCode(draft) ?? '').trim();
     const centro = String(this.resolveCentroCode(draft) ?? '').trim();
+    const isRechazado = String(draft.status ?? '').toUpperCase() === 'RECHAZADO';
+
+    if (isRechazado && !String(draft.comentario_revisor ?? '').trim()) {
+      return 'Debe ingresar un comentario o motivo de rechazo obligatoriamente.';
+    }
 
     if (!red) {
       return 'La red es obligatoria para el rol seleccionado.';

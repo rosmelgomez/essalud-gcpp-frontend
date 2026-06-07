@@ -193,6 +193,9 @@
                 <option [ngValue]="true">Público</option>
                 <option [ngValue]="false">Privado</option>
               </select>
+              <small class="field-info-msg" *ngIf="!docTypeRequiresApproval" style="color: #64748b; font-size: 0.8rem; margin-top: 4px; display: block;">
+                ℹ️ Los tipos de documentos sin aprobación obligatoria son privados por seguridad.
+              </small>
             </div>
 
             <div class="register-form-group" *ngIf="registerDocumentoForm.get('publico')?.value === true">

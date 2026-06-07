@@ -1,0 +1,204 @@
+<div class="dashboard-wrapper">
+  <header class="dashboard-header">
+    <div class="header-content">
+      <span class="eyebrow">MÓDULO DE GESTIÓN DOCUMENTAL</span>
+      <h1>Panel de Auditoría de Documentos</h1>
+      <p>Monitoreo en tiempo real de accesos, descargas y consultas de documentos estadísticos.</p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <button class="btn-refresh" (click)="loadAuditorias()" title="Actualizar datos" [disabled]="isLoading">
+        <mat-icon [class.spin]="isLoading">refresh</mat-icon>
+        Actualizar
+      </button>
+      <a routerLink="/documentos/reports-documento" class="btn-back">
+        <mat-icon>arrow_back</mat-icon>
+        Volver a Repositorio
+      </a>
+    </div>
+  </header>
+
+  <!-- Tarjetas de Métricas -->
+  <section class="metrics-grid">
+    <div class="metric-card glass-card">
+      <div class="metric-header">
+        <span class="metric-title">Total Acciones</span>
+        <mat-icon class="metric-icon-mat">analytics</mat-icon>
+      </div>
+      <div class="metric-value">{{ totalAcciones }}</div>
+      <div class="metric-footer">Registros históricos de auditoría</div>
+    </div>
+
+    <div class="metric-card glass-card approved-card">
+      <div class="metric-header">
+        <span class="metric-title">Visualizaciones</span>
+        <mat-icon class="metric-icon-mat">visibility</mat-icon>
+      </div>
+      <div class="metric-value">{{ totalVisualizaciones }}</div>
+      <div class="metric-footer">Documentos previsualizados</div>
+    </div>
+
+    <div class="metric-card glass-card pending-card">
+      <div class="metric-header">
+        <span class="metric-title">Descargas</span>
+        <mat-icon class="metric-icon-mat">download</mat-icon>
+      </div>
+      <div class="metric-value">{{ totalDescargas }}</div>
+      <div class="metric-footer">Archivos descargados físicamente</div>
+    </div>
+
+    <div class="metric-card glass-card no-approval-card">
+      <div class="metric-header">
+        <span class="metric-title">Usuarios Activos</span>
+        <mat-icon class="metric-icon-mat">people</mat-icon>
+      </div>
+      <div class="metric-value">{{ usuariosUnicos }}</div>
+      <div class="metric-footer">Personal que interactuó</div>
+    </div>
+  </section>
+
+  <!-- Panel de Filtros -->
+  <section class="control-panel">
+    <div class="search-box">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()"
+        placeholder="Buscar por usuario, código, título, IP..." />
+    </div>
+
+    <div class="filters-group">
+      <div class="filter-select-wrapper">
+        <label for="actionFilter">Acción</label>
+        <select id="actionFilter" [(ngModel)]="actionFilter" (change)="applyFilters()">
+          <option value="">Todas las acciones</option>
+          <option value="VISUALIZAR">Visualizar</option>
+          <option value="DESCARGAR">Descargar</option>
+        </select>
+      </div>
+
+      <div class="filter-select-wrapper date-filter">
+        <label for="startDate">Fecha Desde</label>
+        <input type="date" id="startDate" [(ngModel)]="startDate" (change)="applyFilters()" />
+      </div>
+
+      <div class="filter-select-wrapper date-filter">
+        <label for="endDate">Fecha Hasta</label>
+        <input type="date" id="endDate" [(ngModel)]="endDate" (change)="applyFilters()" />
+      </div>
+
+      <button type="button" class="btn-clear" (click)='clearFilters()' title="Limpiar Filtros">
+        <mat-icon>filter_alt_off</mat-icon>
+      </button>
+    </div>
+  </section>
+
+  <!-- Tabla de Auditoría -->
+  <section class="table-container">
+    <div class="loading-overlay" *ngIf="isLoading">
+      <div class="loader">Cargando registros...</div>
+    </div>
+
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Acción</th>
+          <th>Documento</th>
+          <th>Versión</th>
+          <th>Dirección IP</th>
+          <th>User Agent / Dispositivo</th>
+          <th>Fecha y Hora</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let audit of pagedAuditorias" class="table-row">
+          <td class="col-user">
+            <div class="user-display">
+              <strong class="user-name">{{ audit.usuario_nombre || 'Desconocido' }}</strong>
+              <span class="user-username">@{{ audit.usuario_username || 'system' }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="action-badge" [ngClass]="'badge-' + (audit.accion?.toLowerCase() || '')">
+              <mat-icon *ngIf="audit.accion === 'DESCARGAR'">download</mat-icon>
+              <mat-icon *ngIf="audit.accion === 'VISUALIZAR'">visibility</mat-icon>
+              {{ audit.accion }}
+            </span>
+          </td>
+          <td class="col-doc">
+            <div class="doc-display">
+              <span class="code-badge">{{ audit.documento_codigo || 'N/A' }}</span>
+              <span class="doc-title" [title]="audit.documento_titulo">{{ audit.documento_titulo || 'Sin título' }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="version-badge" *ngIf="audit.version_numero">v{{ audit.version_numero }}</span>
+            <div class="version-name" *ngIf="audit.version_nombre" [title]="audit.version_nombre">{{ audit.version_nombre }}</div>
+          </td>
+          <td>
+            <span class="ip-address"><mat-icon>lan</mat-icon> {{ audit.ip_address }}</span>
+          </td>
+          <td class="col-ua">
+            <span class="ua-text" [title]="audit.user_agent">
+              <mat-icon>devices</mat-icon>
+              {{ audit.user_agent || 'Desconocido' }}
+            </span>
+          </td>
+          <td class="col-date">
+            <div class="date-display">
+              <strong>{{ audit.fecha_accion | date:'dd/MM/yyyy' }}</strong>
+              <span>{{ audit.fecha_accion | date:'HH:mm:ss' }}</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Mensaje de no hay resultados -->
+        <tr *ngIf="filteredAuditorias.length === 0 && !isLoading">
+          <td colspan="7" class="empty-table-state">
+            <div class="empty-content">
+              <mat-icon class="empty-icon">gavel</mat-icon>
+              <h3>No se encontraron registros de auditoría</h3>
+              <p>Intente modificar los filtros o rango de fechas seleccionado.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Paginador -->
+    <div class="paginator-container" *ngIf="filteredAuditorias.length > 0 && !isLoading">
+      <div class="paginator-left">
+        <span class="paginator-info">
+          Mostrando {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize,
+          filteredAuditorias.length) }} de {{ filteredAuditorias.length }}
+        </span>
+        <div class="paginator-page-size">
+          <label for="pageSizeSelect">Filas por página:</label>
+          <select id="pageSizeSelect" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="paginator-right">
+        <button type="button" class="paginator-btn" [disabled]="currentPage === 1" (click)="onPageChange(1)"
+          title="Primera página">
+          <mat-icon>first_page</mat-icon>
+        </button>
+        <button type="button" class="paginator-btn" [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)" title="Página anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+
+        <span class="paginator-info">Página {{ currentPage }} de {{ totalPages }}</span>
+
+        <button type="button" class="paginator-btn" [disabled]="currentPage === totalPages"
+          (click)="onPageChange(currentPage + 1)" title="Página siguiente">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+        <button type="button" class="paginator-btn" [disabled]="currentPage === totalPages"
+          (click)="onPageChange(totalPages)" title="Última página">
+          <mat-icon>last_page</mat-icon>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

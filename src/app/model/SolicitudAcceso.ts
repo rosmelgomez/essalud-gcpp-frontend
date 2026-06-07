@@ -11,4 +11,7 @@ export interface SolicitudAcceso {
     date_creation?: string;
     date_update?: string;
     status?: string;
+    comentario_revisor?: string;
+    nombre_revisor?: string;
+    date_resolution?: string;
 }

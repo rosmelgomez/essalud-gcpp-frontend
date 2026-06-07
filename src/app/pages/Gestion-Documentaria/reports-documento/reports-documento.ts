@@ -214,8 +214,13 @@ export class ReportsDocumento implements OnInit {
     // Si requiere aprobación y no está aprobado:
     if (this.requiereAprobacionDoc(doc)) {
       const isApproved = flow && flow.status === 'Aprobado';
-      if (!isApproved && !isOwner && !isApprover && !isAdmin) {
-        return false;
+      if (!isApproved) {
+        if (this.activeTab === 'publicos') {
+          return false;
+        }
+        if (!isOwner && !isApprover && !isAdmin) {
+          return false;
+        }
       }
     }
     
@@ -264,12 +269,16 @@ export class ReportsDocumento implements OnInit {
 
   shouldShowVersionInTimeline(ver: VersionDocumento): boolean {
     if (!ver) return false;
+    const doc = this.documentos.find(d => d.id === ver.id_documento);
+    if (!doc) return false;
+
     if (this.activeTab === 'por_aprobar') {
       const flow = this.activeFlowMap[ver.id];
       return flow && flow.status === 'Pendiente';
     }
     if (this.activeTab === 'publicos') {
-      return ver.visible !== false;
+      if (ver.visible === false) return false;
+      return this.hasAccessToVersion(doc, ver);
     }
     return true;
   }
@@ -749,8 +758,11 @@ export class ReportsDocumento implements OnInit {
     this.editDocCodigo = doc.codigo;
     this.editDocTitulo = doc.titulo;
     this.editDocDescripcion = doc.descripcion || '';
-    this.editDocPublico = doc.publico === true;
-    this.editDocSoloMiRed = doc.solo_mi_red === true;
+    
+    const requiresApproval = this.requiereAprobacionDoc(doc);
+    this.editDocPublico = requiresApproval ? (doc.publico === true) : false;
+    this.editDocSoloMiRed = requiresApproval ? (doc.solo_mi_red === true) : false;
+    
     this.editDocIdTipoDocumento = doc.id_tipo_documento;
     this.editDocFlag = doc.flag !== false;
     this.showEditDocumentModal = true;

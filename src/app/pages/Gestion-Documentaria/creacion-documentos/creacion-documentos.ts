@@ -31,6 +31,7 @@ export class CreacionDocumentos implements OnInit {
   public registerVersionDocumentoForm!: FormGroup;
   public activeMode: 'documento' | 'version' | 'tipo' = 'documento';
   public versionRequiresApproval: boolean = false;
+  public docTypeRequiresApproval: boolean = true;
   public isDocumentoPublico: boolean = false;
   public extensionesChips: string[] = [];
   public extensionesCatalogo: CatalogoExtension[] = [];
@@ -98,6 +99,11 @@ export class CreacionDocumentos implements OnInit {
         });
       }
       this.cdr.detectChanges();
+    });
+
+    // Cuando cambia el tipo de documento
+    this.registerDocumentoForm.get('id_tipo_documento')?.valueChanges.subscribe((idTipo: number) => {
+      this.updateDocumentoPublicoState(idTipo);
     });
   }
 
@@ -464,6 +470,7 @@ export class CreacionDocumentos implements OnInit {
       publico: documento.publico ?? false,
       solo_mi_red: documento.solo_mi_red ?? false,
     });
+    this.updateDocumentoPublicoState(documento.id_tipo_documento);
     this.cdr.detectChanges();
   }
 
@@ -517,6 +524,28 @@ export class CreacionDocumentos implements OnInit {
       visibleControl?.disable?.();
     }
 
+    this.cdr.detectChanges();
+  }
+
+  private updateDocumentoPublicoState(idTipo: number | string | null | undefined): void {
+    if (idTipo === undefined || idTipo === null || idTipo === '') {
+      this.registerDocumentoForm.get('publico')?.enable();
+      return;
+    }
+    const tipo = this.tipo_documento.find(t => t.id === Number(idTipo));
+    const requiresApproval = tipo ? tipo.requiere_aprobacion === true : true;
+    this.docTypeRequiresApproval = requiresApproval;
+
+    const publicoCtrl = this.registerDocumentoForm.get('publico');
+    if (!requiresApproval) {
+      publicoCtrl?.setValue(false);
+      publicoCtrl?.disable();
+      this.registerDocumentoForm.patchValue({
+        solo_mi_red: false
+      });
+    } else {
+      publicoCtrl?.enable();
+    }
     this.cdr.detectChanges();
   }
 

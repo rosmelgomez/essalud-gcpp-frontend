@@ -516,10 +516,13 @@
           </div>
           <div class="edit-form-group">
             <label for="edit_doc_publico">¿Público?</label>
-            <select id="edit_doc_publico" [(ngModel)]="editDocPublico" class="edit-ver-input">
+            <select id="edit_doc_publico" [(ngModel)]="editDocPublico" class="edit-ver-input" [disabled]="!requiereAprobacionDoc(selectedDoc)">
               <option [ngValue]="true">Público</option>
               <option [ngValue]="false">Privado</option>
             </select>
+            <small class="field-info-msg" *ngIf="!requiereAprobacionDoc(selectedDoc)" style="color: #64748b; font-size: 0.8rem; margin-top: 4px; display: block;">
+              ℹ️ Los tipos de documentos sin aprobación obligatoria son privados por seguridad.
+            </small>
           </div>
           <div class="edit-form-group" *ngIf="editDocPublico === true">
             <label for="edit_doc_solomired">Visibilidad</label>

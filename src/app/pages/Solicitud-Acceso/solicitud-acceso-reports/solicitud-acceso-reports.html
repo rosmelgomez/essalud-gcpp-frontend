@@ -2,17 +2,50 @@
 	<section class="page-shell">
 		<header class="page-header">
 			<div>
-				<p class="eyebrow">Administracion</p>
+				<p class="eyebrow">Administración de Accesos</p>
 				<h1>Gestor de Solicitudes de Acceso</h1>
-				<p class="subtitle">Vista en cards con filtros por red, centro y DNI.</p>
+				<p class="subtitle">Bandeja de control de solicitudes de ingreso a la plataforma.</p>
 			</div>
-			<div class="badge-count">{{ totalResultados }} solicitudes</div>
+			<div class="badge-count">{{ totalSolicitudes }} solicitudes registradas</div>
 		</header>
 
+		<!-- Panel de Estadísticas (KPIs) -->
+		<section class="stats-panel">
+			<div class="stat-card total">
+				<div class="stat-icon">📋</div>
+				<div class="stat-info">
+					<span class="stat-label">Total Solicitudes</span>
+					<strong class="stat-value">{{ totalSolicitudes }}</strong>
+				</div>
+			</div>
+			<div class="stat-card pending">
+				<div class="stat-icon pulse">⏳</div>
+				<div class="stat-info">
+					<span class="stat-label">Pendientes</span>
+					<strong class="stat-value">{{ pendientesCount }}</strong>
+				</div>
+			</div>
+			<div class="stat-card approved">
+				<div class="stat-icon">✔️</div>
+				<div class="stat-info">
+					<span class="stat-label">Aprobadas</span>
+					<strong class="stat-value">{{ aprobadasCount }}</strong>
+				</div>
+			</div>
+			<div class="stat-card rejected">
+				<div class="stat-icon">❌</div>
+				<div class="stat-info">
+					<span class="stat-label">Rechazadas</span>
+					<strong class="stat-value">{{ rechazadasCount }}</strong>
+				</div>
+			</div>
+		</section>
+
+		<!-- Filtros -->
 		<section class="filter-panel">
 			<div class="filter-grid">
 				<div class="filter-group">
-					<label for="filtro-red">Red</label>
+					<label for="filtro-red">Red Asistencial</label>
 					<select id="filtro-red" [(ngModel)]="selectedRedFilter" (change)="onRedFilterChange()">
 						<option value="">Todas las redes</option>
 						<option *ngFor="let red of dataRed" [value]="red.redasiscod">
@@ -22,7 +55,7 @@
 				</div>
 
 				<div class="filter-group">
-					<label for="filtro-centro">Centro</label>
+					<label for="filtro-centro">Centro Asistencial</label>
 					<select id="filtro-centro" [(ngModel)]="selectedCentroFilter" (change)="onCentroFilterChange()"
 						[disabled]="!selectedRedFilter">
 						<option value="">Todos los centros</option>
@@ -33,125 +66,99 @@
 				</div>
 
 				<div class="filter-group">
-					<label for="filtro-dni">DNI</label>
+					<label for="filtro-dni">DNI del Solicitante</label>
 					<input id="filtro-dni" type="text" maxlength="8" [(ngModel)]="dniFilter"
-						(input)="onDniFilterChange()" placeholder="Buscar por DNI" />
+						(input)="onDniFilterChange()" placeholder="Buscar por DNI..." />
 				</div>
 
-				<button class="btn-clear" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+				<div class="filter-actions">
+					<button class="btn-clear" type="button" (click)="limpiarFiltros()">Limpiar Filtros</button>
+				</div>
 			</div>
 		</section>
 
+		<!-- Grid de Solicitudes -->
 		<section class="cards-wrapper">
-			<div class="loading" *ngIf="isLoading">Cargando solicitudes...</div>
+			<div class="loading-container" *ngIf="isLoading">
+				<div class="spinner"></div>
+				<p>Cargando solicitudes...</p>
+			</div>
 
-			<div class="empty" *ngIf="!isLoading && filteredSolicitudes.length === 0">
-				No se encontraron solicitudes con los filtros seleccionados.
+			<div class="empty-state" *ngIf="!isLoading && filteredSolicitudes.length === 0">
+				<div class="empty-icon">📂</div>
+				<h3>Sin solicitudes</h3>
+				<p>No se encontraron solicitudes con los filtros seleccionados.</p>
 			</div>
 
 			<div class="cards-viewport" *ngIf="!isLoading && virtualRows.length > 0">
 				<div class="virtual-item" *ngFor="let row of virtualRows">
 					<div class="cards-row" [style.gridTemplateColumns]="getCardsRowTemplateColumns()">
-						<article class="solicitud-card" *ngFor="let solicitud of row; trackBy: trackBySolicitud">
+						<article class="solicitud-card" *ngFor="let solicitud of row; trackBy: trackBySolicitud" 
+							[class.editing-active]="isEditing(solicitud)">
+							
+							<!-- Encabezado de la Tarjeta -->
 							<div class="card-top">
-								<div>
+								<div class="user-info">
 									<h2>{{ solicitud.name || '-' }} {{ solicitud.lastname || '' }}</h2>
-									<p class="meta-inline">
-										<span>DNI: {{ solicitud.dni || '-' }}</span>
-										<span>Correo: {{ solicitud.email || '-' }}</span>
-									</p>
+									<div class="meta-row">
+										<span class="meta-tag dni-tag">💳 {{ solicitud.dni || '-' }}</span>
+										<span class="meta-tag email-tag">✉️ {{ solicitud.email || '-' }}</span>
+									</div>
 								</div>
 								<div class="card-top-side">
-									<span class="status-pill">{{ solicitud.status || 'PENDIENTE' }}</span>
+									<span class="status-badge" [ngClass]="'status-' + (solicitud.status || 'PENDIENTE').toLowerCase()">
+										{{ solicitud.status || 'PENDIENTE' }}
+									</span>
 								</div>
 							</div>
 
+							<!-- Cuerpo: Modo Lectura -->
 							<div class="card-body" *ngIf="!isEditing(solicitud)">
-								<div class="field"><span>Red</span><strong>{{ getRedName(resolveRedCode(solicitud))
-										}}</strong></div>
-								<div class="field"><span>Centro</span><strong>{{
-										getCentroName(resolveCentroCode(solicitud)) }}</strong></div>
-								<div class="field"><span>Correo</span><strong>{{ solicitud.email || '-' }}</strong>
+								<div class="field">
+									<span>Red Asistencial</span>
+									<strong>{{ getRedName(resolveRedCode(solicitud)) }}</strong>
 								</div>
-								<div class="field"><span>Rol Solicitado</span><strong>{{ solicitud.rol_solicitud || '-'
-										}}</strong></div>
-								<div class="field full"><span>Descripcion</span><strong>{{ solicitud.descripcion || '-'
-										}}</strong></div>
-								<div class="field"><span>Creacion</span><strong>{{ formatDate(solicitud.date_creation)
-										}}</strong></div>
-								<div class="field"><span>Actualizacion</span><strong>{{
-										formatDate(solicitud.date_update) }}</strong></div>
-							</div>
-
-							<div class="card-body edit" *ngIf="isEditing(solicitud) && getDraft(solicitud) as draft">
-								<div class="field full"><span>Descripcion</span><strong>{{ solicitud.descripcion || '-'
-										}}</strong></div>
-								<div class="field"><span>Creacion</span><strong>{{ formatDate(solicitud.date_creation)
-										}}</strong></div>
-								<div class="field"><span>Actualizacion</span><strong>{{
-										formatDate(solicitud.date_update) }}</strong></div>
-
-								<div class="field-input">
-									<label>Rol solicitado</label>
-									<select [(ngModel)]="draft.rol_solicitud" (change)="onRoleEditChange(solicitud)">
-										<option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
-									</select>
+								<div class="field">
+									<span>Centro Asistencial</span>
+									<strong>{{ getCentroName(resolveCentroCode(solicitud)) }}</strong>
 								</div>
-
-								<div class="field readonly">
-									<span>Tipo de trabajador</span>
-									<strong>{{ getRoleDescription(draft.rol_solicitud) }}</strong>
+								<div class="field">
+									<span>Rol Solicitado</span>
+									<strong class="role-badge">{{ solicitud.rol_solicitud || '-' }}</strong>
 								</div>
-
-								<div class="field-input">
-									<label>Red</label>
-									<select [(ngModel)]="draft.code_red_solicitud"
-										(change)="onRedEditChange(solicitud)">
-										<option value="">Seleccione red</option>
-										<option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes
-											}}</option>
-									</select>
+								<div class="field">
+									<span>Fecha Solicitud</span>
+									<strong>{{ formatDate(solicitud.date_creation) }}</strong>
 								</div>
-
-								<div class="field-input">
-									<label>Centro</label>
-									<select [(ngModel)]="draft.codcas_solicitud" [disabled]="!canEditCentro(solicitud)">
-										<option value="">{{ canEditCentro(solicitud) ? 'Seleccione centro' : 'No aplica
-											para ADMIN_RED' }}</option>
-										<option *ngFor="let centro of getCentrosByRedCode(draft.code_red_solicitud)"
-											[value]="centro.cenasicod">
-											{{ centro.cenasides }}
-										</option>
-									</select>
+								<div class="field full">
+									<span>Justificación del Solicitante</span>
+									<p class="description-text">{{ solicitud.descripcion || '-' }}</p>
 								</div>
-
-								<div class="field-input">
-									<label>Estado</label>
-									<select [(ngModel)]="draft.status">
-										<option *ngFor="let status of statusOptions" [value]="status">{{ status }}
-										</option>
-									</select>
-								</div>
-
-								<div class="field full validation-message"
-									*ngIf="validationState[getCardKey(solicitud)]">
-									<span>Validacion</span>
-									<strong>{{ validationState[getCardKey(solicitud)] }}</strong>
+								
+								<!-- Información de Auditoría si está resuelta -->
+								<div class="audit-section full" *ngIf="solicitud.status === 'APROBADO' || solicitud.status === 'RECHAZADO'">
+									<div class="audit-header">🔍 Detalles de Resolución</div>
+									<div class="audit-grid">
+										<div class="audit-field">
+											<span>Revisor</span>
+											<strong>{{ solicitud.nombre_revisor || 'Sistema' }}</strong>
+										</div>
+										<div class="audit-field">
+											<span>Fecha Decisión</span>
+											<strong>{{ formatDate(solicitud.date_resolution || solicitud.date_update) }}</strong>
+										</div>
+										<div class="audit-field full" *ngIf="solicitud.comentario_revisor">
+											<span>Comentario/Motivo</span>
+											<p class="audit-comment">{{ solicitud.comentario_revisor }}</p>
+										</div>
+									</div>
 								</div>
 							</div>
 
-							<div class="card-actions" *ngIf="!isEditing(solicitud)">
-								<button type="button" class="btn-primary" (click)="iniciarEdicion(solicitud)">
-									Editar solicitud
-								</button>
-							</div>
-
-							<div class="card-actions" *ngIf="isEditing(solicitud)">
-								<button type="button" class="btn-muted"
-									(click)="cancelarEdicion(solicitud)">Cancelar</button>
-								<button type="button" class="btn-primary" (click)="guardarEdicion(solicitud)"
-									[disabled]="savingState[getCardKey(solicitud)]">
-									{{ savingState[getCardKey(solicitud)] ? 'Actualizando...' : 'Actualizar' }}
+							<!-- Acciones de Tarjeta (Solo para solicitudes pendientes) -->
+							<div class="card-actions" *ngIf="solicitud.status === 'PENDIENTE'">
+								<button type="button" class="btn-edit" (click)="iniciarEdicion(solicitud)">
+									Evaluación / Decisión
 								</button>
 							</div>
 						</article>
@@ -159,27 +166,124 @@
 				</div>
 			</div>
 
+			<!-- Paginación -->
 			<div class="paginator" *ngIf="!isLoading && filteredSolicitudes.length > 0">
 				<div class="paginator-info">
-					<span>Mostrando {{ paginationStart }} - {{ paginationEnd }} de {{ totalResultados }}</span>
+					<span>Mostrando {{ paginationStart }} - {{ paginationEnd }} de {{ totalResultados }} registros</span>
 				</div>
 
 				<div class="paginator-controls">
-					<label for="page-size">Por pagina</label>
+					<label for="page-size">Por página</label>
 					<select id="page-size" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
 						<option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
 					</select>
 
-					<button type="button" class="btn-muted" (click)="goToPreviousPage()" [disabled]="pageIndex === 0">
-						Anterior
+					<button type="button" class="btn-nav" (click)="goToPreviousPage()" [disabled]="pageIndex === 0">
+						◀ Anterior
 					</button>
-					<span class="page-label">Pagina {{ currentPageLabel }}</span>
-					<button type="button" class="btn-primary" (click)="goToNextPage()"
-						[disabled]="pageIndex >= totalPages - 1">
-						Siguiente
+					<span class="page-label">Página {{ currentPageLabel }}</span>
+					<button type="button" class="btn-nav" (click)="goToNextPage()" [disabled]="pageIndex >= totalPages - 1">
+						Siguiente ▶
 					</button>
 				</div>
 			</div>
 		</section>
 	</section>
+
+	<!-- MODAL DE EVALUACIÓN Y DECISIÓN (Panel de Aprobación/Rechazo de Acceso) -->
+	<div class="modal-overlay" *ngIf="showDecisionModal && draftSolicitud">
+		<div class="modal-card decision-card">
+			<header class="modal-header">
+				<h2>Evaluar y Resolver Solicitud de Acceso</h2>
+				<button type="button" class="close-modal-btn" (click)="cancelarEdicion()">&times;</button>
+			</header>
+
+			<div class="modal-body">
+				<!-- Resumen de Datos del Solicitante -->
+				<div class="doc-preview-summary">
+					<div class="preview-item">
+						<strong>Solicitante</strong>
+						<span>{{ draftSolicitud.name }} {{ draftSolicitud.lastname }}</span>
+					</div>
+					<div class="preview-item">
+						<strong>DNI</strong>
+						<span>{{ draftSolicitud.dni }}</span>
+					</div>
+					<div class="preview-item">
+						<strong>Correo Electrónico</strong>
+						<span>{{ draftSolicitud.email }}</span>
+					</div>
+					<div class="preview-item">
+						<strong>Rol Solicitado</strong>
+						<span class="role-badge">{{ draftSolicitud.rol_solicitud }}</span>
+					</div>
+					<div class="preview-item">
+						<strong>Fecha de Creación</strong>
+						<span>{{ formatDate(draftSolicitud.date_creation) }}</span>
+					</div>
+					<div class="preview-item full-width">
+						<strong>Justificación del Solicitante</strong>
+						<p class="description-text">{{ draftSolicitud.descripcion || 'Sin justificación ingresada.' }}</p>
+					</div>
+				</div>
+
+				<!-- Formulario de Configuración de Acceso -->
+				<div class="decision-form-grid">
+					<div class="field-input">
+						<label for="modal-rol">Rol a Asignar</label>
+						<select id="modal-rol" [(ngModel)]="draftSolicitud.rol_solicitud" (change)="onRoleEditChange()">
+							<option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
+						</select>
+					</div>
+
+					<div class="field readonly-display">
+						<span>Tipo de Trabajador</span>
+						<strong>{{ getRoleDescription(draftSolicitud.rol_solicitud) }}</strong>
+					</div>
+
+					<div class="field-input">
+						<label for="modal-red">Red Asistencial</label>
+						<select id="modal-red" [(ngModel)]="draftSolicitud.code_red_solicitud" (change)="onRedEditChange()">
+							<option value="">Seleccione red...</option>
+							<option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes }}</option>
+						</select>
+					</div>
+
+					<div class="field-input">
+						<label for="modal-centro">Centro Asistencial</label>
+						<select id="modal-centro" [(ngModel)]="draftSolicitud.codcas_solicitud" [disabled]="!canEditCentro()">
+							<option value="">{{ canEditCentro() ? 'Seleccione centro...' : 'No aplica (ADMIN_RED)' }}</option>
+							<option *ngFor="let centro of getCentrosByRedCode(draftSolicitud.code_red_solicitud)" [value]="centro.cenasicod">
+								{{ centro.cenasides }}
+							</option>
+						</select>
+					</div>
+
+					<div class="field-input full-width">
+						<label for="modal-comentario">Justificación / Comentario del Administrador</label>
+						<textarea id="modal-comentario" [(ngModel)]="draftSolicitud.comentario_revisor" rows="3" maxlength="500" 
+							placeholder="Escribe el motivo de la aprobación o rechazo (obligatorio en rechazos)..."></textarea>
+					</div>
+				</div>
+
+				<!-- Mensaje de Validación -->
+				<div class="validation-message-banner" *ngIf="validationMessage">
+					<span>⚠️ {{ validationMessage }}</span>
+				</div>
+			</div>
+
+			<!-- Acciones de Decisión -->
+			<footer class="modal-footer">
+				<button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicion()" [disabled]="savingState">
+					Cancelar
+				</button>
+				<button type="button" class="btn-modal-action btn-reject" (click)="resolverConEstado('RECHAZADO')" [disabled]="savingState">
+					❌ Rechazar Acceso
+				</button>
+				<button type="button" class="btn-modal-action btn-approve" (click)="resolverConEstado('APROBADO')" [disabled]="savingState">
+					✔️ Aprobar Acceso
+				</button>
+			</footer>
+		</div>
+	</div>
 </div>

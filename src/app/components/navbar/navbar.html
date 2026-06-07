@@ -1,74 +1,108 @@
 <div class="main" [class.menu-open]="isMenuOpen">
-  <div class="brand-block" [routerLink]="'/home'">
+  <!-- Brand Logo & Title -->
+  <div class="brand-block" routerLink="/home" (click)="closeMenu(); closeProfile()">
     <div class="logo-wrap">
       <img src="/images/Logoes.png" alt="EsSalud" class="logo" />
       <div class="brand-copy">
         <span class="brand-title">SIEST</span>
-        <span class="sub">Gestion integral</span>
+        <span class="sub">Gestión Integral</span>
       </div>
     </div>
   </div>
 
-  <button
-    class="menu-toggle"
-    type="button"
-    (click)="toggleMenu()"
-    aria-label="Abrir menú"
-    [attr.aria-expanded]="isMenuOpen"
-  >
+  <!-- Mobile Menu Toggle -->
+  <button class="menu-toggle" type="button" (click)="toggleMenu()" aria-label="Abrir menú"
+    [attr.aria-expanded]="isMenuOpen">
     <span class="line"></span>
     <span class="line"></span>
     <span class="line"></span>
   </button>
 
+  <!-- Navigation Content (Desktop and Mobile Dropdown) -->
   <div class="nav-content" [class.open]="isMenuOpen">
-    <div class="user-card">
-      <div class="user-avatar">
-        <div class="avatar-badge">
-          <span class="avatar-initials">{{ getInitials() }}</span>
-        </div>
-        <div class="user-info">
-          <div class="user-code">{{ user?.dni || '—' }}</div>
-          <div class="user-fullname">{{ user?.name }} {{ user?.lastname }}</div>
+
+    <!-- Navigation Links -->
+    <div class="nav-links">
+      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link"
+        (click)="closeMenu(); closeProfile()">
+        <span class="nav-link-label">Inicio</span>
+      </a>
+
+      <a routerLink="/manage-users" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active" class="nav-link"
+        (click)="closeMenu(); closeProfile()">
+        <span class="nav-link-label">Gestionar Usuarios</span>
+      </a>
+
+      <a routerLink="/solicitud-acceso-reports" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active"
+        class="nav-link" (click)="closeMenu(); closeProfile()">
+        <span class="nav-link-label">Solicitudes de Acceso</span>
+      </a>
+
+      <a routerLink="/register" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active" class="nav-link"
+        (click)="closeMenu(); closeProfile()">
+        <span class="nav-link-label">Registrar Usuario</span>
+      </a>
+    </div>
+
+    <!-- Search Capsule (Faux Command Palette - Stripe style) -->
+    <div class="search-capsule">
+      <span class="search-icon">🔍</span>
+      <span class="search-placeholder">Buscar en SIEST...</span>
+      <span class="search-shortcut">Ctrl+K</span>
+    </div>
+
+    <!-- Desktop User Profile Dropdown -->
+    <div class="profile-dropdown-container">
+      <div class="profile-dropdown" [class.open]="isProfileOpen">
+        <button class="profile-trigger" type="button" (click)="toggleProfile($event)" aria-label="Menú de perfil">
+          <div class="avatar-badge small">
+            <span class="avatar-initials">{{ getInitials() }}</span>
+          </div>
+          <span class="chevron">▼</span>
+        </button>
+
+        <div class="dropdown-menu" *ngIf="isProfileOpen">
+          <div class="dropdown-header">
+            <span class="user-fullname">{{ user?.name }} {{ user?.lastname }}</span>
+            <span class="user-code">💳 DNI: {{ user?.dni || '—' }}</span>
+            <span class="role-badge">{{ user?.roles }}</span>
+          </div>
+          <div class="dropdown-divider"></div>
+          <a routerLink="/change-password" class="dropdown-item" (click)="closeProfile()">
+            🔑 Cambiar Contraseña
+          </a>
+          <button class="dropdown-item logout-btn" type="button" (click)="logout()">
+            ⇦ Cerrar Sesión
+          </button>
         </div>
       </div>
-      <div class="role-badge">{{ user?.roles }}</div>
     </div>
 
-    <div class="containerBtn actions">
-      <a href="/home">
-        <button class="button ghost" type="button" (click)="closeMenu()">
-          <span class="button-label">Inicio</span>
-        </button>
-      </a>
+    <!-- Mobile User Section (only visible inside mobile dropdown) -->
+    <div class="mobile-user-section">
+      <div class="user-card">
+        <div class="user-avatar">
+          <div class="avatar-badge">
+            <span class="avatar-initials">{{ getInitials() }}</span>
+          </div>
+          <div class="user-info">
+            <div class="user-code">{{ user?.dni || '—' }}</div>
+            <div class="user-fullname">{{ user?.name }} {{ user?.lastname }}</div>
+          </div>
+        </div>
+        <div class="role-badge">{{ user?.roles }}</div>
+      </div>
 
-      <a href="/change-password">
-        <button class="button ghost" type="button" (click)="closeMenu()">
+      <div class="mobile-actions">
+        <a routerLink="/change-password" class="button ghost" (click)="closeMenu()">
           <span class="button-label">Cambiar Contraseña</span>
+        </a>
+        <button class="button ghost logout-btn" type="button" (click)="logout()">
+          <span class="icon">⇦</span>
+          <span class="button-label">Cerrar Sesión</span>
         </button>
-      </a>
-
-      <a href="/manage-users" *ngIf="user?.roles?.includes('ADMIN')">
-        <button class="button ghost" type="button" (click)="closeMenu()">
-          <span class="button-label">Gestionar Usuarios</span>
-        </button>
-      </a>
-
-      <a href="/register">
-        <button
-          class="button ghost"
-          *ngIf="user?.roles?.includes('ADMIN')"
-          type="button"
-          (click)="closeMenu()"
-        >
-          <span class="button-label">Registrar usuario</span>
-        </button>
-      </a>
-
-      <button class="button ghost" type="button" (click)="logout()">
-        <span class="icon">⇦</span>
-        <span class="button-label">Cerrar sesión</span>
-      </button>
+      </div>
     </div>
+
   </div>
 </div>

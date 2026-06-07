@@ -218,6 +218,12 @@
         <img src="/images/logs.png" alt="Auditoría del Sistema" />
         <span>Auditoría del Sistema</span>
       </a>
+
+      <!-- Auditoría de Documentos (admin) -->
+      <a href="/documentos/auditoria-documento" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+        <img src="/images/gestion_documentaria.png" alt="Auditoría de Documentos" style="filter: hue-rotate(45deg);" />
+        <span>Auditoría de Documentos</span>
+      </a>
     </div>
   </div>
 </div>
