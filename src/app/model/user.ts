@@ -1,6 +1,6 @@
-export interface Auth{
-    username:string,
-    password:string,
+export interface Auth {
+  username: string,
+  password: string,
 }
 
 export interface User {
@@ -10,12 +10,14 @@ export interface User {
   dni: string;
   codcas: string;
   codred: string;
+  email: string;
   username: string;
   password: string;
   date_creation: string;
   date_update: string;
   flag: boolean;
   roles?: string[] | string;
+  firstLogin?: boolean;
 }
 
 export interface Rol {

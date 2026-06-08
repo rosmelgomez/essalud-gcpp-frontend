@@ -130,20 +130,20 @@
 
     <div class="modules-menu">
       <!-- Consulta externa -->
-      <a href="/reporte/select" class="module" (click)="saveModulo('Consulta Externa')">
+      <a routerLink="/reporte/select" class="module" (click)="saveModulo('Consulta Externa')">
         <img src="/images/RCS2.png" alt="Consulta externa" />
         <span>Consulta externa</span>
       </a>
 
       <!-- Emergencia -->
-      <a href="/reporte/dashboard-eme" class="module">
+      <a routerLink="/reporte/dashboard-eme" class="module">
         <img src="/images/RSC1.png" alt="Emergencia" />
         <span>Emergencia</span>
       </a>
 
 
       <!-- Centro quirúrgico  -->
-      <a href="/reporte/select" class="module" (click)="saveModulo('Centro Quirúrgico')">
+      <a routerLink="/reporte/select" class="module" (click)="saveModulo('Centro Quirúrgico')">
         <img src="/images/cirugia.png" alt="Centro quirúrgico" />
         <span>Centro quirúrgico</span>
       </a>
@@ -151,19 +151,19 @@
 
 
       <!--  Tablas Homologadas -->
-      <a class="module" href="/tablas-homologadas">
+      <a class="module" routerLink="/tablas-homologadas">
         <img src="/images/tablas-homologadas.png" alt="Reportes gerenciales" />
         <span>Tablas Homologadas</span>
       </a>
 
       <!--  Tramas -->
-      <a class="module" href="/reporte/dashboard-tramas">
+      <a class="module" routerLink="/reporte/dashboard-tramas">
         <img src="/images/tramas.png" alt="Tramas" />
         <span>Tramas</span>
       </a>
 
       <!--  Procedimientos -->
-      <a class="module" href="/reporte/dashboard-procedimientos">
+      <a class="module" routerLink="/reporte/dashboard-procedimientos">
         <img src="/images/procedimientos.png" alt="Procedimientos" />
         <span>Procedimientos</span>
       </a>
@@ -176,51 +176,51 @@
 
 
       <!-- Reportes gerenciales (admin) -->
-      <a href="/reporte/reports-gerenciales" class="module"
+      <a routerLink="/reporte/reports-gerenciales" class="module"
         *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/analytics.png" alt="Reportes gerenciales" />
         <span>Reportes gerenciales</span>
       </a>
 
       <!-- Reporteador -->
-      <a href="/reporte/dashboard-reporteador" class="module"
+      <a routerLink="/reporte/dashboard-reporteador" class="module"
         *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/reporteador.png" alt="Reporteador" />
         <span>Reporteador</span>
       </a>
 
       <!-- Encuesta -->
-      <a href="/encuesta" class="module">
+      <a routerLink="/encuesta" class="module">
         <img src="/images/survey.png" alt="Encuesta" />
         <span>Encuesta de Conformidad</span>
       </a>
 
-      <a class="module" href="/documentos/reports-documento">
+      <a class="module" routerLink="/documentos/reports-documento">
         <img src="/images/gestion_documentaria.png" alt="Gestion Documentaria" />
         <span>Gestión Documentaria</span>
       </a>
 
 
       <!-- Dashboard Encuesta (admin) -->
-      <a href="/dashboard-encuesta" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+      <a routerLink="/dashboard-encuesta" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/respuesta-encuesta.png" alt="Encuesta" />
         <span>Respuesta de Encuestas</span>
       </a>
 
       <!-- Auditoría del Sistema (admin) -->
-      <a href="/solicitud-acceso-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+      <a routerLink="/solicitud-acceso-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/acceso.png" alt="Auditoría del Sistema" />
         <span>Solicitud de Acceso</span>
       </a>
 
       <!-- Auditoría del Sistema (admin) -->
-      <a href="/logs-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+      <a routerLink="/logs-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/logs.png" alt="Auditoría del Sistema" />
         <span>Auditoría del Sistema</span>
       </a>
 
       <!-- Auditoría de Documentos (admin) -->
-      <a href="/documentos/auditoria-documento" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+      <a routerLink="/documentos/auditoria-documento" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/gestion_documentaria.png" alt="Auditoría de Documentos" style="filter: hue-rotate(45deg);" />
         <span>Auditoría de Documentos</span>
       </a>

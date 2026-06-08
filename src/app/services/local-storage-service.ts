@@ -10,11 +10,11 @@ export class LocalStorageService {
     //user.id = 0;
     user.date_creation='';
     user.date_update='';
-    localStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('user', JSON.stringify(user));
   }
 
   getUser(): User | null {
-    const raw = localStorage.getItem('user');
+    const raw = sessionStorage.getItem('user');
     if (!raw) return null;
     try {
       return JSON.parse(raw) as User;

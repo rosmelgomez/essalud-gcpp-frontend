@@ -1,4 +1,39 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  /* Paleta Corporativa Oficial EsSalud (Manual de Identidad) */
+  --essalud-blue: #007AC9;       /* Pantone 3005 C */
+  --essalud-cyan: #3DB7E4;       /* Pantone 298 C */
+  --essalud-navy-deep: #0b1a30;  /* Fondo del navbar */
+  --essalud-navy-dark: #071223;
+  --essalud-slate: #475569;
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+  /* Paleta de Apoyo Oficial */
+  --essalud-success: #00A557;    /* Verde EsSalud Sólido */
+  --essalud-danger: #ED202D;     /* Rojo Clínico */
+  --essalud-warning: #FFC63D;    /* Amarillo */
+  --essalud-info: #00A79C;       /* Turquesa */
+
+  /* Tipografías Corporativas */
+  --font-family-headings: 'Tahoma', 'Segoe UI', sans-serif;
+  --font-family-global: 'Arial', 'Segoe UI', sans-serif;
+
+  /* Sistema de Tarjetas (Cards) */
+  --bg-card-premium: rgba(255, 255, 255, 0.85);
+  --border-card-premium: rgba(0, 122, 201, 0.12);
+  --shadow-card-premium: 0 10px 30px rgba(0, 64, 128, 0.05);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-global);
+  background-color: #f0f4f8;
+  color: #1e293b;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-headings);
+  font-weight: 700;
+}

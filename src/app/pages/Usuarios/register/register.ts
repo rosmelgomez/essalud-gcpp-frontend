@@ -58,6 +58,8 @@ export class Register implements OnInit {
   // Rol actual seleccionado en el formulario
   currentrol: string = '';
 
+  isUsernameManuallyEdited: boolean = false;
+
 
   constructor(
     private formBuilder: FormBuilder,
@@ -321,6 +323,7 @@ export class Register implements OnInit {
     this.getCentroWithRed();
     this.setuprolBehavior();
     this.applyrolRules(this.getSelectedrol());
+    this.setupUsernameAutogeneration();
   }
 
   reactiveForm() {
@@ -329,11 +332,58 @@ export class Register implements OnInit {
       lastname: ['', [Validators.required]],
       dni: ['', [Validators.required]],
       codcas: [''],
+      email: [''],
       username: ['', [Validators.required]],
       password: ['', [Validators.required]],
       rol: ['', [Validators.required]],
       code_red: [''],
     });
+  }
+
+  private setupUsernameAutogeneration() {
+    const nameControl = this.registerForm.get('name');
+    const lastnameControl = this.registerForm.get('lastname');
+
+    if (nameControl && lastnameControl) {
+      nameControl.valueChanges.subscribe(() => {
+        this.updateAutoUsername();
+      });
+      lastnameControl.valueChanges.subscribe(() => {
+        this.updateAutoUsername();
+      });
+    }
+  }
+
+  onUsernameInput() {
+    this.isUsernameManuallyEdited = true;
+  }
+
+  private updateAutoUsername() {
+    if (this.isUsernameManuallyEdited) {
+      return;
+    }
+    const name = this.registerForm.get('name')?.value || '';
+    const lastname = this.registerForm.get('lastname')?.value || '';
+    const generated = this.generateUsername(name, lastname);
+    this.registerForm.patchValue({ username: generated }, { emitEvent: false });
+  }
+
+  private generateUsername(name: string, lastname: string): string {
+    const cleanName = name.trim().split(/\s+/)[0];
+    const cleanLastname = lastname.trim().split(/\s+/)[0];
+
+    if (!cleanName || !cleanLastname) {
+      return '';
+    }
+
+    const firstName = cleanName.toLowerCase();
+    const firstLastName = cleanLastname.toLowerCase();
+
+    const rawUsername = `${firstName}.${firstLastName}`;
+    return rawUsername
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9.]/g, '');
   }
 
   private setuprolBehavior() {
@@ -469,6 +519,7 @@ export class Register implements OnInit {
         lastname: this.registerForm.value.lastname,
         dni: this.registerForm.value.dni,
         codcas: rol === 'USER' ? this.registerForm.value.codcas : '',
+        email: this.registerForm.value.email,
         username: this.registerForm.value.username,
         password: this.registerForm.value.password,
         roles: rol,
@@ -489,6 +540,7 @@ export class Register implements OnInit {
         },
       });
       this.registerForm.reset();
+      this.isUsernameManuallyEdited = false;
       this.selectedRedName = '';
       this.selectedCentroName = '';
       this.isRedEnabled = false;

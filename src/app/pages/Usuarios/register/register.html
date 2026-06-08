@@ -40,16 +40,20 @@
               <input type="text" formControlName="dni" name="dni" placeholder="Ej: 12345678" required />
             </div>
             <div class="register-form-group">
+              <label>Correo Electrónico (Email)</label>
+              <input type="email" formControlName="email" name="email" placeholder="Ej: ana.torres@essalud.gob.pe" />
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="register-form-group">
               <label>Rol</label>
-              <select formControlName="role" name="role" required>
+              <select formControlName="rol" name="rol" required>
                 <option value="">Seleccionar rol...</option>
                 <option value="ADMIN">Administrador</option>
                 <option value="USER">Usuario Normal</option>
                 <option value="ADMIN_RED">Administrador de Red</option>
               </select>
             </div>
-          </div>
-          <div class="form-grid">
             <div class="register-form-group">
               <label>Red</label>
               <div class="custom-dropdown" [class.disabled]="!isRedEnabled" (mouseleave)="closeDropdownRed()"
@@ -70,7 +74,8 @@
               </div>
               <input type="hidden" formControlName="code_red" />
             </div>
-
+          </div>
+          <div class="form-grid">
             <div class="register-form-group">
               <label>Centro</label>
               <div class="custom-dropdown" [class.disabled]="!isCentroEnabled" (mouseleave)="closeDropdownCentro()"
@@ -93,12 +98,13 @@
               </div>
               <input type="hidden" formControlName="codcas" />
             </div>
-          </div>
-          <div class="form-grid">
             <div class="register-form-group">
               <label>Usuario</label>
-              <input type="text" formControlName="username" name="username" placeholder="usuario.ejemplo" required />
+              <input type="text" formControlName="username" name="username" placeholder="usuario.ejemplo"
+                (input)="onUsernameInput()" required />
             </div>
+          </div>
+          <div class="form-grid">
             <div class="register-form-group">
               <label>Contraseña</label>
               <div class="password-input-wrapper">

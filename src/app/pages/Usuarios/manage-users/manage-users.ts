@@ -49,6 +49,7 @@ export class ManageUsers implements OnInit {
   virtualRows: any[][] = [];
   editingRowKey: string | number | null = null;
   editableRow: any | null = null;
+  isEditModalOpen: boolean = false;
 
   dataRed: any[] = [];
   dataCentroCompleto: any[] = [];
@@ -212,6 +213,7 @@ export class ManageUsers implements OnInit {
     if (this.editableRow.roles && Array.isArray(this.editableRow.roles)) {
       this.editableRow.roles = [...this.editableRow.roles];
     }
+    this.isEditModalOpen = true;
     this.initializeEditingDropdowns();
   }
 
@@ -418,6 +420,7 @@ export class ManageUsers implements OnInit {
     this.editingRowKey = null;
     this.editableRow = null;
     this.isSavingEdit = false;
+    this.isEditModalOpen = false;
     this.editingRedEnabled = false;
     this.editingCentroEnabled = false;
     this.editingAllCentroForSelectedRed = [];

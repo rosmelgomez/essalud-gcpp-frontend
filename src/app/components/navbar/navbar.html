@@ -68,6 +68,9 @@
             <span class="role-badge">{{ user?.roles }}</span>
           </div>
           <div class="dropdown-divider"></div>
+          <a routerLink="/perfil" class="dropdown-item" (click)="closeProfile()">
+            👤 Mi Perfil
+          </a>
           <a routerLink="/change-password" class="dropdown-item" (click)="closeProfile()">
             🔑 Cambiar Contraseña
           </a>
@@ -94,6 +97,9 @@
       </div>
 
       <div class="mobile-actions">
+        <a routerLink="/perfil" class="button ghost" (click)="closeMenu()">
+          <span class="button-label">Mi Perfil</span>
+        </a>
         <a routerLink="/change-password" class="button ghost" (click)="closeMenu()">
           <span class="button-label">Cambiar Contraseña</span>
         </a>

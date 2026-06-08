@@ -18,6 +18,8 @@ html, body {
 
 app-navbar {
   display: block;
+  position: relative;
+  z-index: 1000;
 }
 
 .main-container {

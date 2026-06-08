@@ -1,0 +1,84 @@
+<div class="main">
+  <section class="page-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Mi Cuenta</p>
+        <h1>Perfil de Usuario</h1>
+        <p class="subtitle">Verifica la información de tu cuenta y privilegios de acceso.</p>
+      </div>
+    </header>
+
+    <div class="profile-layout" *ngIf="!isLoading && user">
+      <!-- Tarjeta Principal de Presentación -->
+      <div class="profile-card hero-card">
+        <div class="hero-header"></div>
+        <div class="hero-body">
+          <div class="avatar-badge large">
+            <span class="avatar-initials">{{ getInitials() }}</span>
+          </div>
+          <div class="hero-text">
+            <h2>{{ user.name }} {{ user.lastname }}</h2>
+            <div class="role-badge-row">
+              <span class="role-badge">{{ user.roles }}</span>
+            </div>
+            <div class="status-indicator" [class.active]="user.flag">
+              <span class="dot"></span>
+              {{ user.flag ? 'Cuenta Activa' : 'Cuenta Inactiva' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta de Detalles del Perfil -->
+      <div class="profile-card details-card">
+        <h3 class="card-title">Información Personal y del Sistema</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="detail-label">Nombre de Usuario</span>
+            <strong class="detail-value">{{ user.username }}</strong>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Documento Nacional de Identidad (DNI)</span>
+            <strong class="detail-value">💳 {{ user.dni || '—' }}</strong>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Correo Electrónico</span>
+            <strong class="detail-value">✉️ {{ user.email || '—' }}</strong>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Red Asistencial</span>
+            <strong class="detail-value">🏢 {{ redName || '—' }}</strong>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Centro Asistencial</span>
+            <strong class="detail-value">🏥 {{ centroName || '—' }}</strong>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Identificador de Usuario (ID)</span>
+            <strong class="detail-value">🔑 {{ user.id || '—' }}</strong>
+          </div>
+        </div>
+
+        <div class="actions-row">
+          <a routerLink="/change-password" class="btn-change-password">
+            🔑 Cambiar Contraseña
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cargando -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Cargando información de tu perfil...</p>
+    </div>
+
+    <!-- Error/No autenticado -->
+    <div class="error-state" *ngIf="!isLoading && !user">
+      <div class="error-icon">⚠️</div>
+      <h3>No se pudo cargar la información</h3>
+      <p>Por favor, inicia sesión para ver tu perfil.</p>
+      <a routerLink="/login" class="btn-primary">Iniciar Sesión</a>
+    </div>
+  </section>
+</div>

@@ -1,9 +1,10 @@
-import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { User } from '../../model/user';
-import { LocalStorageService } from '../../services/local-storage-service';
+import { AuthService } from '../../services/usuario/auth.service';
 import { RouteLogger } from '../../services/route-logger';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -12,23 +13,28 @@ import { RouteLogger } from '../../services/route-logger';
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
-export class Navbar implements OnInit {
+export class Navbar implements OnInit, OnDestroy {
   user: User | null = null;
   isMenuOpen = false;
   isProfileOpen = false;
+  private userSub!: Subscription;
 
   constructor(
-    private dataImport: LocalStorageService,
+    private authService: AuthService,
     private routeLogger: RouteLogger,
     private elementRef: ElementRef,
   ) { }
 
   ngOnInit(): void {
-    this.getUser();
+    this.userSub = this.authService.user$.subscribe(user => {
+      this.user = user;
+    });
   }
 
-  getUser(): void {
-    this.user = this.dataImport.getUser();
+  ngOnDestroy(): void {
+    if (this.userSub) {
+      this.userSub.unsubscribe();
+    }
   }
 
   toggleMenu(): void {
@@ -77,6 +83,9 @@ export class Navbar implements OnInit {
     this.closeMenu();
     this.closeProfile();
     this.routeLogger.logLogout();
-    localStorage.clear();
+    this.authService.logout().subscribe({
+      next: () => {},
+      error: () => {}
+    });
   }
 }
