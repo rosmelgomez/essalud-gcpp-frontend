@@ -3,13 +3,13 @@ import { Injectable } from '@angular/core';
 import { Backend } from '../../model/api';
 import { HttpClient } from '@angular/common/http';
 
-const base_url = Backend.api + '/repor';
+const base_url = Backend.api + '/reporteador';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ReportDashboardReporteadorService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /// Dashboard Reporteador Red
   getQueryDRR() {
@@ -35,7 +35,7 @@ export class ReportDashboardReporteadorService {
   getQueryDRCAP() {
     return this.http.get<any>(base_url + `/queryDRCAP`, { withCredentials: true });
   }
-   /// Dashboard Reporteador variable
+  /// Dashboard Reporteador variable
   getQueryDRVAR() {
     return this.http.get<any>(base_url + `/queryDRVAR`, { withCredentials: true });
   }

@@ -111,6 +111,7 @@
   </div>
 
   <div class="modules-container" *ngIf="selectCentro">
+
     <div class="modules-header">
       <div class="header-content">
         <h1>El centro seleccionado es {{ nameCentro }}</h1>
@@ -129,26 +130,12 @@
     </div>
 
     <div class="modules-menu">
-      <!-- Consulta externa -->
-      <a routerLink="/reporte/select" class="module" (click)="saveModulo('Consulta Externa')">
-        <img src="/images/RCS2.png" alt="Consulta externa" />
-        <span>Consulta externa</span>
+
+      <!--  Variables SES -->
+      <a class="module">
+        <img src="/images/RCS2.png" alt="Variables SES" />
+        <span>Variables SES</span>
       </a>
-
-      <!-- Emergencia -->
-      <a routerLink="/reporte/dashboard-eme" class="module">
-        <img src="/images/RSC1.png" alt="Emergencia" />
-        <span>Emergencia</span>
-      </a>
-
-
-      <!-- Centro quirúrgico  -->
-      <a routerLink="/reporte/select" class="module" (click)="saveModulo('Centro Quirúrgico')">
-        <img src="/images/cirugia.png" alt="Centro quirúrgico" />
-        <span>Centro quirúrgico</span>
-      </a>
-
-
 
       <!--  Tablas Homologadas -->
       <a class="module" routerLink="/tablas-homologadas">
@@ -225,5 +212,32 @@
         <span>Auditoría de Documentos</span>
       </a>
     </div>
+
+    <!-- Consulta externa -->
+    <div class="modules-menu">
+
+
+      <!-- Consulta externa -->
+      <a class="module" routerLink="/reporte/consulta-externa">
+        <img src="/images/RCS2.png" alt="Consulta Externa" />
+        <span>Consulta Externa</span>
+      </a>
+
+
+      <!-- Emergencia -->
+      <a routerLink="/reporte/dashboard-eme" class="module">
+        <img src="/images/RSC1.png" alt="Emergencia" />
+        <span>Emergencia</span>
+      </a>
+
+
+      <!-- Centro quirúrgico  -->
+      <a routerLink="/reporte/select" class="module" (click)="saveModulo('Centro Quirúrgico')">
+        <img src="/images/cirugia.png" alt="Centro quirúrgico" />
+        <span>Centro quirúrgico</span>
+      </a>
+
+    </div>
+
   </div>
 </div>

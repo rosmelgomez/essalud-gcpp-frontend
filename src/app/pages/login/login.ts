@@ -20,6 +20,8 @@ export class Login implements OnInit {
   public loginForm!: FormGroup;
   public changePasswordForm!: FormGroup;
   showPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
   showChangePassword = false;
   isUpdatingPassword = false;
   tempUserDto: any = null;
@@ -75,6 +77,14 @@ export class Login implements OnInit {
 
   togglePassword(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  toggleNewPassword(): void {
+    this.showNewPassword = !this.showNewPassword;
+  }
+
+  toggleConfirmPassword(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
   }
 
   login() {

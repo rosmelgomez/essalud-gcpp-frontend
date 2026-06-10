@@ -20,4 +20,14 @@ export class TablasHomologadasService {
   getQueryTHCE() {
     return this.http.get<any[]>(base_url + `/queryTHCE`, { withCredentials: true });
   }
+
+  ///Tabla homologada camas
+  getQueryTHCAMA(codcas: string) {
+    return this.http.get<any[]>(base_url + `/queryTHCAMA/${codcas}`, { withCredentials: true });
+  }
+
+  //tabla servicio para camas
+  getQueryTHCAMASERV() {
+    return this.http.get<any[]>(base_url + `/queryTHCAMASERV`, { withCredentials: true });
+  }
 }

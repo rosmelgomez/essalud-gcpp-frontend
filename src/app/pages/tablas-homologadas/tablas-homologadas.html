@@ -23,6 +23,12 @@
         Relación homologada de grupo ocupacional, actividad, servicio, especialidad y variables.
       </p>
     </div>
+    <div class="btn btn-primary" (click)="loadDataCamas()">
+      <h3>Tablas Homolagas - Camas</h3>
+      <p>
+        Relación homologada de camas
+      </p>
+    </div>
   </div>
 
 
@@ -207,10 +213,105 @@
       <div class="no-data">Sin datos para tablas homologadas consulta externa.</div>
     </ng-template>
 
-
-
-
-
-
   </div>
+
+
+  <div class="tabla-camas" *ngIf="camas">
+
+    <mat-card class="resumen-table-camas">
+      <h3>Detalle de tablas homologadas camas</h3>
+      <div class="resumen-wrapper-camas">
+        <div class="resumen-grid-content-camas">
+          <!-- HEADER -->
+          <div class="resumen-header-camas">
+            <div class="cell oricenasicod">oricenasicod</div>
+            <div class="cell cenasicod">cenasicod</div>
+            <div class="cell arehoscod">arehoscod</div>
+            <div class="cell servhoscod">servhoscod</div>
+            <div class="cell estenfcod">estenfcod</div>
+            <div class="cell habcod">habcod</div>
+            <div class="cell camcod">camcod</div>
+            <div class="cell tipcamcod">tipcamcod</div>
+            <div class="cell estcamcod">estcamcod</div>
+            <div class="cell camobsdes">camobsdes</div>
+            <div class="cell camestregcod">camestregcod</div>
+            <div class="cell camflgfun">camflgfun</div>
+            <div class="cell cametiqcod">cametiqcod</div>
+            <div class="cell cenasides">cenasides</div>
+            <div class="cell servhosdes">servhosdes</div>
+          </div>
+
+          <!-- FILTERS ROW -->
+          <div class="resumen-filters-camas">
+            <input type="text" class="filter-input-camas cell oricenasicod" placeholder="Buscar oricenasicod.."
+              (keyup)="filterDataCamas('oricenasicod', $event)" />
+            <input type="text" class="filter-input-camas cell cenasicod" placeholder="Buscar cenasicod..."
+              (keyup)="filterDataCamas('cenasicod', $event)" />
+            <input type="text" class="filter-input-camas cell arehoscod" placeholder="Buscar arehoscod..."
+              (keyup)="filterDataCamas('arehoscod', $event)" />
+            <input type="text" class="filter-input-camas cell servhoscod" placeholder="Buscar servhoscod..."
+              (keyup)="filterDataCamas('servhoscod', $event)" />
+            <input type="text" class="filter-input-camas cell estenfcod" placeholder="Buscar estenfcod..."
+              (keyup)="filterDataCamas('estenfcod', $event)" />
+            <input type="text" class="filter-input-camas cell habcod" placeholder="Buscar habcod..."
+              (keyup)="filterDataCamas('habcod', $event)" />
+            <input type="text" class="filter-input-camas cell camcod" placeholder="Buscar camcod..."
+              (keyup)="filterDataCamas('camcod', $event)" />
+            <input type="text" class="filter-input-camas cell tipcamcod" placeholder="Buscar tipcamcod..."
+              (keyup)="filterDataCamas('tipcamcod', $event)" />
+            <input type="text" class="filter-input-camas cell estcamcod" placeholder="Buscar estcamcod..."
+              (keyup)="filterDataCamas('estcamcod', $event)" />
+            <input type="text" class="filter-input-camas cell camobsdes" placeholder="Buscar camobsdes..."
+              (keyup)="filterDataCamas('camobsdes', $event)" />
+            <input type="text" class="filter-input-camas cell camestregcod" placeholder="Buscar camestregcod..."
+              (keyup)="filterDataCamas('camestregcod', $event)" />
+            <input type="text" class="filter-input-camas cell camflgfun" placeholder="Buscar camflgfun..."
+              (keyup)="filterDataCamas('camflgfun', $event)" />
+            <input type="text" class="filter-input-camas cell cametiqcod" placeholder="Buscar cametiqcod..."
+              (keyup)="filterDataCamas('cametiqcod', $event)" />
+            <input type="text" class="filter-input-camas cell cenasides" placeholder="Buscar cenasides..."
+              (keyup)="filterDataCamas('cenasides', $event)" />
+            <input type="text" class="filter-input-camas cell servhosdes" placeholder="Buscar servhosdes..."
+              (keyup)="filterDataCamas('servhosdes', $event)" />
+          </div>
+
+          <!-- VIRTUAL SCROLL -->
+          <cdk-virtual-scroll-viewport class="resumen-viewport-camas" [itemSize]="72">
+            <div *cdkVirtualFor="let row of dataCamas" class="resumen-row-camas">
+              <div class="cell oricenasicod">{{ row.oricenasicod }}</div>
+              <div class="cell cenasicod">{{ row.cenasicod }}</div>
+              <div class="cell arehoscod">{{ row.arehoscod }}</div>
+              <div class="cell servhoscod">{{ row.servhoscod }}</div>
+              <div class="cell estenfcod">{{ row.estenfcod }}</div>
+              <div class="cell habcod">{{ row.habcod }}</div>
+              <div class="cell camcod">{{ row.camcod }}</div>
+              <div class="cell tipcamcod">{{ row.tipcamcod }}</div>
+              <div class="cell estcamcod">{{ row.estcamcod }}</div>
+              <div class="cell camobsdes">{{ row.camobsdes }}</div>
+              <div class="cell camestregcod">{{ row.camestregcod }}</div>
+              <div class="cell camflgfun">{{ row.camflgfun }}</div>
+              <div class="cell cametiqcod">{{ row.cametiqcod }}</div>
+              <div class="cell cenasides">{{ row.cenasides }}</div>
+              <div class="cell servhosdes">{{ row.servhosdes }}</div>
+            </div>
+          </cdk-virtual-scroll-viewport>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="table-footer-consulta-externa">
+        <div class="footer-left"><strong>Total de filas:</strong></div>
+        <div class="footer-right num">
+          <strong>{{ dataCamas.length }}</strong>
+        </div>
+      </div>
+    </mat-card>
+
+    <ng-template #noTable>
+      <div class="no-data">Sin datos para tablas homologadas consulta externa.</div>
+    </ng-template>
+  </div>
+
+
+
 </div>
