@@ -16,7 +16,7 @@ import { MatSortModule } from '@angular/material/sort';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 
 import { LocalStorageService } from '../../../../services/local-storage-service';
-import { ReportDashboardEmergenciasService } from '../../../../services/reportes/report-dashboard-emergencias-service';
+import { EmergenciasService } from '../../../../services/reportes/emergencias-service';
 
 @Component({
   selector: 'app-aten-topicos-2',
@@ -24,7 +24,7 @@ import { ReportDashboardEmergenciasService } from '../../../../services/reportes
   templateUrl: './aten-topicos-2.html',
   styleUrl: './aten-topicos-2.css',
 })
-export class AtenTopicos2 implements OnInit, OnDestroy  {
+export class AtenTopicos2 implements OnInit, OnDestroy {
   nameCentro: string = '';
   periodo: string = '';
   loading: boolean = false;
@@ -44,9 +44,9 @@ export class AtenTopicos2 implements OnInit, OnDestroy  {
 
   constructor(
     private dataImport: LocalStorageService,
-    private reportDashboardEmergenciasService: ReportDashboardEmergenciasService,
+    private reportDashboardEmergenciasService: EmergenciasService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadData();

@@ -1,4 +1,4 @@
-import {ChangeDetectorRef,Component,ElementRef,OnDestroy,OnInit,ViewChild} from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
@@ -8,7 +8,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { LocalStorageService } from '../../../../services/local-storage-service';
-import { ReportDashboardEmergenciasService } from '../../../../services/reportes/report-dashboard-emergencias-service';
+import { EmergenciasService } from '../../../../services/reportes/emergencias-service';
 
 @Component({
   selector: 'app-aten-topicos-1',
@@ -44,7 +44,7 @@ export class AtenTopicos1 implements OnInit, OnDestroy {
 
   constructor(
     private dataImport: LocalStorageService,
-    private reportDashboardEmergenciasService: ReportDashboardEmergenciasService,
+    private reportDashboardEmergenciasService: EmergenciasService,
     private cdr: ChangeDetectorRef,
   ) { }
 

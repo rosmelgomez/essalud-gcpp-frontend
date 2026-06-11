@@ -16,7 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
 
 @Component({
@@ -114,7 +114,7 @@ export class DmTotalAtencionesCad implements OnInit, OnDestroy {
   @ViewChild('chartTornado') chartTornadoEl!: ElementRef<HTMLDivElement>;
   @ViewChild('chartDiagnostico') chartDiagnosticoEl!: ElementRef<HTMLDivElement>;
   constructor(
-    private reporterDashboardMedicasService: ReportDashboardMedicasService,
+    private reporterDashboardMedicasService: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
   ) { }

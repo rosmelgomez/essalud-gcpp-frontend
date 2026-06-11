@@ -13,13 +13,13 @@ import { MatSortModule } from '@angular/material/sort';
 import { User } from '../../../model/user';
 
 @Component({
-  selector: 'app-report-dashboard-tramas',
+  selector: 'app-dashboard-tramas',
   imports: [CommonModule, FormsModule, MatTableModule, MatCardModule,
     MatButtonModule, MatPaginatorModule, MatSortModule, ScrollingModule],
-  templateUrl: './report-dashboard-tramas.html',
-  styleUrl: './report-dashboard-tramas.css',
+  templateUrl: './dashboard-tramas.html',
+  styleUrl: './dashboard-tramas.css',
 })
-export class ReportDashboardTramas implements OnInit {
+export class DashboardTramas implements OnInit {
 
   public centroForm!: FormGroup;
 
@@ -50,7 +50,6 @@ export class ReportDashboardTramas implements OnInit {
   selectedRedName: string = '';
 
   activeRedIndex: number = -1;
-
 
   /// data establecimiento
   centros: any[] = []

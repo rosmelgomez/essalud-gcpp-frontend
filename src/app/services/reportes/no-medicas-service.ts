@@ -7,8 +7,8 @@ const base_url = Backend.api + '/no-medica';
 @Injectable({
   providedIn: 'root',
 })
-export class ReportDashboardNoMedicasService {
-  constructor(private http: HttpClient) {}
+export class NoMedicasService {
+  constructor(private http: HttpClient) { }
 
   /// Query Dashboard no medicas
   /// Obstetricia - Atenciones Medicas
@@ -30,12 +30,12 @@ export class ReportDashboardNoMedicasService {
 
   /// Obstetricia - Preconcepcional
   getQueryDNMOPC(anio: string, periodo: string, codcas: string, codasegu: string) {
-    return this.http.get<any>( base_url + `/queryDNMOPC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMOPC/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   ///  Preventivo Promocional - Atenciones
   getQueryDNMPPA(anio: string, periodo: string, codcas: string, codasegu: string) {
-    return this.http.get<any>( base_url + `/queryDNMPPA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPPA/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Preventivo Promocional - domiciliaria
   getQueryDNMPPD(anio: string, periodo: string, codcas: string, codasegu: string) {
@@ -65,7 +65,7 @@ export class ReportDashboardNoMedicasService {
   }
   ///  Enfermeria - enfermeria_tuberculosis
   getQueryDNMEETU(anio: string, periodo: string, codcas: string, codasegu: string) {
-    return this.http.get<any>( base_url + `/queryDNMEETU/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMEETU/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///  Enfermeria - enfermeria_vih
   getQueryDNMEETV(anio: string, periodo: string, codcas: string, codasegu: string) {
@@ -99,7 +99,7 @@ export class ReportDashboardNoMedicasService {
   }
   /// Psicologia - horas - programadas
   getQueryDNMPHP(anio: string, periodo: string, codcas: string) {
-    return this.http.get<any>( base_url + `/queryDNMPHP/${anio}/${periodo}/${codcas}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPHP/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
   /// Psicologia - medicos
   getQueryDNMPSM(anio: string, periodo: string, codcas: string) {
@@ -107,11 +107,11 @@ export class ReportDashboardNoMedicasService {
   }
   /// Psicologia - procedimiento terapéutico
   getQueryDNMPSPT(anio: string, periodo: string, codcas: string, codasegu: string) {
-    return this.http.get<any>( base_url + `/queryDNMPSPT/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPSPT/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   /// Psicologia - procedimiento diagnóstico
   getQueryDNMPSPD(anio: string, periodo: string, codcas: string, codasegu: string) {
-    return this.http.get<any>( base_url + `/queryDNMPSPD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMPSPD/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   ///Trabajo Social (TS)
@@ -164,7 +164,7 @@ export class ReportDashboardNoMedicasService {
   }
   /// total atenciones - csv
   getQueryDNMOBTACSV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    return this.http.get<any>( base_url + `/queryDNMOBTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMOBTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Indicadores de preventiva promocional
@@ -206,7 +206,7 @@ export class ReportDashboardNoMedicasService {
   }
   /// total atenciones - csv
   getQueryDNMENTACSV(anio: string, periodo: string, codcas: string, codasegu: string) {
-    return this.http.get<any>( base_url + `/queryDNMENTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDNMENTACSV/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
   /// Indicadores de psicologia

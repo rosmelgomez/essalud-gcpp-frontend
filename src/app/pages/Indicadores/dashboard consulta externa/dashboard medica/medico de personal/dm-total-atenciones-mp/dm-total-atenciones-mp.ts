@@ -16,7 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
 
 @Component({
@@ -33,7 +33,7 @@ import { LocalStorageService } from '../../../../../../services/local-storage-se
   templateUrl: './dm-total-atenciones-mp.html',
   styleUrl: './dm-total-atenciones-mp.css',
 })
-export class DmTotalAtencionesMp  implements OnInit, OnDestroy {
+export class DmTotalAtencionesMp implements OnInit, OnDestroy {
   nameCentro: string = '';
 
   loading: boolean = false;
@@ -114,7 +114,7 @@ export class DmTotalAtencionesMp  implements OnInit, OnDestroy {
   @ViewChild('chartTornado') chartTornadoEl!: ElementRef<HTMLDivElement>;
   @ViewChild('chartDiagnostico') chartDiagnosticoEl!: ElementRef<HTMLDivElement>;
   constructor(
-    private reporterDashboardMedicasService: ReportDashboardMedicasService,
+    private reporterDashboardMedicasService: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
   ) { }
@@ -147,7 +147,7 @@ export class DmTotalAtencionesMp  implements OnInit, OnDestroy {
       q2: this.reporterDashboardMedicasService.getQuery2DMMPTANC(anio, periodo, codcas, codasegu),
       q3: this.reporterDashboardMedicasService.getQuery3DMMPTASGEA(anio, periodo, codcas, codasegu),
       q4: this.reporterDashboardMedicasService.getQuery4DMMPTACSV(anio, periodo, codcas, codasegu),
-  }).subscribe({
+    }).subscribe({
       next: ({ q0, q1, q2, q3, q4 }) => {
         // Asignar datos a las variables correspondientes
         this.query4TotalAtencionesFilter = q4;

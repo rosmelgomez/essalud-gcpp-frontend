@@ -113,13 +113,17 @@
   <div class="modules-container" *ngIf="selectCentro">
 
     <div class="modules-header">
+
+      <!-- header con la información del centro seleccionado-->
       <div class="header-content">
         <h1>El centro seleccionado es {{ nameCentro }}</h1>
         <h1 class="modules-title">Módulos disponibles</h1>
         <p class="modules-subtitle">Accede a los diferentes servicios de la plataforma</p>
       </div>
+
+      <!-- btn para retornar al form de centros-->
       <button class="btn-change-centro" (click)="changeCentro()" title="Cambiar centro"
-        *ngIf="!user?.roles?.includes('USER')">
+        *ngIf="!user?.roles?.includes('USER') && showModulosPrincipales">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <polyline points="12 5 19 12 12 19"></polyline>
@@ -127,12 +131,36 @@
         </svg>
         Cambiar Centro
       </button>
+
+      <!-- btn para retornar principales modulos-->
+      <button class="btn-change-centro" (click)="retornoMainModulos()" title="Retornar a modulos principales"
+        *ngIf="showVariableSES">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="12 5 19 12 12 19"></polyline>
+          <polyline points="19 12 5 12"></polyline>
+        </svg>
+        Retornar a modulos principales
+      </button>
+
+      <!-- btn para retornar a modulos de ses -->
+      <button class="btn-change-centro" (click)="retornoMainSES()" title="Retornar a SES"
+        *ngIf="showModuloConsultaExterna || showModuloCentroQuirurgico">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="12 5 19 12 12 19"></polyline>
+          <polyline points="19 12 5 12"></polyline>
+        </svg>
+        Retornar a SES
+      </button>
+
     </div>
 
-    <div class="modules-menu">
+    <!--  menú con los principales módulos disponibles -->
+    <div class="modules-menu" *ngIf="showModulosPrincipales">
 
       <!--  Variables SES -->
-      <a class="module">
+      <a class="module" (click)="showSESVariables()">
         <img src="/images/RCS2.png" alt="Variables SES" />
         <span>Variables SES</span>
       </a>
@@ -148,19 +176,6 @@
         <img src="/images/tramas.png" alt="Tramas" />
         <span>Tramas</span>
       </a>
-
-      <!--  Procedimientos -->
-      <a class="module" routerLink="/reporte/dashboard-procedimientos">
-        <img src="/images/procedimientos.png" alt="Procedimientos" />
-        <span>Procedimientos</span>
-      </a>
-
-      <!-- Procedimientos-->
-      <div class="module inactive" title="Módulo no disponible" style="display: none !important;">
-        <img src="/images/hospitalizacion.png" alt="Procedimientos" />
-        <span>Procedimientos</span>
-      </div>
-
 
       <!-- Reportes gerenciales (admin) -->
       <a routerLink="/reporte/reports-gerenciales" class="module"
@@ -182,11 +197,11 @@
         <span>Encuesta de Conformidad</span>
       </a>
 
+      <!-- Gestion Documentaria -->
       <a class="module" routerLink="/documentos/reports-documento">
         <img src="/images/gestion_documentaria.png" alt="Gestion Documentaria" />
         <span>Gestión Documentaria</span>
       </a>
-
 
       <!-- Dashboard Encuesta (admin) -->
       <a routerLink="/dashboard-encuesta" class="module" *ngIf="user?.roles?.includes('ADMIN')">
@@ -213,31 +228,81 @@
       </a>
     </div>
 
-    <!-- Consulta externa -->
-    <div class="modules-menu">
-
+    <!-- Subcomponentes de Varibles SES -->
+    <div class="modules-menu" *ngIf="showVariableSES">
 
       <!-- Consulta externa -->
-      <a class="module" routerLink="/reporte/consulta-externa">
+      <a class="module" (click)="showMainConsultaExterna()">
         <img src="/images/RCS2.png" alt="Consulta Externa" />
         <span>Consulta Externa</span>
       </a>
 
-
       <!-- Emergencia -->
-      <a routerLink="/reporte/dashboard-eme" class="module">
+      <a routerLink="/reporte/dashboard-emergencia" class="module">
         <img src="/images/RSC1.png" alt="Emergencia" />
         <span>Emergencia</span>
       </a>
 
-
       <!-- Centro quirúrgico  -->
-      <a routerLink="/reporte/select" class="module" (click)="saveModulo('Centro Quirúrgico')">
+      <a class="module" (click)="showMainCentroQuirurgico()">
         <img src="/images/cirugia.png" alt="Centro quirúrgico" />
         <span>Centro quirúrgico</span>
       </a>
 
+      <!--  Procedimientos -->
+      <a class="module" routerLink="/reporte/dashboard-procedimientos">
+        <img src="/images/procedimientos.png" alt="Procedimientos" />
+        <span>Procedimientos</span>
+      </a>
+
+      <!-- Hospitalizacion-->
+      <a routerLink="/reporte/dashboard-hospitalizacion" class="module">
+        <img src="/images/hospitalizacion.png" alt="Hospitalizacion" />
+        <span>Hospitalizacion</span>
+      </a>
+
     </div>
+
+    <!-- Subcomponentes del modulo consulta externa -->
+    <div class="modules-menu" *ngIf="showModuloConsultaExterna">
+
+      <!-- medicas-->
+      <a href="/reporte/dashboard-medicas" class="module">
+        <img src="/images/medicas.png" alt="Médicas" />
+        <span>Médicas</span>
+      </a>
+
+      <!-- no medicas-->
+      <a href="/reporte/dashboard-no-medicas" class="module">
+        <img src="/images/no-medicas.png" alt="No Médicas" />
+        <span>No Médicas</span>
+      </a>
+
+      <!-- odontologicas-->
+      <a href="/reporte/dashboard-odontologicas" class="module">
+        <img src="/images/odontologicas.png" alt="Odontológicas" />
+        <span>Odontológicas</span>
+      </a>
+
+    </div>
+
+    <!-- Subcomponentes del modulo centro quirurgico -->
+    <div class="modules-menu" *ngIf="showModuloCentroQuirurgico">
+
+      <!-- intervenciones quirurgicas-->
+      <a href="/reporte/dashboard-intervenciones-quirurgicas" class="module">
+        <img src="/images/intervenciones-quirurgicas.png" alt="Intervenciones quirúrgicas" />
+        <span>Intervenciones quirúrgicas</span>
+      </a>
+
+      <!-- transplante-->
+      <a href="/reporte/dashboard-transplante" class="module">
+        <img src="/images/transplante.png" alt="Transplante" />
+        <span>Transplante</span>
+      </a>
+
+    </div>
+
 
   </div>
 </div>

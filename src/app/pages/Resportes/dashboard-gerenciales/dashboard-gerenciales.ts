@@ -4,13 +4,13 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
-  selector: 'app-reports-gerenciales',
+  selector: 'app-dashboard-gerenciales',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './reports-gerenciales.html',
-  styleUrl: './reports-gerenciales.css',
+  templateUrl: './dashboard-gerenciales.html',
+  styleUrl: './dashboard-gerenciales.css',
 })
-export class ReportsGerenciales {
+export class DashboardGerenciales {
   showReporte = true;
   showHistorico = false;
 

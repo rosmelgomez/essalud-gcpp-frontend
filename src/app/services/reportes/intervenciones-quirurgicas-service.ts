@@ -7,8 +7,8 @@ const base_url = Backend.api + '/intervenciones-q';
 @Injectable({
   providedIn: 'root',
 })
-export class ReportDashboardIntervencionesQuirurgicasService {
-  constructor(private http: HttpClient) {}
+export class IntervencionesQuirurgicasService {
+  constructor(private http: HttpClient) { }
 
   ///Dashboard Intervenciones Quirurgicas
   /* Intervenciones quirúrgicas */
@@ -22,8 +22,8 @@ export class ReportDashboardIntervencionesQuirurgicasService {
     return this.http.get<any[]>(base_url + `/queryDIQE/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
-   ///horas quirurgicas electivas
-    getQueryDIQHQE(anio: string, periodo: string, codcas: string, codasegu: string) {
+  ///horas quirurgicas electivas
+  getQueryDIQHQE(anio: string, periodo: string, codcas: string, codasegu: string) {
     return this.http.get<any[]>(base_url + `/queryDIQHQE/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
   ///horas quirurgicas emergencia

@@ -78,8 +78,7 @@
         </button>
 
 
-        <div class="secondary-link">Solicita  acceso al siest <a
-            href="/solicitar-acceso-registro">solicitar</a>.</div>
+        <div class="secondary-link">Solicita acceso al siest <a href="/solicitud-acceso/registro">solicitar</a>.</div>
       </form>
     </div>
   </div>
@@ -95,12 +94,14 @@
       <div class="modal-body">
         <p class="modal-intro">Es tu primer inicio de sesión. Por seguridad debes cambiar tu contraseña.</p>
 
-        <form [formGroup]="changePasswordForm" (ngSubmit)="changePasswordFirstTime()" autocomplete="off" class="change-password-form">
+        <form [formGroup]="changePasswordForm" (ngSubmit)="changePasswordFirstTime()" autocomplete="off"
+          class="change-password-form">
           <div class="field-input">
             <label>Nueva Contraseña</label>
             <div class="input-wrap">
-              <input [type]="showNewPassword ? 'text' : 'password'" name="newPassword" placeholder="Ingresa tu nueva contraseña"
-                aria-label="Nueva Contraseña" formControlName="newPassword" required />
+              <input [type]="showNewPassword ? 'text' : 'password'" name="newPassword"
+                placeholder="Ingresa tu nueva contraseña" aria-label="Nueva Contraseña" formControlName="newPassword"
+                required />
               <button type="button" (click)="toggleNewPassword()" class="toggle-password"
                 aria-label="Mostrar u ocultar contraseña">
                 <svg height="20" viewBox="-64 0 512 512" width="20" xmlns="http://www.w3.org/2000/svg"
@@ -124,8 +125,9 @@
           <div class="field-input">
             <label>Confirmar Nueva Contraseña</label>
             <div class="input-wrap">
-              <input [type]="showConfirmPassword ? 'text' : 'password'" name="confirmPassword" placeholder="Confirma tu nueva contraseña"
-                aria-label="Confirmar Nueva Contraseña" formControlName="confirmPassword" required />
+              <input [type]="showConfirmPassword ? 'text' : 'password'" name="confirmPassword"
+                placeholder="Confirma tu nueva contraseña" aria-label="Confirmar Nueva Contraseña"
+                formControlName="confirmPassword" required />
               <button type="button" (click)="toggleConfirmPassword()" class="toggle-password"
                 aria-label="Mostrar u ocultar contraseña">
                 <svg height="20" viewBox="-64 0 512 512" width="20" xmlns="http://www.w3.org/2000/svg"
@@ -147,7 +149,8 @@
           </div>
 
           <div class="modal-actions-wrapper">
-            <button type="submit" class="btn-modal-action btn-approve" [disabled]="changePasswordForm.invalid || isUpdatingPassword">
+            <button type="submit" class="btn-modal-action btn-approve"
+              [disabled]="changePasswordForm.invalid || isUpdatingPassword">
               <span>{{ isUpdatingPassword ? 'Actualizando...' : 'Actualizar contraseña' }}</span>
             </button>
             <button type="button" class="btn-modal-action btn-cancel" (click)="cancelChangePassword($event)">

@@ -17,7 +17,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { FormsModule } from '@angular/forms';
 
 
@@ -51,7 +51,7 @@ interface PivotRow {
   templateUrl: './dm-total-horas-efectivas-mo.html',
   styleUrl: './dm-total-horas-efectivas-mo.css',
 })
-export class DmTotalHorasEfectivasMo implements OnInit, AfterViewInit, OnDestroy  {
+export class DmTotalHorasEfectivasMo implements OnInit, AfterViewInit, OnDestroy {
   nameCentro: String = '';
 
   periodo: string = '';
@@ -99,10 +99,10 @@ export class DmTotalHorasEfectivasMo implements OnInit, AfterViewInit, OnDestroy
   tableRows: MedicoRow[] = [];
 
   constructor(
-    private reportDashboardMedicasService: ReportDashboardMedicasService,
+    private reportDashboardMedicasService: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -142,7 +142,7 @@ export class DmTotalHorasEfectivasMo implements OnInit, AfterViewInit, OnDestroy
     }
     this.loading = true;
     this.error = null;
-     this.reportDashboardMedicasService.getQueryDMMOTHE(anio, periodo, codcas).subscribe({
+    this.reportDashboardMedicasService.getQueryDMMOTHE(anio, periodo, codcas).subscribe({
       next: (data) => {
         this.query0Data = data;
         const groupMap = new Map<
@@ -275,7 +275,7 @@ export class DmTotalHorasEfectivasMo implements OnInit, AfterViewInit, OnDestroy
       return;
     }
 
-       const aggregatedAll = this.aggregateByLabel(data, labelFn, (d) =>
+    const aggregatedAll = this.aggregateByLabel(data, labelFn, (d) =>
       Number((d as any).horas_efec_def ?? 0),
     );
 

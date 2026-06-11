@@ -17,7 +17,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
 import { forkJoin } from 'rxjs';
 
@@ -69,9 +69,9 @@ export class DmTotalDesercionAm implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private dataImport: LocalStorageService,
-    private reportDashboardMedicasService: ReportDashboardMedicasService,
+    private reportDashboardMedicasService: MedicasService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -114,7 +114,7 @@ export class DmTotalDesercionAm implements OnInit, AfterViewInit, OnDestroy {
     forkJoin({
       query0TD: this.reportDashboardMedicasService.getQuery0DMAMTD(anio, periodo, codcas, codasegu),
       query1TD: this.reportDashboardMedicasService.getQuery1DMAMTD(anio, periodo, codcas, codasegu),
-      query2TDCSV: this.reportDashboardMedicasService.getQuery2DMAMTDCSV(anio, periodo,  codcas, codasegu),
+      query2TDCSV: this.reportDashboardMedicasService.getQuery2DMAMTDCSV(anio, periodo, codcas, codasegu),
     }).subscribe({
       next: (results) => {
         this.query0Data = results.query0TD;
@@ -128,7 +128,7 @@ export class DmTotalDesercionAm implements OnInit, AfterViewInit, OnDestroy {
         this.buildAllCharts();
       },
       error: () => {
-        this.error = 'Error al cargar los datos' ;
+        this.error = 'Error al cargar los datos';
         this.loading = false;
       },
     });
@@ -166,7 +166,7 @@ export class DmTotalDesercionAm implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-   const aggregatedAll = this.aggregateByLabel(data, labelFn).sort((a, b) => b.total - a.total);
+    const aggregatedAll = this.aggregateByLabel(data, labelFn).sort((a, b) => b.total - a.total);
     const aggregated = aggregatedAll.slice(0, 10);
 
     this.destroyChart(currentChart);

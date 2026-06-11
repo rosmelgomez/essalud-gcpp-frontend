@@ -16,14 +16,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
-import { ReportDashboardIntervencionesQuirurgicasService } from '../../../../../../services/reportes/report-dashboard-intervenciones-quirurgicas-service';
+import { IntervencionesQuirurgicasService } from '../../../../../../services/reportes/intervenciones-quirurgicas-service';
 
 
 
 @Component({
   selector: 'app-diq-sin-complejidad-gc',
   imports: [
-        CommonModule,
+    CommonModule,
     MatTableModule,
     MatCardModule,
     MatButtonModule,
@@ -70,7 +70,7 @@ export class DiqSinComplejidadGc implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private dataImport: LocalStorageService,
-    private report: ReportDashboardIntervencionesQuirurgicasService,
+    private report: IntervencionesQuirurgicasService,
     private cdr: ChangeDetectorRef,
   ) { }
 

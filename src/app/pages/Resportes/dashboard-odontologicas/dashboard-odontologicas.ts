@@ -5,15 +5,15 @@ import { LocalStorageService } from '../../../services/local-storage-service';
 import { FileService } from '../../../services/documentos/file-service';
 
 import { forkJoin } from 'rxjs';
-import { ReportDashboardOdontologicasService } from '../../../services/reportes/report-dashboard-odontologicas-service';
+import { OdontologicasService } from '../../../services/reportes/odontologicas-service';
 
 @Component({
-  selector: 'app-report-dashboard-odontologicas',
+  selector: 'app-dashboard-odontologicas',
   imports: [CommonModule, FormsModule],
-  templateUrl: './report-dashboard-odontologicas.html',
-  styleUrl: './report-dashboard-odontologicas.css',
+  templateUrl: './dashboard-odontologicas.html',
+  styleUrl: './dashboard-odontologicas.css',
 })
-export class ReportDashboardOdontologicas implements OnInit {
+export class DashboardOdontologicas implements OnInit {
   currentDate: string = '';
 
   //data importantes
@@ -49,7 +49,7 @@ export class ReportDashboardOdontologicas implements OnInit {
 
   constructor(
     private dataImport: LocalStorageService,
-    private reportDashboardOdonS: ReportDashboardOdontologicasService,
+    private reportDashboardOdonS: OdontologicasService,
     private fileService: FileService,
     private cdr: ChangeDetectorRef,
   ) { }

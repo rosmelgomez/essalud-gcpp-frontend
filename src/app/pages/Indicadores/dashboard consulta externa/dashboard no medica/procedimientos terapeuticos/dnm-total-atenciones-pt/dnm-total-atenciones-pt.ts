@@ -17,7 +17,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
-import { ReportDashboardNoMedicasService } from '../../../../../../services/reportes/report-dashboard-no-medicas-service';
+import { NoMedicasService } from '../../../../../../services/reportes/no-medicas-service';
 
 
 @Component({
@@ -34,7 +34,7 @@ import { ReportDashboardNoMedicasService } from '../../../../../../services/repo
   templateUrl: './dnm-total-atenciones-pt.html',
   styleUrl: './dnm-total-atenciones-pt.css',
 })
-export class DnmTotalAtencionesPt  implements OnInit, OnDestroy {
+export class DnmTotalAtencionesPt implements OnInit, OnDestroy {
   nameCentro: string = '';
 
   loading: boolean = false;
@@ -117,10 +117,10 @@ export class DnmTotalAtencionesPt  implements OnInit, OnDestroy {
   @ViewChild('chartTornado') chartTornadoEl!: ElementRef<HTMLDivElement>;
   @ViewChild('chartDiagnostico') chartDiagnosticoEl!: ElementRef<HTMLDivElement>;
   constructor(
-    private report: ReportDashboardNoMedicasService,
+    private report: NoMedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadAllData();

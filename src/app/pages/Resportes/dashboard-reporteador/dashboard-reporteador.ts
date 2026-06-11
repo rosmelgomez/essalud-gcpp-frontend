@@ -4,18 +4,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Resporteador } from '../../../model/resporteador';
-import {AfterViewInit, ViewChild} from '@angular/core';
-import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import { ReportDashboardReporteadorService } from '../../../services/reportes/report-dashboard-reporteador-service';
+import { AfterViewInit, ViewChild } from '@angular/core';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { ReporteadorService } from '../../../services/reportes/reporteador-service';
 
 @Component({
-  selector: 'app-report-dashboard-reporteador',
-  imports: [CommonModule, FormsModule , MatPaginatorModule, MatTableModule],
-  templateUrl: './report-dashboard-reporteador.html',
-  styleUrl: './report-dashboard-reporteador.css',
+  selector: 'app-dashboard-reporteador',
+  imports: [CommonModule, FormsModule, MatPaginatorModule, MatTableModule],
+  templateUrl: './dashboard-reporteador.html',
+  styleUrl: './dashboard-reporteador.css',
 })
-export class ReportDashboardReporteador implements OnInit , AfterViewInit {
+export class DashboardReporteador implements OnInit, AfterViewInit {
   currentDate: string = '';
 
   // Estados para el reporte
@@ -76,13 +76,13 @@ export class ReportDashboardReporteador implements OnInit , AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   dataSource = new MatTableDataSource<any>([]);
-  displayedColumns: string[] = ['Centro origen', 'Cód. red', 'Red asistencial', 'Cód. centro', 'Centro asistencial','Periodo','Año', 'Cód. servicio', 'Servicio', 'Cód. actividad', 'Actividad', 'Cód. subactividad', 'Subactividad', 'Sexo', 'Edad (años)', 'DNI médico','Acto médico','Paciente','Cód. diagnóstico','Diagnóstico'];
+  displayedColumns: string[] = ['Centro origen', 'Cód. red', 'Red asistencial', 'Cód. centro', 'Centro asistencial', 'Periodo', 'Año', 'Cód. servicio', 'Servicio', 'Cód. actividad', 'Actividad', 'Cód. subactividad', 'Subactividad', 'Sexo', 'Edad (años)', 'DNI médico', 'Acto médico', 'Paciente', 'Cód. diagnóstico', 'Diagnóstico'];
 
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
   }
   constructor(
-    private ReportDashboardReporteadorService: ReportDashboardReporteadorService
+    private ReportDashboardReporteadorService: ReporteadorService
   ) {
     this.currentDate = new Date().toLocaleDateString();
   }
@@ -287,7 +287,7 @@ export class ReportDashboardReporteador implements OnInit , AfterViewInit {
       actividad: this.ReportDashboardReporteadorService.getQueryDRAC(),
       subactividad: this.ReportDashboardReporteadorService.getQueryDRSUBAC(),
       capitulo: this.ReportDashboardReporteadorService.getQueryDRCAP(),
-      varible:this.ReportDashboardReporteadorService.getQueryDRVAR(),
+      varible: this.ReportDashboardReporteadorService.getQueryDRVAR(),
     }).subscribe({
       next: (response) => {
         this.dataRed = response.red;
@@ -308,7 +308,7 @@ export class ReportDashboardReporteador implements OnInit , AfterViewInit {
     this.loadingAM = true;
     this.errorAM = null;
     this.noDataAM = false;
-    const Resporteador : Resporteador = {
+    const Resporteador: Resporteador = {
       anio: this.anio || '',
       periodo: this.periodo || '',
       redasiscod: this.red_asistencial || '',

@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatCardModule } from '@angular/material/card';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
 
 // Configuración centralizada de estilos
@@ -85,7 +85,7 @@ export class DmTotalMedicosAm implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('tmLineChart') tmLineChartEl!: ElementRef<HTMLDivElement>;
 
   constructor(
-    private reportDMS: ReportDashboardMedicasService,
+    private reportDMS: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef
   ) { }

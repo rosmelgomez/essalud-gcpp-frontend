@@ -6,9 +6,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { EstablecimientoService } from '../../services/establecimiento-service';
 import { LocalStorageService } from '../../services/local-storage-service';
 
-
-
-
 @Component({
   selector: 'app-home-page',
   standalone: true,
@@ -30,7 +27,14 @@ export class HomePage implements OnInit {
   nameRed: string = '';
   nameCentro: string = '';
 
-  // Datos para el dropdown de Red Asistencial
+  ///Estados para el manejo de componentes
+  showModulosPrincipales: boolean = true;
+  showVariableSES: boolean = false;
+
+  showModuloConsultaExterna: boolean = false;
+  showModuloCentroQuirurgico: boolean = false;
+
+  // Datos de Redes Asistenciales
   dataRed: any[] = [];
   filteredRed: any = [];
   searchRed: string = '';
@@ -56,6 +60,36 @@ export class HomePage implements OnInit {
     private cdr: ChangeDetectorRef,
     private router: Router,
   ) { }
+
+  /* Métodos para el manejo de componentes */
+  showSESVariables(): void {
+    this.showModulosPrincipales = false;
+    this.showVariableSES = true;
+  }
+
+  retornoMainModulos(): void {
+    this.showModulosPrincipales = true;
+    this.showVariableSES = false;
+  }
+
+  showMainConsultaExterna(): void {
+    this.showModulosPrincipales = false;
+    this.showVariableSES = false;
+    this.showModuloConsultaExterna = true;
+  }
+
+  retornoMainSES(): void {
+    this.showModulosPrincipales = false;
+    this.showVariableSES = true;
+    this.showModuloConsultaExterna = false;
+    this.showModuloCentroQuirurgico = false;
+  }
+
+  showMainCentroQuirurgico(): void {
+    this.showModulosPrincipales = false;
+    this.showVariableSES = false;
+    this.showModuloCentroQuirurgico = true;
+  }
 
   ngOnInit(): void {
     this.reactiveForm();

@@ -6,7 +6,7 @@ const base_url = Backend.api + '/emergencia';
 @Injectable({
   providedIn: 'root',
 })
-export class ReportDashboardEmergenciasService {
+export class EmergenciasService {
   constructor(private http: HttpClient) { }
   ///Dashboard Emergencias
   /* Prioridad */

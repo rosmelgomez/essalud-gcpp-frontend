@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import {MatSort} from '@angular/material/sort';
+import { MatSort } from '@angular/material/sort';
 import { forkJoin } from 'rxjs/internal/observable/forkJoin';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatCardModule } from '@angular/material/card';
@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
 
 @Component({
@@ -107,7 +107,7 @@ export class DmTotalAtencionesMc implements OnInit, OnDestroy {
   @ViewChild('chartTornado') chartTornadoEl!: ElementRef<HTMLDivElement>;
   @ViewChild('chartDiagnostico') chartDiagnosticoEl!: ElementRef<HTMLDivElement>;
   constructor(
-    private reporterDashboardMedicasService: ReportDashboardMedicasService,
+    private reporterDashboardMedicasService: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
   ) { }
@@ -135,11 +135,11 @@ export class DmTotalAtencionesMc implements OnInit, OnDestroy {
     this.error = null;
 
     forkJoin({
-        q0: this.reporterDashboardMedicasService.getQuery0DMMCTASS(anio, periodo, codcas, codasegu),
-        q1: this.reporterDashboardMedicasService.getQuery1DMMCTAAE(anio, periodo, codcas, codasegu),
-        q2: this.reporterDashboardMedicasService.getQuery2DMMCTANC(anio, periodo, codcas, codasegu),
-        q3: this.reporterDashboardMedicasService.getQuery3DMMCTASGEA(anio, periodo, codcas, codasegu),
-        q4: this.reporterDashboardMedicasService.getQuery4DMMCTACSV(anio, periodo, codcas, codasegu),
+      q0: this.reporterDashboardMedicasService.getQuery0DMMCTASS(anio, periodo, codcas, codasegu),
+      q1: this.reporterDashboardMedicasService.getQuery1DMMCTAAE(anio, periodo, codcas, codasegu),
+      q2: this.reporterDashboardMedicasService.getQuery2DMMCTANC(anio, periodo, codcas, codasegu),
+      q3: this.reporterDashboardMedicasService.getQuery3DMMCTASGEA(anio, periodo, codcas, codasegu),
+      q4: this.reporterDashboardMedicasService.getQuery4DMMCTACSV(anio, periodo, codcas, codasegu),
     }).subscribe({
       next: ({ q0, q1, q2, q3, q4 }) => {
         // Asignar datos a las variables correspondientes

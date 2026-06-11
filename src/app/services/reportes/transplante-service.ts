@@ -9,8 +9,8 @@ const base_url = Backend.api + '/transplante';
 @Injectable({
   providedIn: 'root',
 })
-export class ReportTransplante {
-  constructor(private http: HttpClient) {}
+export class TransplanteService {
+  constructor(private http: HttpClient) { }
 
   getQueryTransplante(anio: string, periodo: string, codcas: string, codasegu: string) {
     return this.http.get<any[]>(base_url + `/queryDTrans/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });

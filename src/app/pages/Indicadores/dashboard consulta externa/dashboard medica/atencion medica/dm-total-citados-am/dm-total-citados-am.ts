@@ -1,4 +1,4 @@
-import {Component, OnInit,OnDestroy,AfterViewInit,ChangeDetectorRef,ViewChild,ElementRef,} from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ChangeDetectorRef, ViewChild, ElementRef, } from '@angular/core';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatSort } from '@angular/material/sort';
 import { CommonModule } from '@angular/common';
@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
 
 
@@ -57,7 +57,7 @@ export class DmTotalCitadosAm implements OnInit, AfterViewInit, OnDestroy {
   chartEstado: ApexCharts | null = null;
 
   constructor(
-    private reportDashboardMedicasService: ReportDashboardMedicasService,
+    private reportDashboardMedicasService: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef
   ) { }
@@ -525,7 +525,7 @@ export class DmTotalCitadosAm implements OnInit, AfterViewInit, OnDestroy {
 
   downloadCSV(): void {
 
-     const { anio, periodo, codasegu } = this.dataImport.getDataDMA();
+    const { anio, periodo, codasegu } = this.dataImport.getDataDMA();
     const { codcas } = this.dataImport.getDataCentro();
 
     if (!anio || !periodo || !codcas || !codasegu) {

@@ -5,15 +5,15 @@ import { forkJoin } from 'rxjs';
 import { OnInit } from '@angular/core';
 import { LocalStorageService } from '../../../services/local-storage-service';
 import { FileService } from '../../../services/documentos/file-service';
-import { ReportDashboardMedicasService } from '../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../services/reportes/medicas-service';
 
 @Component({
-  selector: 'app-report-dashboard-medicas',
+  selector: 'app-dashboard-medicas',
   imports: [CommonModule, FormsModule],
-  templateUrl: './report-dashboard-medicas.html',
-  styleUrl: './report-dashboard-medicas.css',
+  templateUrl: './dashboard-medicas.html',
+  styleUrl: './dashboard-medicas.css',
 })
-export class ReportDashboardMedicas implements OnInit {
+export class DashboardMedicas implements OnInit {
   currentDate: string = '';
 
   // Estados para Atenciones Médicas
@@ -182,11 +182,11 @@ export class ReportDashboardMedicas implements OnInit {
   dataHorasProgramadasCAD: any[] = [];
 
   constructor(
-    private report: ReportDashboardMedicasService,
+    private report: MedicasService,
     private cdr: ChangeDetectorRef,
     private dataImport: LocalStorageService,
     private fileService: FileService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.currentDate = this.formatDate(new Date());
@@ -245,14 +245,14 @@ export class ReportDashboardMedicas implements OnInit {
     this.cdr.detectChanges();
 
     forkJoin({
-      atenciones: this.report.getQueryDMAMA(this.anio,this.periodo,this.codcas,this.tipo_asegurado),
+      atenciones: this.report.getQueryDMAMA(this.anio, this.periodo, this.codcas, this.tipo_asegurado),
       horasEfectivas: this.report.getQueryDMAMHE(this.anio, this.periodo, this.codcas),
       horasProgramadas: this.report.getQueryDMAMHP(this.anio, this.periodo, this.codcas),
       citados: this.report.getQueryDMAMC(this.anio, this.periodo, this.codcas, this.tipo_asegurado),
-      desercion: this.report.getQueryDMAMD(this.anio,this.periodo,this.codcas,this.tipo_asegurado),
+      desercion: this.report.getQueryDMAMD(this.anio, this.periodo, this.codcas, this.tipo_asegurado),
       medicos: this.report.getQueryDMAMM(this.anio, this.periodo, this.codcas),
-      consultantes: this.report.getQueryDMAMTC(this.anio,this.periodo,this.codcas,this.tipo_asegurado),
-      consultantesServicio: this.report.getQueryDMAMTCS(this.anio,this.periodo,this.codcas, this.tipo_asegurado),
+      consultantes: this.report.getQueryDMAMTC(this.anio, this.periodo, this.codcas, this.tipo_asegurado),
+      consultantesServicio: this.report.getQueryDMAMTCS(this.anio, this.periodo, this.codcas, this.tipo_asegurado),
     }).subscribe({
       next: (result) => {
         this.totalConsultantesAtencionMedica = result.consultantes[0]?.cantidad ?? 0;
@@ -584,7 +584,7 @@ export class ReportDashboardMedicas implements OnInit {
           agrupador,
           total,
         }));
-          this.dataTotalConsultasMO.sort((a, b) => b.total - a.total);
+        this.dataTotalConsultasMO.sort((a, b) => b.total - a.total);
 
         // Data horas efectivas MO por agrupador
         const horasEfectivasCountMapMO = new Map<string, number>();
@@ -599,7 +599,7 @@ export class ReportDashboardMedicas implements OnInit {
           agrupador,
           total,
         }));
-          this.dataHorasEfectivasMO.sort((a, b) => b.total - a.total);
+        this.dataHorasEfectivasMO.sort((a, b) => b.total - a.total);
 
         // Data horas programadas MO por agrupador
         const horasProgramadasCountMapMO = new Map<string, number>();
@@ -689,7 +689,7 @@ export class ReportDashboardMedicas implements OnInit {
         // Guardar data para indicadores MP
         //data para total consultantes por servicio
         this.dataTotalConsultantesServicioMP = result.consultanteServicioMP;
-          this.dataTotalConsultantesServicioMP.sort((a, b) => b.cantidad - a.cantidad);
+        this.dataTotalConsultantesServicioMP.sort((a, b) => b.cantidad - a.cantidad);
 
         // Data para total medicos MP por agrupador
 
@@ -702,7 +702,7 @@ export class ReportDashboardMedicas implements OnInit {
           agrupador,
           total,
         }));
-          this.dataTotalMedicosMP.sort((a, b) => b.total - a.total);
+        this.dataTotalMedicosMP.sort((a, b) => b.total - a.total);
 
         // Data para total consultas MP por agrupador
         const agrupadorCountMapMP = new Map<string, number>();
@@ -729,7 +729,7 @@ export class ReportDashboardMedicas implements OnInit {
           agrupador,
           total,
         }));
-          this.dataHorasEfectivasMP.sort((a, b) => b.total - a.total);
+        this.dataHorasEfectivasMP.sort((a, b) => b.total - a.total);
 
         // Data horas programadas MP por agrupador
         const horasProgramadasCountMapMP = new Map<string, number>();
@@ -822,7 +822,7 @@ export class ReportDashboardMedicas implements OnInit {
         // Guardar data para indicadores CAI
         //data para total consultantes por servicio
         this.dataTotalConsultantesServicioCAI = result.consultanteServicioCAI;
-          this.dataTotalConsultantesServicioCAI.sort((a, b) => b.cantidad - a.cantidad);
+        this.dataTotalConsultantesServicioCAI.sort((a, b) => b.cantidad - a.cantidad);
         // Data para total medicos CAI por agrupador
 
         const medicosCountMapCAI = new Map<string, number>();
@@ -834,7 +834,7 @@ export class ReportDashboardMedicas implements OnInit {
           agrupador,
           total,
         }));
-          this.dataTotalMedicosCAI.sort((a, b) => b.total - a.total);
+        this.dataTotalMedicosCAI.sort((a, b) => b.total - a.total);
 
         // Data para total consultas CAI por agrupador
         const agrupadorCountMapCAI = new Map<string, number>();
@@ -1055,5 +1055,5 @@ export class ReportDashboardMedicas implements OnInit {
     this.cdr.detectChanges();
   }
 
-  downloadCSV(): void {}
+  downloadCSV(): void { }
 }

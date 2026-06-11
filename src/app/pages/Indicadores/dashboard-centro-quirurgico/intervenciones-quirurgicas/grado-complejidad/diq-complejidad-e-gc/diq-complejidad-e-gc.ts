@@ -16,7 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
-import { ReportDashboardIntervencionesQuirurgicasService } from '../../../../../../services/reportes/report-dashboard-intervenciones-quirurgicas-service';
+import { IntervencionesQuirurgicasService } from '../../../../../../services/reportes/intervenciones-quirurgicas-service';
 
 
 
@@ -31,7 +31,7 @@ import { ReportDashboardIntervencionesQuirurgicasService } from '../../../../../
   templateUrl: './diq-complejidad-e-gc.html',
   styleUrl: './diq-complejidad-e-gc.css',
 })
-export class DiqComplejidadEGc  implements OnInit, AfterViewInit, OnDestroy {
+export class DiqComplejidadEGc implements OnInit, AfterViewInit, OnDestroy {
   loading: boolean = false;
   error: string | null = null;
   dataLoaded: boolean = false;
@@ -69,7 +69,7 @@ export class DiqComplejidadEGc  implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private dataImport: LocalStorageService,
-    private report: ReportDashboardIntervencionesQuirurgicasService,
+    private report: IntervencionesQuirurgicasService,
     private cdr: ChangeDetectorRef,
   ) { }
 

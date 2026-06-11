@@ -6,7 +6,7 @@ import { forkJoin } from 'rxjs';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatCardModule } from '@angular/material/card';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 
 // Configuración centralizada de estilos
 const STYLE_CONFIG = {
@@ -33,7 +33,7 @@ interface PivotRow {
 @Component({
   selector: 'app-dm-total-medicos-mo',
   imports: [
-     CommonModule,
+    CommonModule,
     FormsModule,
     MatCardModule,
     ScrollingModule,
@@ -41,7 +41,7 @@ interface PivotRow {
   templateUrl: './dm-total-medicos-mo.html',
   styleUrl: './dm-total-medicos-mo.css',
 })
-export class DmTotalMedicosMo implements OnInit, AfterViewInit, OnDestroy{
+export class DmTotalMedicosMo implements OnInit, AfterViewInit, OnDestroy {
   periodo: string = '';
   nameCentro: string = '';
 
@@ -87,7 +87,7 @@ export class DmTotalMedicosMo implements OnInit, AfterViewInit, OnDestroy{
   @ViewChild('tmLineChart') tmLineChartEl!: ElementRef<HTMLDivElement>;
 
   constructor(
-    private reportDashboardMedicasService: ReportDashboardMedicasService,
+    private reportDashboardMedicasService: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef
   ) { }
@@ -129,10 +129,10 @@ export class DmTotalMedicosMo implements OnInit, AfterViewInit, OnDestroy{
     this.error = null;
 
     forkJoin({
-        q0: this.reportDashboardMedicasService.getQuery0DMOCTM(anio, periodo, codcas, codasegu),
-        q1: this.reportDashboardMedicasService.getQuery1DMOCTM(anio, periodo, codcas, codasegu),
-        q2: this.reportDashboardMedicasService.getQuery2DMMOTMCSV(anio, periodo, codcas, codasegu),
-   })
+      q0: this.reportDashboardMedicasService.getQuery0DMOCTM(anio, periodo, codcas, codasegu),
+      q1: this.reportDashboardMedicasService.getQuery1DMOCTM(anio, periodo, codcas, codasegu),
+      q2: this.reportDashboardMedicasService.getQuery2DMMOTMCSV(anio, periodo, codcas, codasegu),
+    })
       .subscribe({
         next: ({ q0, q1, q2 }) => {
           this.query0Data = q0 as MedicoRow[];

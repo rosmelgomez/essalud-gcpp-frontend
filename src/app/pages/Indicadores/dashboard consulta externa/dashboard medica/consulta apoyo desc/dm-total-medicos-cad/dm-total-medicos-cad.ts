@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatCardModule } from '@angular/material/card';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
 
 // Configuración centralizada de estilos
@@ -42,7 +42,7 @@ interface PivotRow {
   templateUrl: './dm-total-medicos-cad.html',
   styleUrl: './dm-total-medicos-cad.css',
 })
-export class DmTotalMedicosCad implements OnInit, AfterViewInit, OnDestroy  {
+export class DmTotalMedicosCad implements OnInit, AfterViewInit, OnDestroy {
   periodo: string = '';
   nameCentro: string = '';
 
@@ -88,7 +88,7 @@ export class DmTotalMedicosCad implements OnInit, AfterViewInit, OnDestroy  {
   @ViewChild('tmLineChart') tmLineChartEl!: ElementRef<HTMLDivElement>;
 
   constructor(
-    private reportDashboardMedicasService: ReportDashboardMedicasService,
+    private reportDashboardMedicasService: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef
   ) { }
@@ -130,10 +130,10 @@ export class DmTotalMedicosCad implements OnInit, AfterViewInit, OnDestroy  {
     this.error = null;
 
     forkJoin({
-        q0: this.reportDashboardMedicasService.getQuery0DMCADTM(anio, periodo, codcas, codasegu),
-        q1: this.reportDashboardMedicasService.getQuery1DMCADTM(anio, periodo, codcas, codasegu),
-        q2: this.reportDashboardMedicasService.getQuery2DMCADTMCSV(anio, periodo, codcas, codasegu),
-      })
+      q0: this.reportDashboardMedicasService.getQuery0DMCADTM(anio, periodo, codcas, codasegu),
+      q1: this.reportDashboardMedicasService.getQuery1DMCADTM(anio, periodo, codcas, codasegu),
+      q2: this.reportDashboardMedicasService.getQuery2DMCADTMCSV(anio, periodo, codcas, codasegu),
+    })
       .subscribe({
         next: ({ q0, q1, q2 }) => {
           this.query0Data = q0 as MedicoRow[];

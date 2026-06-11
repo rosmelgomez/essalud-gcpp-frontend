@@ -7,8 +7,8 @@ import { catchError, throwError } from 'rxjs';
 export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const storage = inject(LocalStorageService);
-  const publicRoutes = ['/login', '/solicitar-acceso-registro'];
-  
+  const publicRoutes = ['/login', '/solicitud-acceso/registro'];
+
   const currentPath = router.url.split('?')[0];
   const isPublicRoute = publicRoutes.includes(currentPath);
 

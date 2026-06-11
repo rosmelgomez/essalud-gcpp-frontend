@@ -21,11 +21,11 @@ export class App implements OnInit {
   title = 'Essalud_GCPP_Frontend';
 
   currentNavbar: string = 'login';
-  private readonly publicRoutesWithoutNavbar = ['/login', '/solicitar-acceso', '/solicitar-acceso-registro'];
+  private readonly publicRoutesWithoutNavbar = ['/login', '/solicitud-acceso/registro'];
 
   constructor(
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.router.events

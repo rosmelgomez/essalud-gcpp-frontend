@@ -8,7 +8,7 @@ const base_url = Backend.api + '/reporteador';
 @Injectable({
   providedIn: 'root',
 })
-export class ReportDashboardReporteadorService {
+export class ReporteadorService {
   constructor(private http: HttpClient) { }
 
   /// Dashboard Reporteador Red

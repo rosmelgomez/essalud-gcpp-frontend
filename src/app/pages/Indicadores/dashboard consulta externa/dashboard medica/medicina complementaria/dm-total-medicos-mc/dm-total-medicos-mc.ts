@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatCardModule } from '@angular/material/card';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
 
 // Configuración centralizada de estilos
@@ -84,7 +84,7 @@ export class DmTotalMedicosMc implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('tmLineChart') tmLineChartEl!: ElementRef<HTMLDivElement>;
 
   constructor(
-    private reportDashboardMedicasService: ReportDashboardMedicasService,
+    private reportDashboardMedicasService: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef
   ) { }
@@ -129,7 +129,7 @@ export class DmTotalMedicosMc implements OnInit, AfterViewInit, OnDestroy {
       q0: this.reportDashboardMedicasService.getQuery0DMMCTM(anio, periodo, codcas, codasegu),
       q1: this.reportDashboardMedicasService.getQuery1DMMCTM(anio, periodo, codcas, codasegu),
       q2: this.reportDashboardMedicasService.getQuery2DMMCTMCSV(anio, periodo, codcas, codasegu),
-})
+    })
       .subscribe({
         next: ({ q0, q1, q2 }) => {
           this.query0Data = q0 as MedicoRow[];

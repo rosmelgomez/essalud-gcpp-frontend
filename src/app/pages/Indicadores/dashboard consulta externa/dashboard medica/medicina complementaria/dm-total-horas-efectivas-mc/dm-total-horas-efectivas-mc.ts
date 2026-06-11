@@ -16,7 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
 import { FormsModule } from '@angular/forms';
 
@@ -48,7 +48,7 @@ interface PivotRow {
   templateUrl: './dm-total-horas-efectivas-mc.html',
   styleUrl: './dm-total-horas-efectivas-mc.css',
 })
-export class DmTotalHorasEfectivasMc implements OnInit, AfterViewInit, OnDestroy{
+export class DmTotalHorasEfectivasMc implements OnInit, AfterViewInit, OnDestroy {
   nameCentro: String = '';
 
   periodo: string = '';
@@ -61,7 +61,7 @@ export class DmTotalHorasEfectivasMc implements OnInit, AfterViewInit, OnDestroy
   query0Data: any[] = []; // Servicios
   query0DataOriginal: any[] = []; // Almacenar datos originales
 
-   newtableData: any[] = [];
+  newtableData: any[] = [];
 
   // Filtros
   filters = {
@@ -95,10 +95,10 @@ export class DmTotalHorasEfectivasMc implements OnInit, AfterViewInit, OnDestroy
   tableRows: MedicoRow[] = [];
 
   constructor(
-    private reportDashboardMedicasService: ReportDashboardMedicasService,
+    private reportDashboardMedicasService: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   @ViewChild(MatSort) sort!: MatSort;
 

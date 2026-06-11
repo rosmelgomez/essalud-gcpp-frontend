@@ -3,16 +3,16 @@ import { LocalStorageService } from '../../../services/local-storage-service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkTableModule } from "@angular/cdk/table";
-import { ReportTransplante } from '../../../services/reportes/report-transplante';
+import { TransplanteService } from '../../../services/reportes/transplante-service';
 import { FileService } from '../../../services/documentos/file-service';
 
 @Component({
-  selector: 'app-report-dashboard-transplate',
+  selector: 'app-dashboard-transplante',
   imports: [CommonModule, FormsModule, CdkTableModule],
-  templateUrl: './report-dashboard-transplante.html',
-  styleUrl: './report-dashboard-transplante.css',
+  templateUrl: './dashboard-transplante.html',
+  styleUrl: './dashboard-transplante.css',
 })
-export class ReportDashboardTransplante implements OnInit {
+export class DashboardTransplante implements OnInit {
 
   currentDate: string = '';
 
@@ -41,11 +41,11 @@ export class ReportDashboardTransplante implements OnInit {
 
 
   constructor(
-    private report: ReportTransplante,
+    private report: TransplanteService,
     private cdr: ChangeDetectorRef,
     private dataImport: LocalStorageService,
-     private fileService: FileService,
-  ) {}
+    private fileService: FileService,
+  ) { }
 
   formatDate(date: Date): string {
     const day = String(date.getDate()).padStart(2, '0');
@@ -61,7 +61,7 @@ export class ReportDashboardTransplante implements OnInit {
     this.codcas = this.dataImport.getDataCentro()?.codcas || '';
   }
 
-   downloadFichaTecnica(): void {
+  downloadFichaTecnica(): void {
     this.fileService.getFile('f_centro_quirurgico_tras.pdf').subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -84,54 +84,54 @@ export class ReportDashboardTransplante implements OnInit {
 
 
   loadtransplante() {
-  if (!this.periodo_trans || !this.anio_trans || !this.tipo_asegurado_trans || !this.codcas ) {
-    this.errorT = 'Por favor, complete todos los campos de filtro.';
-    this.loadingT = false;
-    this.noDataT = false;
-    this.selectPeriodoT = true;
-    return;
-  }
-  this.loadingT = true;
-  this.errorT = null;
-  this.noDataT = false;
-  this.selectPeriodoT = false;
-    this.cdr.detectChanges();
-
-  this.report.getQueryTransplante(this.anio_trans, this.periodo_trans,this.codcas ,this.tipo_asegurado_trans).subscribe({
-    next: (data) => {
-      this.dataComplejidadA = data;
-      this.complejidadA = data.length ;
-
-      ///datos para el detalle de complejidad A
-              const salaCountMap = new Map<string, number>();
-
-              for (const row of data) {
-                const sala = (row as any).cpms || 'Sin sala';
-                salaCountMap.set(sala, (salaCountMap.get(sala) || 0) + 1);
-              }
-
-              this.dataComplejidadA = Array.from(salaCountMap, ([sala, total]) => ({
-                sala,
-                total,
-              }));
-              this.dataComplejidadA.sort((a, b) => b.total - a.total);
-
-
-
-      this.loadingT = false;
-      this.noDataT = data.length === 0;
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      this.errorT = 'Error al cargar los datos. Por favor, inténtelo de nuevo.';
+    if (!this.periodo_trans || !this.anio_trans || !this.tipo_asegurado_trans || !this.codcas) {
+      this.errorT = 'Por favor, complete todos los campos de filtro.';
       this.loadingT = false;
       this.noDataT = false;
-      this.cdr.detectChanges();
+      this.selectPeriodoT = true;
+      return;
     }
-  });
+    this.loadingT = true;
+    this.errorT = null;
+    this.noDataT = false;
+    this.selectPeriodoT = false;
+    this.cdr.detectChanges();
+
+    this.report.getQueryTransplante(this.anio_trans, this.periodo_trans, this.codcas, this.tipo_asegurado_trans).subscribe({
+      next: (data) => {
+        this.dataComplejidadA = data;
+        this.complejidadA = data.length;
+
+        ///datos para el detalle de complejidad A
+        const salaCountMap = new Map<string, number>();
+
+        for (const row of data) {
+          const sala = (row as any).cpms || 'Sin sala';
+          salaCountMap.set(sala, (salaCountMap.get(sala) || 0) + 1);
+        }
+
+        this.dataComplejidadA = Array.from(salaCountMap, ([sala, total]) => ({
+          sala,
+          total,
+        }));
+        this.dataComplejidadA.sort((a, b) => b.total - a.total);
+
+
+
+        this.loadingT = false;
+        this.noDataT = data.length === 0;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.errorT = 'Error al cargar los datos. Por favor, inténtelo de nuevo.';
+        this.loadingT = false;
+        this.noDataT = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-   formatNumber(num: number): string {
+  formatNumber(num: number): string {
     return new Intl.NumberFormat('es-PE').format(num);
   }
 

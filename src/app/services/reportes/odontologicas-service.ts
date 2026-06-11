@@ -7,7 +7,7 @@ const base_url = Backend.api + '/odon';
 @Injectable({
   providedIn: 'root',
 })
-export class ReportDashboardOdontologicasService {
+export class OdontologicasService {
   constructor(private http: HttpClient) { }
 
   ///Dashboard odontologicas

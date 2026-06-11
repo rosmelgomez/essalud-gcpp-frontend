@@ -17,7 +17,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
-import { ReportDashboardNoMedicasService } from '../../../../../../services/reportes/report-dashboard-no-medicas-service';
+import { NoMedicasService } from '../../../../../../services/reportes/no-medicas-service';
 
 @Component({
   selector: 'app-dnm-total-atenciones-ps',
@@ -70,7 +70,7 @@ export class DnmTotalAtencionesPs implements OnInit, OnDestroy {
     descripcion_servicio: '',
     descripcion_especialidad: '',
     descripcion_tipo_consulta: '',
-    dni_medico: '', 
+    dni_medico: '',
     doc_paciente: '',
     anio_edad: '',
     cod_tipdoc_paciente: '',
@@ -101,7 +101,7 @@ export class DnmTotalAtencionesPs implements OnInit, OnDestroy {
   chartAgrupador: ApexCharts | null = null;
   chartTornado: ApexCharts | null = null;
   chartDiagnostico: ApexCharts | null = null;
- chartDiagnosticoBar: ApexCharts | null = null;
+  chartDiagnosticoBar: ApexCharts | null = null;
   activeTab: 'produccion' | 'diagnosticos' | 'noconsiderados' = 'produccion';
 
   @ViewChild(MatSort) sort!: MatSort;
@@ -116,7 +116,7 @@ export class DnmTotalAtencionesPs implements OnInit, OnDestroy {
 
 
   constructor(
-    private report: ReportDashboardNoMedicasService,
+    private report: NoMedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
   ) { }
@@ -755,7 +755,7 @@ export class DnmTotalAtencionesPs implements OnInit, OnDestroy {
       chart.destroy();
     }
   }
- private destroyAllCharts(): void {
+  private destroyAllCharts(): void {
     this.destroyChart(this.chartServicio);
     this.destroyChart(this.chartSubactividad);
     this.destroyChart(this.chartDiagnosticoBar);

@@ -2,17 +2,17 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LocalStorageService } from '../../../services/local-storage-service';
-import { ReportDashboardEmergenciasService } from '../../../services/reportes/report-dashboard-emergencias-service';
+import { EmergenciasService } from '../../../services/reportes/emergencias-service';
 
 
 @Component({
-  selector: 'app-report-dashboard-eme',
+  selector: 'app-dashboard-emergencia',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './report-dashboard-eme.html',
-  styleUrl: './report-dashboard-eme.css',
+  templateUrl: './dashboard-emergencia.html',
+  styleUrl: './dashboard-emergencia.css',
 })
-export class ReportDashboardEme implements OnInit {
+export class DashboardEmergencia implements OnInit {
   currentDate: string = '';
   centroNombre: string = '';
 
@@ -51,10 +51,10 @@ export class ReportDashboardEme implements OnInit {
   completedRequests: number = 0;
 
   constructor(
-    private reportDashboardEmergenciasService: ReportDashboardEmergenciasService,
+    private reportDashboardEmergenciasService: EmergenciasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.currentDate = this.formatDate(new Date());

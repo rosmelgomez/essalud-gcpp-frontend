@@ -7,16 +7,16 @@ import { LocalStorageService } from '../../../services/local-storage-service';
 import { forkJoin } from 'rxjs';
 import { CdkTableModule } from "@angular/cdk/table";
 import { OnInit } from '@angular/core';
-import { ReportDashboardIntervencionesQuirurgicasService } from '../../../services/reportes/report-dashboard-intervenciones-quirurgicas-service';
+import { IntervencionesQuirurgicasService } from '../../../services/reportes/intervenciones-quirurgicas-service';
 import { FileService } from '../../../services/documentos/file-service';
 
 @Component({
-  selector: 'app-report-dashboard-intervenciones-quirurgicas',
+  selector: 'app-intervenciones-quirurgicas',
   imports: [CommonModule, FormsModule, CdkTableModule],
-  templateUrl: './report-dashboard-intervenciones-quirurgicas.html',
-  styleUrl: './report-dashboard-intervenciones-quirurgicas.css',
+  templateUrl: './dashboard-intervenciones-quirurgicas.html',
+  styleUrl: './dashboard-intervenciones-quirurgicas.css',
 })
-export class ReportDashboardIntervencionesQuirurgicas implements OnInit {
+export class DashboardIntervencionesQuirurgicas implements OnInit {
 
   currentDate: string = '';
 
@@ -58,7 +58,7 @@ export class ReportDashboardIntervencionesQuirurgicas implements OnInit {
   dataInternvacionesEmergencia: any[] = [];
 
   constructor(
-    private report: ReportDashboardIntervencionesQuirurgicasService,
+    private report: IntervencionesQuirurgicasService,
     private cdr: ChangeDetectorRef,
     private dataImport: LocalStorageService,
     private fileService: FileService,

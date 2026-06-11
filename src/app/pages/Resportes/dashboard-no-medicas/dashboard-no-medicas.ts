@@ -5,15 +5,15 @@ import { LocalStorageService } from '../../../services/local-storage-service';
 import { FileService } from '../../../services/documentos/file-service';
 
 import { forkJoin } from 'rxjs';
-import { ReportDashboardNoMedicasService } from '../../../services/reportes/report-dashboard-no-medicas-service';
+import { NoMedicasService } from '../../../services/reportes/no-medicas-service';
 
 @Component({
-  selector: 'app-report-dashboard-no-medicas',
+  selector: 'app-dashboard-no-medicas',
   imports: [CommonModule, FormsModule],
-  templateUrl: './report-dashboard-no-medicas.html',
-  styleUrl: './report-dashboard-no-medicas.css',
+  templateUrl: './dashboard-no-medicas.html',
+  styleUrl: './dashboard-no-medicas.css',
 })
-export class ReportDashboardNoMedicas implements OnInit {
+export class DashboardNoMedicas implements OnInit {
   currentDate: string = '';
 
   //data importantes
@@ -218,10 +218,10 @@ export class ReportDashboardNoMedicas implements OnInit {
 
   constructor(
     private dataImport: LocalStorageService,
-    private RDNMS: ReportDashboardNoMedicasService,
+    private RDNMS: NoMedicasService,
     private fileService: FileService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.currentDate = this.formatDate(new Date());

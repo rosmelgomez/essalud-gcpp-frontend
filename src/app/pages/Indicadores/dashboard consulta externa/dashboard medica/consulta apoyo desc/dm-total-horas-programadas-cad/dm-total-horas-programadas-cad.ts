@@ -16,7 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
-import { ReportDashboardMedicasService } from '../../../../../../services/reportes/report-dashboard-medicas-service';
+import { MedicasService } from '../../../../../../services/reportes/medicas-service';
 import { LocalStorageService } from '../../../../../../services/local-storage-service';
 import { FormsModule } from '@angular/forms';
 
@@ -100,10 +100,10 @@ export class DmTotalHorasProgramadasCad implements OnInit, AfterViewInit, OnDest
   tableRows: MedicoRow[] = [];
 
   constructor(
-    private reportDashboardMedicasService: ReportDashboardMedicasService,
+    private reportDashboardMedicasService: MedicasService,
     private dataImport: LocalStorageService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   @ViewChild(MatSort) sort!: MatSort;
 

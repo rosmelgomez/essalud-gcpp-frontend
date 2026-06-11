@@ -1,49 +1,49 @@
 import { Routes } from '@angular/router';
-import { ReportDashboard } from './report-dashboard/report-dashboard';
-import { ReportDashboardMedicas } from './report-dashboard-medicas/report-dashboard-medicas';
-import { ReportDashboardNoMedicas } from './report-dashboard-no-medicas/report-dashboard-no-medicas';
-import { ReportDashboardEme } from './report-dashboard-eme/report-dashboard-eme';
-import { ReportDashboardIntervencionesQuirurgicas } from './report-dashboard-intervenciones-quirurgicas/report-dashboard-intervenciones-quirurgicas';
-import { ReportDashboardTransplante } from './report-dashboard-transplante/report-dashboard-transplante';
-import { authenticateGuard } from '../../guards/authenticate-guard';
-import { ReportDashboardTramas } from './report-dashboard-tramas/report-dashboard-tramas';
+import { DashboardMedicas } from './dashboard-medicas/dashboard-medicas';
+import { DashboardNoMedicas } from './dashboard-no-medicas/dashboard-no-medicas';
+import { DashboardEmergencia } from './dashboard-emergencia/dashboard-emergencia';
+import { DashboardTransplante } from './dashboard-transplante/dashboard-transplante';
+import { DashboardTramas } from './dashboard-tramas/dashboard-tramas';
 import { DashboardProcedimientos } from './dashboard-procedimientos/dashboard-procedimientos';
 import { DashboardHospitalizacion } from './dashboard-hospitalizacion/dashboard-hospitalizacion';
-import { ReportsGerenciales } from './reports-gerenciales/reports-gerenciales';
-import { ReportDashboardOdontologicas } from './report-dashboard-odontologicas/report-dashboard-odontologicas';
+import { DashboardGerenciales } from './dashboard-gerenciales/dashboard-gerenciales';
+import { DashboardOdontologicas } from './dashboard-odontologicas/dashboard-odontologicas';
+import { DashboardReporteador } from './dashboard-reporteador/dashboard-reporteador';
+import { DashboardIntervencionesQuirurgicas } from './dashboard-intervenciones-quirurgicas/dashboard-intervenciones-quirurgicas';
+
 
 export const reportesRoutes: Routes = [
 
-    { path: 'select', component: ReportDashboard, canActivate: [authenticateGuard] },
-
     ///dashboard-medicas
-    { path: 'dashboard-medicas', component: ReportDashboardMedicas, canActivate: [authenticateGuard] },
+    { path: 'dashboard-medicas', component: DashboardMedicas },
 
     ///dashboard-no-medicas
-    { path: 'dashboard-no-medicas', component: ReportDashboardNoMedicas, canActivate: [authenticateGuard] },
+    { path: 'dashboard-no-medicas', component: DashboardNoMedicas },
 
     ///dashboard-odontologicas
-    { path: 'dashboard-odontologicas', component: ReportDashboardOdontologicas, canActivate: [authenticateGuard] },
+    { path: 'dashboard-odontologicas', component: DashboardOdontologicas },
 
     ///dashboard-emergencia
-    { path: 'dashboard-eme', component: ReportDashboardEme, canActivate: [authenticateGuard] },
+    { path: 'dashboard-emergencia', component: DashboardEmergencia },
 
     ///Dashboard de intervenciones quirurgicas
-    { path: 'dashboard-intervenciones-quirurgicas', component: ReportDashboardIntervencionesQuirurgicas, canActivate: [authenticateGuard] },
+    { path: 'dashboard-intervenciones-quirurgicas', component: DashboardIntervencionesQuirurgicas },
 
     ///dashboard- transplante
-    { path: 'dashboard-transplante', component: ReportDashboardTransplante, canActivate: [authenticateGuard] },
+    { path: 'dashboard-transplante', component: DashboardTransplante },
 
     ///dashboard-tramas
-    { path: 'dashboard-tramas', component: ReportDashboardTramas, canActivate: [authenticateGuard] },
+    { path: 'dashboard-tramas', component: DashboardTramas },
 
     //Hospitalizacion
-    { path: 'dashboard-hospitalizacion', component: DashboardHospitalizacion, canActivate: [authenticateGuard] },
+    { path: 'dashboard-hospitalizacion', component: DashboardHospitalizacion },
 
     ///dashboard-procedimientos
-    { path: 'dashboard-procedimientos', component: DashboardProcedimientos, canActivate: [authenticateGuard] },
+    { path: 'dashboard-procedimientos', component: DashboardProcedimientos },
 
-    ///reports-gerenciales
-    { path: 'reports-gerenciales', component: ReportsGerenciales, canActivate: [authenticateGuard] },
+    ///dashboard-gerenciales
+    { path: 'dashboard-gerenciales', component: DashboardGerenciales },
 
+    ///dashboard-reporteador
+    { path: 'dashboard-reporteador', component: DashboardReporteador },
 ];
