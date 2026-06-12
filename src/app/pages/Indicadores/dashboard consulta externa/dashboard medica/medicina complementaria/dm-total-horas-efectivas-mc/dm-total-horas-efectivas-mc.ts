@@ -662,15 +662,11 @@ export class DmTotalHorasEfectivasMc implements OnInit, AfterViewInit, OnDestroy
     return true;
   }
 
+
   downloadCSV(): void {
     const data = this.query0Data || [];
-    this.downloadTableCSV(
-      data,
-      'am_total_horas_efectivas_' + this.periodo + '_' + this.nameCentro + '.csv',
-    );
-  }
+    const fileName = 'dm_mc_total_horas_efectivas_' + this.periodo + '_' + this.nameCentro + '.csv';
 
-  downloadTableCSV(data: any[], fileName: string): void {
     if (!data || data.length === 0) {
       console.warn('No hay datos para descargar');
       return;
@@ -681,7 +677,7 @@ export class DmTotalHorasEfectivasMc implements OnInit, AfterViewInit, OnDestroy
     let csv = headers.join(';') + '\n';
 
     for (const row of data) {
-      csv += headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';') + '\n';
+      csv += headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';') + '\n';
     }
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

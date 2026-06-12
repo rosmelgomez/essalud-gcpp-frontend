@@ -31,6 +31,7 @@ export class DmTotalCitadosAm implements OnInit, AfterViewInit, OnDestroy {
   ///Datos de consulta
   query0Data: any[] = [];
   query0DataOriginal: any[] = [];
+  query0DataCSV: any[] = [];
 
   ///Filtros
   filters = {
@@ -109,6 +110,7 @@ export class DmTotalCitadosAm implements OnInit, AfterViewInit, OnDestroy {
       next: (data) => {
         this.query0Data = data;
         this.query0DataOriginal = data; // Almacenar datos originales
+        this.query0DataCSV = data; // Almacenar datos originales para csv
         this.loading = false;
         this.dataLoaded = true;
         this.cdr.detectChanges();
@@ -524,43 +526,27 @@ export class DmTotalCitadosAm implements OnInit, AfterViewInit, OnDestroy {
   }
 
   downloadCSV(): void {
-
-    const { anio, periodo, codasegu } = this.dataImport.getDataDMA();
-    const { codcas } = this.dataImport.getDataCentro();
-
-    if (!anio || !periodo || !codcas || !codasegu) {
-      this.error = 'Parámetros incompletos para descargar datos';
-      return;
-    }
-
-    this.downloadTableCSV(this.query0Data, `am_total_citados_${anio}_${periodo}_${this.nameCentro}.csv`);
-  }
-
-  private downloadTableCSV(data: any[], fileName: string): void {
-    if (!data || data.length === 0) {
+    if (!this.query0DataCSV?.length) {
       console.warn('No hay datos para descargar');
       return;
     }
 
-    const headers = Object.keys(data[0]);
+    const fileName = `dm_am_total_citados_${this.periodo}_${this.nameCentro}.csv`;
 
-    let csv = headers.join(';') + '\n';
+    const headers = Object.keys(this.query0DataCSV[0]);
+    const csvContent = [
+      headers.join(';'),
+      ...this.query0DataCSV.map((row) =>
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+      ),
+    ].join('\n');
 
-    for (const row of data) {
-      csv += headers
-        .map(h => `"${String(row[h] ?? '').replace(/"/g, '""')}"`)
-        .join(';') + '\n';
-    }
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName.endsWith('.csv') ? fileName : `${fileName}.csv`;
-    a.click();
-
-    URL.revokeObjectURL(url);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName.endsWith('.csv') ? fileName : `${fileName}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
   }
 
 

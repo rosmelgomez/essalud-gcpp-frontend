@@ -1000,13 +1000,13 @@ export class DmTotalAtencionesMc implements OnInit, OnDestroy {
       return;
     }
 
-    const fileName = `mc_total_atenciones_${this.periodo}_${this.nameCentro}.csv`;
+    const fileName = `dm_mc_total_atenciones_${this.periodo}_${this.nameCentro}.csv`;
 
     const headers = Object.keys(this.dataCSV[0]);
     const csvContent = [
       headers.join(';'),
       ...this.dataCSV.map((row) =>
-        headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
       ),
     ].join('\n');
 

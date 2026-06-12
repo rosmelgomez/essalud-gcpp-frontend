@@ -448,32 +448,21 @@ export class DmTotalDesercionAm implements OnInit, AfterViewInit, OnDestroy {
     return true;
   }
 
-  descargarCSV(): void {
-    const { anio, periodo, codasegu } = this.dataImport.getDataDMA();
-    const { codcas } = this.dataImport.getDataCentro();
 
-    if (!anio || !periodo || !codcas || !codasegu) {
-      this.error = 'Parámetros incompletos para descargar datos';
-      return;
-    }
 
-    this.downloadTableCSV(
-      this.query2DataCSV,
-      `am_total_desercion_${periodo}_${anio}_${this.nameCentro}.csv`,
-    );
-  }
-
-  private downloadTableCSV(data: any[], fileName: string): void {
-    if (!data?.length) {
+  downloadCSV(): void {
+    if (!this.query2DataCSV?.length) {
       console.warn('No hay datos para descargar');
       return;
     }
 
-    const headers = Object.keys(data[0]);
+    const fileName = `dm_am_total_desercion_${this.periodo}_${this.nameCentro}.csv`;
+
+    const headers = Object.keys(this.query2DataCSV[0]);
     const csvContent = [
       headers.join(';'),
-      ...data.map((row) =>
-        headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+      ...this.query2DataCSV.map((row) =>
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
       ),
     ].join('\n');
 

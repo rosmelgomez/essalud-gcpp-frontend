@@ -661,35 +661,26 @@ export class DmTotalHorasEfectivasAm implements OnInit, AfterViewInit, OnDestroy
   }
 
   downloadCSV(): void {
-    const data = this.query0Data || [];
-    this.downloadTableCSV(
-      data,
-      'am_total_horas_efectivas_' + this.periodo + '_' + this.nameCentro + '.csv',
-    );
-  }
-
-  downloadTableCSV(data: any[], fileName: string): void {
-    if (!data || data.length === 0) {
+    if (!this.query0Data?.length) {
       console.warn('No hay datos para descargar');
       return;
     }
 
-    const headers = Object.keys(data[0]);
+    const fileName = `dm_am_total_horas_efectivas_${this.periodo}_${this.nameCentro}.csv`;
 
-    let csv = headers.join(';') + '\n';
+    const headers = Object.keys(this.query0Data[0]);
+    const csvContent = [
+      headers.join(';'),
+      ...this.query0Data.map((row) =>
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+      ),
+    ].join('\n');
 
-    for (const row of data) {
-      csv += headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';') + '\n';
-    }
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName.endsWith('.csv') ? fileName : `${fileName}.csv`;
-    a.click();
-
-    URL.revokeObjectURL(url);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName.endsWith('.csv') ? fileName : `${fileName}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
   }
 }

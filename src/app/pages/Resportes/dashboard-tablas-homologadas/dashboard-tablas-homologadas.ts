@@ -1,17 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { LocalStorageService } from '../../services/local-storage-service';
+import { LocalStorageService } from '../../../services/local-storage-service';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { TablasHomologadasService } from '../../services/tablas-homologadas-service';
+import { TablasHomologadasService } from '../../../services/tablas-homologadas-service';
 import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
-  selector: 'app-tablas-homologadas',
+  selector: 'app-dashboard-tablas-homologadas',
   imports: [
     CommonModule,
     MatTableModule,
@@ -21,10 +21,10 @@ import { ChangeDetectorRef } from '@angular/core';
     MatSortModule,
     ScrollingModule,
   ],
-  templateUrl: './tablas-homologadas.html',
-  styleUrl: './tablas-homologadas.css',
+  templateUrl: './dashboard-tablas-homologadas.html',
+  styleUrl: './dashboard-tablas-homologadas.css',
 })
-export class TablasHomologadas implements OnInit {
+export class DashboardTablasHomologadas implements OnInit {
 
   nameCentro: string = '';
   codcas: string = '';

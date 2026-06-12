@@ -661,15 +661,13 @@ export class DmTotalHorasEfectivasCad implements OnInit, AfterViewInit, OnDestro
     return true;
   }
 
-  downloadCSV(): void {
-    const data = this.query0Data || [];
-    this.downloadTableCSV(
-      data,
-      'am_total_horas_efectivas_' + this.periodo + '_' + this.nameCentro + '.csv',
-    );
-  }
 
-  downloadTableCSV(data: any[], fileName: string): void {
+
+  downloadCSV(): void {
+
+    const data = this.query0Data || [];
+    const fileName = 'dm_cad_total_horas_efectivas_' + this.periodo + '_' + this.nameCentro + '.csv';
+
     if (!data || data.length === 0) {
       console.warn('No hay datos para descargar');
       return;

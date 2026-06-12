@@ -512,13 +512,13 @@ export class DmTotalMedicosAm implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const fileName = `am_total_medicos_${this.periodo}_${this.nameCentro}.csv`;
+    const fileName = `dm_am_total_medicos_${this.periodo}_${this.nameCentro}.csv`;
 
     const headers = Object.keys(this.query2DataCSV[0]);
     const csvContent = [
       headers.join(';'),
       ...this.query2DataCSV.map((row) =>
-        headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
       ),
     ].join('\n');
 

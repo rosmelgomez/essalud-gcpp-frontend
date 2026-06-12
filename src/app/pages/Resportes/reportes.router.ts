@@ -10,9 +10,12 @@ import { DashboardGerenciales } from './dashboard-gerenciales/dashboard-gerencia
 import { DashboardOdontologicas } from './dashboard-odontologicas/dashboard-odontologicas';
 import { DashboardReporteador } from './dashboard-reporteador/dashboard-reporteador';
 import { DashboardIntervencionesQuirurgicas } from './dashboard-intervenciones-quirurgicas/dashboard-intervenciones-quirurgicas';
+import { DashboardTablasHomologadas } from './dashboard-tablas-homologadas/dashboard-tablas-homologadas';
 
 
 export const reportesRoutes: Routes = [
+
+    ///ruta padre /reporte/...
 
     ///dashboard-medicas
     { path: 'dashboard-medicas', component: DashboardMedicas },
@@ -46,4 +49,7 @@ export const reportesRoutes: Routes = [
 
     ///dashboard-reporteador
     { path: 'dashboard-reporteador', component: DashboardReporteador },
+
+    ///dashboard-tablas-homologadas
+    { path: 'dashboard-tablas-homologadas', component: DashboardTablasHomologadas },
 ];

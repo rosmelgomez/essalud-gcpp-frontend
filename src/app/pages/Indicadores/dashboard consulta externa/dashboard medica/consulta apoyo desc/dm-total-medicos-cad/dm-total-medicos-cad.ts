@@ -515,7 +515,7 @@ export class DmTotalMedicosCad implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const fileName = `am_total_medicos_${this.periodo}_${this.nameCentro}.csv`;
+    const fileName = `dm_cad_total_medicos_${this.periodo}_${this.nameCentro}.csv`;
 
     const headers = Object.keys(this.query2DataCSV[0]);
     const csvContent = [

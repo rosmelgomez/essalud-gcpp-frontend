@@ -1032,7 +1032,7 @@ export class DnmTotalAtencionesPp implements OnInit, OnDestroy {
     const csvContent = [
       headers.join(';'),
       ...this.dataCSV.map((row) =>
-        headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
       ),
     ].join('\n');
 

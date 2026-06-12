@@ -6,7 +6,7 @@
       <p>Centro: {{ nameCentro }} | Período: {{ periodo }}</p>
     </div>
     <div class="actions">
-      <button class="btn-export" (click)="descargarCSV()"> Exportar CSV</button>
+      <button class="btn-export" (click)="downloadCSV()"> Exportar CSV</button>
     </div>
   </div>
 
@@ -22,11 +22,8 @@
 
   <!-- TABS -->
   <div *ngIf="!loading" class="tabs">
-    <button
-      class="tab-button"
-      [class.active]="activeTab === 'Detalle deserciones'"
-      (click)="setActiveTab('Detalle deserciones')"
-    >
+    <button class="tab-button" [class.active]="activeTab === 'Detalle deserciones'"
+      (click)="setActiveTab('Detalle deserciones')">
       Detalle Deserciones
     </button>
   </div>
@@ -53,7 +50,7 @@
       </div>
     </div>
 
-     <mat-card class="resumen-table">
+    <mat-card class="resumen-table">
       <!-- HEADER -->
       <div class="resumen-header">
         <div class="cell servicio">Servicio</div>

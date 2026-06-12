@@ -520,7 +520,7 @@ export class DmTotalMedicosMo implements OnInit, AfterViewInit, OnDestroy {
     const csvContent = [
       headers.join(';'),
       ...this.query2DataCSV.map((row) =>
-        headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
       ),
     ].join('\n');
 

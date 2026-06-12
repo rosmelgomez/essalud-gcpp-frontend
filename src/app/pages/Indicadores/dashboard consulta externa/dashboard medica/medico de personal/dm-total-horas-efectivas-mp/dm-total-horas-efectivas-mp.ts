@@ -680,7 +680,7 @@ export class DmTotalHorasEfectivasMp implements OnInit, AfterViewInit, OnDestroy
     let csv = headers.join(';') + '\n';
 
     for (const row of data) {
-      csv += headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';') + '\n';
+      csv += headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';') + '\n';
     }
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
