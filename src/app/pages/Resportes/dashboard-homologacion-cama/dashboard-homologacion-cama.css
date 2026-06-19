@@ -557,3 +557,21 @@
         text-align: left;
     }
 }
+
+select.select-clasificacion {
+    padding: 6px 8px;
+    border: 1px solid #d1dce6;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    background: #ffffff;
+    color: #334155;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+select.select-clasificacion:focus {
+    border-color: #0064AF;
+    box-shadow: 0 0 0 2px rgba(0, 100, 175, 0.1);
+}

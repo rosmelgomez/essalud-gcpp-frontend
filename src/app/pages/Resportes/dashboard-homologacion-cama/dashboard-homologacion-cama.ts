@@ -10,16 +10,19 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { ClasificacionCamas } from '../../../model/clasificacion-camas';
 import { forkJoin } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard-homologacion-cama',
-  imports: [CommonModule,
+  imports: [
+    CommonModule,
     MatTableModule,
     MatCardModule,
     MatButtonModule,
     MatPaginatorModule,
     MatSortModule,
-    ScrollingModule,],
+    ScrollingModule,
+    FormsModule],
   templateUrl: './dashboard-homologacion-cama.html',
   styleUrl: './dashboard-homologacion-cama.css',
 })
@@ -78,6 +81,7 @@ export class DashboardHomologacionCama implements OnInit {
       },
     });
   }
+
   registrarClasificacion(): void {
     this.submitClasificacionCamas(false);
   }
@@ -134,7 +138,7 @@ export class DashboardHomologacionCama implements OnInit {
 
       clasificacion.push({
         id: id_clasificacion,
-        codcas: this.codcas,
+        cenasicod: cenasicod,
         camcod: camcod,
         arehoscod: arehoscod,
         habcod: habcod,
@@ -147,16 +151,6 @@ export class DashboardHomologacionCama implements OnInit {
     return clasificacion;
 
   }
-
-
-
-
-
-
-
-
-
-
 
 
 

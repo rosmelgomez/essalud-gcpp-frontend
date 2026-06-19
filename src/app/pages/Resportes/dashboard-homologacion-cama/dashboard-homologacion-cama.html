@@ -70,14 +70,11 @@
                             <div class="cell descripcion_clasificacion">{{ row.descripcion_clasificacion || 'Sin
                                 Informacion' }}</div>
                             <div class="cell clasificacion">
-                                <select name="clasificacion" id="clasificacion" required>
-                                    <option value="" *ngIf="!row.descripcion_clasificacion" selected>Seleccionar
-                                    </option>
-                                    <option value="Virtual" *ngIf="row.descripcion_clasificacion === 'Virtual'"
-                                        selected>
-                                        Virtual</option>
-                                    <option value="Fisico" *ngIf="row.descripcion_clasificacion === 'Fisico'" selected>
-                                        Fisico</option>
+                                <select [(ngModel)]="row.descripcion_clasificacion" name="clasificacion"
+                                    class="select-clasificacion">
+                                    <option value="no seleccionado">no seleccionado</option>
+                                    <option value="Virtual">Virtual</option>
+                                    <option value="Fisico">Fisico</option>
                                 </select>
                             </div>
                         </div>
@@ -95,7 +92,7 @@
         </mat-card>
 
         <ng-template #noTable>
-            <div class="no-data">Sin datos para tablas homologadas consulta externa.</div>
+            <div class="no-data">Sin datos para tablas homologadas camas.</div>
         </ng-template>
     </div>
 

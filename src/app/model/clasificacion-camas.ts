@@ -1,6 +1,6 @@
 export interface ClasificacionCamas {
     id: number;
-    codcas: string;
+    cenasicod: string;
     camcod: string;
     arehoscod: string;
     habcod: string;
