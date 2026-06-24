@@ -62,7 +62,21 @@
     color: #ffffff;
 }
 
+.btn-export {
+    padding: 10px 16px;
+    background: #0064af;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
 
+.btn-export:hover {
+    background: #004080;
+    box-shadow: 0 4px 12px rgba(0, 100, 175, 0.3);
+}
 
 
 /*tabla camas*/
@@ -333,10 +347,12 @@
         flex-direction: column;
     }
 
+
     .btn-export {
         width: 100%;
         justify-content: center;
     }
+
 
     .tabs {
         flex-direction: column;

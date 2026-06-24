@@ -32,6 +32,7 @@ export class DashboardHomologacionCama implements OnInit {
 
   dataCamas: any[] = [];
   dataCamasFilter: any[] = [];
+  dataCamasCSV: any[] = [];
 
   valoresClasificacion: Record<string, string> = {};
 
@@ -74,6 +75,7 @@ export class DashboardHomologacionCama implements OnInit {
         console.log(response);
         this.dataCamas = response;
         this.dataCamasFilter = response;
+        this.dataCamasCSV = response;
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -153,7 +155,7 @@ export class DashboardHomologacionCama implements OnInit {
   }
 
 
-
+  ///filtro dinamico para la tabla de camas para cada columna
   filterDataCamas(column: keyof typeof this.filtersCamas, event: any): void {
     const filterValue = event.target.value.toLowerCase().trim();
     this.filtersCamas[column] = filterValue;
@@ -290,6 +292,29 @@ export class DashboardHomologacionCama implements OnInit {
     return true;
   }
 
+  downloadCSV(): void {
+    if (!this.dataCamasCSV?.length) {
+      console.warn('No hay datos para descargar');
+      return;
+    }
+
+    const fileName = `tablas_homologacion_camas_${this.nameCentro}.csv`;
+
+    const headers = Object.keys(this.dataCamasCSV[0]);
+    const csvContent = [
+      headers.join(';'),
+      ...this.dataCamasCSV.map((row) =>
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName.endsWith('.csv') ? fileName : `${fileName}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
 
 
 
