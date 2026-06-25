@@ -58,4 +58,5 @@ export const reportesRoutes: Routes = [
     { path: 'dashboard-homologacion-cama', component: DashboardHomologacionCama },
 
 
+
 ];

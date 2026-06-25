@@ -35,11 +35,11 @@ export class UsersService {
   }
 
   updateUser(user: User) {
-    return this.http.put(base_url + `/updateUser`, user, { withCredentials: true, responseType: 'text' });
+    return this.http.put(base_url + `/updateUser`, user, { withCredentials: true });
   }
 
   deleteUser(username: string) {
-    return this.http.delete(base_url + `/deleteUserByUsername/${username}`, { withCredentials: true, responseType: 'text' });
+    return this.http.delete(base_url + `/deleteUserByUsername/${username}`, { withCredentials: true });
   }
 
   getAllUsers() {

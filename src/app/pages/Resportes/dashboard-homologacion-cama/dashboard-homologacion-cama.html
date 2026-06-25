@@ -1,18 +1,28 @@
 <div class="main">
 
     <div class="header">
-        <h1>Tablas Homologadas</h1>
-        <h2>Reporte de tablas homologadas de camas</h2>
-        <div class="info-centro">
-            <div>
-                <h2>Centro : {{ nameCentro }}</h2>
-            </div>
-            <div>
-                <h2>Codigo : {{ codcas }}</h2>
+        <div class="info-header">
+            <h1>Tablas Homologadas</h1>
+            <h2>Reporte de tablas homologadas de camas</h2>
+            <div class="info-centro">
+                <div>
+                    <h2>Centro : {{ nameCentro }}</h2>
+                </div>
+                <div>
+                    <h2>Codigo : {{ codcas }}</h2>
+                </div>
             </div>
         </div>
-        <div class="actions">
-            <button class="btn-export" (click)="downloadCSV()">Exportar CSV</button>
+
+        <div class="conteiner-btn">
+            <button class="btn-export" (click)="guardarClasificacion()"
+                *ngIf="!user?.roles?.includes('ADMIN_RED') || !user?.roles?.includes('CONSULTA') ">
+                Clasificar Camas
+            </button>
+
+            <button class="btn-export" (click)="downloadCSV()">
+                Exportar CSV
+            </button>
         </div>
     </div>
 
@@ -97,11 +107,6 @@
         <ng-template #noTable>
             <div class="no-data">Sin datos para tablas homologadas camas.</div>
         </ng-template>
-    </div>
-
-    <div class="acction">
-        <button class="btn-guardar-clasificacion" (click)="registrarClasificacion()">Registrar</button>
-        <button class="btn-guardar-clasificacion" (click)="actualizarClasificacion()">Actualizar</button>
     </div>
 
 </div>

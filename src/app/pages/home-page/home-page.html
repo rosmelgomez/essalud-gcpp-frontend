@@ -171,6 +171,12 @@
         <span>Tablas Homologadas</span>
       </a>
 
+      <!--  Dashboard Homologación de camas -->
+      <a class="module" routerLink="/reporte/dashboard-homologacion-cama">
+        <img src="/images/tablas-homologadas.png" alt="Dashboard Homologación de camas" />
+        <span>Dashboard Homologación de camas</span>
+      </a>
+
       <!--  Tramas -->
       <a class="module" routerLink="/reporte/dashboard-tramas">
         <img src="/images/tramas.png" alt="Tramas" />
@@ -209,7 +215,7 @@
         <span>Respuesta de Encuestas</span>
       </a>
 
-      <!-- Auditoría del Sistema (admin) -->
+      <!-- Solicitud de acceso  (admin) -->
       <a routerLink="/solicitud-acceso-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/acceso.png" alt="Auditoría del Sistema" />
         <span>Solicitud de Acceso</span>

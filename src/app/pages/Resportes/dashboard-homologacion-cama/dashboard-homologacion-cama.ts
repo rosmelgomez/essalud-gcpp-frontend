@@ -9,8 +9,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { ClasificacionCamas } from '../../../model/clasificacion-camas';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { User } from '../../../model/user';
 
 @Component({
   selector: 'app-dashboard-homologacion-cama',
@@ -27,6 +28,9 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './dashboard-homologacion-cama.css',
 })
 export class DashboardHomologacionCama implements OnInit {
+
+  user: User | null = null;
+
   nameCentro: string = '';
   codcas: string = '';
 
@@ -64,6 +68,8 @@ export class DashboardHomologacionCama implements OnInit {
 
 
   ngOnInit(): void {
+    this.user = this.dataImport.getUser();
+    console.log('user', this.user);
     this.nameCentro = this.dataImport.getDataCentro()?.nameCentro || '';
     this.codcas = this.dataImport.getDataCentro()?.codcas || '';
     this.loadDataCamas();
@@ -73,9 +79,16 @@ export class DashboardHomologacionCama implements OnInit {
     this.tablasHomologadasService.getQueryTHCAMA(this.codcas).subscribe({
       next: (response) => {
         console.log(response);
-        this.dataCamas = response;
-        this.dataCamasFilter = response;
-        this.dataCamasCSV = response;
+        this.dataCamas = response.map((row: any) => {
+          const desc = row.descripcion_clasificacion || 'no seleccionado';
+          return {
+            ...row,
+            descripcion_clasificacion: desc,
+            original_descripcion: desc
+          };
+        });
+        this.dataCamasFilter = [...this.dataCamas];
+        this.dataCamasCSV = [...this.dataCamas];
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -84,30 +97,22 @@ export class DashboardHomologacionCama implements OnInit {
     });
   }
 
-  registrarClasificacion(): void {
-    this.submitClasificacionCamas(false);
-  }
+  guardarClasificacion(): void {
+    const { register, update } = this.buildClasificaciones();
 
-  actualizarClasificacion(): void {
-    this.submitClasificacionCamas(true);
-  }
-
-  private submitClasificacionCamas(isUpdate: boolean): void {
-
-    const clasificacion = this.buildClasificacionFromSelect();
-    if (!clasificacion) {
+    if (register.length === 0 && update.length === 0) {
+      console.log('No hay cambios para guardar');
       return;
     }
 
-    const solicitudes = clasificacion.map((clasi) =>
-      isUpdate
-        ? this.tablasHomologadasService.updateClasificacionCamas(clasi)
-        : this.tablasHomologadasService.registerClasificacionCamas(clasi)
-    );
+    const solicitudes = [
+      ...register.map((clasi) => this.tablasHomologadasService.registerClasificacionCamas(clasi)),
+      ...update.map((clasi) => this.tablasHomologadasService.updateClasificacionCamas(clasi))
+    ];
 
     forkJoin(solicitudes).subscribe({
       next: (responses) => {
-        console.log(responses);
+        console.log('Clasificaciones guardadas con éxito', responses);
         this.loadDataCamas();
         this.cdr.markForCheck();
       },
@@ -116,42 +121,36 @@ export class DashboardHomologacionCama implements OnInit {
         this.cdr.markForCheck();
       },
     });
-
-
   }
 
-  private buildClasificacionFromSelect(): ClasificacionCamas[] | null {
+  private buildClasificaciones(): { register: ClasificacionCamas[], update: ClasificacionCamas[] } {
+    const register: ClasificacionCamas[] = [];
+    const update: ClasificacionCamas[] = [];
 
-    const clasificacion: ClasificacionCamas[] = [];
-
-    Object.entries(this.valoresClasificacion).forEach(([key, value]) => {
-      const item = this.dataCamasFilter.find((row) => row.cenasicod === key);
-      if (!item) {
+    this.dataCamasFilter.forEach((row) => {
+      // Check if the value has changed
+      if (row.descripcion_clasificacion === row.original_descripcion) {
         return;
       }
 
-      const id_clasificacion = item.id_clasificacion || 0;
-      const cenasicod = item.cenasicod;
-      const camcod = item.camcod;
-      const arehoscod = item.arehoscod;
-      const habcod = item.habcod;
-      const servhoscod = item.servhoscod;
-      const descripcion = this.valoresClasificacion[key] ?? 'sin calificacion';
+      const clasi: ClasificacionCamas = {
+        id: row.id_clasificacion || 0,
+        cenasicod: row.cenasicod,
+        camcod: row.camcod,
+        arehoscod: row.arehoscod,
+        habcod: row.habcod,
+        servhoscod: row.servhoscod,
+        descripcion: row.descripcion_clasificacion
+      };
 
-      clasificacion.push({
-        id: id_clasificacion,
-        cenasicod: cenasicod,
-        camcod: camcod,
-        arehoscod: arehoscod,
-        habcod: habcod,
-        servhoscod: servhoscod,
-        descripcion: descripcion
-      });
-
+      if (row.id_clasificacion) {
+        update.push(clasi);
+      } else {
+        register.push(clasi);
+      }
     });
 
-    return clasificacion;
-
+    return { register, update };
   }
 
 
