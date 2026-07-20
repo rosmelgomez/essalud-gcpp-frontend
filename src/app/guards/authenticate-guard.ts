@@ -26,8 +26,8 @@ export const authenticateGuard: CanActivateFn = (route) => {
 
     if (Array.isArray(userRolesRaw)) {
       userRoles = userRolesRaw.map((r: any) => (r == null ? '' : String(r)));
-    } else if (typeof userRolesRaw === 'string' && userRolesRaw.trim() !== '') {
-      userRoles = [userRolesRaw.trim()];
+    } else if (typeof userRolesRaw === 'string' && (userRolesRaw as string).trim() !== '') {
+      userRoles = [(userRolesRaw as string).trim()];
     }
 
     console.log('[AuthGuard] Normalized user roles:', userRoles);

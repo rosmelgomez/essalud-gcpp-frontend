@@ -71,9 +71,7 @@
           <a routerLink="/perfil" class="dropdown-item" (click)="closeProfile()">
             👤 Mi Perfil
           </a>
-          <a routerLink="/change-password" class="dropdown-item" (click)="closeProfile()">
-            🔑 Cambiar Contraseña
-          </a>
+
           <button class="dropdown-item logout-btn" type="button" (click)="logout()">
             ⇦ Cerrar Sesión
           </button>
@@ -97,10 +95,10 @@
       </div>
 
       <div class="mobile-actions">
-        <a routerLink="/perfil" class="button ghost" (click)="closeMenu()">
+        <a routerLink="/usuario/perfil" class="button ghost" (click)="closeMenu()">
           <span class="button-label">Mi Perfil</span>
         </a>
-        <a routerLink="/change-password" class="button ghost" (click)="closeMenu()">
+        <a routerLink="/usuario/change-password" class="button ghost" (click)="closeMenu()">
           <span class="button-label">Cambiar Contraseña</span>
         </a>
         <button class="button ghost logout-btn" type="button" (click)="logout()">

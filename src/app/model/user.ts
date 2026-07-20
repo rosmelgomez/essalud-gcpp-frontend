@@ -16,7 +16,7 @@ export interface User {
   date_creation: string;
   date_update: string;
   flag: boolean;
-  roles?: string[] | string;
+  roles?: string[] | string[];
   firstLogin?: boolean;
 }
 

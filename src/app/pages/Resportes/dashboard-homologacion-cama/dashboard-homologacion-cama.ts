@@ -153,7 +153,6 @@ export class DashboardHomologacionCama implements OnInit {
     return { register, update };
   }
 
-
   ///filtro dinamico para la tabla de camas para cada columna
   filterDataCamas(column: keyof typeof this.filtersCamas, event: any): void {
     const filterValue = event.target.value.toLowerCase().trim();

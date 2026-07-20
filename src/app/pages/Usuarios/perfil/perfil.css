@@ -374,3 +374,298 @@
     gap: 12px;
   }
 }
+
+
+
+.change-password-shell {
+  width: 100%;
+  max-width: 1000px;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+.change-password-info {
+  background: linear-gradient(135deg, rgba(25, 68, 121, 0.92), rgba(12, 45, 85, 0.9));
+  border: 1px solid rgba(125, 193, 255, 0.25);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-radius: 18px;
+  padding: 20px;
+  color: #d6e8ff;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+}
+
+.change-password-info h2 {
+  margin: 6px 0;
+  font-size: 20px;
+  color: #e1edff;
+}
+
+.change-password-info p {
+  margin: 0 0 10px 0;
+  color: #c3d6f4;
+  line-height: 1.5;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.tips {
+  margin: 12px 0 0 0;
+  padding-left: 18px;
+  color: #c9ddff;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tips li {
+  margin-bottom: 6px;
+}
+
+.change-password-container {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.98);
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 14px 42px rgba(15, 30, 50, 0.16);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #5a6f8d;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0c2e57;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  background: #35d18c;
+  border-radius: 50%;
+  box-shadow: 0 0 0 6px rgba(53, 209, 140, 0.2);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #2f2f2f;
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e2e6ea;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: #fff;
+  font-family: inherit;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #0064af;
+  box-shadow: 0 0 0 3px rgba(0, 100, 175, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #999;
+}
+
+.change-password-form {
+  width: 100%;
+}
+
+.change-password-submit {
+  margin-top: 20px;
+}
+
+.change-password-submit button {
+  background: linear-gradient(135deg, #0f6aca 0%, #0a3f7a 100%);
+  color: #fff;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  width: 100%;
+  box-shadow: 0 6px 18px rgba(0, 100, 175, 0.16);
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.change-password-submit button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 100, 175, 0.18);
+}
+
+.change-password-submit button:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 18px rgba(0, 100, 175, 0.16);
+}
+
+/* Estilos para inputs password con toggle button */
+input[type="password"],
+input[type="text"] {
+  padding-right: 38px;
+}
+
+button[type="button"] {
+  color: #666;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+button[type="button"]:hover {
+  opacity: 1;
+}
+
+button[type="button"] svg {
+  color: #666;
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 1024px) {
+  .change-password-shell {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+    gap: 18px;
+  }
+
+  .change-password-info {
+    order: 2;
+  }
+
+  .change-password-container {
+    padding: 22px;
+  }
+
+  .main {
+    padding: 18px 10px 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding: 16px 12px 24px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .change-password-shell {
+    max-width: 100%;
+    gap: 16px;
+    grid-template-columns: 1fr;
+  }
+
+  .change-password-container {
+    padding: 20px 16px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .change-password-info {
+    padding: 18px;
+  }
+
+  .change-password-info h2 {
+    font-size: 18px;
+  }
+
+  .badge {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .tips {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: 12px 8px 20px;
+  }
+
+  .change-password-shell {
+    gap: 12px;
+  }
+
+  .change-password-container {
+    padding: 16px 12px;
+    border-radius: 12px;
+  }
+
+  .change-password-info {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+
+  .form-group input {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .change-password-submit button {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}
+

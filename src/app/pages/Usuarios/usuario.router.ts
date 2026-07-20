@@ -1,0 +1,16 @@
+import { Routes } from "@angular/router";
+import { Perfil } from "./perfil/perfil";
+import { ChangePassword } from "./change-password/change-password";
+import { ManageUsers } from "./manage-users/manage-users";
+import { Register } from "./register/register";
+import { LogsReports } from "../logs-reports/logs-reports";
+
+export const usuarioRoutes: Routes = [
+
+    ///ruta padre /usuario/...
+    { path: 'perfil', component: Perfil },
+    { path: 'change-password', component: ChangePassword },
+    { path: 'manage-users', component: ManageUsers, data: { role: ['ADMIN'] } },
+    { path: 'register', component: Register, data: { role: ['ADMIN'] } },
+    { path: 'logs-reports', component: LogsReports, data: { role: ['ADMIN'] } },
+];

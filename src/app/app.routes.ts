@@ -13,6 +13,7 @@ import { documentoRoutes } from './pages/Gestion-Documentaria/documento.router';
 import { reportesRoutes } from './pages/Resportes/reportes.router';
 import { indicadoresRoutes } from './pages/Indicadores/indicadores.router';
 import { solicitudAccesoRoutes } from './pages/Solicitud-Acceso/solucitud-acceso.router';
+import { usuarioRoutes } from './pages/Usuarios/usuario.router';
 
 
 export const routes: Routes = [
@@ -20,12 +21,12 @@ export const routes: Routes = [
 
     // core del sistema 
     { path: 'login', component: Login },
-    { path: 'register', component: Register, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
-    { path: 'change-password', component: ChangePassword, canActivate: [authenticateGuard] },
-    { path: 'perfil', component: Perfil, canActivate: [authenticateGuard] },
-    { path: 'manage-users', component: ManageUsers, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
+
+    // home page
     { path: 'home', component: HomePage, canActivate: [authenticateGuard] },
-    { path: 'logs-reports', component: LogsReports, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
+
+    // usuarios
+    { path: 'usuario', children: usuarioRoutes , canActivate: [authenticateGuard]},
 
     //solicitud de acceso
     { path: 'solicitud-acceso', children: solicitudAccesoRoutes },
@@ -33,10 +34,10 @@ export const routes: Routes = [
     //reports
     { path: 'reporte', children: reportesRoutes, canActivate: [authenticateGuard] },
 
-    ///indicadores
+    //indicadores
     { path: 'indicador', children: indicadoresRoutes, canActivate: [authenticateGuard] },
 
-    ///Encuesta
+    //Encuesta
     { path: 'encuesta', children: encuestaRoutes, canActivateChild: [authenticateGuard] },
 
     //Gestion de documentos
