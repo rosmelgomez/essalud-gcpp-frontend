@@ -22,9 +22,15 @@ export class Perfil implements OnInit, OnDestroy {
   redName: string = '';
   centroName: string = '';
   isLoading: boolean = true;
+
+  formUser: boolean = false;
+  formPassword: boolean = false;
+
+
   private userSub!: Subscription;
 
   private _snackBar = inject(MatSnackBar);
+  public changeUserForm!: FormGroup;
   public changePasswordForm!: FormGroup;
   showCurrentPassword = false;
   showNewPassword = false;
@@ -41,11 +47,24 @@ export class Perfil implements OnInit, OnDestroy {
   ) { }
 
   initializeForm(): void {
+    this.changeUserForm = this.formBuilder.group({
+      name: ['', [Validators.required]],
+      lastname: ['', [Validators.required]],
+      dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
+      email: ['', [Validators.required, Validators.email]],
+    });
+
+
     this.changePasswordForm = this.formBuilder.group({
       currentPassword: ['', [Validators.required]],
       newPassword: ['', [Validators.required]],
       confirmPassword: ['', [Validators.required]],
     });
+
+  }
+
+  cambiarFormUser() {
+    this.formUser = !this.formUser;
   }
 
   ngOnInit(): void {
@@ -108,76 +127,110 @@ export class Perfil implements OnInit, OnDestroy {
     return `${firstInitial}${lastInitial}`;
   }
 
-   toggleCurrentPassword(): void {
-      this.showCurrentPassword = !this.showCurrentPassword;
+  changeUser(): void {
+    if (!this.changeUserForm.valid) {
+      this._snackBar.open('Por favor completa todos los campos requeridos', 'Cerrar', {
+        duration: 3000,
+      });
+      return;
     }
-  
-    toggleNewPassword(): void {
-      this.showNewPassword = !this.showNewPassword;
-    }
-  
-    toggleConfirmPassword(): void {
-      this.showConfirmPassword = !this.showConfirmPassword;
-    }
-  
-    changePassword(): void {
-      if (!this.changePasswordForm.valid) {
-        this._snackBar.open('Por favor completa todos los campos requeridos', 'Cerrar', {
+
+    const updatedUser: User = {
+      id: this.user!.id,
+      name: this.changeUserForm.value.name,
+      lastname: this.changeUserForm.value.lastname,
+      dni: this.changeUserForm.value.dni,
+      codcas: this.user!.codcas,
+      codred: this.user!.codred,
+      email: this.changeUserForm.value.email,
+      flag: this.user!.flag,
+      username: this.user!.username,
+      password: "",
+      date_creation: this.user!.date_creation,
+      date_update: new Date().toISOString(),
+    };
+    this.usersService.updateUser(updatedUser).subscribe({
+      next: () => {
+        this._snackBar.open('Información actualizada correctamente', 'Cerrar', {
           duration: 3000,
         });
-        return;
+        this.authService.setCurrentUser(updatedUser);
+        this.changeUserForm.reset();
+        this.cambiarFormUser();
       }
-      const { currentPassword, newPassword, confirmPassword } = this.changePasswordForm.value;
-      if (newPassword !== confirmPassword) {
-        this._snackBar.open('Las contraseñas nuevas no coinciden', 'Cerrar', {
+      ,
+      error: () => {
+        this._snackBar.open('Error al actualizar la información', 'Cerrar', {
           duration: 3000,
         });
-        return;
-      }
-  
-      const username = this.dataImport.getUser()?.username;
-  
-      // Verificar contraseña actual
-      const user: Auth = {
-        username: username!.toString(),
-        password: currentPassword,
-      };
-  
-      this.usersService.verifyPassword(user).subscribe({
-        next: (resp: any) => {
-          if (resp) {
-            // Contraseña verificada, ahora cambiar la contraseña
-            const updateUser: Auth = {
-              username: username!.toString(),
-              password: newPassword,
-            };
-  
-            this.usersService.changePassword(updateUser).subscribe({
-              next: () => {
-                this._snackBar.open('Contraseña actualizada correctamente', 'Cerrar', {
-                  duration: 3000,
-                });
-                this.changePasswordForm.reset();
-              },
-              error: () => {
-                this._snackBar.open('Error al actualizar la contraseña', 'Cerrar', {
-                  duration: 3000,
-                });
-              },
-            });
-          } else {
-            this._snackBar.open('Contraseña actual incorrecta', 'Cerrar', {
+      },
+    });
+
+  }
+
+  toggleCurrentPassword(): void {
+    this.showCurrentPassword = !this.showCurrentPassword;
+  }
+
+  toggleNewPassword(): void {
+    this.showNewPassword = !this.showNewPassword;
+  }
+
+  toggleConfirmPassword(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  changePassword(): void {
+    if (!this.changePasswordForm.valid) {
+      this._snackBar.open('Por favor completa todos los campos requeridos', 'Cerrar', {
+        duration: 3000,
+      });
+      return;
+    }
+    const { currentPassword, newPassword, confirmPassword } = this.changePasswordForm.value;
+    if (newPassword !== confirmPassword) {
+      this._snackBar.open('Las contraseñas nuevas no coinciden', 'Cerrar', {
+        duration: 3000,
+      });
+      return;
+    }
+
+    const username = this.dataImport.getUser()?.username;
+
+    // Verificar contraseña actual
+    const user: Auth = {
+      username: username!.toString(),
+      password: currentPassword,
+    };
+
+    this.usersService.verifyPassword(user).subscribe({
+      next: (resp: any) => {
+        const updateUser: Auth = {
+          username: username!.toString(),
+          password: newPassword,
+        };
+
+        this.usersService.changePassword(updateUser).subscribe({
+          next: () => {
+            this._snackBar.open('Contraseña actualizada correctamente', 'Cerrar', {
               duration: 3000,
             });
-          }
-        },
-        error: () => {
-          this._snackBar.open('Error al verificar la contraseña', 'Cerrar', {
-            duration: 3000,
-          });
-        },
-      });
-    }
+            this.changePasswordForm.reset();
+          },
+          error: () => {
+            this._snackBar.open('Error al actualizar la contraseña', 'Cerrar', {
+              duration: 3000,
+            });
+          },
+        });
+      },
+      error: () => {
+        this._snackBar.open('Error al verificar la contraseña', 'Cerrar', {
+          duration: 3000,
+        });
+      },
+    });
+  }
 
 
 }

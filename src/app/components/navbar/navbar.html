@@ -1,5 +1,5 @@
-<div class="main" [class.menu-open]="isMenuOpen">
-  <!-- Brand Logo & Title -->
+<header class="navbar" [class.menu-open]="isMenuOpen">
+  <!-- Logo y Titulo -->
   <div class="brand-block" routerLink="/home" (click)="closeMenu(); closeProfile()">
     <div class="logo-wrap">
       <img src="/images/Logoes.png" alt="EsSalud" class="logo" />
@@ -28,17 +28,17 @@
         <span class="nav-link-label">Inicio</span>
       </a>
 
-      <a routerLink="/manage-users" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active" class="nav-link"
+      <a routerLink="/usuario/manage-users" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active" class="nav-link"
         (click)="closeMenu(); closeProfile()">
         <span class="nav-link-label">Gestionar Usuarios</span>
       </a>
 
-      <a routerLink="/solicitud-acceso-reports" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active"
+      <a routerLink="/solicitud-acceso/reports" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active"
         class="nav-link" (click)="closeMenu(); closeProfile()">
         <span class="nav-link-label">Solicitudes de Acceso</span>
       </a>
 
-      <a routerLink="/register" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active" class="nav-link"
+      <a routerLink="/usuario/register" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active" class="nav-link"
         (click)="closeMenu(); closeProfile()">
         <span class="nav-link-label">Registrar Usuario</span>
       </a>
@@ -68,7 +68,7 @@
             <span class="role-badge">{{ user?.roles }}</span>
           </div>
           <div class="dropdown-divider"></div>
-          <a routerLink="/perfil" class="dropdown-item" (click)="closeProfile()">
+          <a routerLink="/usuario/perfil" class="dropdown-item" (click)="closeProfile()">
             👤 Mi Perfil
           </a>
 
@@ -109,4 +109,4 @@
     </div>
 
   </div>
-</div>
+</header>

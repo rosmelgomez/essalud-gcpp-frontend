@@ -9,7 +9,7 @@ export const usuarioRoutes: Routes = [
 
     ///ruta padre /usuario/...
     { path: 'perfil', component: Perfil },
-    { path: 'change-password', component: ChangePassword },
+    //{ path: 'change-password', component: ChangePassword },
     { path: 'manage-users', component: ManageUsers, data: { role: ['ADMIN'] } },
     { path: 'register', component: Register, data: { role: ['ADMIN'] } },
     { path: 'logs-reports', component: LogsReports, data: { role: ['ADMIN'] } },

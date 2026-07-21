@@ -5,7 +5,7 @@ import { authenticateGuard } from "../../guards/authenticate-guard";
 
 
 export const solicitudAccesoRoutes: Routes = [
-    //solicitud de acceso
+    //solicitud-acceso/...  
     { path: 'registro', component: SolicitudAccesoRegistro },
     { path: 'reports', component: SolicitudAccesoReports, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
 ]   
