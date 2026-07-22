@@ -1,246 +1,198 @@
-<div class="main">
-  <div class="page-header">
+<main class="profile-page">
+  <header class="page-header">
     <div>
-      <p class="eyebrow">Mi Cuenta</p>
-      <h1>Perfil de Usuario</h1>
-      <p class="subtitle">Verifica la información de tu cuenta y privilegios de acceso.</p>
+      <p class="page-kicker">Mi cuenta</p>
+      <h1>Perfil de usuario</h1>
+      <p>Administra tus datos personales y la seguridad de tu cuenta.</p>
     </div>
-  </div>
+    <span class="header-badge">Cuenta personal</span>
+  </header>
 
-  <div class="container" *ngIf="!isLoading && user">
-
-    <div class="profile-card hero-card">
-      <div class="hero-header"></div>
-      <div class="hero-body">
-        <div class="avatar-badge large">
-          <span class="avatar-initials">{{ getInitials() }}</span>
-        </div>
-        <div class="hero-text">
-          <h2>{{ user.name }} {{ user.lastname }}</h2>
-          <div class="role-badge-row">
-            <span class="role-badge">{{ user.roles }}</span>
-          </div>
-          <div class="status-indicator" [class.active]="user.flag">
-            <span class="dot"></span>
-            {{ user.flag ? 'Cuenta Activa' : 'Cuenta Inactiva' }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="profile-card details-card">
-      <h3 class="card-title">Información Personal y del Sistema</h3>
-      <div class="details-grid" *ngIf="!formUser">
-        <div class="detail-item">
-          <span class="detail-label">Nombre de Usuario</span>
-          <strong class="detail-value">{{ user.username }}</strong>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Documento Nacional de Identidad (DNI)</span>
-          <strong class="detail-value">💳 {{ user.dni || '—' }}</strong>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Correo Electrónico</span>
-          <strong class="detail-value">✉️ {{ user.email || '—' }}</strong>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Red Asistencial</span>
-          <strong class="detail-value">🏢 {{ redName || '—' }}</strong>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Centro Asistencial</span>
-          <strong class="detail-value">🏥 {{ centroName || '—' }}</strong>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Identificador de Usuario (ID)</span>
-          <strong class="detail-value">🔑 {{ user.id || '—' }}</strong>
+  <div class="profile-layout" *ngIf="!isLoading && user">
+    <aside class="identity-card">
+      <div class="identity-cover"></div>
+      <div class="identity-content">
+        <div class="avatar" aria-hidden="true">{{ getInitials() }}</div>
+        <h2>{{ user.name }} {{ user.lastname }}</h2>
+        <span class="role-badge">{{ user.roles }}</span>
+        <div class="account-status" [class.active]="user.flag">
+          <span class="status-dot"></span>
+          {{ user.flag ? 'Cuenta activa' : 'Cuenta inactiva' }}
         </div>
       </div>
 
-      <form [formGroup]="changeUserForm" autocomplete="off" class="change-user-form" *ngIf="formUser">
-        <div class="form-grid">
-          <div class="change-form-group">
-            <label>Nombre</label>
-            <input type="text" formControlName="name" name="name" placeholder="Ej: Ana" required />
-          </div>
-          <div class="change-form-group">
-            <label>Apellido</label>
-            <input type="text" formControlName="lastname" name="lastname" placeholder="Ej: Torres" required />
-          </div>
+      <div class="identity-meta">
+        <div class="meta-row">
+          <span class="meta-icon">US</span>
+          <span>
+            <small>Usuario</small>
+            <strong>{{ user.username }}</strong>
+          </span>
         </div>
-        <div class="form-grid">
-          <div class="change-form-group">
-            <label>DNI</label>
-            <input type="text" formControlName="dni" name="dni" placeholder="Ej: 12345678" required />
-          </div>
-          <div class="change-form-group">
-            <label>Correo Electrónico (Email)</label>
-            <input type="email" formControlName="email" name="email" placeholder="Ej: ana.torres@essalud.gob.pe" />
-          </div>
+        <div class="meta-row">
+          <span class="meta-icon">ID</span>
+          <span>
+            <small>Identificador</small>
+            <strong>{{ user.id || '—' }}</strong>
+          </span>
         </div>
-
-
-
-        <div class="change-user-submit">
-          <button type="submit">Actualizar Información</button>
+        <div class="meta-row">
+          <span class="meta-icon">RA</span>
+          <span>
+            <small>Red asistencial</small>
+            <strong>{{ redName || 'No asignada' }}</strong>
+          </span>
         </div>
-
-      </form>
-
-
-      <div class="actions-row">
-        <button type="submit" *ngIf="!formUser"  (click)="cambiarFormUser()" class="btn-change-password">
-          actualizar información
-        </button>
-        <button type="submit" *ngIf="formUser" (click)="changeUser()" class="btn-change-password">
-          cambiar contraseña
-        </button>
+        <div class="meta-row">
+          <span class="meta-icon">CA</span>
+          <span>
+            <small>Centro asistencial</small>
+            <strong>{{ centroName || 'No asignado' }}</strong>
+          </span>
+        </div>
       </div>
+    </aside>
 
-
-    </div>
-
-  </div>
-
-
-  <!-- cambiar contraseña -->
-  <div class="container" *ngIf="!isLoading && user">
-
-    <div class="change-password-info">
-      <span class="badge">Cambiar contraseña</span>
-      <h2>Actualiza tu contraseña</h2>
-      <p>
-        Es recomendable cambiar tu contraseña periódicamente para mantener la seguridad de tu
-        cuenta.
-      </p>
-      <ul class="tips">
-        <li>Usa una contraseña única y difícil de adivinar.</li>
-        <li>Incluye una combinación de letras, números y caracteres especiales.</li>
-        <li>Mínimo 8 caracteres.</li>
-      </ul>
-    </div>
-
-    <div class="change-password-container">
-      <div class="card-header">
+    <section class="profile-workspace">
+      <div class="workspace-heading">
         <div>
-          <div class="eyebrow">Formulario</div>
-          <div class="title">Nueva contraseña</div>
+          <span class="section-kicker">Configuración</span>
+          <h2>Información de la cuenta</h2>
         </div>
-        <div class="status-dot"></div>
+        <p>Actualiza tus datos y credenciales desde un mismo lugar.</p>
       </div>
 
-      <form [formGroup]="changePasswordForm" autocomplete="off" class="change-password-form">
-        <div class="form-group">
-          <label>Contraseña actual</label>
-          <div style="position: relative; display: flex; align-items: center">
-            <input [type]="showCurrentPassword ? 'text' : 'password'" formControlName="currentPassword"
-              name="currentPassword" placeholder="Ingresa tu contraseña actual" required style="width: 100%" />
-            <button title="Ver contraseña" type="button" (click)="toggleCurrentPassword()" style="
-                  position: absolute;
-                  right: 8px;
-                  background: none;
-                  border: none;
-                  cursor: pointer;
-                ">
-              <svg height="20" viewBox="-64 0 512 512" width="20" xmlns="http://www.w3.org/2000/svg"
-                *ngIf="showCurrentPassword">
-                <path
-                  d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0">
-                </path>
-                <path
-                  d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0">
-                </path>
-              </svg>
-              <svg viewBox="0 0 576 512" height="1em" xmlns="http://www.w3.org/2000/svg" *ngIf="!showCurrentPassword">
-                <path
-                  d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z">
-                </path>
-              </svg>
-            </button>
+      <article class="settings-card personal-card">
+        <div class="card-heading">
+          <span class="heading-icon" aria-hidden="true">01</span>
+          <div>
+            <h3>Información personal</h3>
+            <p>Mantén actualizados tus datos de identificación y contacto.</p>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Nueva contraseña</label>
-          <div style="position: relative; display: flex; align-items: center">
-            <input [type]="showNewPassword ? 'text' : 'password'" formControlName="newPassword" name="newPassword"
-              placeholder="Mínimo 8 caracteres" required style="width: 100%" />
-            <button title="ver nuevo contraseña" type="button" (click)="toggleNewPassword()" style="
-                  position: absolute;
-                  right: 8px;
-                  background: none;
-                  border: none;
-                  cursor: pointer;
-                ">
-              <svg height="20" viewBox="-64 0 512 512" width="20" xmlns="http://www.w3.org/2000/svg"
-                *ngIf="showNewPassword">
-                <path
-                  d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0">
-                </path>
-                <path
-                  d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0">
-                </path>
-              </svg>
-              <svg viewBox="0 0 576 512" height="1em" xmlns="http://www.w3.org/2000/svg" *ngIf="!showNewPassword">
-                <path
-                  d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z">
-                </path>
-              </svg>
+        <form [formGroup]="changeUserForm" (ngSubmit)="changeUser()" autocomplete="off">
+          <div class="fields-grid personal-fields">
+            <label class="field">
+              <span>Nombre</span>
+              <input type="text" formControlName="name" autocomplete="given-name" placeholder="Ingresa tu nombre" />
+            </label>
+            <label class="field">
+              <span>Apellido</span>
+              <input type="text" formControlName="lastname" autocomplete="family-name" placeholder="Ingresa tu apellido" />
+            </label>
+            <label class="field">
+              <span>Documento de identidad (DNI)</span>
+              <input type="text" formControlName="dni" inputmode="numeric" maxlength="8" placeholder="8 dígitos" />
+            </label>
+            <label class="field">
+              <span>Correo electrónico</span>
+              <input type="email" formControlName="email" autocomplete="email" placeholder="nombre@correo.com" />
+            </label>
+          </div>
+
+          <div class="form-footer">
+            <span class="form-hint">Los campos se guardarán en tu perfil de usuario.</span>
+            <button class="primary-button" type="submit" [disabled]="changeUserForm.invalid">
+              Guardar información
             </button>
+          </div>
+        </form>
+      </article>
+
+      <article class="settings-card security-card">
+        <div class="card-heading">
+          <span class="heading-icon secure" aria-hidden="true">02</span>
+          <div>
+            <h3>Seguridad y contraseña</h3>
+            <p>Usa una contraseña única de al menos 8 caracteres.</p>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Confirmar nueva contraseña</label>
-          <div style="position: relative; display: flex; align-items: center">
-            <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword"
-              name="confirmPassword" placeholder="Repite tu nueva contraseña" required style="width: 100%" />
-            <button title="confirmac contraseña" type="button" (click)="toggleConfirmPassword()" style="
-                  position: absolute;
-                  right: 8px;
-                  background: none;
-                  border: none;
-                  cursor: pointer;
-                ">
-              <svg height="20" viewBox="-64 0 512 512" width="20" xmlns="http://www.w3.org/2000/svg"
-                *ngIf="showConfirmPassword">
-                <path
-                  d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0">
-                </path>
-                <path
-                  d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0">
-                </path>
+        <div class="security-layout">
+          <div class="security-note">
+            <span class="shield-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 3 5 6v5c0 4.6 2.9 8.6 7 10 4.1-1.4 7-5.4 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                <path d="m9.5 12 1.7 1.7 3.7-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
-              <svg viewBox="0 0 576 512" height="1em" xmlns="http://www.w3.org/2000/svg" *ngIf="!showConfirmPassword">
-                <path
-                  d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z">
-                </path>
-              </svg>
-            </button>
+            </span>
+            <div>
+              <strong>Protege tu acceso</strong>
+              <p>Combina mayúsculas, minúsculas, números y símbolos. Evita reutilizar contraseñas.</p>
+            </div>
           </div>
+
+          <form [formGroup]="changePasswordForm" (ngSubmit)="changePassword()" autocomplete="off">
+            <div class="fields-grid password-fields">
+              <label class="field">
+                <span>Contraseña actual</span>
+                <span class="password-input">
+                  <input [type]="showCurrentPassword ? 'text' : 'password'" formControlName="currentPassword"
+                    autocomplete="current-password" placeholder="Ingresa tu contraseña actual" />
+                  <button type="button" (click)="toggleCurrentPassword()"
+                    [attr.aria-label]="showCurrentPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="1.7" />
+                      <circle cx="12" cy="12" r="2.8" stroke="currentColor" stroke-width="1.7" />
+                    </svg>
+                  </button>
+                </span>
+              </label>
+
+              <label class="field">
+                <span>Nueva contraseña</span>
+                <span class="password-input">
+                  <input [type]="showNewPassword ? 'text' : 'password'" formControlName="newPassword"
+                    autocomplete="new-password" placeholder="Mínimo 8 caracteres" />
+                  <button type="button" (click)="toggleNewPassword()"
+                    [attr.aria-label]="showNewPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="1.7" />
+                      <circle cx="12" cy="12" r="2.8" stroke="currentColor" stroke-width="1.7" />
+                    </svg>
+                  </button>
+                </span>
+              </label>
+
+              <label class="field">
+                <span>Confirmar contraseña</span>
+                <span class="password-input">
+                  <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword"
+                    autocomplete="new-password" placeholder="Repite la nueva contraseña" />
+                  <button type="button" (click)="toggleConfirmPassword()"
+                    [attr.aria-label]="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="1.7" />
+                      <circle cx="12" cy="12" r="2.8" stroke="currentColor" stroke-width="1.7" />
+                    </svg>
+                  </button>
+                </span>
+              </label>
+            </div>
+
+            <div class="form-footer security-footer">
+              <span class="form-hint">Al cambiarla, usa la nueva contraseña en tu próximo acceso.</span>
+              <button class="primary-button" type="submit" [disabled]="changePasswordForm.invalid">
+                Actualizar contraseña
+              </button>
+            </div>
+          </form>
         </div>
-
-        <div class="change-password-submit">
-          <button type="submit" (click)="changePassword()">Cambiar contraseña</button>
-        </div>
-      </form>
-    </div>
-
+      </article>
+    </section>
   </div>
 
+  <section class="state-card" *ngIf="isLoading">
+    <span class="spinner"></span>
+    <h2>Cargando tu perfil</h2>
+    <p>Estamos preparando la información de tu cuenta.</p>
+  </section>
 
-  <!-- Cargando -->
-  <div class="loading-state" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <p>Cargando información de tu perfil...</p>
-  </div>
-
-  <!-- Error/No autenticado -->
-  <div class="error-state" *ngIf="!isLoading && !user">
-    <div class="error-icon">⚠️</div>
-    <h3>No se pudo cargar la información</h3>
-    <p>Por favor, inicia sesión para ver tu perfil.</p>
-    <a routerLink="/login" class="btn-primary">Iniciar Sesión</a>
-  </div>
-
-</div>
+  <section class="state-card" *ngIf="!isLoading && !user">
+    <span class="state-icon">!</span>
+    <h2>No se pudo cargar la información</h2>
+    <p>Inicia sesión nuevamente para consultar tu perfil.</p>
+    <a routerLink="/login" class="primary-button">Iniciar sesión</a>
+  </section>
+</main>

@@ -240,6 +240,7 @@
       </section>
 
       <section class="table-card resumen-table">
+        <div class="resumen-wrapper">
 
         <div class="resumen-header">
           <div class="cell fecha">Fecha</div>
@@ -273,7 +274,6 @@
             [(ngModel)]="filtrosTabla.comentario" />
         </div>
 
-        <div class="resumen-wrapper" >
           <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="72">
             <div class="resumen-row" *cdkVirtualFor="let item of registrosTablaFiltrados">
               <div class="cell fecha">{{ formatearFecha(item.date_creation) }}</div>

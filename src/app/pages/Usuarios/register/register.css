@@ -344,6 +344,7 @@
     padding: 16px 12px 24px;
     align-items: flex-start;
     overflow-y: auto;
+    background-attachment: scroll;
   }
 
   .register-shell {
@@ -409,7 +410,7 @@
 @media (max-width: 640px) {
   .main {
     padding: 14px 10px 20px;
-    min-height: calc(100vh - 70px);
+    min-height: 100%;
   }
 
   .register-shell {
@@ -510,7 +511,7 @@
 @media (max-width: 480px) {
   .main {
     padding: 12px 8px 18px;
-    min-height: 100vh;
+    min-height: 100%;
     background-attachment: scroll;
   }
 

@@ -6,13 +6,15 @@
   background-attachment: fixed;
   width: 100%;
   min-height: 100vh;
-  height: 100vh;
+  min-height: 100dvh;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   padding: 24px 18px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   box-sizing: border-box;
 }
 
@@ -401,6 +403,7 @@
   .main {
     padding: 16px 12px 24px;
     align-items: flex-start;
+    background-attachment: scroll;
   }
 
   .solicitud-container {

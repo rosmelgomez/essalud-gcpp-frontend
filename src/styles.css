@@ -26,11 +26,68 @@ html, body {
   height: 100%;
 }
 
+html {
+  min-width: 320px;
+}
+
 body {
   margin: 0;
   font-family: var(--font-family-global);
   background-color: #f0f4f8;
   color: #1e293b;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+video,
+canvas {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(0, 122, 201, 0.32);
+  outline-offset: 2px;
+}
+
+* {
+  scrollbar-color: rgba(71, 85, 105, 0.45) transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(71, 85, 105, 0.38);
+  background-clip: padding-box;
+}
+
+@media (max-width: 768px) {
+  .cdk-overlay-pane {
+    max-width: calc(100vw - 24px) !important;
+  }
 }
 
 h1, h2, h3, h4, h5, h6 {

@@ -23,10 +23,6 @@ export class Perfil implements OnInit, OnDestroy {
   centroName: string = '';
   isLoading: boolean = true;
 
-  formUser: boolean = false;
-  formPassword: boolean = false;
-
-
   private userSub!: Subscription;
 
   private _snackBar = inject(MatSnackBar);
@@ -57,14 +53,10 @@ export class Perfil implements OnInit, OnDestroy {
 
     this.changePasswordForm = this.formBuilder.group({
       currentPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required]],
-      confirmPassword: ['', [Validators.required]],
+      newPassword: ['', [Validators.required, Validators.minLength(8)]],
+      confirmPassword: ['', [Validators.required, Validators.minLength(8)]],
     });
 
-  }
-
-  cambiarFormUser() {
-    this.formUser = !this.formUser;
   }
 
   ngOnInit(): void {
@@ -73,6 +65,12 @@ export class Perfil implements OnInit, OnDestroy {
       next: (user) => {
         this.user = user;
         if (this.user) {
+          this.changeUserForm.patchValue({
+            name: this.user.name,
+            lastname: this.user.lastname,
+            dni: this.user.dni,
+            email: this.user.email,
+          }, { emitEvent: false });
           this.loadNames();
         } else {
           this.isLoading = false;
@@ -155,8 +153,7 @@ export class Perfil implements OnInit, OnDestroy {
           duration: 3000,
         });
         this.authService.setCurrentUser(updatedUser);
-        this.changeUserForm.reset();
-        this.cambiarFormUser();
+        this.changeUserForm.patchValue(updatedUser, { emitEvent: false });
       }
       ,
       error: () => {

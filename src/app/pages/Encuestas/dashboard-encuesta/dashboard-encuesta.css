@@ -15,6 +15,7 @@
 
 .dashboard-shell {
   width: 100%;
+  min-height: 100%;
   max-width: 100%;
   display: flex;
   flex-direction: column;
@@ -437,7 +438,7 @@
 
 .resumen-viewport {
   height: 420px;
-  min-width: 1560px;
+  min-width: 1710px;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;

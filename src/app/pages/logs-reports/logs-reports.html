@@ -141,6 +141,7 @@
       </section>
 
       <section class="table-card resumen-table">
+        <div class="resumen-wrapper">
         <div class="resumen-header">
           <div class="cell code_red">Red</div>
           <div class="cell codcas">Centro</div>
@@ -172,7 +173,6 @@
           <input type="text" class="filter-input cell date" placeholder="Buscar Fecha..." [(ngModel)]="filters.date" />
         </div>
 
-        <div class="resumen-wrapper">
           <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="72">
             <div *cdkVirtualFor="let row of allLogs" class="resumen-row">
               <div class="cell code_red">{{ getRedNombre(row.code_red) }}</div>

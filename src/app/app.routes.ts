@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { Login } from './pages/login/login';
 import { Register } from './pages/Usuarios/register/register';
-import { ChangePassword } from './pages/Usuarios/change-password/change-password';
 import { ManageUsers } from './pages/Usuarios/manage-users/manage-users';
 import { Perfil } from './pages/Usuarios/perfil/perfil'
 import { HomePage } from './pages/home-page/home-page';

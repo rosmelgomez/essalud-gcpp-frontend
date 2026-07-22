@@ -3,7 +3,7 @@
   align-items: center; 
   gap: 1.15rem; 
   width: 100%; 
-  height: 4.75rem; 
+  min-height: 4.75rem;
   padding: 0 1.5rem; 
   color: #17324d; 
   background: #f2f2f2; 
@@ -441,8 +441,10 @@
 }
 
 @media only screen and (max-width: 1024px) {
-  .main {
-    grid-template-columns: auto 1fr auto;
+  .navbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    height: auto;
     row-gap: 16px;
     padding: 16px 24px;
   }
@@ -506,12 +508,12 @@
 }
 
 @media only screen and (max-width: 720px) {
-  .main {
-    padding: 14px 18px;
+  .navbar {
+    padding: 12px 14px;
   }
 
   .logo-wrap {
-    padding: 8px 12px;
+    padding: 6px 0;
     gap: 10px;
   }
 

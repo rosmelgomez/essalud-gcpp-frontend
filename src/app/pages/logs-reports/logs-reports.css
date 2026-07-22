@@ -14,6 +14,7 @@
 
 .dashboard-shell {
   width: 100%;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -273,8 +274,8 @@
 .resumen-filters,
 .resumen-row {
   display: grid;
-  grid-template-columns: 150px 220px 180px 120px 100px 150px 220px 130px 100px 140px;
-  min-width: 1610px;
+  grid-template-columns: 150px 220px 180px 120px 100px minmax(180px, 1fr) 220px 130px 150px;
+  min-width: 1450px;
 }
 
 .resumen-header {
@@ -296,7 +297,7 @@
 
 .resumen-viewport {
   height: 420px;
-  min-width: 1610px;
+  min-width: 1450px;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -421,8 +422,12 @@
   .resumen-header,
   .resumen-filters,
   .resumen-row {
-    grid-template-columns: repeat(10, minmax(130px, 1fr));
-    min-width: 1300px;
+    grid-template-columns: repeat(9, minmax(130px, 1fr));
+    min-width: 1170px;
+  }
+
+  .resumen-viewport {
+    min-width: 1170px;
   }
 
   .table-footer {

@@ -31,7 +31,7 @@
     radial-gradient(circle at 90% 8%, rgba(0, 174, 239, 0.14), transparent 35%),
     linear-gradient(180deg, #f0f4f8 0%, #e8eef6 100%);
   background-color: var(--bg-color);
-  min-height: 100vh;
+  min-height: 100%;
   padding: 2.5rem;
   box-sizing: border-box;
 }
