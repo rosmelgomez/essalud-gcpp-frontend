@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angula
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Auth, User } from '../../../model/user';
-import { AuthService } from '../../../services/usuario/auth.service';
+import { AuthService } from '../../../services/usuario/auth-service';
 import { EstablecimientoService } from '../../../services/establecimiento-service';
 import { forkJoin, Subscription } from 'rxjs';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';

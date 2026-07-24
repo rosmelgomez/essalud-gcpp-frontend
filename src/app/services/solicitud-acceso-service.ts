@@ -17,11 +17,11 @@ export class SolicitudAccesoService  {
   }
 
   getListSolicitud() {
-    return this.http.get<SolicitudAcceso[]>(base_url + `/getSolicitudes`, { withCredentials: true });
+    return this.http.get<SolicitudAcceso[]>(base_url + `/getall`, { withCredentials: true });
   }
 
   updateSolicitud(solicitud: SolicitudAcceso) {
-    return this.http.put(base_url + `/updateSolicitud`, solicitud, { withCredentials: true, responseType: 'text' });
+    return this.http.put(base_url + `/update`, solicitud, { withCredentials: true, responseType: 'text' });
   }
 
 }

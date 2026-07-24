@@ -7,14 +7,15 @@ import { User } from '../model/user';
 export class LocalStorageService {
 
   saveUser(user: User): void {
-    //user.id = 0;
-    user.date_creation='';
-    user.date_update='';
-    sessionStorage.setItem('user', JSON.stringify(user));
+    user.password = '';
+    user.firstLogin = false;
+    user.date_creation = '';
+    user.date_update = '';
+    localStorage.setItem('user', JSON.stringify(user));
   }
 
   getUser(): User | null {
-    const raw = sessionStorage.getItem('user');
+    const raw = localStorage.getItem('user');
     if (!raw) return null;
     try {
       return JSON.parse(raw) as User;
@@ -68,9 +69,9 @@ export class LocalStorageService {
 
   }
 
-  getDataModulo(): {modulo?: string} {
+  getDataModulo(): { modulo?: string } {
     const raw = localStorage.getItem('modulo');
-   if (!raw) return {};
+    if (!raw) return {};
 
     try {
       const data = JSON.parse(raw);
@@ -610,8 +611,6 @@ export class LocalStorageService {
       return {};
     }
   }
-
-
 
   ///guardar datos de filtros de dashboard-intervenciones-quirurgicas
   saveDataIQGC(anio?: string, periodo?: string, codasegu?: string): void {

@@ -11,19 +11,19 @@ export class EstablecimientoService {
   constructor(private http: HttpClient) { }
 
   getCentros() {
-    return this.http.get<any[]>(base_url + '/getCentros', { withCredentials: true });
+    return this.http.get<any[]>(base_url + '/getcentros', { withCredentials: true });
   }
 
   getRed() {
-    return this.http.get<any[]>(base_url + '/getRedes', { withCredentials: true });
+    return this.http.get<any[]>(base_url + '/getredes', { withCredentials: true });
   }
 
   getCentrosWithRed() {
-    return this.http.get<any[]>(base_url + '/getRedesWithCentros', { withCredentials: true });
+    return this.http.get<any[]>(base_url + '/getredeswithcentros', { withCredentials: true });
   }
 
   getCentrosByRed(code_red: string) {
-    return this.http.get<any[]>(base_url + `/getCentroAsistencialByRed/${code_red}`, { withCredentials: true });
+    return this.http.get<any[]>(base_url + `/getcentrobyred/${code_red}`, { withCredentials: true });
   }
 
   getCentroWithRedByCodcas(codcas: string) {

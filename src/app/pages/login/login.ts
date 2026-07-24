@@ -4,7 +4,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthLogin } from '../../services/usuario/auth-login';
-import { AuthService } from '../../services/usuario/auth.service';
+import { AuthService } from '../../services/usuario/auth-service';
 import { RouteLogger } from '../../services/route-logger';
 import { UsersService } from '../../services/usuario/users-service';
 import { Auth } from '../../model/user';

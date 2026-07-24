@@ -14,19 +14,19 @@ export class EncuestaService {
   constructor(private http: HttpClient) {}
 
   getModulos(){
-    return this.http.get<Modulo[]>(base_url + '/getModulos');
+    return this.http.get<Modulo[]>(base_url + '/getmodulos');
   }
 
   getCategorias() {
-    return this.http.get<Categoria[]>(base_url + '/getCategorias');
+    return this.http.get<Categoria[]>(base_url + '/getcategorias');
   }
 
   getSubcategorias() {
-    return this.http.get<Subcategoria[]>(base_url + '/getSubcategorias');
+    return this.http.get<Subcategoria[]>(base_url + '/getsubcategorias');
   }
 
   getVariables() {
-    return this.http.get<Variable[]>(base_url + '/getVariables');
+    return this.http.get<Variable[]>(base_url + '/getvariables');
   }
 
 
@@ -35,6 +35,6 @@ export class EncuestaService {
   }
 
   getEncuesta() {
-    return this.http.get<Encuesta[]>(base_url + '/getEncuestas');
+    return this.http.get<Encuesta[]>(base_url + '/getall');
   }
 }

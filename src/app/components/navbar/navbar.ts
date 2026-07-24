@@ -2,7 +2,7 @@ import { Component, ElementRef, HostListener, OnInit, OnDestroy } from '@angular
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { User } from '../../model/user';
-import { AuthService } from '../../services/usuario/auth.service';
+import { AuthService } from '../../services/usuario/auth-service';
 import { RouteLogger } from '../../services/route-logger';
 import { Subscription } from 'rxjs';
 

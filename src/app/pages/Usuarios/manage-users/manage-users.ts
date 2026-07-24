@@ -553,7 +553,7 @@ export class ManageUsers implements OnInit {
     });
   }
 
-  deleteUser(username: string): void {
+  deleteUser(username: string, id: number): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
@@ -566,7 +566,7 @@ export class ManageUsers implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.userservice.deleteUser(username).subscribe({
+        this.userservice.deleteUser(id).subscribe({
           next: () => {
             this.loadData();
             this.cdr.markForCheck();

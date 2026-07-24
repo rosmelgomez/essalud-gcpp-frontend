@@ -15,11 +15,11 @@ export class UsersService {
   constructor(private http: HttpClient) { }
 
   verifyPassword(user: Auth) {
-    return this.http.post(base_url + `/verifyPassword`, user, { withCredentials: true, responseType: 'text' });
+    return this.http.post(base_url + `/verifypassword`, user, { withCredentials: true, responseType: 'text' });
   }
 
   changePassword(user: Auth) {
-    return this.http.put(base_url + `/changePassword`, user, { withCredentials: true, responseType: 'text' });
+    return this.http.put(base_url + `/changepassword`, user, { withCredentials: true, responseType: 'text' });
   }
 
   registerUser(user: User) {
@@ -27,31 +27,31 @@ export class UsersService {
   }
 
   getUser(username: string) {
-    return this.http.get<User>(base_url + `/getUser/${username}`, { withCredentials: true });
+    return this.http.get<User>(base_url + `/getbyusername/${username}`, { withCredentials: true });
   }
 
   getUserByDni(dni: string) {
-    return this.http.get<User>(base_url + `/getUserByDni/${dni}`, { withCredentials: true });
+    return this.http.get<User>(base_url + `/getbydni/${dni}`, { withCredentials: true });
   }
 
   updateUser(user: User) {
-    return this.http.put(base_url + `/updateUser`, user, { withCredentials: true });
+    return this.http.put(base_url + `/update`, user, { withCredentials: true });
   }
 
-  deleteUser(username: string) {
-    return this.http.delete(base_url + `/deleteUserByUsername/${username}`, { withCredentials: true });
+  deleteUser(id: number) {
+    return this.http.delete(base_url + `/delete/${id}`, { withCredentials: true });
   }
 
   getAllUsers() {
-    return this.http.get<User[]>(base_url + `/getUsers`, { withCredentials: true });
+    return this.http.get<User[]>(base_url + `/getall`, { withCredentials: true });
   }
 
   getUsersByCodred(codred: string) {
-    return this.http.get<User[]>(base_url + `/getUsersByCodred/${codred}`, { withCredentials: true });
+    return this.http.get<User[]>(base_url + `/getallbycodred/${codred}`, { withCredentials: true });
   }
 
   getRoles() {
-    return this.http.get<Rol[]>(base_url + `/getRoles`, { withCredentials: true });
+    return this.http.get<Rol[]>(base_url + `/getroles`, { withCredentials: true });
   }
 
 }

@@ -1,37 +1,42 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { LocalStorageService } from '../services/local-storage-service';
-import { catchError, throwError } from 'rxjs';
+import { AuthLogin } from '../services/usuario/auth-login';
+import { catchError, switchMap, throwError } from 'rxjs';
 
 export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
+  const auth = inject(AuthLogin);
   const router = inject(Router);
-  const storage = inject(LocalStorageService);
-  const publicRoutes = ['/login', '/solicitud-acceso/registro'];
-
+  const publicRoutes = ['/login', '/solicitar-acceso-registro'];
+  const isLogoutRequest = req.url.includes('/logout') || req.url.includes('/log/register');
   const currentPath = router.url.split('?')[0];
   const isPublicRoute = publicRoutes.includes(currentPath);
 
   const redirectToLogin = () => {
-    storage.clearFrontendSession();
-    router.navigate(['/login'], {
+  
+    router.navigate(['/'], {
       queryParams: {
-        message: 'Sesión expirada. Por favor, vuelva a iniciar sesión.',
+        message: 'Su sesión ha expirado. Por favor, inicie sesión de nuevo.',
       },
     });
   };
 
-  return next(req).pipe(
-    catchError((error: HttpErrorResponse) => {
-      console.log('[AuthInterceptor] Error HTTP capturado', {
-        url: req.url,
-        status: error?.status,
-      });
+  const cleanedHeaders = req.headers.has('Authorization')
+    ? req.headers.delete('Authorization')
+    : req.headers;
 
-      // Solo si la petición de api-token falla, limpiamos la sesión y redirigimos a login
-      if (req.url.includes('/api-token')) {
-        console.warn('[AuthInterceptor] La petición api-token falló. Limpiando sesión y redirigiendo a Login.');
-        redirectToLogin();
+  const requestWithCredentials = req.clone({
+    withCredentials: true,
+    headers: cleanedHeaders,
+  });
+
+  return next(requestWithCredentials).pipe(
+    catchError((error: HttpErrorResponse) => {
+      // Manejar errores de autenticación
+      if (error.status === 401 || error.status === 403) {
+        if (isPublicRoute) {
+          return throwError(() => error);
+        }
       }
 
       return throwError(() => error);
