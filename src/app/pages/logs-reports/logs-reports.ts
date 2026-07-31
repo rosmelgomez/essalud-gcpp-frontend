@@ -8,7 +8,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ChangeDetectorRef } from '@angular/core';
-import { LogsUsersService } from '../../services/logs-users-service';
+import { LogsUsersService } from '../../services/usuario/logs-users-service';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { EstablecimientoService } from '../../services/establecimiento-service';
 import ApexCharts, { ApexOptions } from 'apexcharts';
