@@ -37,6 +37,27 @@ export class PatologiaService {
     return this.http.get<any>(base_url + `/queryAPACCGB`, { withCredentials: true });
   }
 
+   ///ranking red
+  getQueryAPACRR(anios:String[]){
+    let parameters: any = {
+      anios: anios
+    };
+    return this.http.get<any>(base_url + `/queryAPACRR`, { params: parameters, withCredentials: true });
+  }
+
+  ///comorbilidad grupo
+  getQueryAPACCG(patologia:String, patron:String){
+    return this.http.get<any>(base_url + `/queryAPACCGP/${patologia}/${patron}`, {  withCredentials: true });
+  }
+
+
+  ///patologia -> area ->servicio
+  getQueryAPACPAS( anios:String[]){
+    let parameters: any = {
+      anios: anios
+    };
+    return this.http.get<any>(base_url + `/queryAPACPAS`, { params: parameters, withCredentials: true });
+  }
 
 
 }

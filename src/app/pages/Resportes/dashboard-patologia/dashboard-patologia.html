@@ -1,1 +1,205 @@
-<p>dashboard-patologia works!</p>
+<div class="main">
+    <!-- HEADER -->
+    <div class="header">
+        <div>
+            <h2>Detalle de Atenciones</h2>
+            <p> Período: {{ 'periodo' }} | Centro: {{ 'nameCentro' }}</p>
+        </div>
+        <div class="actions">
+            <button class="btn-export"> Exportar CSV</button>
+        </div>
+    </div>
+
+    <!-- LOADING -->
+    <div *ngIf="loading" class="loading">
+        <p>Cargando datos...</p>
+    </div>
+
+    <!-- ERROR -->
+    <div *ngIf="error" class="error">
+        <p>{{ error }}</p>
+    </div>
+
+    <!-- TABS -->
+    <div *ngIf="!loading" class="tabs">
+        <button class="tab-button" [class.active]="activeTab === 'Analítica por patología de alto costo'"
+            (click)="setActiveTab('Analítica por patología de alto costo')">
+            Analítica por patología de alto costo
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'Detalle por patología'"
+            (click)="setActiveTab('Detalle por patología')">
+            Detalle por patología
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'Comorbilidad del paciente'"
+            (click)="setActiveTab('Comorbilidad del paciente')">
+            Comorbilidad del paciente
+        </button>
+    </div>
+
+    <!-- CONTENIDO TABS -->
+    <div *ngIf="!loading && activeTab === 'Analítica por patología de alto costo'" class="tab-content">
+
+        <div class="header-filter">
+            <div class="filter-item-toppings">
+                <label for="anio_apal">Año:</label>
+                <select id="anio_apal" [(ngModel)]="anio_apal" (change)="onAnioApalChange()">
+                    <option *ngFor="let anio of dataAnioApal" [value]="anio.anio">{{ anio.anio }}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="overview-cards">
+            <!-- Card 1 -->
+            <div class="overview-card card-blue">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">group</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-value">190 157</h2>
+                    <p class="card-title">Pacientes · Alto costo (Raras + Oncológico + Renal)</p>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="overview-card card-green">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">analytics</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-value">33</h2>
+                    <p class="card-title">Patologías activas</p>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="overview-card card-yellow">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">hub</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-value">101 968</h2>
+                    <p class="card-title">Mayor concentracion · Red</p>
+                    <p class="card-subtitle-highlight card-yellow-highlight">Hipertension Total en RED ASISTENCIAL REBAGLIATI</p>
+                </div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="overview-card card-red">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">apartment</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-value">11 603</h2>
+                    <p class="card-title">Mayor concentracion · Centro</p>
+                    <p class="card-subtitle-highlight card-red-highlight">Hipertension Total en POL. PABLO BERMUDEZ</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-grid" style="grid-template-columns: 35% 65%;">
+            <div class="chart-card">
+                <h3>Pacientes por patología de alto costo: Raras / Oncológico / Renal</h3>
+                <div #chartPacientesTotales class="chart"></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Evolucion anual · patologías de alto costo (Raras / Oncológico / Renal)</h3>
+                <div #chartComorbilidadGlobal class="chart"></div>
+            </div>
+
+
+        </div>
+
+        <div class="chart-full-width">
+            <h3>Ranking por red · patologías de alto costo</h3>
+            <h4>Pacientes de Raras + Oncologico + Renal por red asistencial, distinguidos por patologia · top 15 (2019 -
+                2025)</h4>
+            <div #chartRankingRed class="chart"></div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Comorbilidades asociadas a Oncológico (alto costo)</h3>
+                <h4>% de pacientes con Oncológico que en algun momento también tuvo cada comorbilidad asociada (lista
+                    según comorbilidades) · 2019-2025.</h4>
+                <div #chartComorbilidadesOncologico class="chart"></div>
+            </div>
+            <div class="chart-card">
+                <h3>Comorbilidades asociadas a Renal (alto costo)</h3>
+                <h4>% de pacientes con Renal que en algun momento también tuvo cada comorbilidad asociada (lista según
+                    comorbilidades) · 2019-2025.</h4>
+                <div #chartComorbilidadesRenal class="chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="!loading && activeTab === 'Detalle por patología'" class="tab-content">
+
+        <div class="header-filter">
+            <mat-form-field class="filter-item-toppings" appearance="fill">
+                <mat-label>Año</mat-label>
+                <mat-select [(ngModel)]="anio_DP" multiple (selectionChange)="onAnioApalChange()">
+                    <mat-option *ngFor="let anio of dataAnioDP" [value]="anio.anio">{{ anio.anio }}</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="filter-item-toppings" appearance="fill">
+                <mat-label>Patología</mat-label>
+                <mat-select [(ngModel)]="patologia_DP" multiple (selectionChange)="onAnioApalChange()">
+                    <mat-option *ngFor="let patologia of dataPatologiaDP" [value]="patologia.patologia">{{ patologia.patologia }}</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="filter-item-toppings" appearance="fill">
+                <mat-label>Grupo Etario</mat-label>
+                <mat-select [(ngModel)]="grupoEtario_DP" multiple (selectionChange)="onAnioApalChange()">
+                    <mat-option *ngFor="let grupo of dataGrupoEtarioDP" [value]="grupo">{{ grupo }}</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="filter-item-toppings" appearance="fill">
+                <mat-label>Red</mat-label>
+                <mat-select [(ngModel)]="red_DP" multiple (selectionChange)="onAnioApalChange()">
+                    <mat-option *ngFor="let red of dataRedDP" [value]="red.red">{{ red.red }}</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="filter-item-toppings" appearance="fill">
+                <mat-label>Centro</mat-label>
+                <mat-select [(ngModel)]="centro_DP" multiple (selectionChange)="onAnioApalChange()">
+                    <mat-option *ngFor="let centro of dataCentroDP" [value]="centro.centro">{{ centro.centro }}</mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+
+
+        <div class="chart-full-width">
+            <h3>Top 10 diagnósticos por atenciones </h3>
+            <div #chartDiagnostico class="chart"></div>
+        </div>
+
+
+    </div>
+
+    <div *ngIf="!loading && activeTab === 'Comorbilidad del paciente'" class="tab-content">
+        <div class="chart-card">
+            <mat-card class="resumen-table-noconsiderados">
+                <h3>Registros No Considerados</h3>
+                <!-- HEADER -->
+                <div class="resumen-header-noconsiderados">
+                    <div class="cell servicio2">Servicio</div>
+                    <div class="cell actividad2">Actividad</div>
+                    <div class="cell subactividad2">Subactividad</div>
+                    <div class="cell tipo_consulta2">Tipo Consulta</div>
+                    <div class="cell coddiag2">CodDiag</div>
+                    <div class="cell diagnostico2">Diagnóstico</div>
+                    <div class="cell dni_medico2 num">Dni Medico</div>
+                    <div class="cell acto_med2 num">acto_med</div>
+                    <div class="cell sexo2">Sexo</div>
+                    <div class="cell fecha_atencion2">Fecha Atención</div>
+                    <div class="cell desc_cl2">Desc CL</div>
+                </div>
+
+
+
+
+            </mat-card>
+        </div>
+    </div>
+</div>
