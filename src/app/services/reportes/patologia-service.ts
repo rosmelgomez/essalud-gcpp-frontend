@@ -11,34 +11,34 @@ export class PatologiaService {
   constructor(private http: HttpClient) { }
 
   /// opcion patologias
-  getQueryOP(){
+  getQueryOP() {
     return this.http.get<any>(base_url + `/queryOP`, { withCredentials: true });
   }
 
   /// opcion anio
-  getQueryOA(){
+  getQueryOA() {
     return this.http.get<any>(base_url + `/queryOA`, { withCredentials: true });
   }
 
   ///opcion red centro
-  getQueryORC(){
+  getQueryORC() {
     return this.http.get<any>(base_url + `/queryORC`, { withCredentials: true });
   }
 
 
   ///Analitica por patologia de alto costo
   /// pacientes totales
-  getQueryAPACPT(){
+  getQueryAPACPT() {
     return this.http.get<any>(base_url + `/queryAPACPT`, { withCredentials: true });
   }
 
   ///comorbilidad global
-  getQueryAPACCGB(){
+  getQueryAPACCGB() {
     return this.http.get<any>(base_url + `/queryAPACCGB`, { withCredentials: true });
   }
 
-   ///ranking red
-  getQueryAPACRR(anios:String[]){
+  ///ranking red
+  getQueryAPACRR(anios: String[]) {
     let parameters: any = {
       anios: anios
     };
@@ -46,17 +46,68 @@ export class PatologiaService {
   }
 
   ///comorbilidad grupo
-  getQueryAPACCG(patologia:String, patron:String){
-    return this.http.get<any>(base_url + `/queryAPACCGP/${patologia}/${patron}`, {  withCredentials: true });
+  getQueryAPACCG(patologia: String, patron: String) {
+    return this.http.get<any>(base_url + `/queryAPACCGP/${patologia}/${patron}`, { withCredentials: true });
   }
 
+  ///comorbilidad interserccion
+  getQueryAPACCI() {
+    return this.http.get<any>(base_url + `/queryAPACCI`, { withCredentials: true });
+  }
 
   ///patologia -> area ->servicio
-  getQueryAPACPAS( anios:String[]){
+  getQueryAPACPAS(anios: String[]) {
     let parameters: any = {
       anios: anios
     };
     return this.http.get<any>(base_url + `/queryAPACPAS`, { params: parameters, withCredentials: true });
+  }
+
+  /// diagnostico y servicios mas frecuente por patologia
+  getQueryAPACDSFP(anios: String[]) {
+    let parameters: any = {
+      anios: anios
+    };
+    return this.http.get<any>(base_url + `/queryAPACDSFP`, { params: parameters, withCredentials: true });
+  }
+
+  ///total pacientes
+  getQueryAPACTP(anios: String[]) {
+    let parameters: any = {
+      anios: anios
+    };
+    return this.http.get<any>(base_url + `/queryAPACTP`, { params: parameters, withCredentials: true });
+  }
+
+  ///mayor concentracion red
+  getQueryAPACMCR(anios: String[]) {
+    let parameters: any = {
+      anios: anios
+    };
+    return this.http.get<any>(base_url + `/queryAPACMCR`, { params: parameters, withCredentials: true });
+  }
+
+  ///mayor concentrado centro
+  getQueryAPACMCC(anios: String[]) {
+    let parameters: any = {
+      anios: anios
+    };
+    return this.http.get<any>(base_url + `/queryAPACMCC`, { params: parameters, withCredentials: true });
+  }
+
+
+
+  ///graficos Detalle por patología
+  /// total de pacientes
+  getQueryDPTP(patologias: String[], anios: String[], codreds: String[], codcens: String[], grupo_edades: String[]) {
+    let parameters: any = {
+      patologias: patologias,
+      anios: anios,
+      codreds: codreds,
+      codcens: codcens,
+      grupo_edades: grupo_edades
+    };
+    return this.http.get<any>(base_url + `/queryDPTP`, { params: parameters, withCredentials: true });
   }
 
 

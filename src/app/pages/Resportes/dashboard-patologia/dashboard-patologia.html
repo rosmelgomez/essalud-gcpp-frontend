@@ -42,7 +42,7 @@
         <div class="header-filter">
             <div class="filter-item-toppings">
                 <label for="anio_apal">Año:</label>
-                <select id="anio_apal" [(ngModel)]="anio_apal" (change)="onAnioApalChange()">
+                <select id="anio_apal" [(ngModel)]="anio_apal" (change)="loadDataAnaliticaPatologiaFiltros()">
                     <option *ngFor="let anio of dataAnioApal" [value]="anio.anio">{{ anio.anio }}</option>
                 </select>
             </div>
@@ -55,7 +55,8 @@
                     <span class="material-icons card-icon">group</span>
                 </div>
                 <div class="card-content">
-                    <h2 class="card-value">190 157</h2>
+                    <h2 class="card-value" *ngFor="let paciente of queryTotalPacientes">
+                        {{formatNumber(paciente.pacientes)}}</h2>
                     <p class="card-title">Pacientes · Alto costo (Raras + Oncológico + Renal)</p>
                 </div>
             </div>
@@ -76,10 +77,10 @@
                 <div class="card-icon-container">
                     <span class="material-icons card-icon">hub</span>
                 </div>
-                <div class="card-content">
-                    <h2 class="card-value">101 968</h2>
+                <div class="card-content" *ngFor="let red of queryMayorConcentracionRed">
+                    <h2 class="card-value">{{formatNumber(red.pacientes)}} </h2>
                     <p class="card-title">Mayor concentracion · Red</p>
-                    <p class="card-subtitle-highlight card-yellow-highlight">Hipertension Total en RED ASISTENCIAL REBAGLIATI</p>
+                    <p class="card-subtitle-highlight card-yellow-highlight">{{red.patologia}} en {{red.redasisdes}}</p>
                 </div>
             </div>
 
@@ -88,15 +89,16 @@
                 <div class="card-icon-container">
                     <span class="material-icons card-icon">apartment</span>
                 </div>
-                <div class="card-content">
-                    <h2 class="card-value">11 603</h2>
+                <div class="card-content" *ngFor="let centro of queryMayorConcentracionCentro">
+                    <h2 class="card-value">{{formatNumber(centro.pacientes)}}</h2>
                     <p class="card-title">Mayor concentracion · Centro</p>
-                    <p class="card-subtitle-highlight card-red-highlight">Hipertension Total en POL. PABLO BERMUDEZ</p>
+                    <p class="card-subtitle-highlight card-red-highlight">{{centro.patologia}} en {{centro.cenasides}}
+                    </p>
                 </div>
             </div>
         </div>
 
-        <div class="charts-grid" style="grid-template-columns: 35% 65%;">
+        <div class="charts-grid">
             <div class="chart-card">
                 <h3>Pacientes por patología de alto costo: Raras / Oncológico / Renal</h3>
                 <div #chartPacientesTotales class="chart"></div>
@@ -131,6 +133,29 @@
                 <div #chartComorbilidadesRenal class="chart"></div>
             </div>
         </div>
+
+        <div class="chart-full-width">
+            <h3>Diagnosticos y servicios mas frecuentes por patología de alto costo</h3>
+            <h4>Top 10 diagnosticos (CIE-10) por patología y, dentro de cada uno, sus servicios mas frecuentes · tamaño
+                = pacientes · responde al filtro de Anio</h4>
+            <div #chartDiagnosticoServiciosMasFrecPato class="chart"></div>
+        </div>
+
+        <div class="chart-full-width">
+            <h3>Todas las intersecciones entre comorbilidades</h3>
+            <h4>Cada fila = una patologia; posicion, tamaño y color de cada burbuja = pacientes que comparte con la otra
+                patología · (2019-2026)</h4>
+            <div #chartComorbilidadInterserccion class="chart"></div>
+        </div>
+
+        <div class="chart-full-width">
+            <h3>Flujo de atencion: patología de alto costo → area → servicio</h3>
+            <h4>En que area y servicio se concentra la atencion de cada patología de alto costo · responde al filtro de
+                Anio.</h4>
+            <div #chartPatologiaAreaServicio class="chart"></div>
+        </div>
+
+
     </div>
 
     <div *ngIf="!loading && activeTab === 'Detalle por patología'" class="tab-content">
@@ -138,35 +163,64 @@
         <div class="header-filter">
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Año</mat-label>
-                <mat-select [(ngModel)]="anio_DP" multiple (selectionChange)="onAnioApalChange()">
+                <mat-select [(ngModel)]="anio_DP" multiple (selectionChange)="loadDataDetallePatologia()">
                     <mat-option *ngFor="let anio of dataAnioDP" [value]="anio.anio">{{ anio.anio }}</mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Patología</mat-label>
-                <mat-select [(ngModel)]="patologia_DP" multiple (selectionChange)="onAnioApalChange()">
-                    <mat-option *ngFor="let patologia of dataPatologiaDP" [value]="patologia.patologia">{{ patologia.patologia }}</mat-option>
+                <mat-select [(ngModel)]="patologia_DP" multiple (selectionChange)="loadDataDetallePatologia()">
+                    <mat-option *ngFor="let patologia of dataPatologiaDP" [value]="patologia.patologia">{{
+                        patologia.patologia }}</mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Grupo Etario</mat-label>
-                <mat-select [(ngModel)]="grupoEtario_DP" multiple (selectionChange)="onAnioApalChange()">
+                <mat-select [(ngModel)]="grupoEtario_DP" multiple (selectionChange)="loadDataDetallePatologia()">
                     <mat-option *ngFor="let grupo of dataGrupoEtarioDP" [value]="grupo">{{ grupo }}</mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Red</mat-label>
-                <mat-select [(ngModel)]="red_DP" multiple (selectionChange)="onAnioApalChange()">
-                    <mat-option *ngFor="let red of dataRedDP" [value]="red.red">{{ red.red }}</mat-option>
+                <mat-select [(ngModel)]="red_DP" multiple (selectionChange)="loadDataDetallePatologia()">
+                    <mat-option *ngFor="let red of dataRed_DP" [value]="red.redasiscod">{{red.redasisdes}}</mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Centro</mat-label>
-                <mat-select [(ngModel)]="centro_DP" multiple (selectionChange)="onAnioApalChange()">
-                    <mat-option *ngFor="let centro of dataCentroDP" [value]="centro.centro">{{ centro.centro }}</mat-option>
+                <mat-select [(ngModel)]="centro_DP" multiple (selectionChange)="loadDataDetallePatologia()">
+                    <mat-option *ngFor="let centro of dataCentroWithRed_DP"
+                        [value]="centro.cenasicod">{{centro.cenasides}}</mat-option>
                 </mat-select>
             </mat-form-field>
         </div>
+
+        <div class="overview-cards" style="grid-template-columns: repeat(2, 1fr);">
+            <!-- Card 1 -->
+            <div class="overview-card card-blue">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">group</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-value" *ngFor="let paciente of dataQueryDPTP">
+                        {{formatNumber(paciente.pacientes)}}</h2>
+                    <p class="card-title">Pacientes · Acidosis Metabólica</p>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="overview-card card-green">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">analytics</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-value">33</h2>
+                    <p class="card-title">Patologías activas</p>
+                </div>
+            </div>
+
+        </div>
+
 
 
         <div class="chart-full-width">
