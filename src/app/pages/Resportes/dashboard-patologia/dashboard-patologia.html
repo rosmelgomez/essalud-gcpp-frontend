@@ -109,7 +109,6 @@
                 <div #chartComorbilidadGlobal class="chart"></div>
             </div>
 
-
         </div>
 
         <div class="chart-full-width">
@@ -138,21 +137,21 @@
             <h3>Diagnosticos y servicios mas frecuentes por patología de alto costo</h3>
             <h4>Top 10 diagnosticos (CIE-10) por patología y, dentro de cada uno, sus servicios mas frecuentes · tamaño
                 = pacientes · responde al filtro de Anio</h4>
-            <div #chartDiagnosticoServiciosMasFrecPato class="chart"></div>
+            <div #chartDiagnosticoServiciosMasFrecPato class="chart" style="height: 400px;"></div>
         </div>
 
         <div class="chart-full-width">
             <h3>Todas las intersecciones entre comorbilidades</h3>
             <h4>Cada fila = una patologia; posicion, tamaño y color de cada burbuja = pacientes que comparte con la otra
                 patología · (2019-2026)</h4>
-            <div #chartComorbilidadInterserccion class="chart"></div>
+            <div #chartComorbilidadInterserccion class="chart" style="height: 580px;"></div>
         </div>
 
         <div class="chart-full-width">
             <h3>Flujo de atencion: patología de alto costo → area → servicio</h3>
             <h4>En que area y servicio se concentra la atencion de cada patología de alto costo · responde al filtro de
                 Anio.</h4>
-            <div #chartPatologiaAreaServicio class="chart"></div>
+            <div #chartPatologiaAreaServicio class="chart" style="height: 500px;"></div>
         </div>
 
 
@@ -214,7 +213,7 @@
                     <span class="material-icons card-icon">analytics</span>
                 </div>
                 <div class="card-content">
-                    <h2 class="card-value">33</h2>
+                    <h2 class="card-value" *ngFor="let patologias of dataQueryDPTDD">{{patologias.n}}</h2>
                     <p class="card-title">Patologías activas</p>
                 </div>
             </div>
@@ -223,11 +222,24 @@
 
 
 
-        <div class="chart-full-width">
-            <h3>Top 10 diagnósticos por atenciones </h3>
-            <div #chartDiagnostico class="chart"></div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Distribucion por sexo</h3>
+                <div #chartDistribucionSexo class="chart"></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Distribucion por grupo etario</h3>
+                <div #chartDistribucionGrupoEtario class="chart"></div>
+            </div>
+
         </div>
 
+        <div class="chart-full-width">
+            <h3>Evolucion anual</h3>
+            <div #chartEvolucionAnual class="chart"></div>
+        </div>
 
     </div>
 

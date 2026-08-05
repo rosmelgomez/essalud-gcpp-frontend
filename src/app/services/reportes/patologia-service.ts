@@ -110,5 +110,62 @@ export class PatologiaService {
     return this.http.get<any>(base_url + `/queryDPTP`, { params: parameters, withCredentials: true });
   }
 
+  ///Total diagnosticos distintos
+  getQueryDPTDD(patologias: String[], anios: String[], codreds: String[], codcens: String[], grupo_edades: String[]) {
+    let parameters: any = {
+      patologias: patologias,
+      anios: anios,
+      codreds: codreds,
+      codcens: codcens,
+      grupo_edades: grupo_edades
+    };
+    return this.http.get<any>(base_url + `/queryDPTDD`, { params: parameters, withCredentials: true });
+  }
+
+  ///Distribucion sexo
+  getQueryDPDS(patologias: String[], anios: String[], codreds: String[], codcens: String[], grupo_edades: String[]) {
+    let parameters: any = {
+      patologias: patologias,
+      anios: anios,
+      codreds: codreds,
+      codcens: codcens,
+      grupo_edades: grupo_edades
+    };
+    return this.http.get<any>(base_url + `/queryDPDS`, { params: parameters, withCredentials: true });
+  }
+
+  ///Distribucion por grupo etario
+  getQueryDPDGE(patologias: String[], anios: String[], codreds: String[], codcens: String[]) {
+    let parameters: any = {
+      patologias: patologias,
+      anios: anios,
+      codreds: codreds,
+      codcens: codcens,
+    };
+    return this.http.get<any>(base_url + `/queryDPDGE`, { params: parameters, withCredentials: true });
+  }
+
+  ///Tabla diagnosticos
+  getQueryDPTD(patologias: String[], anios: String[], codreds: String[], codcens: String[], grupo_edades: String[]) {
+    let parameters: any = {
+      patologias: patologias,
+      anios: anios,
+      codreds: codreds,
+      codcens: codcens,
+      grupo_edades: grupo_edades
+    };
+    return this.http.get<any>(base_url + `/queryDPTD`, { params: parameters, withCredentials: true });
+  }
+
+  ///evolucion anual
+  getQueryDPEA(patologias: String[], codreds: String[], codcens: String[], grupo_edades: String[]) {
+    let parameters: any = {
+      patologias: patologias,
+      codreds: codreds,
+      codcens: codcens,
+      grupo_edades: grupo_edades
+    };
+    return this.http.get<any>(base_url + `/queryDPEA`, { params: parameters, withCredentials: true });
+  }
 
 }

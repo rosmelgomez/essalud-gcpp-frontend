@@ -134,6 +134,20 @@ export class DashboardPatologia implements OnInit, OnDestroy {
   //total pacientes
   dataQueryDPTP: any[] = [];
 
+  ///Total diagnosticos distintos
+  dataQueryDPTDD: any[] = [];
+
+  ///Distribucion sexo
+  dataQueryDPDS: any[] = [];
+
+  ///Distribucion por grupo etario
+  dataQueryDPDGE: any[] = [];
+
+  ///Tabla diagnosticos  
+  dataQueryDPTD: any[] = [];
+
+  ///evolucion anual
+  dataQueryDPEA: any[] = [];
 
   ///graficos Analitica por patologia de alto costo
   chartPacientesTotales: ApexCharts | null = null;
@@ -161,9 +175,19 @@ export class DashboardPatologia implements OnInit, OnDestroy {
   @ViewChild('chartPatologiaAreaServicio') chartPatologiaAreaServicioElement!: ElementRef<HTMLDivElement>;
 
   ///graficos Detalle por patología
+  chartDistribucionSexo: ApexCharts | null = null;
+  @ViewChild('chartDistribucionSexo') chartDistribucionSexoElement!: ElementRef<HTMLDivElement>;
+
+  chartDistribucionGrupoEtario: ApexCharts | null = null;
+  @ViewChild('chartDistribucionGrupoEtario') chartDistribucionGrupoEtarioElement!: ElementRef<HTMLDivElement>;
+
+  chartTopDiagnostico: ApexCharts | null = null;
+  @ViewChild('chartTopDiagnostico') chartTopDiagnosticoElement!: ElementRef<HTMLDivElement>;
+
+  chartEvolucionAnual: ApexCharts | null = null;
+  @ViewChild('chartEvolucionAnual') chartEvolucionAnualElement!: ElementRef<HTMLDivElement>;
 
   constructor(
-    private dataService: LocalStorageService,
     private patologiaService: PatologiaService,
     private establecimientoService: EstablecimientoService,
     private cdr: ChangeDetectorRef) { }
@@ -410,10 +434,23 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
     forkJoin({
       q0: this.patologiaService.getQueryDPTP(selectedPatologias, selectedAnios, selectedReds, selectedCens, selectedGrupoEdades),
+      q1: this.patologiaService.getQueryDPTDD(selectedPatologias, selectedAnios, selectedReds, selectedCens, selectedGrupoEdades),
+      q2: this.patologiaService.getQueryDPDS(selectedPatologias, selectedAnios, selectedReds, selectedCens, selectedGrupoEdades),
+      q3: this.patologiaService.getQueryDPDGE(selectedPatologias, selectedAnios, selectedReds, selectedCens),
+      q4: this.patologiaService.getQueryDPTD(selectedPatologias, selectedAnios, selectedReds, selectedCens, selectedGrupoEdades),
+      q5: this.patologiaService.getQueryDPEA(selectedPatologias, selectedReds, selectedCens, selectedGrupoEdades),
     }).subscribe({
       next: (results) => {
         this.dataQueryDPTP = results.q0;
-        console.log(this.dataQueryDPTP);
+        this.dataQueryDPTDD = results.q1;
+        this.dataQueryDPDS = results.q2;
+        this.dataQueryDPDGE = results.q3;
+        this.dataQueryDPTD = results.q4;
+        this.dataQueryDPEA = results.q5;
+
+        this.buildChartDistribucionSexo();
+        this.buildChartDistribucionGrupoEtario();
+        this.buildChartEvolucionAnual();
 
         this.loading = false;
         this.cdr.detectChanges();
@@ -427,7 +464,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     });
   }
 
-
+  ///Analitica por patologia de alto costo
 
   buildChartPacientesTotales(): void {
     setTimeout(() => {
@@ -453,6 +490,29 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         return;
       }
 
+      //obtener patologias diferentes de dataQueryDPEA
+      const dataPatologia = [...new Set(data.map((item: any) => item.patologia))].filter((item: any) => item !== 'Alto costo');
+      console.log('dataPatologia  (1):', dataPatologia);
+
+      ///obtener años diferentes de dataQueryDPEA
+      const dataAnios = [...new Set(data.map((item: any) => item.anio))].filter((item: any) => item !== 'Alto costo');
+
+      ///regresion 4 años de dataAnios
+      const dataAniosRegresion = dataAnios.slice(-4);
+      console.log('dataAniosRegresion (1):', dataAniosRegresion);
+
+      ///agregar 4 años en adelante del ultimo año obtenido
+      const dataAniosFinal: string[] = [];
+      const yearAnioFinal = parseInt(dataAnios[dataAnios.length - 1]);
+      for (let i = 1; i <= 4; i++) {
+        dataAniosFinal.push((yearAnioFinal + i).toString());
+      }
+
+      const dataAniosFinalUnido = dataAnios.concat(dataAniosFinal);
+
+      console.log('dataAnios (1):', dataAnios);
+      console.log('dataAniosFinalUnido (1):', dataAniosFinalUnido); 
+
       // Map historical data
       const histMap = new Map<string, Map<string, number>>();
       data.forEach((item: any) => {
@@ -465,16 +525,23 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         histMap.get(pat)!.set(yr, val);
       });
 
-      const patologias = ['Oncologico', 'Renal', 'Raras'];
-      const years = ['2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030'];
-      const regressionYears = [2022, 2023, 2024, 2025];
+      const patologias = dataPatologia;
+      const years = dataAniosFinalUnido;
+      const regressionYears = dataAniosRegresion.map(yr => parseInt(yr));
 
       const series: any[] = [];
-      const colors = ['#0064af', '#00a261', '#e29c00', '#0064af', '#00a261', '#e29c00'];
-      const dashArray = [0, 0, 0, 5, 5, 5];
+      const colors: string[] = [];
+      const dashArray: number[] = [];
+      const markerStrokeWidths: number[] = [];
+      const markerColors: string[] = [];
+      const dataLabelColors: string[] = [];
 
-      patologias.forEach((pat) => {
-        // Calculate linear regression on years 2022-2025
+      const baseColors = ['#0064af', '#e29c00', '#00a261', '#8b5cf6', '#ec4899', '#f97316'];
+
+      patologias.forEach((pat, i) => {
+        const color = baseColors[i % baseColors.length];
+        
+        // Calculate linear regression
         const x = regressionYears;
         const y = regressionYears.map(yr => histMap.get(pat)?.get(yr.toString()) ?? 0);
 
@@ -487,34 +554,48 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
         const intercept = (sumY - slope * sumX) / n;
 
-        // 1. Actuals Series (2019 to 2026)
-        const actualData = ['2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026'].map(
-          yr => histMap.get(pat)?.get(yr) ?? null
-        );
+        const actualData = dataAnios.map(yr => histMap.get(pat)?.get(yr) ?? null);
         while (actualData.length < years.length) {
           actualData.push(null);
         }
 
-        // 2. Trend Series (2025 actual connects to 2026-2030 projected)
-        const trendData = Array(6).fill(null);
-        const val2025 = histMap.get(pat)?.get('2025') ?? null;
-        trendData.push(val2025);
+        const trendData = Array(dataAnios.length - 1).fill(null);
+        const lastYearVal = histMap.get(pat)?.get(dataAnios[dataAnios.length - 1]) ?? null;
+        trendData.push(lastYearVal);
 
-        for (let yr = 2026; yr <= 2030; yr++) {
+        dataAniosFinal.forEach(yrStr => {
+          const yr = parseInt(yrStr);
           trendData.push(Math.round(slope * yr + intercept));
-        }
+        });
 
-        series.push({
-          name: pat,
-          data: actualData
-        });
-        series.push({
-          name: `Tendencia ${pat}`,
-          data: trendData
-        });
+        series.push({ name: pat, data: actualData });
+        series.push({ name: `Tendencia ${pat}`, data: trendData });
+
+        // Actual series style
+        colors.push(color);
+        dashArray.push(0);
+        markerStrokeWidths.push(0);
+        markerColors.push(color);
+        dataLabelColors.push(color);
+
+        // Trend series style
+        colors.push(color + '66'); // 40% opacity
+        dashArray.push(5);
+        markerStrokeWidths.push(2);
+        markerColors.push('#ffffff');
+        dataLabelColors.push(color);
       });
 
-      const options = this.createLineOptions(years, series, colors, dashArray);
+      const options = this.createLineOptions(
+        years,
+        series,
+        colors,
+        dashArray,
+        markerStrokeWidths,
+        markerColors,
+        dataLabelColors,
+        dataAnios.length - 1
+      );
 
       this.destroyChart(this.chartComorbilidadGlobal);
       this.renderApexChart(
@@ -631,27 +712,40 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     });
   }
 
-  buildChartDiagnosticoServiciosMasFrecPato(): void {
-    setTimeout(() => {
-      const container = this.chartDiagnosticoServiciosMasFrecPatoElement?.nativeElement;
-      if (!container) {
+  private loadPlotly(): Promise<void> {
+    return new Promise((resolve) => {
+      const plotlyLib = (window as any).Plotly;
+      if (plotlyLib) {
+        resolve();
         return;
       }
 
-      const plotlyLib = (window as any).Plotly;
-      if (!plotlyLib) {
-        // Load Plotly dynamically from CDN
-        if (!document.getElementById('plotly-cdn-script')) {
-          const script = document.createElement('script');
-          script.id = 'plotly-cdn-script';
-          script.src = 'https://cdn.plot.ly/plotly-2.24.1.min.js';
-          script.onload = () => {
-            this.buildChartDiagnosticoServiciosMasFrecPato();
-          };
-          document.body.appendChild(script);
-        }
-        return;
+      const scriptId = 'plotly-cdn-script';
+      let script = document.getElementById(scriptId) as HTMLScriptElement;
+
+      if (!script) {
+        script = document.createElement('script');
+        script.id = scriptId;
+        script.src = 'https://cdn.plot.ly/plotly-2.24.1.min.js';
+        document.body.appendChild(script);
       }
+
+      script.addEventListener('load', () => resolve());
+    });
+  }
+
+  buildChartDiagnosticoServiciosMasFrecPato(): void {
+    this.loadPlotly().then(() => {
+      setTimeout(() => {
+        const container = this.chartDiagnosticoServiciosMasFrecPatoElement?.nativeElement;
+        if (!container) {
+          return;
+        }
+
+        const plotlyLib = (window as any).Plotly;
+        if (!plotlyLib) {
+          return;
+        }
 
       const data = this.queryDiagnosticoServiciosMasFrecPato;
       if (!data || data.length === 0) return;
@@ -787,7 +881,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
       const layout = {
         margin: { l: 0, r: 0, b: 0, t: 0 },
-        height: 480,
+        height: 400,
       };
 
       const config = {
@@ -797,31 +891,23 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
       plotlyLib.newPlot(container, [trace], layout, config);
     });
-  }
+  });
+}
 
   buildChartComorbilidadInterserccion(): void {
-    setTimeout(() => {
-      const container = this.chartComorbilidadInterserccionElement?.nativeElement;
-      if (!container) {
-        return;
-      }
-      const data = this.queryComorbilidadInterserccion;
-      if (!data || data.length === 0) return;
-
-      const plotlyLib = (window as any).Plotly;
-      if (!plotlyLib) {
-        // Load Plotly dynamically from CDN
-        if (!document.getElementById('plotly-cdn-script')) {
-          const script = document.createElement('script');
-          script.id = 'plotly-cdn-script';
-          script.src = 'https://cdn.plot.ly/plotly-2.24.1.min.js';
-          script.onload = () => {
-            this.buildChartComorbilidadInterserccion();
-          };
-          document.body.appendChild(script);
+    this.loadPlotly().then(() => {
+      setTimeout(() => {
+        const container = this.chartComorbilidadInterserccionElement?.nativeElement;
+        if (!container) {
+          return;
         }
-        return;
-      }
+        const data = this.queryComorbilidadInterserccion;
+        if (!data || data.length === 0) return;
+
+        const plotlyLib = (window as any).Plotly;
+        if (!plotlyLib) {
+          return;
+        }
 
       // Calculate max intersection value for each category
       const maxVals: { [key: string]: number } = {};
@@ -837,7 +923,15 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       });
 
       // Sort categories in ascending order of max value (Plotly renders Y-axis from bottom to top)
-      const uniqueCategories = Object.keys(maxVals).sort((a, b) => maxVals[a] - maxVals[b]);
+      let uniqueCategories = Object.keys(maxVals).sort((a, b) => maxVals[a] - maxVals[b]);
+
+      // Keep only top 20 categories with the highest intersection values
+      if (uniqueCategories.length > 20) {
+        const topCategories = [...uniqueCategories]
+          .sort((a, b) => maxVals[b] - maxVals[a])
+          .slice(0, 20);
+        uniqueCategories = uniqueCategories.filter(cat => topCategories.includes(cat));
+      }
 
       const xVals: number[] = [];
       const yVals: string[] = [];
@@ -850,6 +944,8 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         const val = Number(item.pacientes) || 0;
 
         if (pA === pB) return;
+
+        if (!uniqueCategories.includes(pA) || !uniqueCategories.includes(pB)) return;
 
         // Point 1 (Row: pA)
         xVals.push(val);
@@ -906,7 +1002,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
       const layout = {
         margin: { l: 280, r: 50, b: 50, t: 30 },
-        height: 600,
+        height: 580,
         hovermode: 'closest',
         xaxis: {
           title: 'Pacientes en común',
@@ -918,7 +1014,11 @@ export class DashboardPatologia implements OnInit, OnDestroy {
           categoryorder: 'array',
           categoryarray: uniqueCategories,
           gridcolor: '#f1f5f9',
-          zeroline: false
+          zeroline: false,
+          tickfont: {
+            size: 9,
+            family: 'Segoe UI, sans-serif'
+          }
         }
       };
 
@@ -929,11 +1029,377 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
       plotlyLib.newPlot(container, [trace], layout, config);
     });
-  }
+  });
+}
 
   buildChartPatologiaAreaServicio(): void {
-    setTimeout(() => {
+    this.loadPlotly().then(() => {
+      setTimeout(() => {
+        const container = this.chartPatologiaAreaServicioElement?.nativeElement;
+        if (!container) {
+          return;
+        }
 
+        const plotlyLib = (window as any).Plotly;
+        if (!plotlyLib) {
+          return;
+        }
+
+        const data = this.queryPatologiaAreaServicio;
+        if (!data || data.length === 0) return;
+
+        // Grouping logic
+        const patToArea: { [key: string]: number } = {};
+        const areaToServ: { [area: string]: { [serv: string]: number } } = {};
+
+        data.forEach(item => {
+          const pat = item.patologia;
+          const area = item.area;
+          const serv = item.servhosdes;
+          const val = Number(item.pacientes) || 0;
+
+          if (!area) return;
+
+          // Path to Area
+          const patAreaKey = `${pat} -> ${area}`;
+          patToArea[patAreaKey] = (patToArea[patAreaKey] || 0) + val;
+
+          // Area to Service
+          if (!areaToServ[area]) {
+            areaToServ[area] = {};
+          }
+          if (serv) {
+            areaToServ[area][serv] = (areaToServ[area][serv] || 0) + val;
+          }
+        });
+
+        const nodes: any[] = [];
+        const edges: any[] = [];
+
+        const patColors: { [key: string]: string } = {
+          'Renal': '#10b981',      // Green
+          'Oncologico': '#0064af', // Blue
+          'Raras': '#eab308'       // Yellow/Orange
+        };
+
+        const areaTitles: { [key: string]: string } = {
+          'CONSULTA EXTERNA': 'Consulta Externa',
+          'EMERGENCIA': 'Emergencia',
+          'HOSPITALIZACION': 'Hospitalizacion',
+          'CENTRO QUIRURGICO': 'Centro Quirurgico'
+        };
+
+        const toTitleCase = (str: string): string => {
+          if (!str) return '';
+          return str
+            .toLowerCase()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        };
+
+        // Collect all present pathologies and areas dynamically to prevent unmatched IDs
+        const patsInQuery = new Set<string>();
+        const areasInQuery = new Set<string>();
+
+        data.forEach(item => {
+          if (item.patologia) patsInQuery.add(item.patologia);
+          if (item.area) areasInQuery.add(item.area);
+        });
+
+        // Add pathology nodes
+        patsInQuery.forEach(pat => {
+          nodes.push({
+            id: `pat-${pat}`,
+            title: pat,
+            color: patColors[pat] || '#cbd5e1'
+          });
+        });
+
+        // Add area nodes
+        areasInQuery.forEach(area => {
+          nodes.push({
+            id: `area-${area}`,
+            title: areaTitles[area] || toTitleCase(area),
+            color: '#cbd5e1' // Cool light grey for areas
+          });
+        });
+
+        // Add edges from Pathology -> Area
+        Object.keys(patToArea).forEach(key => {
+          const [pat, area] = key.split(' -> ');
+          if (patsInQuery.has(pat) && areasInQuery.has(area)) {
+            edges.push({
+              source: `pat-${pat}`,
+              target: `area-${area}`,
+              value: patToArea[key]
+            });
+          }
+        });
+
+        // Process services per area
+        areasInQuery.forEach(area => {
+          const servicesMap = areaToServ[area] || {};
+          const serviceList = Object.keys(servicesMap)
+            .map(name => ({ name: name, value: servicesMap[name] }))
+            .sort((a, b) => b.value - a.value);
+
+          if (serviceList.length === 0) return;
+
+          // Take top 6 services, aggregate the rest
+          const topCount = 6;
+          const topServices = serviceList.slice(0, topCount);
+          const remainingServices = serviceList.slice(topCount);
+
+          topServices.forEach(serv => {
+            const servId = `serv-${area}-${serv.name}`;
+            nodes.push({
+              id: servId,
+              title: toTitleCase(serv.name),
+              color: '#cbd5e1' // Cool light grey for services
+            });
+            edges.push({
+              source: `area-${area}`,
+              target: servId,
+              value: serv.value
+            });
+          });
+
+          if (remainingServices.length > 0) {
+            const totalVal = remainingServices.reduce((sum, s) => sum + s.value, 0);
+            const count = remainingServices.length;
+            const servId = `serv-${area}-OTHERS`;
+            nodes.push({
+              id: servId,
+              title: `Otros Servicios (${count})`,
+              color: '#94a3b8' // Soft grey for others
+            });
+            edges.push({
+              source: `area-${area}`,
+              target: servId,
+              value: totalVal
+            });
+          }
+        });
+
+        // Build mapping to indices for Plotly
+        const nodeIdToIndex = new Map<string, number>();
+        const nodeLabels: string[] = [];
+        const nodeColors: string[] = [];
+
+        nodes.forEach((n, idx) => {
+          nodeIdToIndex.set(n.id, idx);
+          nodeLabels.push(n.title);
+          nodeColors.push(n.color);
+        });
+
+        const plotlySources = edges.map(e => nodeIdToIndex.get(e.source));
+        const plotlyTargets = edges.map(e => nodeIdToIndex.get(e.target));
+        const plotlyValues = edges.map(e => e.value);
+
+        const linkColors = edges.map(e => {
+          if (e.source.startsWith('pat-')) {
+            const pat = e.source.substring(4);
+            if (pat === 'Renal') return 'rgba(16, 185, 129, 0.45)';
+            if (pat === 'Oncologico') return 'rgba(0, 100, 175, 0.45)';
+            if (pat === 'Raras') return 'rgba(234, 179, 8, 0.45)';
+          }
+          return 'rgba(203, 213, 225, 0.35)';
+        });
+
+        plotlyLib.purge(container);
+
+        const trace: any = {
+          type: 'sankey',
+          orientation: 'h',
+          node: {
+            pad: 12,
+            thickness: 15,
+            line: { color: '#ffffff', width: 1.5 },
+            label: nodeLabels,
+            color: nodeColors,
+            hovertemplate: '%{label}<br>%{value:,} pacientes<extra></extra>',
+            textfont: {
+              family: 'Segoe UI, sans-serif',
+              size: 10,
+              color: '#334155'
+            }
+          },
+          link: {
+            source: plotlySources,
+            target: plotlyTargets,
+            value: plotlyValues,
+            color: linkColors,
+            hovertemplate: '%{source.label} → %{target.label}<br>%{value:,} pacientes<extra></extra>'
+          }
+        };
+
+        const layout = {
+          margin: { l: 20, r: 120, b: 20, t: 20 },
+          height: 500
+        };
+
+        const config = {
+          responsive: true,
+          displayModeBar: false
+        };
+
+        plotlyLib.newPlot(container, [trace], layout, config);
+      });
+    });
+  }
+
+  ///Detalle por patología
+
+  buildChartDistribucionSexo() {
+    setTimeout(() => {
+      this.renderTopDonutChart(
+        this.dataQueryDPDS,
+        (item) => item.sexo,
+        (item) => item.pacientes,
+        this.chartDistribucionSexoElement?.nativeElement,
+        this.chartDistribucionSexo,
+        (chart) => (this.chartDistribucionSexo = chart),
+      );
+    });
+  }
+
+  buildChartDistribucionGrupoEtario() {
+    setTimeout(() => {
+      this.renderTopDonutChart(
+        this.dataQueryDPDGE,
+        (item) => item.grupo_edad,
+        (item) => item.pacientes,
+        this.chartDistribucionGrupoEtarioElement?.nativeElement,
+        this.chartDistribucionGrupoEtario,
+        (chart) => (this.chartDistribucionGrupoEtario = chart),
+      );
+    });
+  }
+
+  buildChartTopDiagnostico() {
+
+  }
+
+  buildChartEvolucionAnual() {
+    setTimeout(() => {
+      if (!this.chartEvolucionAnualElement?.nativeElement) {
+        return;
+      }
+      const data = this.dataQueryDPEA;
+      if (!data || !data.length) {
+        return;
+      }
+
+      //obtener patologias diferentes de dataQueryDPEA
+      const dataPatologia = [...new Set(data.map((item: any) => item.patologia))].filter((item: any) => item !== 'Alto costo');
+      console.log('dataPatologia', dataPatologia);
+
+      ///obtener años diferentes de dataQueryDPEA
+      const dataAnios = [...new Set(data.map((item: any) => item.anio))].filter((item: any) => item !== 'Alto costo');
+
+      ///regresion 4 años de dataAnios
+      const dataAniosRegresion = dataAnios.slice(-4);
+
+      ///agregar 4 años en adelante
+      const dataAniosFinal: string[] = [];
+      const yearAnioFinal = parseInt(dataAnios[dataAnios.length - 1]);
+      for (let i = 1; i <= 4; i++) {
+        dataAniosFinal.push((yearAnioFinal + i).toString());
+      }
+
+      const dataAniosFinalUnido = dataAnios.concat(dataAniosFinal);
+
+      // Map historical data
+      const histMap = new Map<string, Map<string, number>>();
+      data.forEach((item: any) => {
+        const pat = item.patologia;
+        const yr = item.anio;
+        const val = Number(item.pacientes) || 0;
+        if (!histMap.has(pat)) {
+          histMap.set(pat, new Map<string, number>());
+        }
+        histMap.get(pat)!.set(yr, val);
+      });
+
+      const patologias = dataPatologia;
+      const years = dataAniosFinalUnido;
+      const regressionYears = dataAniosRegresion.map(yr => parseInt(yr));
+
+      const series: any[] = [];
+      const colors: string[] = [];
+      const dashArray: number[] = [];
+      const markerStrokeWidths: number[] = [];
+      const markerColors: string[] = [];
+      const dataLabelColors: string[] = [];
+
+      const baseColors = ['#0064af', '#e29c00', '#00a261', '#8b5cf6', '#ec4899', '#f97316'];
+
+      patologias.forEach((pat, i) => {
+        const color = baseColors[i % baseColors.length];
+
+        // Calculate linear regression
+        const x = regressionYears;
+        const y = regressionYears.map(yr => histMap.get(pat)?.get(yr.toString()) ?? 0);
+
+        const n = x.length;
+        const sumX = x.reduce((a, b) => a + b, 0);
+        const sumY = y.reduce((a, b) => a + b, 0);
+        const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+        const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
+
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+
+        const actualData = dataAnios.map(yr => histMap.get(pat)?.get(yr) ?? null);
+        while (actualData.length < years.length) {
+          actualData.push(null);
+        }
+
+        const trendData = Array(dataAnios.length - 1).fill(null);
+        const lastYearVal = histMap.get(pat)?.get(dataAnios[dataAnios.length - 1]) ?? null;
+        trendData.push(lastYearVal);
+
+        dataAniosFinal.forEach(yrStr => {
+          const yr = parseInt(yrStr);
+          trendData.push(Math.round(slope * yr + intercept));
+        });
+
+        series.push({ name: pat, data: actualData });
+        series.push({ name: `Tendencia ${pat}`, data: trendData });
+
+        // Actual series style
+        colors.push(color);
+        dashArray.push(0);
+        markerStrokeWidths.push(0);
+        markerColors.push(color);
+        dataLabelColors.push(color);
+
+        // Trend series style
+        colors.push(color + '66'); // 40% opacity
+        dashArray.push(5);
+        markerStrokeWidths.push(2);
+        markerColors.push('#ffffff');
+        dataLabelColors.push(color);
+      });
+
+      const options = this.createLineOptions(
+        years,
+        series,
+        colors,
+        dashArray,
+        markerStrokeWidths,
+        markerColors,
+        dataLabelColors,
+        dataAnios.length - 1
+      );
+
+      this.destroyChart(this.chartEvolucionAnual);
+      this.renderApexChart(
+        this.chartEvolucionAnualElement.nativeElement,
+        options,
+        (chart) => (this.chartEvolucionAnual = chart)
+      );
     });
   }
 
@@ -1117,6 +1583,10 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     series: any[],
     colors: string[],
     dashArray: number[],
+    markerStrokeWidths: number[],
+    markerColors: string[],
+    dataLabelColors: string[],
+    lastActualDataIdx: number
   ): ApexOptions {
     return {
       chart: {
@@ -1135,8 +1605,8 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       markers: {
         size: 5,
         strokeColors: colors,
-        strokeWidth: [0, 0, 0, 2, 2, 2],
-        colors: ['#0064af', '#00a261', '#e29c00', '#ffffff', '#ffffff', '#ffffff'],
+        strokeWidth: markerStrokeWidths,
+        colors: markerColors,
         hover: {
           size: 7,
         },
@@ -1177,24 +1647,25 @@ export class DashboardPatologia implements OnInit, OnDestroy {
           const seriesIdx = opts.seriesIndex;
           const dataIdx = opts.dataPointIndex;
 
-          // Don't duplicate label at year 2025 for the trend line
-          if (seriesIdx >= 3 && dataIdx === 6) return '';
+          const isTrend = seriesIdx % 2 === 1;
 
-          if (seriesIdx < 3) {
+          if (isTrend) {
+            // Don't duplicate label at the overlap point of the trend line
+            if (dataIdx === lastActualDataIdx) return '';
+            return [val.toLocaleString(), '(estimado)'];
+          } else {
             if (dataIdx === 0) return val.toLocaleString();
             const prevVal = opts.w.config.series[seriesIdx].data[dataIdx - 1];
             if (prevVal === null || prevVal === undefined) return val.toLocaleString();
             const pct = ((val - prevVal) / prevVal) * 100;
             const sign = pct >= 0 ? '▲ +' : '▼ ';
             return [val.toLocaleString(), `${sign}${pct.toFixed(1)}%`];
-          } else {
-            return [val.toLocaleString(), '(estimado)'];
           }
         },
         style: {
           fontSize: '9px',
           fontWeight: 700,
-          colors: ['#0064af', '#00a261', '#e29c00', '#0064af', '#00a261', '#e29c00'],
+          colors: dataLabelColors,
         },
       },
       grid: {
@@ -1591,16 +2062,18 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
 
 
-
-
   activeTab: 'Analítica por patología de alto costo' | 'Detalle por patología' | 'Comorbilidad del paciente' = 'Analítica por patología de alto costo';
 
   setActiveTab(tab: 'Analítica por patología de alto costo' | 'Detalle por patología' | 'Comorbilidad del paciente'): void {
     this.activeTab = tab;
     this.cdr.detectChanges();
     if (tab === 'Analítica por patología de alto costo') {
+
+      ///graficos Analitica por patologia de alto costo
       this.buildChartPacientesTotales();
       this.buildChartComorbilidadGlobal();
+
+      ///filtros Analitica por patologia de alto costo
       this.buildChartRankingRed();
       this.buildChartComorbilidadesOncologico();
       this.buildChartComorbilidadesRenal();
