@@ -8,14 +8,13 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatSortModule } from '@angular/material/sort';
 import { forkJoin } from 'rxjs/internal/observable/forkJoin';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { LocalStorageService } from '../../../services/local-storage-service';
 import { PatologiaService } from '../../../services/reportes/patologia-service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -34,7 +33,9 @@ import { EstablecimientoService } from '../../../services/establecimiento-servic
     ScrollingModule,
     FormsModule,
     MatFormFieldModule,
-    MatSelectModule
+    MatSelectModule,
+    ScrollingModule,
+    MatPaginatorModule,
   ],
   templateUrl: './dashboard-patologia.html',
   styleUrl: './dashboard-patologia.css',
@@ -117,19 +118,19 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
 
   dataAnioDP: any[] = [];
-  anio_DP: string[] = [];
+  anio_DP: string[] = ["TODOS"];
 
   dataPatologiaDP: any[] = [];
-  patologia_DP: string[] = [];
+  patologia_DP: string[] = ["TODOS"];
 
   dataGrupoEtarioDP = ["TODOS", "0-11", "12-17", "18-29", "30-44", "45-59", "60+", "SIN DATO"];
   grupoEtario_DP: string[] = ['TODOS'];
 
   dataRedDP: any[] = [];
-  red_DP: string[] = [];
+  red_DP: string[] = ["TODAS"];
 
   dataCentroDP: any[] = [];
-  centro_DP: string[] = [];
+  centro_DP: string[] = ["TODOS"];
 
   //total pacientes
   dataQueryDPTP: any[] = [];
@@ -148,6 +149,25 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
   ///evolucion anual
   dataQueryDPEA: any[] = [];
+
+  ///Pacientes por servicio
+  dataQueryDPPS: any[] = [];
+
+  ///Ranking por centro
+  dataQueryDPRC: any[] = [];
+
+  ////Comorbilidad del paciente
+
+  documentoCPAP: string = '';
+  sexoCPAP: string = '';
+  rangoEdadCPAP: string = '';
+  patologiasCPAP: number = 0;
+  centrosCPAP: number = 0;
+
+
+  dataQueryCPCPD: any[] = [];
+
+
 
   ///graficos Analitica por patologia de alto costo
   chartPacientesTotales: ApexCharts | null = null;
@@ -187,6 +207,12 @@ export class DashboardPatologia implements OnInit, OnDestroy {
   chartEvolucionAnual: ApexCharts | null = null;
   @ViewChild('chartEvolucionAnual') chartEvolucionAnualElement!: ElementRef<HTMLDivElement>;
 
+  chartPacientesPorServicio: ApexCharts | null = null;
+  @ViewChild('chartPacientesPorServicio') chartPacientesPorServicioElement!: ElementRef<HTMLDivElement>;
+
+  chartRankingCentro: ApexCharts | null = null;
+  @ViewChild('chartRankingCentro') chartRankingCentroElement!: ElementRef<HTMLDivElement>;
+
   constructor(
     private patologiaService: PatologiaService,
     private establecimientoService: EstablecimientoService,
@@ -214,9 +240,14 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     this.destroyChart(this.chartDiagnosticoServiciosMasFrecPato);
     this.destroyChart(this.chartComorbilidadInterserccion);
     this.destroyChart(this.chartPatologiaAreaServicio);
+    this.destroyChart(this.chartDistribucionSexo);
+    this.destroyChart(this.chartDistribucionGrupoEtario);
+    this.destroyChart(this.chartTopDiagnostico);
+    this.destroyChart(this.chartEvolucionAnual);
+    this.destroyChart(this.chartPacientesPorServicio);
   }
 
-  getRedAndCentro() {
+  loadDataRedAndCentro() {
     forkJoin({
       red: this.establecimientoService.getRed(),
       centrowithcentro: this.establecimientoService.getCentrosWithRed(),
@@ -230,9 +261,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       },
     });
   }
-
-
-
 
 
   loadDataOpciones() {
@@ -288,7 +316,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       }
     });
   }
-
 
   loadDataAnaliticaPatologia() {
     this.loading = true;
@@ -401,44 +428,35 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    let selectedAnios = this.anio_DP;
-    if (!selectedAnios || selectedAnios.length === 0 || selectedAnios.includes('Todos los anios') || selectedAnios.includes('TODOS')) {
-      selectedAnios = ['TODOS'];
+    if (!this.anio_DP) {
+      this.anio_DP = ['TODOS'];
     }
 
-    let selectedPatologias = this.patologia_DP;
-    if (!selectedPatologias || selectedPatologias.length === 0 || selectedPatologias.includes('Todos los anios') || selectedPatologias.includes('TODOS')) {
-      selectedPatologias = ['Anemia'];
+    if (!this.patologia_DP) {
+      this.patologia_DP = ['Acidosis metabólica'];
     }
 
-    let selectedReds = this.red_DP;
-    if (!selectedReds || selectedReds.length === 0 || selectedReds.includes('Todos los anios') || selectedReds.includes('TODOS')) {
-      selectedReds = ['07'];
+    if (!this.red_DP) {
+      this.red_DP = ['TODAS'];
     }
 
-    let selectedCens = this.centro_DP;
-    if (!selectedCens || selectedCens.length === 0 || selectedCens.includes('Todos los anios') || selectedCens.includes('TODOS')) {
-      selectedCens = ['001'];
+    if (!this.centro_DP) {
+      this.centro_DP = ['TODOS'];
     }
 
-    let selectedGrupoEdades = this.grupoEtario_DP;
-    if (!selectedGrupoEdades || selectedGrupoEdades.length === 0 || selectedGrupoEdades.includes('Todos los anios') || selectedGrupoEdades.includes('TODOS')) {
-      selectedGrupoEdades = ['TODOS'];
+    if (!this.grupoEtario_DP) {
+      this.grupoEtario_DP = ['TODOS'];
     }
-
-    console.log("selectedPatologias: ", selectedPatologias);
-    console.log("selectedAnios: ", selectedAnios);
-    console.log("selectedReds: ", selectedReds);
-    console.log("selectedCens: ", selectedCens);
-    console.log("selectedGrupoEdades: ", selectedGrupoEdades);
 
     forkJoin({
-      q0: this.patologiaService.getQueryDPTP(selectedPatologias, selectedAnios, selectedReds, selectedCens, selectedGrupoEdades),
-      q1: this.patologiaService.getQueryDPTDD(selectedPatologias, selectedAnios, selectedReds, selectedCens, selectedGrupoEdades),
-      q2: this.patologiaService.getQueryDPDS(selectedPatologias, selectedAnios, selectedReds, selectedCens, selectedGrupoEdades),
-      q3: this.patologiaService.getQueryDPDGE(selectedPatologias, selectedAnios, selectedReds, selectedCens),
-      q4: this.patologiaService.getQueryDPTD(selectedPatologias, selectedAnios, selectedReds, selectedCens, selectedGrupoEdades),
-      q5: this.patologiaService.getQueryDPEA(selectedPatologias, selectedReds, selectedCens, selectedGrupoEdades),
+      q0: this.patologiaService.getQueryDPTP(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      q1: this.patologiaService.getQueryDPTDD(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      q2: this.patologiaService.getQueryDPDS(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      q3: this.patologiaService.getQueryDPDGE(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP),
+      q4: this.patologiaService.getQueryDPTD(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      q5: this.patologiaService.getQueryDPEA(this.patologia_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      q6: this.patologiaService.getQueryDPPS(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      q7: this.patologiaService.getQueryDPRC(this.patologia_DP, this.anio_DP, this.red_DP),
     }).subscribe({
       next: (results) => {
         this.dataQueryDPTP = results.q0;
@@ -447,10 +465,39 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         this.dataQueryDPDGE = results.q3;
         this.dataQueryDPTD = results.q4;
         this.dataQueryDPEA = results.q5;
+        this.dataQueryDPPS = results.q6;
+        this.dataQueryDPRC = results.q7;
 
         this.buildChartDistribucionSexo();
         this.buildChartDistribucionGrupoEtario();
         this.buildChartEvolucionAnual();
+        this.buildChartPacientesServicio();
+        this.buildChartRankingCentro();
+
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        this.error = 'Error al cargar los datos.';
+        this.loading = false;
+        console.error(error);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadDataComorbilidadPaciente(): void {
+    this.loading = true;
+    this.error = null;
+
+    forkJoin({
+      q0: this.patologiaService.getQueryCPCPD(this.documentoCPAP),
+    }).subscribe({
+      next: (results) => {
+        this.dataQueryCPCPD = results.q0;
+        console.log(this.dataQueryCPCPD);
+        this.patologiasCPAP = this.dataQueryCPCPD.length;
+
 
         this.loading = false;
         this.cdr.detectChanges();
@@ -492,14 +539,12 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
       //obtener patologias diferentes de dataQueryDPEA
       const dataPatologia = [...new Set(data.map((item: any) => item.patologia))].filter((item: any) => item !== 'Alto costo');
-      console.log('dataPatologia  (1):', dataPatologia);
 
       ///obtener años diferentes de dataQueryDPEA
       const dataAnios = [...new Set(data.map((item: any) => item.anio))].filter((item: any) => item !== 'Alto costo');
 
       ///regresion 4 años de dataAnios
       const dataAniosRegresion = dataAnios.slice(-4);
-      console.log('dataAniosRegresion (1):', dataAniosRegresion);
 
       ///agregar 4 años en adelante del ultimo año obtenido
       const dataAniosFinal: string[] = [];
@@ -509,9 +554,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       }
 
       const dataAniosFinalUnido = dataAnios.concat(dataAniosFinal);
-
-      console.log('dataAnios (1):', dataAnios);
-      console.log('dataAniosFinalUnido (1):', dataAniosFinalUnido); 
 
       // Map historical data
       const histMap = new Map<string, Map<string, number>>();
@@ -540,7 +582,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
       patologias.forEach((pat, i) => {
         const color = baseColors[i % baseColors.length];
-        
+
         // Calculate linear regression
         const x = regressionYears;
         const y = regressionYears.map(yr => histMap.get(pat)?.get(yr.toString()) ?? 0);
@@ -671,8 +713,10 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       const data = this.queryComorbilidadesOncologico;
       if (!data || data.length === 0) return;
 
-      const oncoItem = this.queryTotalPacientes.find(item => item.patologia === 'Oncologico');
-      const total = oncoItem ? Number(oncoItem.pacientes) : 285436;
+      const total = data.reduce(
+        (sum: number, row: any) => sum + Number(row.pacientes ?? 0),
+        0,
+      );
 
       const sorted = [...data].sort((a, b) => Number(b.pacientes) - Number(a.pacientes)).slice(0, 15);
       const categories = sorted.map(d => d.patologia_b);
@@ -747,152 +791,152 @@ export class DashboardPatologia implements OnInit, OnDestroy {
           return;
         }
 
-      const data = this.queryDiagnosticoServiciosMasFrecPato;
-      if (!data || data.length === 0) return;
+        const data = this.queryDiagnosticoServiciosMasFrecPato;
+        if (!data || data.length === 0) return;
 
-      // Group by patologia: 'Renal', 'Oncologico', 'Raras'
-      const tree: { [pat: string]: { [area: string]: { [serv: string]: number } } } = {
-        'Renal': {},
-        'Oncologico': {},
-        'Raras': {}
-      };
+        // Group by patologia: 'Renal', 'Oncologico', 'Raras'
+        const tree: { [pat: string]: { [area: string]: { [serv: string]: number } } } = {
+          'Renal': {},
+          'Oncologico': {},
+          'Raras': {}
+        };
 
-      data.forEach(item => {
-        const pat = item.patologia;
-        const area = item.diagdes || 'Sin Área';
-        const serv = item.servhosdes || 'Sin Servicio';
-        const val = Number(item.pacientes) || 0;
+        data.forEach(item => {
+          const pat = item.patologia;
+          const area = item.diagdes || 'Sin Área';
+          const serv = item.servhosdes || 'Sin Servicio';
+          const val = Number(item.pacientes) || 0;
 
-        if (tree[pat]) {
-          if (!tree[pat][area]) {
-            tree[pat][area] = {};
-          }
-          tree[pat][area][serv] = (tree[pat][area][serv] || 0) + val;
-        }
-      });
-
-      // Prepare lists for Plotly Treemap
-      const ids: string[] = [];
-      const labels: string[] = [];
-      const parents: string[] = [];
-      const values: number[] = [];
-
-      // Add Nivel 1 (Roots)
-      const patNames = ['Renal', 'Oncologico', 'Raras'];
-      patNames.forEach(pat => {
-        let totalPatVal = 0;
-        const patAreaObj = tree[pat];
-
-        Object.keys(patAreaObj).forEach(area => {
-          let totalAreaVal = 0;
-          const areaId = `${pat} - ${area}`;
-          const servObj = patAreaObj[area];
-
-          // Sort services and take top 10 per area to avoid rendering hundreds of tiny boxes
-          const sortedServices = Object.keys(servObj)
-            .map(serv => ({ name: serv, val: servObj[serv] }))
-            .sort((a, b) => b.val - a.val);
-
-          const topServices = sortedServices.slice(0, 10);
-          topServices.forEach(serv => {
-            const servId = `${areaId} - ${serv.name}`;
-            ids.push(servId);
-            labels.push(serv.name);
-            parents.push(areaId);
-            values.push(serv.val);
-            totalAreaVal += serv.val;
-          });
-
-          // Only add area if it has children services
-          if (topServices.length > 0) {
-            ids.push(areaId);
-            labels.push(area);
-            parents.push(pat);
-            values.push(totalAreaVal);
-            totalPatVal += totalAreaVal;
+          if (tree[pat]) {
+            if (!tree[pat][area]) {
+              tree[pat][area] = {};
+            }
+            tree[pat][area][serv] = (tree[pat][area][serv] || 0) + val;
           }
         });
 
-        // Only add pathology root if it has children areas
-        if (totalPatVal > 0) {
-          ids.push(pat);
-          labels.push(pat);
-          parents.push("");
-          values.push(totalPatVal);
-        }
-      });
+        // Prepare lists for Plotly Treemap
+        const ids: string[] = [];
+        const labels: string[] = [];
+        const parents: string[] = [];
+        const values: number[] = [];
 
-      if (ids.length === 0) {
-        return;
-      }
+        // Add Nivel 1 (Roots)
+        const patNames = ['Renal', 'Oncologico', 'Raras'];
+        patNames.forEach(pat => {
+          let totalPatVal = 0;
+          const patAreaObj = tree[pat];
 
-      // Calculate maximum value for each pathology to dynamically scale opacity
-      const maxVals: { [key: string]: number } = { 'Renal': 1, 'Oncologico': 1, 'Raras': 1 };
-      ids.forEach((id, idx) => {
-        const root = id.split(' - ')[0];
-        const val = values[idx];
-        if (val > maxVals[root]) {
-          maxVals[root] = val;
-        }
-      });
+          Object.keys(patAreaObj).forEach(area => {
+            let totalAreaVal = 0;
+            const areaId = `${pat} - ${area}`;
+            const servObj = patAreaObj[area];
 
-      // Map dynamic opacity shading based on the node's value relative to its pathology root
-      const colors = ids.map((id, idx) => {
-        const root = id.split(' - ')[0];
-        const val = values[idx];
-        const maxVal = maxVals[root];
-        const opacity = maxVal > 0 ? 0.35 + (val / maxVal) * 0.6 : 0.8;
+            // Sort services and take top 10 per area to avoid rendering hundreds of tiny boxes
+            const sortedServices = Object.keys(servObj)
+              .map(serv => ({ name: serv, val: servObj[serv] }))
+              .sort((a, b) => b.val - a.val);
 
-        if (root === 'Renal') {
-          return `rgba(16, 185, 129, ${opacity})`; // Green shade
-        } else if (root === 'Oncologico') {
-          return `rgba(0, 100, 175, ${opacity})`;  // Blue shade
-        } else {
-          return `rgba(234, 179, 8, ${opacity})`;   // Yellow/Orange shade
-        }
-      });
+            const topServices = sortedServices.slice(0, 10);
+            topServices.forEach(serv => {
+              const servId = `${areaId} - ${serv.name}`;
+              ids.push(servId);
+              labels.push(serv.name);
+              parents.push(areaId);
+              values.push(serv.val);
+              totalAreaVal += serv.val;
+            });
 
-      // Clear the element before rendering to avoid duplicates
-      plotlyLib.purge(container);
+            // Only add area if it has children services
+            if (topServices.length > 0) {
+              ids.push(areaId);
+              labels.push(area);
+              parents.push(pat);
+              values.push(totalAreaVal);
+              totalPatVal += totalAreaVal;
+            }
+          });
 
-      const trace: any = {
-        type: 'treemap',
-        ids: ids,
-        labels: labels,
-        parents: parents,
-        values: values,
-        textinfo: 'label+value',
-        textposition: 'middle center',
-        textfont: {
-          family: 'Calibri, Segoe UI, sans-serif',
-          size: 11,
-          color: '#ffffff'
-        },
-        marker: {
-          colors: colors,
-          line: {
-            color: '#ffffff',
-            width: 1.5
+          // Only add pathology root if it has children areas
+          if (totalPatVal > 0) {
+            ids.push(pat);
+            labels.push(pat);
+            parents.push("");
+            values.push(totalPatVal);
           }
-        },
-        hoverinfo: 'label+value+percent parent',
-        branchvalues: 'total'
-      };
+        });
 
-      const layout = {
-        margin: { l: 0, r: 0, b: 0, t: 0 },
-        height: 400,
-      };
+        if (ids.length === 0) {
+          return;
+        }
 
-      const config = {
-        responsive: true,
-        displayModeBar: false
-      };
+        // Calculate maximum value for each pathology to dynamically scale opacity
+        const maxVals: { [key: string]: number } = { 'Renal': 1, 'Oncologico': 1, 'Raras': 1 };
+        ids.forEach((id, idx) => {
+          const root = id.split(' - ')[0];
+          const val = values[idx];
+          if (val > maxVals[root]) {
+            maxVals[root] = val;
+          }
+        });
 
-      plotlyLib.newPlot(container, [trace], layout, config);
+        // Map dynamic opacity shading based on the node's value relative to its pathology root
+        const colors = ids.map((id, idx) => {
+          const root = id.split(' - ')[0];
+          const val = values[idx];
+          const maxVal = maxVals[root];
+          const opacity = maxVal > 0 ? 0.35 + (val / maxVal) * 0.6 : 0.8;
+
+          if (root === 'Renal') {
+            return `rgba(16, 185, 129, ${opacity})`; // Green shade
+          } else if (root === 'Oncologico') {
+            return `rgba(0, 100, 175, ${opacity})`;  // Blue shade
+          } else {
+            return `rgba(234, 179, 8, ${opacity})`;   // Yellow/Orange shade
+          }
+        });
+
+        // Clear the element before rendering to avoid duplicates
+        plotlyLib.purge(container);
+
+        const trace: any = {
+          type: 'treemap',
+          ids: ids,
+          labels: labels,
+          parents: parents,
+          values: values,
+          textinfo: 'label+value',
+          textposition: 'middle center',
+          textfont: {
+            family: 'Calibri, Segoe UI, sans-serif',
+            size: 11,
+            color: '#ffffff'
+          },
+          marker: {
+            colors: colors,
+            line: {
+              color: '#ffffff',
+              width: 1.5
+            }
+          },
+          hoverinfo: 'label+value+percent parent',
+          branchvalues: 'total'
+        };
+
+        const layout = {
+          margin: { l: 0, r: 0, b: 0, t: 0 },
+          height: 400,
+        };
+
+        const config = {
+          responsive: true,
+          displayModeBar: false
+        };
+
+        plotlyLib.newPlot(container, [trace], layout, config);
+      });
     });
-  });
-}
+  }
 
   buildChartComorbilidadInterserccion(): void {
     this.loadPlotly().then(() => {
@@ -909,128 +953,128 @@ export class DashboardPatologia implements OnInit, OnDestroy {
           return;
         }
 
-      // Calculate max intersection value for each category
-      const maxVals: { [key: string]: number } = {};
-      data.forEach(item => {
-        const pA = item.patologia_a;
-        const pB = item.patologia_b;
-        const val = Number(item.pacientes) || 0;
+        // Calculate max intersection value for each category
+        const maxVals: { [key: string]: number } = {};
+        data.forEach(item => {
+          const pA = item.patologia_a;
+          const pB = item.patologia_b;
+          const val = Number(item.pacientes) || 0;
 
-        if (pA === pB) return;
+          if (pA === pB) return;
 
-        if (!maxVals[pA] || val > maxVals[pA]) maxVals[pA] = val;
-        if (!maxVals[pB] || val > maxVals[pB]) maxVals[pB] = val;
-      });
+          if (!maxVals[pA] || val > maxVals[pA]) maxVals[pA] = val;
+          if (!maxVals[pB] || val > maxVals[pB]) maxVals[pB] = val;
+        });
 
-      // Sort categories in ascending order of max value (Plotly renders Y-axis from bottom to top)
-      let uniqueCategories = Object.keys(maxVals).sort((a, b) => maxVals[a] - maxVals[b]);
+        // Sort categories in ascending order of max value (Plotly renders Y-axis from bottom to top)
+        let uniqueCategories = Object.keys(maxVals).sort((a, b) => maxVals[a] - maxVals[b]);
 
-      // Keep only top 20 categories with the highest intersection values
-      if (uniqueCategories.length > 20) {
-        const topCategories = [...uniqueCategories]
-          .sort((a, b) => maxVals[b] - maxVals[a])
-          .slice(0, 20);
-        uniqueCategories = uniqueCategories.filter(cat => topCategories.includes(cat));
-      }
-
-      const xVals: number[] = [];
-      const yVals: string[] = [];
-      const colorVals: number[] = [];
-      const textVals: string[] = [];
-
-      data.forEach(item => {
-        const pA = item.patologia_a;
-        const pB = item.patologia_b;
-        const val = Number(item.pacientes) || 0;
-
-        if (pA === pB) return;
-
-        if (!uniqueCategories.includes(pA) || !uniqueCategories.includes(pB)) return;
-
-        // Point 1 (Row: pA)
-        xVals.push(val);
-        yVals.push(pA);
-        colorVals.push(val);
-        textVals.push(`${pA} ∩ ${pB}<br>${val.toLocaleString()} pacientes`);
-
-        // Point 2 (Row: pB)
-        xVals.push(val);
-        yVals.push(pB);
-        colorVals.push(val);
-        textVals.push(`${pB} ∩ ${pA}<br>${val.toLocaleString()} pacientes`);
-      });
-
-      const maxVal = Math.max(...xVals, 1);
-      const minVal = Math.min(...xVals, 0);
-
-      // Scale bubble sizes between 8 and 38 pixels
-      const sizeVals = xVals.map(v => {
-        const ratio = (v - minVal) / (maxVal - minVal || 1);
-        return 8 + ratio * 30;
-      });
-
-      plotlyLib.purge(container);
-
-      const trace: any = {
-        x: xVals,
-        y: yVals,
-        mode: 'markers',
-        type: 'scatter',
-        text: textVals,
-        hoverinfo: 'text',
-        marker: {
-          size: sizeVals,
-          color: colorVals,
-          colorscale: 'Blues',
-          showscale: true,
-          reversescale: false,
-          colorbar: {
-            title: 'Pacientes',
-            titleside: 'top',
-            tickformat: '.2s',
-            outlinewidth: 0,
-            thickness: 15,
-            len: 1.0
-          },
-          line: {
-            color: '#1e3a8a',
-            width: 0.5
-          },
-          opacity: 0.7
+        // Keep only top 20 categories with the highest intersection values
+        if (uniqueCategories.length > 20) {
+          const topCategories = [...uniqueCategories]
+            .sort((a, b) => maxVals[b] - maxVals[a])
+            .slice(0, 20);
+          uniqueCategories = uniqueCategories.filter(cat => topCategories.includes(cat));
         }
-      };
 
-      const layout = {
-        margin: { l: 280, r: 50, b: 50, t: 30 },
-        height: 580,
-        hovermode: 'closest',
-        xaxis: {
-          title: 'Pacientes en común',
-          tickformat: '.2s',
-          gridcolor: '#e2e8f0',
-          zeroline: false
-        },
-        yaxis: {
-          categoryorder: 'array',
-          categoryarray: uniqueCategories,
-          gridcolor: '#f1f5f9',
-          zeroline: false,
-          tickfont: {
-            size: 9,
-            family: 'Segoe UI, sans-serif'
+        const xVals: number[] = [];
+        const yVals: string[] = [];
+        const colorVals: number[] = [];
+        const textVals: string[] = [];
+
+        data.forEach(item => {
+          const pA = item.patologia_a;
+          const pB = item.patologia_b;
+          const val = Number(item.pacientes) || 0;
+
+          if (pA === pB) return;
+
+          if (!uniqueCategories.includes(pA) || !uniqueCategories.includes(pB)) return;
+
+          // Point 1 (Row: pA)
+          xVals.push(val);
+          yVals.push(pA);
+          colorVals.push(val);
+          textVals.push(`${pA} ∩ ${pB}<br>${val.toLocaleString()} pacientes`);
+
+          // Point 2 (Row: pB)
+          xVals.push(val);
+          yVals.push(pB);
+          colorVals.push(val);
+          textVals.push(`${pB} ∩ ${pA}<br>${val.toLocaleString()} pacientes`);
+        });
+
+        const maxVal = Math.max(...xVals, 1);
+        const minVal = Math.min(...xVals, 0);
+
+        // Scale bubble sizes between 8 and 38 pixels
+        const sizeVals = xVals.map(v => {
+          const ratio = (v - minVal) / (maxVal - minVal || 1);
+          return 8 + ratio * 30;
+        });
+
+        plotlyLib.purge(container);
+
+        const trace: any = {
+          x: xVals,
+          y: yVals,
+          mode: 'markers',
+          type: 'scatter',
+          text: textVals,
+          hoverinfo: 'text',
+          marker: {
+            size: sizeVals,
+            color: colorVals,
+            colorscale: 'Blues',
+            showscale: true,
+            reversescale: false,
+            colorbar: {
+              title: 'Pacientes',
+              titleside: 'top',
+              tickformat: '.2s',
+              outlinewidth: 0,
+              thickness: 15,
+              len: 1.0
+            },
+            line: {
+              color: '#1e3a8a',
+              width: 0.5
+            },
+            opacity: 0.7
           }
-        }
-      };
+        };
 
-      const config = {
-        responsive: true,
-        displayModeBar: false
-      };
+        const layout = {
+          margin: { l: 280, r: 50, b: 50, t: 30 },
+          height: 580,
+          hovermode: 'closest',
+          xaxis: {
+            title: 'Pacientes en común',
+            tickformat: '.2s',
+            gridcolor: '#e2e8f0',
+            zeroline: false
+          },
+          yaxis: {
+            categoryorder: 'array',
+            categoryarray: uniqueCategories,
+            gridcolor: '#f1f5f9',
+            zeroline: false,
+            tickfont: {
+              size: 9,
+              family: 'Segoe UI, sans-serif'
+            }
+          }
+        };
 
-      plotlyLib.newPlot(container, [trace], layout, config);
+        const config = {
+          responsive: true,
+          displayModeBar: false
+        };
+
+        plotlyLib.newPlot(container, [trace], layout, config);
+      });
     });
-  });
-}
+  }
 
   buildChartPatologiaAreaServicio(): void {
     this.loadPlotly().then(() => {
@@ -1293,7 +1337,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
       //obtener patologias diferentes de dataQueryDPEA
       const dataPatologia = [...new Set(data.map((item: any) => item.patologia))].filter((item: any) => item !== 'Alto costo');
-      console.log('dataPatologia', dataPatologia);
 
       ///obtener años diferentes de dataQueryDPEA
       const dataAnios = [...new Set(data.map((item: any) => item.anio))].filter((item: any) => item !== 'Alto costo');
@@ -1402,6 +1445,58 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       );
     });
   }
+
+
+  buildChartPacientesServicio() {
+    setTimeout(() => {
+      const data = this.dataQueryDPPS;
+      if (!data || data.length === 0) return;
+
+      const total = data.reduce(
+        (sum: number, row: any) => sum + Number(row.pacientes ?? 0),
+        0,
+      );
+
+      const sorted = [...data].sort((a, b) => Number(b.pacientes) - Number(a.pacientes)).slice(0, 15);
+      const categories = sorted.map(d => d.servhosdes);
+      const seriesData = sorted.map(d => (Number(d.pacientes) / total) * 100);
+
+      const options = this.createComorbilidadBarOptions(categories, seriesData, sorted, '#0064af');
+
+      this.destroyChart(this.chartPacientesPorServicio);
+      this.renderApexChart(
+        this.chartPacientesPorServicioElement.nativeElement,
+        options,
+        (chart) => (this.chartPacientesPorServicio = chart)
+      );
+    });
+  }
+
+  buildChartRankingCentro() {
+    setTimeout(() => {
+      const data = this.dataQueryDPRC;
+      if (!data || data.length === 0) return;
+
+      const total = data.reduce(
+        (sum: number, row: any) => sum + Number(row.pacientes ?? 0),
+        0,
+      );
+
+      const sorted = [...data].sort((a, b) => Number(b.pacientes) - Number(a.pacientes)).slice(0, 15);
+      const categories = sorted.map(d => d.cenasides);
+      const seriesData = sorted.map(d => (Number(d.pacientes) / total) * 100);
+
+      const options = this.createComorbilidadBarOptions(categories, seriesData, sorted, '#0064af');
+
+      this.destroyChart(this.chartRankingCentro);
+      this.renderApexChart(
+        this.chartRankingCentroElement.nativeElement,
+        options,
+        (chart) => (this.chartRankingCentro = chart)
+      );
+    });
+  }
+
 
 
   private renderTopDonutChart<T>(
@@ -2080,9 +2175,10 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       this.buildChartPatologiaAreaServicio();
       this.buildChartDiagnosticoServiciosMasFrecPato();
       this.buildChartComorbilidadInterserccion();
+
     } else if (tab === 'Detalle por patología') {
       this.loadDataDetallePatologia();
-      this.getRedAndCentro();
+      this.loadDataRedAndCentro();
     } else if (tab === 'Comorbilidad del paciente') {
 
     }

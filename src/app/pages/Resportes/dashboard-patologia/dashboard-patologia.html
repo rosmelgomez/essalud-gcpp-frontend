@@ -166,6 +166,7 @@
                     <mat-option *ngFor="let anio of dataAnioDP" [value]="anio.anio">{{ anio.anio }}</mat-option>
                 </mat-select>
             </mat-form-field>
+
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Patología</mat-label>
                 <mat-select [(ngModel)]="patologia_DP" multiple (selectionChange)="loadDataDetallePatologia()">
@@ -173,18 +174,21 @@
                         patologia.patologia }}</mat-option>
                 </mat-select>
             </mat-form-field>
+
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Grupo Etario</mat-label>
                 <mat-select [(ngModel)]="grupoEtario_DP" multiple (selectionChange)="loadDataDetallePatologia()">
                     <mat-option *ngFor="let grupo of dataGrupoEtarioDP" [value]="grupo">{{ grupo }}</mat-option>
                 </mat-select>
             </mat-form-field>
+
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Red</mat-label>
                 <mat-select [(ngModel)]="red_DP" multiple (selectionChange)="loadDataDetallePatologia()">
                     <mat-option *ngFor="let red of dataRed_DP" [value]="red.redasiscod">{{red.redasisdes}}</mat-option>
                 </mat-select>
             </mat-form-field>
+
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Centro</mat-label>
                 <mat-select [(ngModel)]="centro_DP" multiple (selectionChange)="loadDataDetallePatologia()">
@@ -214,14 +218,11 @@
                 </div>
                 <div class="card-content">
                     <h2 class="card-value" *ngFor="let patologias of dataQueryDPTDD">{{patologias.n}}</h2>
-                    <p class="card-title">Patologías activas</p>
+                    <p class="card-title">Diagnosticos distintos</p>
                 </div>
             </div>
 
         </div>
-
-
-
 
         <div class="charts-grid">
             <div class="chart-card">
@@ -237,35 +238,133 @@
         </div>
 
         <div class="chart-full-width">
+
+            <mat-card class="resumen-table">
+                <h3>Top diagnosticos (CIE-10)</h3>
+                <!-- HEADER -->
+                <div class="resumen-header">
+                    <div class="cell cie-10">CIE-10</div>
+                    <div class="cell diagnostico">Diagnostico</div>
+                    <div class="cell tipo">Tipo</div>
+                    <div class="cell pacientes">Pacientes</div>
+                </div>
+
+                <!-- WRAPPER PARA SCROLL HORIZONTAL -->
+                <div class="resumen-wrapper">
+                    <!-- VIRTUAL SCROLL -->
+                    <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+                        <div *cdkVirtualFor="let row of dataQueryDPTD" class="resumen-row">
+                            <div class="cell cie-10">{{ row.cod_diagnostico }}</div>
+                            <div class="cell diagnostico">{{ row.diagdes }}</div>
+                            <div class="cell tipo">{{ row.tipodiagnom }}</div>
+                            <div class="cell pacientes">{{formatNumber(row.pacientes) }}</div>
+                        </div>
+                    </cdk-virtual-scroll-viewport>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="table-footer">
+                    <div class="footer-left"><strong>Total de pacientes:</strong></div>
+                    <div class="footer-right num">
+                        <strong>{{ 'totalAtencionesQ4' }}</strong>
+                    </div>
+                </div>
+            </mat-card>
+        </div>
+
+        <div class="chart-full-width">
             <h3>Evolucion anual</h3>
             <div #chartEvolucionAnual class="chart"></div>
         </div>
 
+        <div class="chart-full-width">
+            <h3>Pacientes por servicio</h3>
+            <div #chartPacientesPorServicio class="chart"></div>
+        </div>
+
+        <div class="chart-full-width">
+            <h3>Ranking por centro</h3>
+            <div #chartRankingCentro class="chart"></div>
+        </div>
+
+
     </div>
 
     <div *ngIf="!loading && activeTab === 'Comorbilidad del paciente'" class="tab-content">
-        <div class="chart-card">
-            <mat-card class="resumen-table-noconsiderados">
-                <h3>Registros No Considerados</h3>
-                <!-- HEADER -->
-                <div class="resumen-header-noconsiderados">
-                    <div class="cell servicio2">Servicio</div>
-                    <div class="cell actividad2">Actividad</div>
-                    <div class="cell subactividad2">Subactividad</div>
-                    <div class="cell tipo_consulta2">Tipo Consulta</div>
-                    <div class="cell coddiag2">CodDiag</div>
-                    <div class="cell diagnostico2">Diagnóstico</div>
-                    <div class="cell dni_medico2 num">Dni Medico</div>
-                    <div class="cell acto_med2 num">acto_med</div>
-                    <div class="cell sexo2">Sexo</div>
-                    <div class="cell fecha_atencion2">Fecha Atención</div>
-                    <div class="cell desc_cl2">Desc CL</div>
-                </div>
 
-
-
-
-            </mat-card>
+        <div class="header-filter">
+            <div class="filter-item-toppings">
+                <label for="documento">Documento del paciente:</label>
+                <input type="text" id="documentoCPAP" [(ngModel)]="documentoCPAP">
+            </div>
+            <button class="search-button" (click)="loadDataComorbilidadPaciente()">
+                Buscar
+            </button>
         </div>
+
+        <div class="overview-cards">
+            <!-- Card 1 -->
+            <div class="overview-card card-blue">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">group</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-value" *ngFor="let paciente of queryTotalPacientes">
+                        {{documentoCPAP}}</h2>
+                    <p class="card-title">Documento</p>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="overview-card card-green">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">analytics</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-value">33</h2>
+                    <p class="card-title">Sexo</p>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="overview-card card-yellow">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">hub</span>
+                </div>
+                <div class="card-content" *ngFor="let red of queryMayorConcentracionRed">
+                    <h2 class="card-value">documentoCPAP </h2>
+                    <p class="card-title">Rangos de edad</p>
+                </div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="overview-card card-red">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">apartment</span>
+                </div>
+                <div class="card-content" *ngFor="let centro of queryMayorConcentracionCentro">
+                    <h2 class="card-value">{{patologiasCPAP}}</h2>
+                    <p class="card-title">Patologias</p>
+                </div>
+            </div>
+
+            <!-- Card 5 -->
+            <div class="overview-card card-red">
+                <div class="card-icon-container">
+                    <span class="material-icons card-icon">apartment</span>
+                </div>
+                <div class="card-content" *ngFor="let centro of queryMayorConcentracionCentro">
+                    <h2 class="card-value">documentoCPAP</h2>
+                    <p class="card-title">Centros</p>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+
     </div>
 </div>

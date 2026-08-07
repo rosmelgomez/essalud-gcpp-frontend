@@ -168,4 +168,35 @@ export class PatologiaService {
     return this.http.get<any>(base_url + `/queryDPEA`, { params: parameters, withCredentials: true });
   }
 
+  ///Pacientes por servicio
+  getQueryDPPS(patologias: String[], anios: String[], codreds: String[], codcens: String[], grupo_edades: String[]) {
+    let parameters: any = {
+      patologias: patologias,
+      anios: anios,
+      codreds: codreds,
+      codcens: codcens,
+      grupo_edades: grupo_edades
+    };
+    return this.http.get<any>(base_url + `/queryDPPS`, { params: parameters, withCredentials: true });
+  }
+
+  ///Ranking por centro
+  getQueryDPRC(patologias: String[], anios: String[], codreds: String[]) {
+    let parameters: any = {
+      patologias: patologias,
+      anios: anios,
+      codreds: codreds
+    };
+    return this.http.get<any>(base_url + `/queryDPRC`, { params: parameters, withCredentials: true });
+  }
+
+
+
+
+  ////Comorbilidad del paciente
+  ///buscar pacientes 
+  getQueryCPCPD(documento: String) {
+    return this.http.get<any[]>(base_url + `/queryCPCPD/${documento}`, { withCredentials: true });
+  }
+
 }
