@@ -345,9 +345,8 @@
 }
 
 
-/* RESUMEN TABLE (diagnosticos) */
+/* RESUMEN TABLE (*/
 .resumen-table {
-  --resumen-cols: repeat(6, 1fr);
   background: rgba(255, 255, 255, 0.95);
   padding: 16px;
   border-radius: 8px;
@@ -355,7 +354,6 @@
   margin-bottom: 24px;
 }
 
-/* Virtual scroll and row layout for rendimiento - 6 COLUMNAS */
 .resumen-header {
   display: grid;
   grid-template-columns: var(--resumen-cols);
@@ -1355,7 +1353,6 @@
 /* OVERVIEW CARDS DESIGN */
 .overview-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin-bottom: 28px;
   width: 100%;
@@ -1946,4 +1943,37 @@
   .table-footer .footer-right {
     text-align: left;
   }
+}
+
+/* MATRIZ COMORBILIDAD PACIENTE */
+.cell-matrix {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cell-matrix.active-comorbilidad {
+  background-color: rgba(16, 185, 129, 0.08);
+  border-radius: 4px;
+}
+
+.badge-present {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.25);
+}
+
+.text-absent {
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 600;
 }

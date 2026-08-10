@@ -137,6 +137,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
   ///Total diagnosticos distintos
   dataQueryDPTDD: any[] = [];
+  totalPacientesQueryDPTDD: number = 0;
 
   ///Distribucion sexo
   dataQueryDPDS: any[] = [];
@@ -166,6 +167,9 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
 
   dataQueryCPCPD: any[] = [];
+  dataAnioMatrizQueryCPCPD: any[] = [];
+  dataPatologiaMatrizQueryCPCPD: any[] = [];
+  dataMatrizQueryCPCPD: any = {};
 
 
 
@@ -220,7 +224,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadDataOpciones();
-    this.loadDataAnaliticaPatologia();
+    this.loadDataDetallePatologia();
   }
   ngOnDestroy(): void {
     this.destroyAllCharts();
@@ -468,6 +472,13 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         this.dataQueryDPPS = results.q6;
         this.dataQueryDPRC = results.q7;
 
+
+        this.totalPacientesQueryDPTDD = results.q4.reduce(
+          (sum: number, row: any) => sum + Number(row.pacientes ?? 0),
+          0,
+        );
+
+        ///graficos Detalle por patologia
         this.buildChartDistribucionSexo();
         this.buildChartDistribucionGrupoEtario();
         this.buildChartEvolucionAnual();
@@ -495,8 +506,43 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     }).subscribe({
       next: (results) => {
         this.dataQueryCPCPD = results.q0;
-        console.log(this.dataQueryCPCPD);
         this.patologiasCPAP = this.dataQueryCPCPD.length;
+
+        ///obtener sexo de pacientes de dataQueryCPCPD
+        const dataSexo = [...new Set(this.dataQueryCPCPD.map((item: any) => item.sexo))];
+        if (dataSexo[0] == 'F') {
+          this.sexoCPAP = 'FEMENINO'
+        } else if (dataSexo[0] == 'M') {
+          this.sexoCPAP = 'MASCULINO'
+        }
+        ///obtener edad de pacientes de dataQueryCPCPD
+        const dataEdad = [...new Set(this.dataQueryCPCPD.map((item: any) => item.anio_edad))];
+        ///ordenar de menor a mayor 
+        dataEdad.sort((a: any, b: any) => a - b);
+        this.rangoEdadCPAP = dataEdad[0] + '-' + dataEdad[dataEdad.length - 1]
+
+        ///obtener centros de pacientes de dataQueryCPCPD
+        const dataCentro = [...new Set(this.dataQueryCPCPD.map((item: any) => item.cenasides))];
+        this.centrosCPAP = dataCentro.length
+
+        ///matriz patologia por año
+        ///columna anio 
+        this.dataAnioMatrizQueryCPCPD = [...new Set(this.dataQueryCPCPD.map((item: any) => item.anio))];
+        this.dataAnioMatrizQueryCPCPD.sort((a: any, b: any) => a - b);
+        /// fila patologia
+        this.dataPatologiaMatrizQueryCPCPD = [...new Set(this.dataQueryCPCPD.map((item: any) => item.patologia))];
+        this.dataPatologiaMatrizQueryCPCPD.sort((a: any, b: any) => a.localeCompare(b));
+
+        this.dataMatrizQueryCPCPD = this.dataQueryCPCPD.reduce((acc: any, item: any) => {
+          const patologia = item.patologia;
+          const anio = item.anio;
+          if (!acc[patologia]) {
+            acc[patologia] = {};
+          }
+          acc[patologia][anio] = "check";
+          return acc;
+        }, {});
+
 
 
         this.loading = false;
@@ -509,6 +555,11 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  hasComorbilidad(patologia: string, anio: any): boolean {
+    const matrix = this.dataMatrizQueryCPCPD as Record<string, Record<string, any>>;
+    return !!(matrix && matrix[patologia] && matrix[patologia][anio]);
   }
 
   ///Analitica por patologia de alto costo
@@ -1446,7 +1497,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     });
   }
 
-
   buildChartPacientesServicio() {
     setTimeout(() => {
       const data = this.dataQueryDPPS;
@@ -2157,15 +2207,17 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
 
 
-  activeTab: 'Analítica por patología de alto costo' | 'Detalle por patología' | 'Comorbilidad del paciente' = 'Analítica por patología de alto costo';
+  activeTab: 'Detalle por patología' | 'Analítica por patología de alto costo' | 'Comorbilidad del paciente' = 'Detalle por patología';
 
-  setActiveTab(tab: 'Analítica por patología de alto costo' | 'Detalle por patología' | 'Comorbilidad del paciente'): void {
+  setActiveTab(tab: 'Detalle por patología' | 'Analítica por patología de alto costo' | 'Comorbilidad del paciente'): void {
     this.activeTab = tab;
     this.cdr.detectChanges();
     if (tab === 'Analítica por patología de alto costo') {
+      this.loadDataAnaliticaPatologia();
+      this.loadDataAnaliticaPatologiaFiltros();
 
       ///graficos Analitica por patologia de alto costo
-      this.buildChartPacientesTotales();
+      /*.buildChartPacientesTotales();
       this.buildChartComorbilidadGlobal();
 
       ///filtros Analitica por patologia de alto costo
@@ -2175,6 +2227,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       this.buildChartPatologiaAreaServicio();
       this.buildChartDiagnosticoServiciosMasFrecPato();
       this.buildChartComorbilidadInterserccion();
+      */
 
     } else if (tab === 'Detalle por patología') {
       this.loadDataDetallePatologia();
