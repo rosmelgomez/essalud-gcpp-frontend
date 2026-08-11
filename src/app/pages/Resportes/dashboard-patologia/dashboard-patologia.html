@@ -63,15 +63,17 @@
 
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Red</mat-label>
-                <mat-select [(ngModel)]="red_DP" multiple (selectionChange)="loadDataDetallePatologia()">
+                <mat-select [(ngModel)]="red_DP" multiple (selectionChange)="onRedChange_DP()">
+                    <mat-option value="TODAS">TODAS</mat-option>
                     <mat-option *ngFor="let red of dataRed_DP" [value]="red.redasiscod">{{red.redasisdes}}</mat-option>
                 </mat-select>
             </mat-form-field>
 
             <mat-form-field class="filter-item-toppings" appearance="fill">
                 <mat-label>Centro</mat-label>
-                <mat-select [(ngModel)]="centro_DP" multiple (selectionChange)="loadDataDetallePatologia()">
-                    <mat-option *ngFor="let centro of dataCentroWithRed_DP"
+                <mat-select [(ngModel)]="centro_DP" multiple (selectionChange)="onCentroChange_DP()">
+                    <mat-option [value]="'TODOS'">TODOS</mat-option>
+                    <mat-option *ngFor="let centro of filteredCentro_DP"
                         [value]="centro.cenasicod">{{centro.cenasides}}</mat-option>
                 </mat-select>
             </mat-form-field>
@@ -86,7 +88,8 @@
                 <div class="card-content">
                     <h2 class="card-value" *ngFor="let paciente of dataQueryDPTP">
                         {{formatNumber(paciente.pacientes)}}</h2>
-                    <p class="card-title">Pacientes · Acidosis Metabólica</p>
+                    <p class="card-title">Pacientes · {{ (patologia_DP && patologia_DP.length > 0 && patologia_DP[0] !==
+                        'TODOS') ? patologia_DP[0] : 'Patología' }}</p>
                 </div>
             </div>
 
@@ -131,7 +134,8 @@
                 <!-- WRAPPER PARA SCROLL HORIZONTAL -->
                 <div class="resumen-wrapper">
                     <!-- VIRTUAL SCROLL -->
-                    <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+                    <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48"
+                        [style.height.px]="getTableHeight(dataQueryDPTD.length)">
                         <div *cdkVirtualFor="let row of dataQueryDPTD" class="resumen-row">
                             <div class="cell cie-10">{{ row.cod_diagnostico }}</div>
                             <div class="cell diagnostico">{{ row.diagdes }}</div>
@@ -172,12 +176,12 @@
     <div *ngIf="!loading && activeTab === 'Analítica por patología de alto costo'" class="tab-content">
 
         <div class="header-filter">
-            <div class="filter-item-toppings">
-                <label for="anio_apal">Año:</label>
-                <select id="anio_apal" [(ngModel)]="anio_apal" (change)="loadDataAnaliticaPatologiaFiltros()">
-                    <option *ngFor="let anio of dataAnioApal" [value]="anio.anio">{{ anio.anio }}</option>
-                </select>
-            </div>
+            <mat-form-field class="filter-item-toppings" appearance="fill">
+                <mat-label>Año</mat-label>
+                <mat-select [(ngModel)]="anio_apal" multiple (selectionChange)="loadDataAnaliticaPatologiaFiltros()">
+                    <mat-option *ngFor="let anio of dataAnioApal" [value]="anio.anio">{{ anio.anio }}</mat-option>
+                </mat-select>
+            </mat-form-field>
         </div>
 
         <div class="overview-cards" style="grid-template-columns: repeat(4, 1fr);">
@@ -308,8 +312,7 @@
                     <span class="material-icons card-icon">group</span>
                 </div>
                 <div class="card-content">
-                    <h2 class="card-value" *ngFor="let paciente of queryTotalPacientes">
-                        {{documentoCPAP}}</h2>
+                    <h2 class="card-value">{{documentoCPAP}}</h2>
                     <p class="card-title">Documento</p>
                 </div>
             </div>
@@ -330,7 +333,7 @@
                 <div class="card-icon-container">
                     <span class="material-icons card-icon">hub</span>
                 </div>
-                <div class="card-content" *ngFor="let red of queryMayorConcentracionRed">
+                <div class="card-content">
                     <h2 class="card-value">{{rangoEdadCPAP}} años </h2>
                     <p class="card-title">Rangos de edad</p>
                 </div>
@@ -341,9 +344,9 @@
                 <div class="card-icon-container">
                     <span class="material-icons card-icon">apartment</span>
                 </div>
-                <div class="card-content" *ngFor="let centro of queryMayorConcentracionCentro">
+                <div class="card-content">
                     <h2 class="card-value">{{patologiasCPAP}}</h2>
-                    <p class="card-title">Patologias</p>
+                    <p class="card-title">Patologías</p>
                 </div>
             </div>
 
@@ -352,7 +355,7 @@
                 <div class="card-icon-container">
                     <span class="material-icons card-icon">apartment</span>
                 </div>
-                <div class="card-content" *ngFor="let centro of queryMayorConcentracionCentro">
+                <div class="card-content">
                     <h2 class="card-value">{{centrosCPAP}}</h2>
                     <p class="card-title">Centros</p>
                 </div>
@@ -374,7 +377,8 @@
 
                 <div class="resumen-wrapper">
                     <!-- VIRTUAL SCROLL -->
-                    <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+                    <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48"
+                        [style.height.px]="getTableHeight(dataPatologiaMatrizQueryCPCPD.length)">
                         <div *cdkVirtualFor="let row of dataPatologiaMatrizQueryCPCPD" class="resumen-row">
                             <div class="cell patologia" [title]="row">{{ row }}</div>
                             <ng-container *ngFor="let anio of dataAnioMatrizQueryCPCPD">
@@ -411,7 +415,8 @@
                 <!-- WRAPPER PARA SCROLL HORIZONTAL -->
                 <div class="resumen-wrapper">
                     <!-- VIRTUAL SCROLL -->
-                    <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
+                    <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48"
+                        [style.height.px]="getTableHeight(dataQueryCPCPD.length)">
                         <div *cdkVirtualFor="let row of dataQueryCPCPD" class="resumen-row">
                             <div class="cell año">{{ row.anio }}</div>
                             <div class="cell patologia">{{ row.patologia }}</div>

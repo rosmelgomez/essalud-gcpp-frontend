@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
-import { forkJoin } from 'rxjs/internal/observable/forkJoin';
+import { forkJoin } from 'rxjs';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
@@ -34,8 +34,6 @@ import { EstablecimientoService } from '../../../services/establecimiento-servic
     FormsModule,
     MatFormFieldModule,
     MatSelectModule,
-    ScrollingModule,
-    MatPaginatorModule,
   ],
   templateUrl: './dashboard-patologia.html',
   styleUrl: './dashboard-patologia.css',
@@ -44,8 +42,39 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
   loading: boolean = false;
   error: string | null = null;
+  activeTab: string = 'Detalle por patología';
 
   currentDate: string = '';
+
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
+    this.cdr.detectChanges();
+
+    if (tab === 'Detalle por patología') {
+      this.buildChartDistribucionSexo();
+      this.buildChartDistribucionGrupoEtario();
+      this.buildChartEvolucionAnual();
+      this.buildChartPacientesServicio();
+      this.buildChartRankingCentro();
+    } else if (tab === 'Analítica por patología de alto costo') {
+      if (!this.queryPacientesTotales || this.queryPacientesTotales.length === 0) {
+        this.loadDataAnaliticaPatologia();
+      } else {
+        this.buildChartPacientesTotales();
+        this.buildChartComorbilidadGlobal();
+        this.buildChartRankingRed();
+        this.buildChartComorbilidadesOncologico();
+        this.buildChartComorbilidadesRenal();
+        this.buildChartPatologiaAreaServicio();
+        this.buildChartDiagnosticoServiciosMasFrecPato();
+        this.buildChartComorbilidadInterserccion();
+      }
+    } else if (tab === 'Comorbilidad del paciente') {
+      if (this.documentoCPAP) {
+        this.loadDataComorbilidadPaciente();
+      }
+    }
+  }
 
   ///////Analitica por patologia de alto costo
   //filtros  
@@ -99,22 +128,10 @@ export class DashboardPatologia implements OnInit, OnDestroy {
   queryComorbilidadesRenal: any[] = [];
 
   ////// Detalle por patología
-  // Datos de Redes Asistenciales
+  // Datos de Redes y Centros Asistenciales
   dataRed_DP: any[] = [];
-  filteredRed_DP: any = [];
-  searchRed_DP: string = '';
-  isDropdownRedOpen_DP: boolean = false;
-  selectedRedName_DP: string = '';
-  activeRedIndex_DP: number = -1;
-
-  // Datos para el dropdown de Centro Asistencial
-  dataCentro_DP: any = [];
   dataCentroWithRed_DP: any[] = [];
-  filteredCentro_DP: any = [];
-  searchCentro_DP: string = '';
-  isDropdownCentroOpen_DP: boolean = false;
-  selectedCentroName_DP: string = '';
-  activeCentroIndex_DP: number = -1;
+  filteredCentro_DP: any[] = [];
 
 
   dataAnioDP: any[] = [];
@@ -205,9 +222,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
   chartDistribucionGrupoEtario: ApexCharts | null = null;
   @ViewChild('chartDistribucionGrupoEtario') chartDistribucionGrupoEtarioElement!: ElementRef<HTMLDivElement>;
 
-  chartTopDiagnostico: ApexCharts | null = null;
-  @ViewChild('chartTopDiagnostico') chartTopDiagnosticoElement!: ElementRef<HTMLDivElement>;
-
   chartEvolucionAnual: ApexCharts | null = null;
   @ViewChild('chartEvolucionAnual') chartEvolucionAnualElement!: ElementRef<HTMLDivElement>;
 
@@ -223,9 +237,9 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
-    this.loadDataOpciones();
-    this.loadDataDetallePatologia();
+    this.loadDataIniciales();
   }
+
   ngOnDestroy(): void {
     this.destroyAllCharts();
   }
@@ -234,6 +248,62 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     return new Intl.NumberFormat('es-PE').format(num);
   }
 
+  getTableHeight(count?: number, itemSize: number = 48, maxHeight: number = 420): number {
+    if (!count || count === 0) return itemSize;
+    return Math.min(maxHeight, count * itemSize + 4);
+  }
+
+  loadDataIniciales() {
+    this.loading = true;
+    this.error = null;
+
+    forkJoin({
+      opcionesPat: this.patologiaService.getQueryOP(),
+      opcionesAnio: this.patologiaService.getQueryOA(),
+      opcionesRedCentro: this.patologiaService.getQueryORC(),
+      redes: this.establecimientoService.getRed(),
+      centrosWithRed: this.establecimientoService.getCentrosWithRed(),
+    }).subscribe({
+      next: (results) => {
+        this.dataPatologiaDP = results.opcionesPat;
+        this.dataAnioApal = results.opcionesAnio;
+        this.dataAnioDP = results.opcionesAnio;
+
+        this.dataRed_DP = results.redes;
+        this.dataCentroWithRed_DP = results.centrosWithRed;
+        this.filteredCentro_DP = results.centrosWithRed ? [...results.centrosWithRed] : [];
+
+        if (this.dataAnioDP && this.dataAnioDP.length > 0) {
+          this.anio_DP = [this.dataAnioDP[0].anio];
+        } else {
+          this.anio_DP = ['TODOS'];
+        }
+
+        if (this.dataAnioApal && this.dataAnioApal.length > 0) {
+          this.anio_apal = [this.dataAnioApal[0].anio];
+        } else {
+          this.anio_apal = ['TODOS'];
+        }
+
+        if (this.dataPatologiaDP && this.dataPatologiaDP.length > 0) {
+          this.patologia_DP = [this.dataPatologiaDP[0].patologia];
+        } else {
+          this.patologia_DP = ['Acidosis metabólica'];
+        }
+
+        this.red_DP = ['TODAS'];
+        this.onRedChange_DP(false);
+        this.centro_DP = ['TODOS'];
+        this.grupoEtario_DP = ['TODOS'];
+
+        this.loadDataDetallePatologia();
+      },
+      error: (err) => {
+        console.error('Error al cargar datos iniciales', err);
+        this.loadDataDetallePatologia();
+      }
+    });
+  }
 
   private destroyAllCharts(): void {
     this.destroyChart(this.chartPacientesTotales);
@@ -246,79 +316,44 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     this.destroyChart(this.chartPatologiaAreaServicio);
     this.destroyChart(this.chartDistribucionSexo);
     this.destroyChart(this.chartDistribucionGrupoEtario);
-    this.destroyChart(this.chartTopDiagnostico);
     this.destroyChart(this.chartEvolucionAnual);
     this.destroyChart(this.chartPacientesPorServicio);
+    this.destroyChart(this.chartRankingCentro);
   }
 
-  loadDataRedAndCentro() {
-    forkJoin({
-      red: this.establecimientoService.getRed(),
-      centrowithcentro: this.establecimientoService.getCentrosWithRed(),
-    }).subscribe({
-      next: (results) => {
-        this.dataRed_DP = results.red;
-        this.dataCentroWithRed_DP = results.centrowithcentro;
-      },
-      error: (err) => {
-        console.log('Error al obtener las redes y centros', err);
-      },
-    });
-  }
+  onRedChange_DP(reload: boolean = true): void {
+    const selectedReds = this.red_DP || [];
+    const isAllReds = selectedReds.length === 0 || selectedReds.includes('TODAS') || selectedReds.includes('TODOS');
 
+    if (isAllReds || !this.dataCentroWithRed_DP || this.dataCentroWithRed_DP.length === 0) {
+      this.filteredCentro_DP = [...this.dataCentroWithRed_DP];
+    } else {
+      this.filteredCentro_DP = this.dataCentroWithRed_DP.filter((centro: any) =>
+        selectedReds.includes(centro.redasiscod)
+      );
+    }
 
-  loadDataOpciones() {
-    forkJoin({
-      q0: this.patologiaService.getQueryOP(),
-      q1: this.patologiaService.getQueryOA(),
-      q2: this.patologiaService.getQueryORC(),
-    }).subscribe({
-      next: (results) => {
-        this.dataPatologiaDP = results.q0;
-        this.dataAnioApal = results.q1;
-        this.dataAnioDP = results.q1;
+    // Filter out selected centros that no longer belong to selected red(s)
+    if (this.centro_DP && this.centro_DP.length > 0 && !this.centro_DP.includes('TODOS')) {
+      const validCentroCodes = new Set(this.filteredCentro_DP.map((c: any) => c.cenasicod));
+      const updatedCentroSelection = this.centro_DP.filter((code: string) => validCentroCodes.has(code));
 
-        // Map redasisdes to red property for the HTML template
-        const uniqueReds = Array.from(new Set(results.q2.map((item: any) => item.redasisdes)))
-          .filter(Boolean)
-          .map(redasisdes => ({ redasisdes }));
-        this.dataRedDP = uniqueReds;
-
-        // Map cenasides to centro property for the HTML template
-        const uniqueCentros = Array.from(new Set(results.q2.map((item: any) => item.cenasides)))
-          .filter(Boolean)
-          .map(cenasides => ({ cenasides }));
-        this.dataCentroDP = uniqueCentros;
-
-        // Set default values for the dropdowns
-        if (this.dataAnioApal.length > 0) {
-          this.anio_apal = [this.dataAnioApal[0].anio];
-        }
-        if (this.dataAnioDP.length > 0) {
-          this.anio_DP = [this.dataAnioDP[0].anio];
-        }
-        if (this.dataPatologiaDP.length > 0) {
-          this.patologia_DP = [this.dataPatologiaDP[0].patologia];
-        }
-        if (this.dataRed_DP.length > 0) {
-          this.red_DP = [this.dataRed_DP[0].redasiscod];
-        }
-        if (this.dataCentroWithRed_DP.length > 0) {
-          this.centro_DP = [this.dataCentroWithRed_DP[0].cenasicod];
-        }
-        this.grupoEtario_DP = ['TODOS'];
-
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.error = 'Error al cargar los datos.';
-
-        this.loading = false;
-        console.error(error);
-        this.cdr.detectChanges();
+      if (updatedCentroSelection.length > 0) {
+        this.centro_DP = updatedCentroSelection;
+      } else {
+        this.centro_DP = ['TODOS'];
       }
-    });
+    } else if (!this.centro_DP || this.centro_DP.length === 0) {
+      this.centro_DP = ['TODOS'];
+    }
+
+    if (reload) {
+      this.loadDataDetallePatologia();
+    }
+  }
+
+  onCentroChange_DP(): void {
+    this.loadDataDetallePatologia();
   }
 
   loadDataAnaliticaPatologia() {
@@ -364,6 +399,9 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
 
 
+        this.loading = false;
+        this.cdr.detectChanges();
+
         this.buildChartPacientesTotales();
         this.buildChartComorbilidadGlobal();
         this.buildChartRankingRed();
@@ -372,9 +410,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         this.buildChartPatologiaAreaServicio();
         this.buildChartDiagnosticoServiciosMasFrecPato();
         this.buildChartComorbilidadInterserccion();
-
-        this.loading = false;
-        this.cdr.detectChanges();
       },
       error: (error) => {
         this.error = 'Error al cargar los datos.';
@@ -387,9 +422,16 @@ export class DashboardPatologia implements OnInit, OnDestroy {
   }
 
   loadDataAnaliticaPatologiaFiltros() {
+    if (!this.anio_apal || this.anio_apal.length === 0) {
+      if (this.dataAnioApal && this.dataAnioApal.length > 0) {
+        this.anio_apal = [this.dataAnioApal[0].anio];
+      } else {
+        this.anio_apal = ['TODOS'];
+      }
+    }
 
     let selectedAnios = this.anio_apal;
-    if (!selectedAnios || selectedAnios.length === 0 || selectedAnios.includes('Todos los anios') || selectedAnios.includes('TODOS')) {
+    if (selectedAnios.includes('TODOS')) {
       selectedAnios = ['TODOS'];
     }
 
@@ -409,20 +451,18 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         this.queryMayorConcentracionCentro = results.q4;
         this.queryDiagnosticoServiciosMasFrecPato = results.q5;
 
+        this.loading = false;
+        this.cdr.detectChanges();
+
         this.buildChartRankingRed();
         this.buildChartComorbilidadesOncologico();
         this.buildChartComorbilidadesRenal();
         this.buildChartPatologiaAreaServicio();
         this.buildChartDiagnosticoServiciosMasFrecPato();
-
-
-        this.loading = false;
-        this.cdr.detectChanges();
       },
       error: (error) => {
         this.error = 'Error al cargar los datos.';
         this.loading = false;
-        console.error(error);
         this.cdr.detectChanges();
       }
     });
@@ -432,23 +472,32 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    if (!this.anio_DP) {
-      this.anio_DP = ['TODOS'];
+    if (!this.anio_DP || this.anio_DP.length === 0) {
+      if (this.dataAnioDP && this.dataAnioDP.length > 0) {
+        this.anio_DP = [this.dataAnioDP[0].anio];
+      } else {
+        this.anio_DP = ['TODOS'];
+      }
     }
 
-    if (!this.patologia_DP) {
-      this.patologia_DP = ['Acidosis metabólica'];
+    if (!this.patologia_DP || this.patologia_DP.length === 0) {
+      if (this.dataPatologiaDP && this.dataPatologiaDP.length > 0) {
+        this.patologia_DP = [this.dataPatologiaDP[0].patologia];
+      } else {
+        this.patologia_DP = ['Acidosis metabólica'];
+      }
     }
 
-    if (!this.red_DP) {
+    if (!this.red_DP || this.red_DP.length === 0) {
       this.red_DP = ['TODAS'];
+      this.onRedChange_DP(false);
     }
 
-    if (!this.centro_DP) {
+    if (!this.centro_DP || this.centro_DP.length === 0) {
       this.centro_DP = ['TODOS'];
     }
 
-    if (!this.grupoEtario_DP) {
+    if (!this.grupoEtario_DP || this.grupoEtario_DP.length === 0) {
       this.grupoEtario_DP = ['TODOS'];
     }
 
@@ -478,20 +527,19 @@ export class DashboardPatologia implements OnInit, OnDestroy {
           0,
         );
 
+        this.loading = false;
+        this.cdr.detectChanges();
+
         ///graficos Detalle por patologia
         this.buildChartDistribucionSexo();
         this.buildChartDistribucionGrupoEtario();
         this.buildChartEvolucionAnual();
         this.buildChartPacientesServicio();
         this.buildChartRankingCentro();
-
-        this.loading = false;
-        this.cdr.detectChanges();
       },
       error: (error) => {
         this.error = 'Error al cargar los datos.';
         this.loading = false;
-        console.error(error);
         this.cdr.detectChanges();
       }
     });
@@ -551,7 +599,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       error: (error) => {
         this.error = 'Error al cargar los datos.';
         this.loading = false;
-        console.error(error);
         this.cdr.detectChanges();
       }
     });
@@ -577,6 +624,139 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Algoritmo de proyección para Evolución Anual (Raras / Oncológico / Renal).
+   * 1. La línea sólida muestra los datos reales históricos (incluyendo 2026 si está registrado).
+   * 2. La regresión lineal se calcula EXCLUSIVAMENTE sobre años completos estables (2022-2025),
+   *    ignorando la caída del año incompleto 2026 para que la tendencia 
+   * 3. La línea punteada de tendencia se conecta desde 2025 y se proyecta ascendentemente (2026-2030).
+   */
+  calcularProyeccionEvolucionAnual(data: any[], filterAltoCosto: boolean = false) {
+    if (!data || !data.length) {
+      return null;
+    }
+
+    let patologias = [...new Set(data.map((item: any) => item.patologia))]
+      .filter((item: any) => item !== 'Alto costo');
+
+    if (filterAltoCosto) {
+      const preferredOrder = ['Oncologico', 'Renal', 'Raras'];
+      patologias = patologias.filter(p => preferredOrder.includes(p));
+      patologias.sort((a, b) => preferredOrder.indexOf(a) - preferredOrder.indexOf(b));
+    }
+
+    // 1. Todos los años reales disponibles en los datos
+    let allHistoricalYears = [...new Set(data.map((item: any) => item.anio))]
+      .filter((item: any) => item !== 'Alto costo')
+      .map(String)
+      .sort((a, b) => parseInt(a) - parseInt(b));
+
+    // Años estables completos para la regresión (EXCLUSIVAMENTE hasta 2025)
+    const completeStableYears = allHistoricalYears.filter(yr => parseInt(yr) <= 2025);
+    const regressionYearsStr = completeStableYears.length >= 4 ? completeStableYears.slice(-4) : completeStableYears;
+    const regressionYears = regressionYearsStr.map(yr => parseInt(yr));
+
+    // Eje X unificado: Años reales + años proyectados futuros
+    const projectedYears = ['2026', '2027', '2028', '2029', '2030'];
+    const dataAniosFinalUnido = Array.from(new Set([...allHistoricalYears, ...projectedYears]))
+      .sort((a, b) => parseInt(a) - parseInt(b));
+
+    // Mapa de datos históricos { patologia -> { anio -> pacientes } }
+    const histMap = new Map<string, Map<string, number>>();
+    data.forEach((item: any) => {
+      const pat = item.patologia;
+      const yr = String(item.anio);
+      const val = Number(item.pacientes) || 0;
+      if (!histMap.has(pat)) {
+        histMap.set(pat, new Map<string, number>());
+      }
+      histMap.get(pat)!.set(yr, val);
+    });
+
+    const series: any[] = [];
+    const colors: string[] = [];
+    const dashArray: number[] = [];
+    const markerStrokeWidths: number[] = [];
+    const markerColors: string[] = [];
+    const dataLabelColors: string[] = [];
+
+    const baseColorsMap: { [key: string]: string } = {
+      'Oncologico': '#0064af',
+      'Renal': '#00a261',
+      'Raras': '#eab308'
+    };
+    const defaultColors = ['#0064af', '#00a261', '#eab308', '#8b5cf6', '#ec4899', '#f97316'];
+
+    patologias.forEach((pat, i) => {
+      const color = baseColorsMap[pat] || defaultColors[i % defaultColors.length];
+
+      // Regresión lineal sobre los años estables (2022-2025)
+      const x = regressionYears;
+      const y = regressionYears.map(yr => histMap.get(pat)?.get(yr.toString()) ?? 0);
+
+      const n = x.length;
+      const sumX = x.reduce((a, b) => a + b, 0);
+      const sumY = y.reduce((a, b) => a + b, 0);
+      const sumXY = x.reduce((sum, xi, idx) => sum + xi * y[idx], 0);
+      const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
+
+      const denominator = (n * sumXX - sumX * sumX);
+      const slope = denominator !== 0 ? (n * sumXY - sumX * sumY) / denominator : 0;
+      const intercept = n > 0 ? (sumY - slope * sumX) / n : 0;
+
+      // 1. Serie Real Sólida (Muestra todos los años reales registrados)
+      const actualData = dataAniosFinalUnido.map(yr => {
+        if (allHistoricalYears.includes(yr)) {
+          return histMap.get(pat)?.get(yr) ?? null;
+        }
+        return null;
+      });
+
+      // 2. Serie Tendencia Punteada (Conecta en 2025 y proyecta ascendentemente hacia 2026-2030)
+      const lastStableYear = '2025';
+      const lastStableVal = histMap.get(pat)?.get(lastStableYear) ?? null;
+      const lastStableIdx = dataAniosFinalUnido.indexOf(lastStableYear);
+
+      const trendData = Array(dataAniosFinalUnido.length).fill(null);
+      if (lastStableIdx >= 0) {
+        trendData[lastStableIdx] = lastStableVal;
+        for (let idx = lastStableIdx + 1; idx < dataAniosFinalUnido.length; idx++) {
+          const yr = parseInt(dataAniosFinalUnido[idx]);
+          trendData[idx] = Math.round(slope * yr + intercept);
+        }
+      }
+
+      // Agregar Serie Real (Línea sólida)
+      series.push({ name: pat, data: actualData });
+      colors.push(color);
+      dashArray.push(0);
+      markerStrokeWidths.push(0);
+      markerColors.push(color);
+      dataLabelColors.push(color);
+
+      // Agregar Serie Tendencia Proyectada (Línea discontinua)
+      series.push({ name: `Tendencia ${pat}`, data: trendData });
+      colors.push(color);
+      dashArray.push(5);
+      markerStrokeWidths.push(2);
+      markerColors.push('#ffffff');
+      dataLabelColors.push(color);
+    });
+
+    const splitIdx = dataAniosFinalUnido.indexOf('2025');
+
+    return {
+      years: dataAniosFinalUnido,
+      series,
+      colors,
+      dashArray,
+      markerStrokeWidths,
+      markerColors,
+      dataLabelColors,
+      splitIndex: splitIdx >= 0 ? splitIdx : 6
+    };
+  }
+
   buildChartComorbilidadGlobal(): void {
     setTimeout(() => {
       if (!this.chartComorbilidadGlobalElement?.nativeElement) {
@@ -584,110 +764,20 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       }
 
       const data = this.queryComorbilidadGlobal;
-      if (!data || !data.length) {
+      const projection = this.calcularProyeccionEvolucionAnual(data, true);
+      if (!projection) {
         return;
       }
 
-      //obtener patologias diferentes de dataQueryDPEA
-      const dataPatologia = [...new Set(data.map((item: any) => item.patologia))].filter((item: any) => item !== 'Alto costo');
-
-      ///obtener años diferentes de dataQueryDPEA
-      const dataAnios = [...new Set(data.map((item: any) => item.anio))].filter((item: any) => item !== 'Alto costo');
-
-      ///regresion 4 años de dataAnios
-      const dataAniosRegresion = dataAnios.slice(-4);
-
-      ///agregar 4 años en adelante del ultimo año obtenido
-      const dataAniosFinal: string[] = [];
-      const yearAnioFinal = parseInt(dataAnios[dataAnios.length - 1]);
-      for (let i = 1; i <= 4; i++) {
-        dataAniosFinal.push((yearAnioFinal + i).toString());
-      }
-
-      const dataAniosFinalUnido = dataAnios.concat(dataAniosFinal);
-
-      // Map historical data
-      const histMap = new Map<string, Map<string, number>>();
-      data.forEach((item: any) => {
-        const pat = item.patologia;
-        const yr = item.anio;
-        const val = Number(item.pacientes) || 0;
-        if (!histMap.has(pat)) {
-          histMap.set(pat, new Map<string, number>());
-        }
-        histMap.get(pat)!.set(yr, val);
-      });
-
-      const patologias = dataPatologia;
-      const years = dataAniosFinalUnido;
-      const regressionYears = dataAniosRegresion.map(yr => parseInt(yr));
-
-      const series: any[] = [];
-      const colors: string[] = [];
-      const dashArray: number[] = [];
-      const markerStrokeWidths: number[] = [];
-      const markerColors: string[] = [];
-      const dataLabelColors: string[] = [];
-
-      const baseColors = ['#0064af', '#e29c00', '#00a261', '#8b5cf6', '#ec4899', '#f97316'];
-
-      patologias.forEach((pat, i) => {
-        const color = baseColors[i % baseColors.length];
-
-        // Calculate linear regression
-        const x = regressionYears;
-        const y = regressionYears.map(yr => histMap.get(pat)?.get(yr.toString()) ?? 0);
-
-        const n = x.length;
-        const sumX = x.reduce((a, b) => a + b, 0);
-        const sumY = y.reduce((a, b) => a + b, 0);
-        const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-        const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
-
-        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-        const intercept = (sumY - slope * sumX) / n;
-
-        const actualData = dataAnios.map(yr => histMap.get(pat)?.get(yr) ?? null);
-        while (actualData.length < years.length) {
-          actualData.push(null);
-        }
-
-        const trendData = Array(dataAnios.length - 1).fill(null);
-        const lastYearVal = histMap.get(pat)?.get(dataAnios[dataAnios.length - 1]) ?? null;
-        trendData.push(lastYearVal);
-
-        dataAniosFinal.forEach(yrStr => {
-          const yr = parseInt(yrStr);
-          trendData.push(Math.round(slope * yr + intercept));
-        });
-
-        series.push({ name: pat, data: actualData });
-        series.push({ name: `Tendencia ${pat}`, data: trendData });
-
-        // Actual series style
-        colors.push(color);
-        dashArray.push(0);
-        markerStrokeWidths.push(0);
-        markerColors.push(color);
-        dataLabelColors.push(color);
-
-        // Trend series style
-        colors.push(color + '66'); // 40% opacity
-        dashArray.push(5);
-        markerStrokeWidths.push(2);
-        markerColors.push('#ffffff');
-        dataLabelColors.push(color);
-      });
-
       const options = this.createLineOptions(
-        years,
-        series,
-        colors,
-        dashArray,
-        markerStrokeWidths,
-        markerColors,
-        dataLabelColors,
-        dataAnios.length - 1
+        projection.years,
+        projection.series,
+        projection.colors,
+        projection.dashArray,
+        projection.markerStrokeWidths,
+        projection.markerColors,
+        projection.dataLabelColors,
+        projection.splitIndex
       );
 
       this.destroyChart(this.chartComorbilidadGlobal);
@@ -1345,7 +1435,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
   }
 
   ///Detalle por patología
-
   buildChartDistribucionSexo() {
     setTimeout(() => {
       this.renderTopDonutChart(
@@ -1372,120 +1461,26 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     });
   }
 
-  buildChartTopDiagnostico() {
-
-  }
-
   buildChartEvolucionAnual() {
     setTimeout(() => {
       if (!this.chartEvolucionAnualElement?.nativeElement) {
         return;
       }
       const data = this.dataQueryDPEA;
-      if (!data || !data.length) {
+      const projection = this.calcularProyeccionEvolucionAnual(data, false);
+      if (!projection) {
         return;
       }
 
-      //obtener patologias diferentes de dataQueryDPEA
-      const dataPatologia = [...new Set(data.map((item: any) => item.patologia))].filter((item: any) => item !== 'Alto costo');
-
-      ///obtener años diferentes de dataQueryDPEA
-      const dataAnios = [...new Set(data.map((item: any) => item.anio))].filter((item: any) => item !== 'Alto costo');
-
-      ///regresion 4 años de dataAnios
-      const dataAniosRegresion = dataAnios.slice(-4);
-
-      ///agregar 4 años en adelante
-      const dataAniosFinal: string[] = [];
-      const yearAnioFinal = parseInt(dataAnios[dataAnios.length - 1]);
-      for (let i = 1; i <= 4; i++) {
-        dataAniosFinal.push((yearAnioFinal + i).toString());
-      }
-
-      const dataAniosFinalUnido = dataAnios.concat(dataAniosFinal);
-
-      // Map historical data
-      const histMap = new Map<string, Map<string, number>>();
-      data.forEach((item: any) => {
-        const pat = item.patologia;
-        const yr = item.anio;
-        const val = Number(item.pacientes) || 0;
-        if (!histMap.has(pat)) {
-          histMap.set(pat, new Map<string, number>());
-        }
-        histMap.get(pat)!.set(yr, val);
-      });
-
-      const patologias = dataPatologia;
-      const years = dataAniosFinalUnido;
-      const regressionYears = dataAniosRegresion.map(yr => parseInt(yr));
-
-      const series: any[] = [];
-      const colors: string[] = [];
-      const dashArray: number[] = [];
-      const markerStrokeWidths: number[] = [];
-      const markerColors: string[] = [];
-      const dataLabelColors: string[] = [];
-
-      const baseColors = ['#0064af', '#e29c00', '#00a261', '#8b5cf6', '#ec4899', '#f97316'];
-
-      patologias.forEach((pat, i) => {
-        const color = baseColors[i % baseColors.length];
-
-        // Calculate linear regression
-        const x = regressionYears;
-        const y = regressionYears.map(yr => histMap.get(pat)?.get(yr.toString()) ?? 0);
-
-        const n = x.length;
-        const sumX = x.reduce((a, b) => a + b, 0);
-        const sumY = y.reduce((a, b) => a + b, 0);
-        const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-        const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
-
-        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-        const intercept = (sumY - slope * sumX) / n;
-
-        const actualData = dataAnios.map(yr => histMap.get(pat)?.get(yr) ?? null);
-        while (actualData.length < years.length) {
-          actualData.push(null);
-        }
-
-        const trendData = Array(dataAnios.length - 1).fill(null);
-        const lastYearVal = histMap.get(pat)?.get(dataAnios[dataAnios.length - 1]) ?? null;
-        trendData.push(lastYearVal);
-
-        dataAniosFinal.forEach(yrStr => {
-          const yr = parseInt(yrStr);
-          trendData.push(Math.round(slope * yr + intercept));
-        });
-
-        series.push({ name: pat, data: actualData });
-        series.push({ name: `Tendencia ${pat}`, data: trendData });
-
-        // Actual series style
-        colors.push(color);
-        dashArray.push(0);
-        markerStrokeWidths.push(0);
-        markerColors.push(color);
-        dataLabelColors.push(color);
-
-        // Trend series style
-        colors.push(color + '66'); // 40% opacity
-        dashArray.push(5);
-        markerStrokeWidths.push(2);
-        markerColors.push('#ffffff');
-        dataLabelColors.push(color);
-      });
-
       const options = this.createLineOptions(
-        years,
-        series,
-        colors,
-        dashArray,
-        markerStrokeWidths,
-        markerColors,
-        dataLabelColors,
-        dataAnios.length - 1
+        projection.years,
+        projection.series,
+        projection.colors,
+        projection.dashArray,
+        projection.markerStrokeWidths,
+        projection.markerColors,
+        projection.dataLabelColors,
+        projection.splitIndex
       );
 
       this.destroyChart(this.chartEvolucionAnual);
@@ -1546,7 +1541,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       );
     });
   }
-
 
 
   private renderTopDonutChart<T>(
@@ -2164,78 +2158,4 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
     requestAnimationFrame(tryRender);
   }
-
-
-  filterRed(event: any) {
-    const searchValue = event.target.value.toLowerCase();
-    this.searchRed_DP = searchValue;
-    this.isDropdownRedOpen_DP = true;
-
-    if (this.selectedRedName_DP) {
-      this.selectedRedName_DP = '';
-      //this.centroForm_DP.patchValue({ code_red: '' });
-      //this.restoreAllCentros_DP();
-    }
-
-    if (searchValue.trim() === '') {
-      this.filteredRed_DP = this.dataRed_DP;
-    } else {
-      this.filteredRed_DP = this.dataRed_DP.filter((red: any) =>
-        red.redasisdes.toLowerCase().includes(searchValue),
-      );
-    }
-    this.activeRedIndex_DP = this.filteredRed_DP.length > 0 ? 0 : -1;
-    //this.scrollActiveRedIntoView_DP();
-  }
-
-  filterCentro_DP(event: any) {
-    const searchValue = event.target.value.toLowerCase();
-    this.searchCentro_DP = searchValue;
-    this.isDropdownCentroOpen_DP = true;
-
-    if (searchValue.trim() === '') {
-      this.filteredCentro_DP = this.dataCentro_DP;
-    } else {
-      this.filteredCentro_DP = this.dataCentro_DP.filter((centro: any) =>
-        centro.cenasides.toLowerCase().includes(searchValue),
-      );
-    }
-    //const centroOptions = this.getCentroOptions_DP();
-    //this.activeCentroIndex_DP = centroOptions.length > 0 ? 0 : -1;
-    //this.scrollActiveCentroIntoView_DP();
-  }
-
-
-
-  activeTab: 'Detalle por patología' | 'Analítica por patología de alto costo' | 'Comorbilidad del paciente' = 'Detalle por patología';
-
-  setActiveTab(tab: 'Detalle por patología' | 'Analítica por patología de alto costo' | 'Comorbilidad del paciente'): void {
-    this.activeTab = tab;
-    this.cdr.detectChanges();
-    if (tab === 'Analítica por patología de alto costo') {
-      this.loadDataAnaliticaPatologia();
-      this.loadDataAnaliticaPatologiaFiltros();
-
-      ///graficos Analitica por patologia de alto costo
-      /*.buildChartPacientesTotales();
-      this.buildChartComorbilidadGlobal();
-
-      ///filtros Analitica por patologia de alto costo
-      this.buildChartRankingRed();
-      this.buildChartComorbilidadesOncologico();
-      this.buildChartComorbilidadesRenal();
-      this.buildChartPatologiaAreaServicio();
-      this.buildChartDiagnosticoServiciosMasFrecPato();
-      this.buildChartComorbilidadInterserccion();
-      */
-
-    } else if (tab === 'Detalle por patología') {
-      this.loadDataDetallePatologia();
-      this.loadDataRedAndCentro();
-    } else if (tab === 'Comorbilidad del paciente') {
-
-    }
-  }
-
-
 }
