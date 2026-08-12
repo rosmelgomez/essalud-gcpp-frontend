@@ -78,10 +78,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
   ///////Analitica por patologia de alto costo
   //filtros  
-
-
-
-
   dataAnioApal: any[] = [];
   anio_apal: string[] = [];
 
@@ -625,11 +621,11 @@ export class DashboardPatologia implements OnInit, OnDestroy {
   }
 
   /**
-   * Algoritmo de proyección para Evolución Anual (Raras / Oncológico / Renal).
-   * 1. La línea sólida muestra los datos reales históricos (incluyendo 2026 si está registrado).
-   * 2. La regresión lineal se calcula EXCLUSIVAMENTE sobre años completos estables (2022-2025),
-   *    ignorando la caída del año incompleto 2026 para que la tendencia 
-   * 3. La línea punteada de tendencia se conecta desde 2025 y se proyecta ascendentemente (2026-2030).
+   * Algoritmo de proyección dinámico y general para Evolución Anual (Raras / Oncológico / Renal).
+   * 1. Detecta automáticamente el último año completo estable en la base de datos (si el último año registrado
+   *    corresponde al año en curso o muestra una caída parcial por estar en progreso, toma el año anterior como base).
+   * 2. Calcula la regresión lineal utilizando los últimos 4 años completos estables.
+   * 3. Genera dinámicamente las proyecciones para los siguientes 5 años conectando desde el último año completo.
    */
   calcularProyeccionEvolucionAnual(data: any[], filterAltoCosto: boolean = false) {
     if (!data || !data.length) {
@@ -637,7 +633,9 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     }
 
     let patologias = [...new Set(data.map((item: any) => item.patologia))]
-      .filter((item: any) => item !== 'Alto costo');
+      .filter((item: any) => item !== '');
+
+
 
     if (filterAltoCosto) {
       const preferredOrder = ['Oncologico', 'Renal', 'Raras'];
@@ -645,19 +643,41 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       patologias.sort((a, b) => preferredOrder.indexOf(a) - preferredOrder.indexOf(b));
     }
 
-    // 1. Todos los años reales disponibles en los datos
+    // 1. Obtener todos los años reales registrados en la BD en orden numérico
     let allHistoricalYears = [...new Set(data.map((item: any) => item.anio))]
-      .filter((item: any) => item !== 'Alto costo')
+      .filter((item: any) => item !== '')
       .map(String)
       .sort((a, b) => parseInt(a) - parseInt(b));
 
-    // Años estables completos para la regresión (EXCLUSIVAMENTE hasta 2025)
-    const completeStableYears = allHistoricalYears.filter(yr => parseInt(yr) <= 2025);
+    if (allHistoricalYears.length === 0) {
+      return null;
+    }
+
+    // 2. Determinar dinámicamente el último año completo estable.
+    // Si el último año del dataset es mayor o igual al año calendario actual, se asume año en curso (incompleto)
+    // y se toma (maxYear - 1) como el último año completo de referencia.
+    const currentCalendarYear = new Date().getFullYear();
+    const maxDatasetYear = parseInt(allHistoricalYears[allHistoricalYears.length - 1]);
+
+    let lastStableYearNum = maxDatasetYear;
+    if (maxDatasetYear >= currentCalendarYear && allHistoricalYears.length > 1) {
+      lastStableYearNum = maxDatasetYear - 1;
+    }
+
+    const lastStableYearStr = lastStableYearNum.toString();
+
+    // Años estables completos para la regresión (hasta lastStableYearNum)
+    const completeStableYears = allHistoricalYears.filter(yr => parseInt(yr) <= lastStableYearNum);
     const regressionYearsStr = completeStableYears.length >= 4 ? completeStableYears.slice(-4) : completeStableYears;
     const regressionYears = regressionYearsStr.map(yr => parseInt(yr));
 
-    // Eje X unificado: Años reales + años proyectados futuros
-    const projectedYears = ['2026', '2027', '2028', '2029', '2030'];
+    // 3. Proyectar 5 años a futuro a partir del año estable
+    const projectedYears: string[] = [];
+    for (let i = 1; i <= 5; i++) {
+      projectedYears.push((lastStableYearNum + i).toString());
+    }
+
+    // Eje X unificado: Años reales recibidos + años proyectados dinámicos
     const dataAniosFinalUnido = Array.from(new Set([...allHistoricalYears, ...projectedYears]))
       .sort((a, b) => parseInt(a) - parseInt(b));
 
@@ -690,7 +710,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     patologias.forEach((pat, i) => {
       const color = baseColorsMap[pat] || defaultColors[i % defaultColors.length];
 
-      // Regresión lineal sobre los años estables (2022-2025)
+      // Regresión lineal sobre los 4 años estables
       const x = regressionYears;
       const y = regressionYears.map(yr => histMap.get(pat)?.get(yr.toString()) ?? 0);
 
@@ -704,7 +724,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       const slope = denominator !== 0 ? (n * sumXY - sumX * sumY) / denominator : 0;
       const intercept = n > 0 ? (sumY - slope * sumX) / n : 0;
 
-      // 1. Serie Real Sólida (Muestra todos los años reales registrados)
+      // 1. Serie Real Sólida (Muestra todos los años reales registrados en el dataset)
       const actualData = dataAniosFinalUnido.map(yr => {
         if (allHistoricalYears.includes(yr)) {
           return histMap.get(pat)?.get(yr) ?? null;
@@ -712,10 +732,9 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         return null;
       });
 
-      // 2. Serie Tendencia Punteada (Conecta en 2025 y proyecta ascendentemente hacia 2026-2030)
-      const lastStableYear = '2025';
-      const lastStableVal = histMap.get(pat)?.get(lastStableYear) ?? null;
-      const lastStableIdx = dataAniosFinalUnido.indexOf(lastStableYear);
+      // 2. Serie Tendencia Punteada (Conecta en lastStableYearStr y proyecta hacia los años futuros)
+      const lastStableVal = histMap.get(pat)?.get(lastStableYearStr) ?? null;
+      const lastStableIdx = dataAniosFinalUnido.indexOf(lastStableYearStr);
 
       const trendData = Array(dataAniosFinalUnido.length).fill(null);
       if (lastStableIdx >= 0) {
@@ -743,7 +762,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
       dataLabelColors.push(color);
     });
 
-    const splitIdx = dataAniosFinalUnido.indexOf('2025');
+    const splitIdx = dataAniosFinalUnido.indexOf(lastStableYearStr);
 
     return {
       years: dataAniosFinalUnido,
@@ -1670,7 +1689,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         type: 'donut',
         height: 350,
         parentHeightOffset: 0,
-        toolbar: { show: false },
+        toolbar: { show: true },
       },
       series: values,
       labels: categories,
@@ -1732,7 +1751,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         type: 'line',
         height: 350,
         parentHeightOffset: 0,
-        toolbar: { show: false },
+        toolbar: { show: true },
       },
       series: series,
       colors: colors,
@@ -1842,7 +1861,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         height: 480,
         stacked: true,
         parentHeightOffset: 0,
-        toolbar: { show: false },
+        toolbar: { show: true },
       },
       series: series,
       colors: colors,
@@ -1919,7 +1938,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         type: 'bar',
         height: 480,
         parentHeightOffset: 0,
-        toolbar: { show: false },
+        toolbar: { show: true },
       },
       series: [{ name: 'Pacientes', data: series }],
       colors: colors,
@@ -1996,7 +2015,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         type: 'treemap',
         height: 480,
         parentHeightOffset: 0,
-        toolbar: { show: false },
+        toolbar: { show: true },
       },
       series: seriesData,
       colors: colors,
@@ -2053,7 +2072,7 @@ export class DashboardPatologia implements OnInit, OnDestroy {
         type: 'bar',
         height: 480,
         parentHeightOffset: 0,
-        toolbar: { show: false },
+        toolbar: { show: true },
       },
       series: [
         {
