@@ -635,8 +635,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     let patologias = [...new Set(data.map((item: any) => item.patologia))]
       .filter((item: any) => item !== '');
 
-
-
     if (filterAltoCosto) {
       const preferredOrder = ['Oncologico', 'Renal', 'Raras'];
       patologias = patologias.filter(p => preferredOrder.includes(p));
@@ -2177,4 +2175,6 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
     requestAnimationFrame(tryRender);
   }
+
+
 }
