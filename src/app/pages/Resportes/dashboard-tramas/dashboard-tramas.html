@@ -8,6 +8,9 @@
                 Información actualizada al {{ currentDate }}
             </p>
         </div>
+        <div class="actions">
+            <button class="btn-export" (click)="exportarExcel()"> Exportar Excel</button>
+        </div>
 
     </div>
     <!-- TABS -->
@@ -72,7 +75,7 @@
         </div>
 
         <!-- Selecciona año inicio y año fin y centro    -->
-        <div *ngIf="!selectFiltroTTB1 && !loadingTTB1" class="select-filtro">
+        <div *ngIf="!selectFiltroTTB1 && !loadingTTB1 " class="select-filtro">
             <p>Por favor, seleccione Fecha de Inicio y Fin y Centro para ver la información de la tabla B1</p>
         </div>
 
@@ -81,9 +84,10 @@
             {{ errorTTB1 }}
         </div>
 
-        <mat-card *ngIf="selectFiltroTTB1 && !loadingTTB1" class="resumen-table">
+        <mat-card *ngIf="selectFiltroTTB1 && !loadingTTB1 && !noDataTTB1" class="resumen-table">
             <h3>
-                Muestra de datos — {{ tramasTablaB1.length }} filas totales · mostrando {{ tramasTablaB1muestra.length}}
+                Muestra de datos — {{ formatNumber(tramasTablaB1.length) }} filas totales · mostrando {{
+                tramasTablaB1muestra.length}}
             </h3>
             <!-- HEADER -->
             <div class="resumen-header">
@@ -186,9 +190,10 @@
         </div>
 
 
-        <mat-card *ngIf="selectFiltroTTB2 && !loadingTTB2" class="resumen-table">
+        <mat-card *ngIf="selectFiltroTTB2 && !loadingTTB2 && !noDataTTB2" class="resumen-table">
             <h3>
-                Muestra de datos — {{ tramasTablaB2.length }} filas totales · mostrando {{ tramasTablaB2muestra.length}}
+                Muestra de datos — {{ formatNumber( tramasTablaB2.length) }} filas totales · mostrando {{
+                tramasTablaB2muestra.length}}
             </h3>
             <!-- HEADER -->
             <div class="resumen-header">
@@ -246,9 +251,5 @@
                 </div>
             </div>
         </mat-card>
-
-
-
     </div>
-
 </div>

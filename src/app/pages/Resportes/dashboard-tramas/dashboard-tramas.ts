@@ -105,6 +105,9 @@ export class DashboardTramas implements OnInit {
     return `${day}/${month}/${year}`;
   }
 
+  formatNumber(num: number): string {
+    return new Intl.NumberFormat('es-PE').format(num);
+  }
   ngOnInit(): void {
     this.user = this.dataImport.getUser();
     this.getCentro();
@@ -311,10 +314,6 @@ export class DashboardTramas implements OnInit {
     }
   }
 
-
-
-
-
   formatDateToDDMMYYYY(dateStr: string): string {
     if (!dateStr) return '';
     const parts = dateStr.split('-');
@@ -337,14 +336,13 @@ export class DashboardTramas implements OnInit {
     const fechaInicioB1Format = this.formatDateToDDMMYYYY(fechaInicioB1);
     const fechaFinB1Format = this.formatDateToDDMMYYYY(fechaFinB1);
 
-    console.log(fechaInicioB1Format);
-    console.log(fechaFinB1Format);
-    console.log(codcasB1);
+    ///direfencia de dias entre la fecha fin e inicio 
+    const dias = Math.floor((Date.parse(fechaFinB1) - Date.parse(fechaInicioB1)) / (1000 * 60 * 60 * 24));
+    console.log("Diferencia de dias: " + dias);
 
-    if (fechaInicioB1Format && fechaFinB1Format) {
+    if (fechaInicioB1Format && fechaFinB1Format && dias <= 31) {
       this.tramasService.getQueryTablaB1(fechaInicioB1Format, fechaFinB1Format, codcasB1).subscribe({
         next: (data) => {
-          console.log(data);
           this.tramasTablaB1 = data;
           this.tramasTablaB1muestra = data ? data.slice(0, 20) : [];
           this.loadingTTB1 = false;
@@ -360,6 +358,11 @@ export class DashboardTramas implements OnInit {
         }
       }
       );
+    } else {
+      this.loadingTTB1 = false;
+      this.errorTTB1 = 'La diferencia entre la fecha de fin y la fecha de inicio no debe exceder los 31 días';
+      this.noDataTTB1 = true;
+      this.cdr.detectChanges();
     }
   }
 
@@ -376,15 +379,12 @@ export class DashboardTramas implements OnInit {
 
     const fechaInicioB2Format = this.formatDateToDDMMYYYY(fechaInicioB2);
     const fechaFinB2Format = this.formatDateToDDMMYYYY(fechaFinB2);
+    const dias = Math.floor((Date.parse(fechaFinB2) - Date.parse(fechaInicioB2)) / (1000 * 60 * 60 * 24));
+    console.log("Diferencia : " + dias);
 
-    console.log(fechaInicioB2Format);
-    console.log(fechaFinB2Format);
-    console.log(codcasB2);
-
-    if (fechaInicioB2Format && fechaFinB2Format) {
+    if (fechaInicioB2Format && fechaFinB2Format && dias <= 31) {
       this.tramasService.getQueryTablaB2(fechaInicioB2Format, fechaFinB2Format, codcasB2).subscribe({
         next: (data) => {
-          console.log(data);
           this.tramasTablaB2 = data;
           this.tramasTablaB2muestra = data ? data.slice(0, 20) : [];
           this.loadingTTB2 = false;
@@ -400,13 +400,17 @@ export class DashboardTramas implements OnInit {
         }
       }
       );
+    } else {
+      this.loadingTTB2 = false;
+      this.errorTTB2 = 'La diferencia entre la fecha de fin y la fecha de inicio no debe exceder los 31 días';
+      this.noDataTTB2 = true;
+      this.cdr.detectChanges();
     }
   }
 
   // Tabs
   activeTab:
     | 'Tramas Tabla B1'
-
     | 'Tramas Tabla B2' = 'Tramas Tabla B1';
 
   setActiveTab(
@@ -417,5 +421,15 @@ export class DashboardTramas implements OnInit {
     this.activeTab = tab;
     this.cdr.detectChanges();
   }
+
+
+
+  exportarExcel() {
+
+
+  }
+
+
+
 
 }
