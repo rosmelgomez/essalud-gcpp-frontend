@@ -13,6 +13,7 @@ import { DashboardIntervencionesQuirurgicas } from './dashboard-intervenciones-q
 import { DashboardTablasHomologadas } from './dashboard-tablas-homologadas/dashboard-tablas-homologadas';
 import { DashboardHomologacionCama } from './dashboard-homologacion-cama/dashboard-homologacion-cama';
 import { DashboardPatologia } from './dashboard-patologia/dashboard-patologia';
+import { DashboardSeguimientoPaciente } from './dashboard-seguimiento-paciente/dashboard-seguimiento-paciente';
 
 
 export const reportesRoutes: Routes = [
@@ -61,5 +62,7 @@ export const reportesRoutes: Routes = [
     ///dashboard-patologia
     { path: 'dashboard-patologia', component: DashboardPatologia },
 
+    ///dashboard-seguimiento-paciente
+    { path: 'dashboard-seguimiento-paciente', component: DashboardSeguimientoPaciente },
 
 ];

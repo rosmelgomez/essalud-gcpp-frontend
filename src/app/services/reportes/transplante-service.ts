@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { Backend } from '../../model/api';
 import { HttpClient } from '@angular/common/http';
 
-
-
 const base_url = Backend.api + '/transplante';
 
 @Injectable({

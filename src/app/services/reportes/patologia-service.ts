@@ -111,7 +111,7 @@ export class PatologiaService {
   }
 
   ///Total diagnosticos distintos
-  getQueryDPTDD(patologias: String[], anios: String[], codreds: String[], codcens: String[], grupo_edades: String[]) {
+  getQueryDPTDDIS(patologias: String[], anios: String[], codreds: String[], codcens: String[], grupo_edades: String[]) {
     let parameters: any = {
       patologias: patologias,
       anios: anios,
@@ -119,7 +119,20 @@ export class PatologiaService {
       codcens: codcens,
       grupo_edades: grupo_edades
     };
-    return this.http.get<any>(base_url + `/queryDPTDD`, { params: parameters, withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDPTDDIS`, { params: parameters, withCredentials: true });
+  }
+
+
+  ///total diagnostico definitivo y presuntivo
+  getQueryDPTDDEFPRE(patologias: String[], anios: String[], codreds: String[], codcens: String[], grupo_edades: String[]) {
+    let parameters: any = {
+      patologias: patologias,
+      anios: anios,
+      codreds: codreds,
+      codcens: codcens,
+      grupo_edades: grupo_edades
+    };
+    return this.http.get<any>(base_url + `/queryDPTDDEFPRE`, { params: parameters, withCredentials: true });
   }
 
   ///Distribucion sexo

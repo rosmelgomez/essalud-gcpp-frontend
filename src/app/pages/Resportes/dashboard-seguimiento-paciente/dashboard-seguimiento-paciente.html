@@ -1,0 +1,134 @@
+<div class="main">
+    <!-- Header con logo y título -->
+    <div class="header">
+        <div class="header-content">
+            <h2 class="title">Consulta seguimiento paciente</h2>
+            <p class="subtitle">
+                Busqueda de atenciones medicas por documento del paciente | Base ESSI
+            </p>
+        </div>
+
+        <div class="header-content header-content-actions">
+            <button class="btn-download btn-ficha-tecnica" (click)="downloadCSV()" *ngIf="dataQuery1SPA.length > 0">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Exportar CSV
+            </button>
+        </div>
+    </div>
+    <!-- TABS -->
+
+    <!-- 
+    <div class="tabs">
+        <button class="tab-button" [class.active]="activeTab === 'Atenciones Medicas'"
+            (click)="setActiveTab('Atenciones Medicas')">
+            Atenciones Médicas
+        </button>
+
+    </div>
+    TABS -->
+
+    <!-- CONTENIDO TABS -->
+    <!-- Tab Atenciones -->
+    <div *ngIf="activeTab === 'Atenciones'" class="tab-content">
+
+        <div class="header">
+            <div class="header-actions">
+                <div class="buscar-group">
+                    <select [(ngModel)]="tipo_documento" class="anio-select">
+                        <option value="0">Seleccione un Tipo de documento</option>
+                        <option value="1">D.N.I.</option>
+                        <option value="2">CARNE DE EXTRANJERIA/PASAPORTE</option>
+                        <option value="8">NEONATO</option>
+                        <option value="6">CARNET DE IDENTIDAD - RR.EE.</option>
+                        <option value="7">CARNET PERMISO TEMP PERM CPP</option>
+                        <option value="4">DOCUMENTO IDENTIDAD EXTRANJERO</option>
+                        <option value="5">PERMISO TEMPORAL DE PERMANENCIA</option>
+                        <option value="T">CARNET DE REFUGIADOS</option>
+                    </select>
+                    <input type="text" [(ngModel)]="documento" class="tipo-asegurado-select" placeholder="Documento">
+                    <!-- Botón búsqueda -->
+                    <button (click)="loadAtenciones()" class="btn-search">Buscar</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Estado Loading-->
+        <div *ngIf="loadingSPA" class="loading">
+            <p>Cargando datos...</p>
+        </div>
+
+        <!-- Ingrese documento -->
+        <div *ngIf="ingreseDocumento" class="select-periodo">
+            <p>Por favor, seleccione un tipo de documento e ingrese un número de documento</p>
+        </div>
+
+        <!-- Estado de Error -->
+        <div *ngIf="errorSPA" class="alert alert-danger">
+            {{ errorSPA }}
+        </div>
+
+        <!-- Estado No Data -->
+        <div *ngIf="noDataSPA" class="alert alert-danger">
+            No se encontraron datos
+        </div>
+
+        <!-- Contenido de Atenciones -->
+        <div *ngIf="!ingreseDocumento && !loadingSPA && !errorSPA && !noDataSPA" class="dashboard-content">
+
+            <mat-card class="resumen-table" style="--resumen-cols: repeat(18, 1fr);">
+                <h3>Diagnosticos asociados (detalle)</h3>
+                <!-- HEADER -->
+                <div class="resumen-header">
+                    <div class="cell red">RED</div>
+                    <div class="cell centro">Centro</div>
+                    <div class="cell acto_med">Acto_Med</div>
+                    <div class="cell area">Area</div>
+                    <div class="cell servicio">Servicio</div>
+                    <div class="cell diagnostico">Diagnostico</div>
+                    <div class="cell tipo_atencion">Tipo de Atencion</div>
+                    <div class="cell edad_atencion">Edad en atencion</div>
+                    <div class="cell fecha_atencion">Fecha de atencion</div>
+                    <div class="cell atencion">Atencion</div>
+                    <div class="cell procedimiento">Procedimiento</div>
+                    <div class="cell receta">Receta</div>
+                    <div class="cell examen_imagen">Examen imagen</div>
+                    <div class="cell examen_laboratorio">Examen laboratorio</div>
+                    <div class="cell examen_patologia">Examen patologia</div>
+                    <div class="cell hospitalizacion">Hospitalizacion</div>
+                    <div class="cell operacion">Operacion</div>
+                    <div class="cell cita_topico">Cita topico</div>
+                </div>
+
+                <!-- WRAPPER PARA SCROLL HORIZONTAL -->
+                <div class="resumen-wrapper">
+                    <!-- VIRTUAL SCROLL -->
+                    <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48"
+                        [style.height.px]="getTableHeight(dataQuery1SPA.length)">
+                        <div *cdkVirtualFor="let row of dataQuery1SPA" class="resumen-row">
+                            <div class="cell red">{{ row.RED }}</div>
+                            <div class="cell centro">{{ row.CENTRO }}</div>
+                            <div class="cell acto_med">{{ row.ACTO_MED }}</div>
+                            <div class="cell area">{{row.AREA}}</div>
+                            <div class="cell servicio">{{row.SERVICIO}}</div>
+                            <div class="cell diagnostico">{{diagnostico(row.ACTO_MED)}}</div>
+                            <div class="cell tipo_atencion">{{row.TIPO_ATENCION}}</div>
+                            <div class="cell edad_atencion">{{row.EDAD_EN_ATENCION}}</div>
+                            <div class="cell fecha_atencion">{{row.FECHA_ATENCION}}</div>
+                            <div class="cell atencion">{{row.ACTMEDATE}}</div>
+                            <div class="cell procedimiento">{{row.ACTMEDPRO}}</div>
+                            <div class="cell receta">{{row.ACTMEDREC}}</div>
+                            <div class="cell examen_imagen">{{row.ACTMEDEXAIMA}}</div>
+                            <div class="cell examen_laboratorio">{{row.ACTMEDEXALAB}}</div>
+                            <div class="cell examen_patologia">{{row.ACTMEDEXAPAT}}</div>
+                            <div class="cell hospitalizacion">{{row.ACTMEDHOS}}</div>
+                            <div class="cell operacion">{{row.ACTMEDOPE}}</div>
+                            <div class="cell cita_topico">{{row.ACTMEDCITT}}</div>
+                        </div>
+                    </cdk-virtual-scroll-viewport>
+                </div>
+            </mat-card>
+        </div>
+    </div>
+
+</div>

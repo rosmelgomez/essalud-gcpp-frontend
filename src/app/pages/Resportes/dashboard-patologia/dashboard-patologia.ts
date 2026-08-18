@@ -149,8 +149,12 @@ export class DashboardPatologia implements OnInit, OnDestroy {
   dataQueryDPTP: any[] = [];
 
   ///Total diagnosticos distintos
-  dataQueryDPTDD: any[] = [];
-  totalPacientesQueryDPTDD: number = 0;
+  dataQueryDPTDDIS: any[] = [];
+  totalPacientesQueryDPTDDIS: number = 0;
+
+  ///Total diagnostico definitivo y presuntivo
+  dataQueryDPTDDEFPRE: any[] = [];
+  totalPacientesQueryDPTDDEFPRE: number = 0;
 
   ///Distribucion sexo
   dataQueryDPDS: any[] = [];
@@ -498,27 +502,29 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     }
 
     forkJoin({
-      q0: this.patologiaService.getQueryDPTP(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
-      q1: this.patologiaService.getQueryDPTDD(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
-      q2: this.patologiaService.getQueryDPDS(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
-      q3: this.patologiaService.getQueryDPDGE(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP),
-      q4: this.patologiaService.getQueryDPTD(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
-      q5: this.patologiaService.getQueryDPEA(this.patologia_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
-      q6: this.patologiaService.getQueryDPPS(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
-      q7: this.patologiaService.getQueryDPRC(this.patologia_DP, this.anio_DP, this.red_DP),
+      DPTP: this.patologiaService.getQueryDPTP(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      DPTDDIS: this.patologiaService.getQueryDPTDDIS(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      DPTDDEFPRE: this.patologiaService.getQueryDPTDDEFPRE(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      DPDS: this.patologiaService.getQueryDPDS(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      DPDGE: this.patologiaService.getQueryDPDGE(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP),
+      DPTD: this.patologiaService.getQueryDPTD(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      DPEA: this.patologiaService.getQueryDPEA(this.patologia_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      DPPS: this.patologiaService.getQueryDPPS(this.patologia_DP, this.anio_DP, this.red_DP, this.centro_DP, this.grupoEtario_DP),
+      DPRC: this.patologiaService.getQueryDPRC(this.patologia_DP, this.anio_DP, this.red_DP),
     }).subscribe({
       next: (results) => {
-        this.dataQueryDPTP = results.q0;
-        this.dataQueryDPTDD = results.q1;
-        this.dataQueryDPDS = results.q2;
-        this.dataQueryDPDGE = results.q3;
-        this.dataQueryDPTD = results.q4;
-        this.dataQueryDPEA = results.q5;
-        this.dataQueryDPPS = results.q6;
-        this.dataQueryDPRC = results.q7;
+        this.dataQueryDPTP = results.DPTP;
+        this.dataQueryDPTDDIS = results.DPTDDIS;
+        this.dataQueryDPTDDEFPRE = results.DPTDDEFPRE;
+        this.dataQueryDPDS = results.DPDS;
+        this.dataQueryDPDGE = results.DPDGE;
+        this.dataQueryDPTD = results.DPTD;
+        this.dataQueryDPEA = results.DPEA;
+        this.dataQueryDPPS = results.DPPS;
+        this.dataQueryDPRC = results.DPRC;
 
 
-        this.totalPacientesQueryDPTDD = results.q4.reduce(
+        this.totalPacientesQueryDPTDDIS = results.DPTD.reduce(
           (sum: number, row: any) => sum + Number(row.pacientes ?? 0),
           0,
         );
