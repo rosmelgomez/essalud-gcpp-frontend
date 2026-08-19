@@ -133,6 +133,9 @@ export class DashboardOdontologicas implements OnInit {
       ),
     }).subscribe({
       next: (results) => {
+
+        console.log(results);
+
         //total consultantes atencion
         this.totalConsultantesAtencionSO = results.totalConsultantesAtencion[0].cantidad ?? 0;
 
@@ -221,6 +224,7 @@ export class DashboardOdontologicas implements OnInit {
         this.cdr.detectChanges();
       },
     });
+    this.cdr.detectChanges();
   }
 
   // Tabs

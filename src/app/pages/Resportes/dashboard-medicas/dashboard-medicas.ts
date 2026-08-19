@@ -541,7 +541,7 @@ export class DashboardMedicas implements OnInit {
       next: (result) => {
         this.totalConsultantesMO = result.consultantesMO[0]?.cantidad ?? 0;
         this.totalAtencionesMO = result.atencionesMO.length;
-        this.totalMedicosMO = result.medicosMO.length; //Ajustar cuando haya endpoint de medicos MO
+        this.totalMedicosMO = result.medicosMO.length;
 
         this.horasEfectivasMO = result.horasEfectivasMO.reduce(
           (sum: number, row: { horas_efec_def: any }) => sum + Number(row.horas_efec_def ?? 0),

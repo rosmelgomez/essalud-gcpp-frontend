@@ -24,11 +24,17 @@ export class IntervencionesQuirurgicasService {
 
   ///horas quirurgicas electivas
   getQueryDIQHQE(anio: string, periodo: string, codcas: string, codasegu: string) {
-    return this.http.get<any[]>(base_url + `/queryDIQHQE/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDIQHQE/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
+
   ///horas quirurgicas emergencia
   getQueryDIQHQEME(anio: string, periodo: string, codcas: string, codasegu: string) {
-    return this.http.get<any[]>(base_url + `/queryDIQHQEME/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+    return this.http.get<any>(base_url + `/queryDIQHQEME/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+  }
+
+  ///Intervenciones Quirurgicas Suspendidas
+  getQueryDIQS(anio: string, periodo: string, codcas: string) {
+    return this.http.get<any[]>(base_url + `/queryDIQS/${anio}/${periodo}/${codcas}`, { withCredentials: true });
   }
 
   ///Indicadores de grado de complejidad

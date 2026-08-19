@@ -46,6 +46,7 @@ export class DashboardIntervencionesQuirurgicas implements OnInit {
   intervacionesEmergencia: number = 0;
   horasQuirurgicasElectivas: number = 0;
   horasQuirurgicasEmergencia: number = 0;
+  intervencionesSuspendidas: number = 0;
 
 
   //data indicadores grado de complejidad
@@ -56,6 +57,7 @@ export class DashboardIntervencionesQuirurgicas implements OnInit {
   dataComplejidadE: any[] = [];
   dataSinComplejidad: any[] = [];
   dataInternvacionesEmergencia: any[] = [];
+  dataIntervencionesSuspendidas: any[] = [];
 
   constructor(
     private report: IntervencionesQuirurgicasService,
@@ -277,10 +279,10 @@ export class DashboardIntervencionesQuirurgicas implements OnInit {
       intervencionesEmergencia: this.report.getQueryDIQE(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc),
       horasQuirurgicasElectivas: this.report.getQueryDIQHQE(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc),
       horasQuirurgicasEmergencia: this.report.getQueryDIQHQEME(this.anio_gc, this.periodo_gc, this.codcas, this.tipo_asegurado_gc),
+      intervencionesSuspendidas: this.report.getQueryDIQS(this.anio_gc, this.periodo_gc, this.codcas),
     }).subscribe({
       next: (result) => {
         this.intervacionesEmergencia = result.intervencionesEmergencia.length;
-
         const areaCountMap = new Map<string, number>();
 
         for (const row of result.intervencionesEmergencia) {
@@ -293,8 +295,15 @@ export class DashboardIntervencionesQuirurgicas implements OnInit {
           total,
         }));
         this.dataInternvacionesEmergencia.sort((a, b) => b.total - a.total);
-        this.horasQuirurgicasElectivas = result.horasQuirurgicasElectivas[0].horas_quirurgicas_realizadas_iq_electivas || 0;
-        this.horasQuirurgicasEmergencia = result.horasQuirurgicasEmergencia[0].horas_quirurgicas_realizadas_iq_emergencia || 0;
+
+        this.horasQuirurgicasElectivas = result.horasQuirurgicasElectivas.totalHorasElectivas || 0;
+        this.horasQuirurgicasEmergencia = result.horasQuirurgicasEmergencia.totalHorasElectivas || 0;
+        this.intervencionesSuspendidas = result.intervencionesSuspendidas.length;
+
+        console.log(this.horasQuirurgicasElectivas);
+        console.log(this.horasQuirurgicasEmergencia);
+        console.log(this.intervencionesSuspendidas);
+        ///this.dataIntervencionesSuspendidas = result.intervencionesSuspendidas;
         this.cdr.detectChanges();
       }
     });

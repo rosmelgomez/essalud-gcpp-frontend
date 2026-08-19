@@ -122,7 +122,7 @@ export class DashboardSeguimientoPaciente implements OnInit {
         .map((row: any) => row.diagdes ?? row.DIAGDES)
         .filter((desc: any) => desc !== null && desc !== undefined && String(desc).trim() !== '');
 
-      return descripciones.length > 0 ? descripciones.join(', ') : '-';
+      return descripciones.length > 0 ? descripciones[0] : '-';
     }
 
     return '-';
