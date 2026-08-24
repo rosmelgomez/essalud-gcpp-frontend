@@ -184,7 +184,7 @@
       </a>
 
       <!-- Reportes gerenciales (admin) -->
-      <a routerLink="/reporte/reports-gerenciales" class="module"
+      <a routerLink="/reporte/dashboard-gerenciales" class="module"
         *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
         <img src="/images/analytics.png" alt="Reportes gerenciales" />
         <span>Reportes gerenciales</span>
@@ -199,6 +199,7 @@
 
       <!-- Encuesta -->
       <a routerLink="/encuesta" class="module">
+        <div class=""></div>
         <img src="/images/survey.png" alt="Encuesta" />
         <span>Encuesta de Conformidad</span>
       </a>

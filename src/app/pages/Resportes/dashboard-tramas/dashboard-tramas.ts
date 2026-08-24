@@ -11,6 +11,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { User } from '../../../model/user';
+import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
 
 @Component({
   selector: 'app-dashboard-tramas',
@@ -93,16 +94,22 @@ export class DashboardTramas implements OnInit {
     private tramasService: TramasService,
     private establecimientoService: EstablecimientoService,
     private dataImport: LocalStorageService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private fechaService: FechaActualizacionService
   ) {
-    this.currentDate = this.formatDate(new Date());
+    this.loadFechaActualizacion();
   }
 
-  formatDate(date: Date): string {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+
+  loadFechaActualizacion() {
+    this.fechaService.queryFechaActualizacion().subscribe({
+      next: (data) => {
+        this.currentDate = data.fecha_act;
+      },
+      error: (error) => {
+        console.error('Error al cargar la fecha de actualizacion', error);
+      }
+    });
   }
 
   formatNumber(num: number): string {
@@ -338,7 +345,6 @@ export class DashboardTramas implements OnInit {
 
     ///direfencia de dias entre la fecha fin e inicio 
     const dias = Math.floor((Date.parse(fechaFinB1) - Date.parse(fechaInicioB1)) / (1000 * 60 * 60 * 24));
-    console.log("Diferencia de dias: " + dias);
 
     if (fechaInicioB1Format && fechaFinB1Format && dias <= 31) {
       this.tramasService.getQueryTablaB1(fechaInicioB1Format, fechaFinB1Format, codcasB1).subscribe({
@@ -380,7 +386,6 @@ export class DashboardTramas implements OnInit {
     const fechaInicioB2Format = this.formatDateToDDMMYYYY(fechaInicioB2);
     const fechaFinB2Format = this.formatDateToDDMMYYYY(fechaFinB2);
     const dias = Math.floor((Date.parse(fechaFinB2) - Date.parse(fechaInicioB2)) / (1000 * 60 * 60 * 24));
-    console.log("Diferencia : " + dias);
 
     if (fechaInicioB2Format && fechaFinB2Format && dias <= 31) {
       this.tramasService.getQueryTablaB2(fechaInicioB2Format, fechaFinB2Format, codcasB2).subscribe({
@@ -423,13 +428,55 @@ export class DashboardTramas implements OnInit {
   }
 
 
+  exportarExcelTablaB1() {
+    if (this.tramasTablaB1.length === 0) {
+      console.warn('No hay datos para descargar');
+      return;
+    }
 
-  exportarExcel() {
+    // Construir el CSV
+    const csvContent = [
+      // Encabezados
+      Object.keys(this.tramasTablaB1[0]).join(','),
+      // Filas de datos
+      ...this.tramasTablaB1.map(row =>
+        Object.values(row).map(value => `"${value}"`).join(',')
+      )
+    ].join('\n');
 
+    // Crear Blob y descargar
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = 'tramas_tabla_b1.xlsx';
+    link.click();
+    URL.revokeObjectURL(url);
 
   }
 
+  exportarExcelTablaB2(): void {
+    if (!this.tramasTablaB2?.length) {
+      console.warn('No hay datos para descargar');
+      return;
+    }
 
+    const fileName = `tramas_tabla_b2.xlsx`;
 
+    const headers = Object.keys(this.tramasTablaB1[0]);
+    const csvContent = [
+      headers.join(';'),
+      ...this.tramasTablaB1.map((row) =>
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName.endsWith('.xlsx') ? fileName : `${fileName}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
 
 }

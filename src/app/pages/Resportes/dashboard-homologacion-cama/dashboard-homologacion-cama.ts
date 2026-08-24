@@ -69,7 +69,6 @@ export class DashboardHomologacionCama implements OnInit {
 
   ngOnInit(): void {
     this.user = this.dataImport.getUser();
-    console.log('user', this.user);
     this.nameCentro = this.dataImport.getDataCentro()?.nameCentro || '';
     this.codcas = this.dataImport.getDataCentro()?.codcas || '';
     this.loadDataCamas();
@@ -78,7 +77,6 @@ export class DashboardHomologacionCama implements OnInit {
   loadDataCamas(): void {
     this.tablasHomologadasService.getQueryTHCAMA(this.codcas).subscribe({
       next: (response) => {
-        console.log(response);
         this.dataCamas = response.map((row: any) => {
           const desc = row.descripcion_clasificacion || 'no seleccionado';
           return {
@@ -112,7 +110,6 @@ export class DashboardHomologacionCama implements OnInit {
 
     forkJoin(solicitudes).subscribe({
       next: (responses) => {
-        console.log('Clasificaciones guardadas con éxito', responses);
         this.loadDataCamas();
         this.cdr.markForCheck();
       },

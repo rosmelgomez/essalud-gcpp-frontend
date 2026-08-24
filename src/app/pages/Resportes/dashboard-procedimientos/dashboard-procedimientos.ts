@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LocalStorageService } from '../../../services/local-storage-service';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
+import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
 
 export interface ProcedimientoInfo {
   cod_relacional: number; // codigo solo de referencia 
@@ -98,16 +99,21 @@ export class DashboardProcedimientos {
     private lsService: LocalStorageService,
     private proservice: ProcedimientosService,
     private cdr: ChangeDetectorRef,
+    private fechaService: FechaActualizacionService,
   ) {
-    this.currentDate = this.formatDate(new Date());
+    this.loadFechaActualizacion
     this.centroAtencion = this.lsService.getDataCentro()?.nameCentro || "";
   }
 
-  formatDate(date: Date): string {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+  loadFechaActualizacion() {
+    this.fechaService.queryFechaActualizacion().subscribe({
+      next: (data) => {
+        this.currentDate = data.fecha_act;
+      },
+      error: (error) => {
+        console.error('Error al cargar la fecha de actualizacion', error);
+      }
+    });
   }
 
 
@@ -148,8 +154,6 @@ export class DashboardProcedimientos {
           this.informacion[index].data.sort((a, b) => b.total - a.total);
 
           this.informacion[index].total = data.length;
-          console.log(this.informacion[index].data, 'DATA');
-          console.log(this.informacion[index].total, 'TOTAL');
         });
 
         this.loadingP = false;

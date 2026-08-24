@@ -27,7 +27,8 @@ export class DashboardGerenciales {
     { nombre: 'intervenciones_quirurgicas', link: 'https://app.powerbi.com/view?r=eyJrIjoiOTJkZjBjZGItMzk0OC00NDlmLWExZjYtODY0NTBhNzIwODZkIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
     { nombre: 'cambios_ses', link: 'https://app.powerbi.com/view?r=eyJrIjoiOTZhMzAxM2ItZTNhYS00MWMyLWE3MDQtOTRmOGJkYWJjNmZjIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
     { nombre: 'accidentes', link: 'https://app.powerbi.com/view?r=eyJrIjoiZGU0YTAxMzktMDdiMi00NDEyLThjMmYtMTQ3ZGIwMmQ0MTIyIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
-    { nombre: 'diferimiento_citas_ce', link: 'https://app.powerbi.com/view?r=eyJrIjoiZjJlZjk2NDgtMjdlMS00ZGRjLWJlMWMtN2QyYjJkNjNiOGU4IiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' }
+    { nombre: 'diferimiento_citas_ce', link: 'https://app.powerbi.com/view?r=eyJrIjoiZjJlZjk2NDgtMjdlMS00ZGRjLWJlMWMtN2QyYjJkNjNiOGU4IiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
+    { nombre: 'lista_quirurgica', link: 'https://app.powerbi.com/view?r=eyJrIjoiNjgyZjM5YWUtMTY0OC00NTc2LWE4NWMtNjcxZmE4MDczYTliIiwidCI6IjM0ZjMyNDE5LTFjMDUtNDc1Ni04OTZlLTQ1ZDYzMzcyNjU5YiIsImMiOjR9' },
   ]
 
   constructor(private sanitizer: DomSanitizer, private cdr: ChangeDetectorRef) { }

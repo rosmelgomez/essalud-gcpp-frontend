@@ -6,6 +6,7 @@ import { FileService } from '../../../services/documentos/file-service';
 
 import { forkJoin } from 'rxjs';
 import { OdontologicasService } from '../../../services/reportes/odontologicas-service';
+import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
 
 @Component({
   selector: 'app-dashboard-odontologicas',
@@ -52,19 +53,25 @@ export class DashboardOdontologicas implements OnInit {
     private reportDashboardOdonS: OdontologicasService,
     private fileService: FileService,
     private cdr: ChangeDetectorRef,
+    private fechaService: FechaActualizacionService,
   ) { }
 
   ngOnInit(): void {
-    this.currentDate = this.formatDate(new Date());
+    this.loadFechaActualizacion()
     this.centroAtencion = this.dataImport.getDataCentro()?.nameCentro || '';
     this.codcas = this.dataImport.getDataCentro()?.codcas || '';
   }
 
-  formatDate(date: Date): string {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+
+  loadFechaActualizacion() {
+    this.fechaService.queryFechaActualizacion().subscribe({
+      next: (data) => {
+        this.currentDate = data.fecha_act;
+      },
+      error: (error) => {
+        console.error('Error al cargar la fecha de actualizacion', error);
+      }
+    });
   }
 
   formatNumber(num: number): string {

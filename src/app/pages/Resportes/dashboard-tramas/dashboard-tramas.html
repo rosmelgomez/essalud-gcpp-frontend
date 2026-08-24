@@ -9,7 +9,7 @@
             </p>
         </div>
         <div class="actions">
-            <button class="btn-export" (click)="exportarExcel()"> Exportar Excel</button>
+            <button class="btn-export"> Exportar Excel</button>
         </div>
 
     </div>
@@ -64,6 +64,10 @@
                     <button (click)="loadQueryTablaB1(fechaInicioB1,fechaFinB1,codcasB1)" class="btn-search">
                         Buscar
                     </button>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-export" (click)="exportarExcelTablaB1()"> Exportar Excel</button>
                 </div>
 
             </div>
@@ -170,7 +174,9 @@
                         Buscar
                     </button>
                 </div>
-
+                <div class="actions">
+                    <button class="btn-export" (click)="exportarExcelTablaB2()"> Exportar Excel</button>
+                </div>
             </div>
         </div>
 

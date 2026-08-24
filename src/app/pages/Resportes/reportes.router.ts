@@ -14,6 +14,7 @@ import { DashboardTablasHomologadas } from './dashboard-tablas-homologadas/dashb
 import { DashboardHomologacionCama } from './dashboard-homologacion-cama/dashboard-homologacion-cama';
 import { DashboardPatologia } from './dashboard-patologia/dashboard-patologia';
 import { DashboardSeguimientoPaciente } from './dashboard-seguimiento-paciente/dashboard-seguimiento-paciente';
+import { DashboardFarmacia } from './dashboard-farmacia/dashboard-farmacia';
 
 
 export const reportesRoutes: Routes = [
@@ -65,4 +66,6 @@ export const reportesRoutes: Routes = [
     ///dashboard-seguimiento-paciente
     { path: 'dashboard-seguimiento-paciente', component: DashboardSeguimientoPaciente },
 
+    ///dashboard-farmacia
+    { path: 'dashboard-farmacia', component: DashboardFarmacia },
 ];

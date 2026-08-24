@@ -9,6 +9,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { TablasHomologadasService } from '../../../services/tablas-homologadas-service';
 import { ChangeDetectorRef } from '@angular/core';
+import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
 
 @Component({
   selector: 'app-dashboard-tablas-homologadas',
@@ -25,6 +26,9 @@ import { ChangeDetectorRef } from '@angular/core';
   styleUrl: './dashboard-tablas-homologadas.css',
 })
 export class DashboardTablasHomologadas implements OnInit {
+
+  currentDate: string = '';
+
 
   nameCentro: string = '';
   codcas: string = '';
@@ -99,12 +103,26 @@ export class DashboardTablasHomologadas implements OnInit {
     private dataImport: LocalStorageService,
     private tablasHomologadasService: TablasHomologadasService,
     private cdr: ChangeDetectorRef,
+    private fechaService: FechaActualizacionService,
   ) { }
 
   ngOnInit(): void {
     this.nameCentro = this.dataImport.getDataCentro()?.nameCentro || '';
     this.codcas = this.dataImport.getDataCentro()?.codcas || '';
   }
+
+
+  loadFechaActualizacion() {
+    this.fechaService.queryFechaActualizacion().subscribe({
+      next: (data) => {
+        this.currentDate = data.fecha_act;
+      },
+      error: (error) => {
+        console.error('Error al cargar la fecha de actualizacion', error);
+      }
+    });
+  }
+
 
   loadDataEmergencia(): void {
     this.tablasHomologadasService.getQueryTHE(this.codcas).subscribe({

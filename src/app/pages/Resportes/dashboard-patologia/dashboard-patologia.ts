@@ -20,6 +20,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
 import { EstablecimientoService } from '../../../services/establecimiento-service';
+import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
 
 @Component({
   selector: 'app-dashboard-patologia',
@@ -234,7 +235,9 @@ export class DashboardPatologia implements OnInit, OnDestroy {
   constructor(
     private patologiaService: PatologiaService,
     private establecimientoService: EstablecimientoService,
-    private cdr: ChangeDetectorRef) { }
+    private cdr: ChangeDetectorRef,
+    private fechaService: FechaActualizacionService,
+  ) { }
 
   ngOnInit(): void {
     this.loadDataIniciales();
@@ -242,6 +245,17 @@ export class DashboardPatologia implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyAllCharts();
+  }
+
+  loadFechaActualizacion() {
+    this.fechaService.queryFechaActualizacion().subscribe({
+      next: (data) => {
+        this.currentDate = data.fecha_act;
+      },
+      error: (error) => {
+        console.error('Error al cargar la fecha de actualizacion', error);
+      }
+    });
   }
 
   formatNumber(num: number): string {

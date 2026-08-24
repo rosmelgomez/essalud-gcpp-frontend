@@ -98,14 +98,73 @@
                     <div class="card-body">
                         <div class="contend_left">
                             <a class="card-link">
-                                <h5 class="card-title">Total de días estancia hospitalaria</h5>
+                                <h5 class="card-title">Días Estancia</h5>
                             </a>
                             <h2 class="card-value">{{ formatNumber(totalDiasEstancia) }}</h2>
                             <p class="card-subtitle">Periodo {{ anioE }}-{{ periodoE }} | {{ centroAtencion }}</p>
                         </div>
                     </div>
                 </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="contend_left">
+                            <a class="card-link">
+                                <h5 class="card-title">Paciente Día</h5>
+                            </a>
+                            <h2 class="card-value">{{ formatNumber(totalPacientesMes) }}</h2>
+                            <p class="card-subtitle">Periodo {{ anioE }}-{{ periodoE }} | {{ centroAtencion }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Pacientes por Día</h3>
+                    <div class="chart-host chart-host-fechas" #chartPacientesMes></div>
+                </div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Top 10 Diagnósticos</h3>
+                    <div class="chart-host" #chartDiagnosticos></div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Egresos por Servicio</h3>
+                    <div class="chart-host" #chartServicio></div>
+                </div>
+            </div>
+
+
+            <mat-card class="resumen-table" style="--resumen-cols: repeat(4, 1fr);">
+                <h3>Diagnosticos asociados (detalle)</h3>
+                <!-- HEADER -->
+                <div class="resumen-header">
+                    <div class="cell servicio">Servicio</div>
+                    <div class="cell estenfdes">estenfdes</div>
+                    <div class="cell cama">Cama</div>
+                    <div class="cell egresos">Egresos</div>
+                </div>
+
+                <!-- WRAPPER PARA SCROLL HORIZONTAL -->
+                <div class="resumen-wrapper">
+                    <!-- VIRTUAL SCROLL -->
+                    <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48"
+                        [style.height.px]="getTableHeight(dataEgresos.length)">
+                        <div *cdkVirtualFor="let row of dataEgresos" class="resumen-row">
+                            <div class="cell servicio">{{row.servicio}}</div>
+                            <div class="cell estenfdes">{{ row.estenfdes }}</div>
+                            <div class="cell cama">{{ row.cama }}</div>
+                            <div class="cell egresos">{{row.dias_hospit}}</div>
+                        </div>
+                    </cdk-virtual-scroll-viewport>
+                </div>
+            </mat-card>
+
+
 
         </div>
 

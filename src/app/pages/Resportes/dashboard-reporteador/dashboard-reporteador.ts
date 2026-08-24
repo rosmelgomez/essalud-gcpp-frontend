@@ -8,6 +8,7 @@ import { AfterViewInit, ViewChild } from '@angular/core';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { ReporteadorService } from '../../../services/reportes/reporteador-service';
+import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
 
 @Component({
   selector: 'app-dashboard-reporteador',
@@ -78,13 +79,31 @@ export class DashboardReporteador implements OnInit, AfterViewInit {
   dataSource = new MatTableDataSource<any>([]);
   displayedColumns: string[] = ['Centro origen', 'Cód. red', 'Red asistencial', 'Cód. centro', 'Centro asistencial', 'Periodo', 'Año', 'Cód. servicio', 'Servicio', 'Cód. actividad', 'Actividad', 'Cód. subactividad', 'Subactividad', 'Sexo', 'Edad (años)', 'DNI médico', 'Acto médico', 'Paciente', 'Cód. diagnóstico', 'Diagnóstico'];
 
+
+
+
+  constructor(
+    private ReportDashboardReporteadorService: ReporteadorService,
+    private fechaService: FechaActualizacionService
+  ) {
+    this.loadFechaActualizacion();
+
+  }
+
+  loadFechaActualizacion() {
+    this.fechaService.queryFechaActualizacion().subscribe({
+      next: (data) => {
+        this.currentDate = data.fecha_act;
+      },
+      error: (error) => {
+        console.error('Error al cargar la fecha de actualizacion', error);
+      }
+    });
+  }
+
+
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
-  }
-  constructor(
-    private ReportDashboardReporteadorService: ReporteadorService
-  ) {
-    this.currentDate = new Date().toLocaleDateString();
   }
 
   ngOnInit() {

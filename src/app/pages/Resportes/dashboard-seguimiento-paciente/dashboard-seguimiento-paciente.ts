@@ -12,6 +12,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
 
 @Component({
   selector: 'app-dashboard-seguimiento-paciente',
@@ -30,6 +31,8 @@ import { MatSelectModule } from '@angular/material/select';
 })
 export class DashboardSeguimientoPaciente implements OnInit {
 
+  currentDate: string = '';
+
   //filtros
   documento: string = '';
   tipo_documento: number = 0;
@@ -47,7 +50,21 @@ export class DashboardSeguimientoPaciente implements OnInit {
   constructor(
     private seguimientoPacienteService: SeguimientoPacienteService,
     private cdr: ChangeDetectorRef,
-  ) { }
+    private fechaService: FechaActualizacionService,
+  ) {
+    this.loadFechaActualizacion();
+  }
+
+  loadFechaActualizacion() {
+    this.fechaService.queryFechaActualizacion().subscribe({
+      next: (data) => {
+        this.currentDate = data.fecha_act;
+      },
+      error: (error) => {
+        console.error('Error al cargar la fecha de actualizacion', error);
+      }
+    });
+  }
 
   ngOnInit(): void {
     ///this.loadAtenciones();
@@ -77,8 +94,6 @@ export class DashboardSeguimientoPaciente implements OnInit {
         this.dataQuery2SPA = data.query2;
 
         this.loadingSPA = false;
-        console.log("dataQuery1SPA " + this.dataQuery1SPA.length);
-        console.log("dataQuery2SPA " + this.dataQuery2SPA.length);
 
         if (data.query1.length === 0 || data.query2.length === 0) {
           this.noDataSPA = true;
@@ -86,7 +101,6 @@ export class DashboardSeguimientoPaciente implements OnInit {
           this.noDataSPA = false;
         }
 
-        console.log("noDataSPA " + this.noDataSPA);
 
 
         this.cdr.detectChanges();

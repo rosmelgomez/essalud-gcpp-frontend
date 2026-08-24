@@ -10,7 +10,14 @@ const base_url = Backend.api + '/hospitalizacion';
 export class HospitalizacionService {
   constructor(private http: HttpClient) { }
 
-  getqueryDHE(anio: string, periodo: string, codcas: string, codasegu: string) {
+  getQueryDHE(anio: string, periodo: string, codcas: string, codasegu: string) {
     return this.http.get<any[]>(base_url + `/queryDHE/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
+
+  ///pacientes mes
+  getQueryDHPM(anio: string, periodo: string, codcas: string) {
+    return this.http.get<any[]>(base_url + `/queryDHPM/${anio}/${periodo}/${codcas}`, { withCredentials: true });
+  }
+
+
 }
