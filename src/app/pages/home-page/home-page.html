@@ -134,7 +134,7 @@
 
       <!-- btn para retornar principales modulos-->
       <button class="btn-change-centro" (click)="retornoMainModulos()" title="Retornar a modulos principales"
-        *ngIf="showVariableSES">
+        *ngIf="btnReturnModulos">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <polyline points="12 5 19 12 12 19"></polyline>
@@ -154,6 +154,7 @@
         Retornar a SES
       </button>
 
+
     </div>
 
     <!--  menú con los principales módulos disponibles -->
@@ -172,7 +173,7 @@
       </a>
 
       <!--  Dashboard Homologación de camas -->
-      <a class="module" routerLink="/reporte/dashboard-homologacion-cama">
+      <a class="module" routerLink="/reporte/dashboard-homologacion-cama" style="display: none;">
         <img src="/images/tablas-homologadas.png" alt="Dashboard Homologación de camas" />
         <span>Dashboard Homologación de camas</span>
       </a>
@@ -197,29 +198,28 @@
         <span>Reporteador</span>
       </a>
 
+      <!-- patologia -->
+      <a href="/reporte/dashboard-patologia" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+        <img src="/images/patologia.png" alt="Patología" />
+        <span>Patología</span>
+      </a>
+
+      <!-- seguimiento paciente -->
+      <a href="/reporte/dashboard-seguimiento-paciente" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+        <img src="/images/seguimiento_paciente.png" alt="Seguimiento Paciente" />
+        <span>Seguimiento Paciente</span>
+      </a>
+
       <!-- Encuesta -->
-      <a routerLink="/encuesta" class="module">
-        <div class=""></div>
+      <a class="module" (click)="showMainEncuesta()">
         <img src="/images/survey.png" alt="Encuesta" />
         <span>Encuesta de Conformidad</span>
       </a>
 
       <!-- Gestion Documentaria -->
-      <a class="module" routerLink="/documentos/reports-documento">
+      <a class="module" (click)="showMainGestionDocumentaria()">
         <img src="/images/gestion_documentaria.png" alt="Gestion Documentaria" />
         <span>Gestión Documentaria</span>
-      </a>
-
-      <!-- Dashboard Encuesta (admin) -->
-      <a routerLink="/dashboard-encuesta" class="module" *ngIf="user?.roles?.includes('ADMIN')">
-        <img src="/images/respuesta-encuesta.png" alt="Encuesta" />
-        <span>Respuesta de Encuestas</span>
-      </a>
-
-      <!-- Solicitud de acceso  (admin) -->
-      <a routerLink="/solicitud-acceso-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
-        <img src="/images/acceso.png" alt="Auditoría del Sistema" />
-        <span>Solicitud de Acceso</span>
       </a>
 
       <!-- Auditoría del Sistema (admin) -->
@@ -228,28 +228,12 @@
         <span>Auditoría del Sistema</span>
       </a>
 
-      <!-- Auditoría de Documentos (admin) -->
-      <a routerLink="/documentos/auditoria-documento" class="module" *ngIf="user?.roles?.includes('ADMIN')">
-        <img src="/images/gestion_documentaria.png" alt="Auditoría de Documentos" style="filter: hue-rotate(45deg);" />
-        <span>Auditoría de Documentos</span>
-      </a>
 
-      <!-- patologia-->
-      <a href="/reporte/dashboard-patologia" class="module">
-        <img src="/images/patologia.png" alt="Patología" />
-        <span>Patología</span>
-      </a>
-
-      <!-- seguimiento paciente-->
-      <a href="/reporte/dashboard-seguimiento-paciente" class="module">
-        <img src="/images/seguimiento_paciente.png" alt="Seguimiento Paciente" />
-        <span>Seguimiento Paciente</span>
-      </a>
 
     </div>
 
     <!-- Subcomponentes de Varibles SES -->
-    <div class="modules-menu" *ngIf="showVariableSES">
+    <div class="modules-menu" *ngIf="showVariablesSES">
 
       <!-- Consulta externa -->
       <a class="module" (click)="showMainConsultaExterna()">
@@ -279,6 +263,12 @@
       <a routerLink="/reporte/dashboard-hospitalizacion" class="module">
         <img src="/images/hospitalizacion.png" alt="Hospitalizacion" />
         <span>Hospitalizacion</span>
+      </a>
+
+      <!-- Farmacia-->
+      <a href="/reporte/dashboard-farmacia" class="module">
+        <img src="/images/farmacia.png" alt="Farmacia" />
+        <span>Farmacia</span>
       </a>
 
     </div>
@@ -319,6 +309,41 @@
       <a href="/reporte/dashboard-transplante" class="module">
         <img src="/images/transplante.png" alt="Transplante" />
         <span>Transplante</span>
+      </a>
+
+
+    </div>
+
+    <!-- Subcomponentes de Gestion Documentaria-->
+    <div class="modules-menu" *ngIf="showModuloGestionDocumentaria">
+
+      <a class="module" routerLink="/documentos/reports-documento">
+        <img src="/images/gestion_documentaria.png" alt="Gestion Documentaria" />
+        <span>Gestión Documentaria</span>
+      </a>
+
+      <!-- Auditoría de Documentos (admin) -->
+      <a routerLink="/documentos/auditoria-documento" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+        <img src="/images/gestion_documentaria.png" alt="Auditoría de Documentos" style="filter: hue-rotate(45deg);" />
+        <span>Auditoría de Documentos</span>
+      </a>
+
+    </div>
+
+    <!-- Subcomponentes de encuesta-->
+    <div class="modules-menu" *ngIf="showModuloEncuesta">
+
+      <!-- Encuesta -->
+      <a routerLink="/encuesta" class="module">
+        <div class=""></div>
+        <img src="/images/survey.png" alt="Encuesta" />
+        <span>Encuesta de Conformidad</span>
+      </a>
+
+      <!-- Dashboard Encuesta (admin) -->
+      <a routerLink="/dashboard-encuesta" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+        <img src="/images/respuesta-encuesta.png" alt="Encuesta" />
+        <span>Respuesta de Encuestas</span>
       </a>
 
 

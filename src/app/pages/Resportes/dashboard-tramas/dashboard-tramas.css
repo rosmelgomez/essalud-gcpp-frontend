@@ -47,19 +47,32 @@
 }
 
 .btn-export {
-    padding: 10px 16px;
-    background: #0064AF;
+    height: 42px;
+    padding: 0 20px;
+    background: linear-gradient(135deg, #107c41 0%, #0b5a2f 100%);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 3px 10px rgba(16, 124, 65, 0.25);
+    white-space: nowrap;
 }
 
 .btn-export:hover {
-    background: #004080;
-    box-shadow: 0 4px 12px rgba(0, 100, 175, 0.3);
+    background: linear-gradient(135deg, #13924d 0%, #0e6e39 100%);
+    box-shadow: 0 6px 18px rgba(16, 124, 65, 0.35);
+    transform: translateY(-2px);
+}
+
+.btn-export:active {
+    transform: translateY(0);
 }
 
 
@@ -81,18 +94,117 @@
     font-weight: 500;
 }
 
-.actions {
+.header-actions {
     display: flex;
+    justify-content: space-between;
     align-items: flex-end;
-    gap: 0.75rem;
-    flex-wrap: wrap;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.buscar-group {
+.header-actions .buscar-group {
     display: flex;
+    align-items: flex-end;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    width: auto;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Campos de filtro individuales */
+.header-actions .filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 180px;
+    min-width: 150px;
+}
+
+.header-actions .filter-field-centro {
+    flex: 2 1 280px;
+    min-width: 220px;
+    max-width: 450px;
+}
+
+.header-actions .filter-field-actions {
+    flex: 0 0 auto;
+    min-width: auto;
+}
+
+.header-actions .actions {
+    display: flex;
+    align-items: flex-end;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.header-actions .filter-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0064AF;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.header-actions .filter-label i {
+    font-size: 15px;
+    color: #0088bb;
+}
+
+/* Estilos unificados de inputs y selects de filtro */
+.header-actions .filter-input,
+.header-actions .filter-select,
+.header-actions .dropdown-input {
+    height: 42px;
+    padding: 0 12px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #1e293b;
+    background-color: #f8fafc;
+    transition: all 0.25s ease;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.header-actions .filter-input:focus,
+.header-actions .filter-select:focus,
+.header-actions .dropdown-input:focus {
+    outline: none;
+    border-color: #0064AF;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0, 100, 175, 0.15);
+}
+
+.header-actions .filter-input:hover,
+.header-actions .filter-select:hover,
+.header-actions .dropdown-input:hover {
+    border-color: #94a3b8;
+    background-color: #ffffff;
+}
+
+.filter-field-centro .custom-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.filter-field-centro .dropdown-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
 .anio-select,
@@ -428,27 +540,20 @@ to {
 
 /* Search Button */
 .btn-search {
-    background: linear-gradient(135deg, #0064AF, #004a7a);
+    height: 42px;
+    padding: 0 22px;
+    background: linear-gradient(135deg, #0064AF 0%, #004a7a 100%);
     color: white;
     border: none;
-    padding: 10px 20px;
-    width: fit-content;
-    white-space: nowrap;
     border-radius: 8px;
-    font-family: 'Calibri', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 8px rgba(0, 64, 175, 0.2);
-    border-radius: 10px;
     font-family: 'Calibri', sans-serif;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
     flex-shrink: 0;
@@ -780,9 +885,16 @@ to {
         padding: 20px 24px;
     }
 
-    .actions {
-        width: 100%;
+    .header-actions {
         flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        width: 100%;
+    }
+
+    .header-actions .actions {
+        width: 100%;
+        margin-left: 0;
     }
 
     .anio-select {
@@ -797,9 +909,25 @@ to {
         width: 100%;
     }
 
-    .buscar-group {
+    .header-actions .buscar-group {
         width: 100%;
-        flex-direction: column;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .header-actions .filter-field {
+        flex: 1 1 calc(50% - 12px);
+        min-width: 180px;
+    }
+
+    .header-actions .filter-field-centro {
+        max-width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .header-actions .filter-field-actions {
+        flex: 1 1 100%;
     }
 
     .btn-search {
@@ -807,7 +935,7 @@ to {
         justify-content: center;
     }
 
-    .btn-download {
+    .btn-export {
         width: 100%;
         justify-content: center;
     }
@@ -865,24 +993,32 @@ to {
         padding: 10px 14px;
     }
 
-    .buscar-group {
+    .header-actions .buscar-group {
         width: 100%;
         flex-direction: column;
         gap: 12px;
     }
 
+    .header-actions .filter-field,
+    .header-actions .filter-field-centro,
+    .header-actions .filter-field-actions {
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 100%;
+    }
+
     .btn-search {
         width: 100%;
         justify-content: center;
-        font-size: 13px;
-        padding: 10px 20px;
+        font-size: 14px;
+        height: 42px;
     }
 
-    .btn-download {
+    .btn-export {
         width: 100%;
         justify-content: center;
-        font-size: 13px;
-        padding: 10px 20px;
+        font-size: 14px;
+        height: 42px;
     }
 
     .card {
@@ -1199,7 +1335,7 @@ to {
         text-align: center;
     }
 
-    .filter-input {
+    .resumen-filters .filter-input {
         font-size: 0.6rem;
         padding: 4px 4px;
     }
@@ -1302,14 +1438,12 @@ to {
         min-height: 10px;
     }
 
-    .filter-input {
+    .resumen-filters .filter-input {
         font-size: 0.65rem;
         padding: 3px 2px;
     }
 
-
-
-    .filter-input::placeholder {
+    .resumen-filters .filter-input::placeholder {
         font-size: 0.6rem;
     }
 

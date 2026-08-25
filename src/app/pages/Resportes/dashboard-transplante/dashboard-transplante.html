@@ -18,9 +18,8 @@
   <!-- TABS -->
 
 
-  <div class="tabs">
-    <button class="tab-button" [class.active]="activeTab === 'Transplante'"
-      (click)="setActiveTab('Transplante')">
+  <div class="tabs" style="display: none;">
+    <button class="tab-button" [class.active]="activeTab === 'Transplante'" (click)="setActiveTab('Transplante')">
       Transplante
     </button>
   </div>
@@ -87,7 +86,7 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link" >
+              <a class="card-link">
                 <h5 class="card-title">Complejidad A</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(complejidadA) }}</h2>

@@ -28,8 +28,8 @@
         <span class="nav-link-label">Inicio</span>
       </a>
 
-      <a routerLink="/usuario/manage-users" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active" class="nav-link"
-        (click)="closeMenu(); closeProfile()">
+      <a routerLink="/usuario/manage-users" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active"
+        class="nav-link" (click)="closeMenu(); closeProfile()">
         <span class="nav-link-label">Gestionar Usuarios</span>
       </a>
 
@@ -38,8 +38,8 @@
         <span class="nav-link-label">Solicitudes de Acceso</span>
       </a>
 
-      <a routerLink="/usuario/register" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active" class="nav-link"
-        (click)="closeMenu(); closeProfile()">
+      <a routerLink="/usuario/register" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active"
+        class="nav-link" (click)="closeMenu(); closeProfile()">
         <span class="nav-link-label">Registrar Usuario</span>
       </a>
     </div>

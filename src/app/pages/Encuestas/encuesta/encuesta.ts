@@ -3,7 +3,7 @@ import { Component, OnInit, inject, ChangeDetectionStrategy, Inject } from '@ang
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
-import { Categoria, Modulo , Subcategoria, Variable } from '../../../model/encuesta';
+import { Categoria, Modulo, Subcategoria, Variable } from '../../../model/encuesta';
 import { ChangeDetectorRef } from '@angular/core';
 import {
   MatDialog,
@@ -382,6 +382,7 @@ export class Encuesta implements OnInit {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+
 export class EncuestaConfirmDialogComponent {
   readonly dialogRef = inject(MatDialogRef<EncuestaConfirmDialogComponent>);
 

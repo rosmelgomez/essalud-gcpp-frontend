@@ -7,7 +7,16 @@
     </div>
   </div>
 
-  <div class="tab-content">
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-button" [class.active]="activeTab === 'Emergencia'" (click)="setActiveTab('Emergencia')">
+      Emergencia
+    </button>
+  </div>
+
+  <!-- CONTENIDO TABS -->
+  <!-- Tab Emergencia-->
+  <div *ngIf="activeTab === 'Emergencia'" class="tab-content">
     <div class="header">
       <div class="header-actions">
         <div class="buscar-group">
@@ -103,7 +112,6 @@
       </div>
 
       <!-- Fila 2: -->
-
       <div class="cards-row">
         <div class="card">
           <div class="card-body">
@@ -199,5 +207,7 @@
         </div>
       </div>
     </div>
+
   </div>
+
 </div>

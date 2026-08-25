@@ -334,4 +334,20 @@ export class DashboardEmergencia implements OnInit {
     link.click();
     window.URL.revokeObjectURL(url);
   }
+
+
+
+  // Tabs
+  activeTab:
+    | 'Emergencia'
+    | 'Consulta' = 'Emergencia';
+
+  setActiveTab(
+    tab:
+      | 'Emergencia'
+      | 'Consulta',
+  ): void {
+    this.activeTab = tab;
+    this.cdr.detectChanges();
+  }
 }

@@ -428,40 +428,15 @@ export class DashboardTramas implements OnInit {
   }
 
 
-  exportarExcelTablaB1() {
-    if (this.tramasTablaB1.length === 0) {
+
+
+  downloadCSVTablaB1(): void {
+    if (!this.tramasTablaB1?.length) {
       console.warn('No hay datos para descargar');
       return;
     }
 
-    // Construir el CSV
-    const csvContent = [
-      // Encabezados
-      Object.keys(this.tramasTablaB1[0]).join(','),
-      // Filas de datos
-      ...this.tramasTablaB1.map(row =>
-        Object.values(row).map(value => `"${value}"`).join(',')
-      )
-    ].join('\n');
-
-    // Crear Blob y descargar
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.download = 'tramas_tabla_b1.xlsx';
-    link.click();
-    URL.revokeObjectURL(url);
-
-  }
-
-  exportarExcelTablaB2(): void {
-    if (!this.tramasTablaB2?.length) {
-      console.warn('No hay datos para descargar');
-      return;
-    }
-
-    const fileName = `tramas_tabla_b2.xlsx`;
+    const fileName = `tramas_tabla_b1.csv`;
 
     const headers = Object.keys(this.tramasTablaB1[0]);
     const csvContent = [
@@ -474,7 +449,34 @@ export class DashboardTramas implements OnInit {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = fileName.endsWith('.xlsx') ? fileName : `${fileName}.xlsx`;
+    link.download = fileName.endsWith('.csv') ? fileName : `${fileName}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+
+
+
+  downloadCSVTablaB2(): void {
+    if (!this.tramasTablaB2?.length) {
+      console.warn('No hay datos para descargar');
+      return;
+    }
+
+    const fileName = `tramas_tabla_b2.csv`;
+
+    const headers = Object.keys(this.tramasTablaB2[0]);
+    const csvContent = [
+      headers.join(';'),
+      ...this.tramasTablaB2.map((row) =>
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName.endsWith('.csv') ? fileName : `${fileName}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
   }

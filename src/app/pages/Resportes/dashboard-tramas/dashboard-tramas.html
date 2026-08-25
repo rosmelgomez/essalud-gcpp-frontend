@@ -32,42 +32,56 @@
             <div class="header-actions">
                 <div class="buscar-group">
 
-                    <label for="fechaInicioB1">Fecha Inicio:</label>
-                    <input type="date" id="fechaInicioB1" [(ngModel)]="fechaInicioB1">
-
-                    <label for="fechaFinB1">Fecha Fin:</label>
-                    <input type="date" id="fechaFinB1" [(ngModel)]="fechaFinB1">
-
-                    <div class="form-grid">
-                        <div class="centro-form-group">
-                            <div class="custom-dropdown" (mouseleave)="closeDropdown()" (mouseenter)="openDropdown()">
-                                <input type="text" title="Selecciona un centro"
-                                    placeholder="Buscar y seleccionar centro..." (input)="filterCentro($event)"
-                                    (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName"
-                                    class="dropdown-input" />
-                                <div class="dropdown-list" *ngIf="isDropdownOpen">
-                                    <div *ngFor="let centro of (searchCentro ? filteredCentro : centros); let i = index"
-                                        #centroOption class="dropdown-item" [class.active]="i === activeCentroIndex"
-                                        (click)="selectDropdownOption(centro)">
-                                        {{ centro.cenasides }}
-                                    </div>
-                                    <div *ngIf="(searchCentro ? filteredCentro : centros).length === 0"
-                                        class="dropdown-item disabled">
-                                        No hay resultados
-                                    </div>
-                                </div>
-                            </div>
-                            <input type="hidden" [(ngModel)]="codcasB1" />
-                        </div>
+                    <div class="filter-field">
+                        <label for="fechaInicioB1" class="filter-label">
+                            <i class="bi bi-calendar-event"></i> Fecha Inicio:
+                        </label>
+                        <input type="date" id="fechaInicioB1" class="filter-input" [(ngModel)]="fechaInicioB1">
                     </div>
 
-                    <button (click)="loadQueryTablaB1(fechaInicioB1,fechaFinB1,codcasB1)" class="btn-search">
-                        Buscar
-                    </button>
+                    <div class="filter-field">
+                        <label for="fechaFinB1" class="filter-label">
+                            <i class="bi bi-calendar-event"></i> Fecha Fin:
+                        </label>
+                        <input type="date" id="fechaFinB1" class="filter-input" [(ngModel)]="fechaFinB1">
+                    </div>
+
+                    <div class="filter-field filter-field-centro">
+                        <label class="filter-label">
+                            <i class="bi bi-building"></i> Centro Asistencial:
+                        </label>
+                        <div class="custom-dropdown" (mouseleave)="closeDropdown()" (mouseenter)="openDropdown()">
+                            <input type="text" title="Selecciona un centro"
+                                placeholder="Buscar y seleccionar centro..." (input)="filterCentro($event)"
+                                (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName"
+                                class="dropdown-input" />
+                            <div class="dropdown-list" *ngIf="isDropdownOpen">
+                                <div *ngFor="let centro of (searchCentro ? filteredCentro : centros); let i = index"
+                                    #centroOption class="dropdown-item" [class.active]="i === activeCentroIndex"
+                                    (click)="selectDropdownOption(centro)">
+                                    {{ centro.cenasides }}
+                                </div>
+                                <div *ngIf="(searchCentro ? filteredCentro : centros).length === 0"
+                                    class="dropdown-item disabled">
+                                    No hay resultados
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" [(ngModel)]="codcasB1" />
+                    </div>
+
+                    <div class="filter-field filter-field-actions">
+                        <button (click)="loadQueryTablaB1(fechaInicioB1,fechaFinB1,codcasB1)" class="btn-search">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                    </div>
+
                 </div>
 
                 <div class="actions">
-                    <button class="btn-export" (click)="exportarExcelTablaB1()"> Exportar Excel</button>
+                    <button class="btn-export" (click)="downloadCSVTablaB1()">
+                        <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                    </button>
                 </div>
 
             </div>
@@ -157,25 +171,43 @@
             <div class="header-actions">
                 <div class="buscar-group">
 
-                    <label for="fechaInicioB2">Fecha Inicio:</label>
-                    <input type="date" id="fechaInicioB2" [(ngModel)]="fechaInicioB2">
+                    <div class="filter-field">
+                        <label for="fechaInicioB2" class="filter-label">
+                            <i class="bi bi-calendar-event"></i> Fecha Inicio:
+                        </label>
+                        <input type="date" id="fechaInicioB2" class="filter-input" [(ngModel)]="fechaInicioB2">
+                    </div>
 
-                    <label for="fechaFinB2">Fecha Fin:</label>
-                    <input type="date" id="fechaFinB2" [(ngModel)]="fechaFinB2">
+                    <div class="filter-field">
+                        <label for="fechaFinB2" class="filter-label">
+                            <i class="bi bi-calendar-event"></i> Fecha Fin:
+                        </label>
+                        <input type="date" id="fechaFinB2" class="filter-input" [(ngModel)]="fechaFinB2">
+                    </div>
 
-                    <select [(ngModel)]="codcasB2" class="codcas-select">
-                        <option value="">Seleccione un CAS</option>
-                        <option *ngFor="let centro of centros" [value]="centro.cenasicod">
-                            {{ centro.cenasides }}
-                        </option>
-                    </select>
+                    <div class="filter-field filter-field-centro">
+                        <label for="codcasB2" class="filter-label">
+                            <i class="bi bi-building"></i> Centro Asistencial:
+                        </label>
+                        <select id="codcasB2" [(ngModel)]="codcasB2" class="codcas-select filter-select">
+                            <option value="">Seleccione un CAS</option>
+                            <option *ngFor="let centro of centros" [value]="centro.cenasicod">
+                                {{ centro.cenasides }}
+                            </option>
+                        </select>
+                    </div>
 
-                    <button (click)="loadQueryTablaB2(fechaInicioB2,fechaFinB2,codcasB2)" class="btn-search">
-                        Buscar
-                    </button>
+                    <div class="filter-field filter-field-actions">
+                        <button (click)="loadQueryTablaB2(fechaInicioB2,fechaFinB2,codcasB2)" class="btn-search">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                    </div>
+
                 </div>
                 <div class="actions">
-                    <button class="btn-export" (click)="exportarExcelTablaB2()"> Exportar Excel</button>
+                    <button class="btn-export" (click)="downloadCSVTablaB2()">
+                        <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                    </button>
                 </div>
             </div>
         </div>

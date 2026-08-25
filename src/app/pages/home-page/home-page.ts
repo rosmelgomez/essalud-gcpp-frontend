@@ -29,10 +29,14 @@ export class HomePage implements OnInit {
 
   ///Estados para el manejo de componentes
   showModulosPrincipales: boolean = true;
-  showVariableSES: boolean = false;
+  btnReturnModulos: boolean = false;
+
+  showVariablesSES: boolean = false;
 
   showModuloConsultaExterna: boolean = false;
   showModuloCentroQuirurgico: boolean = false;
+  showModuloGestionDocumentaria: boolean = false;
+  showModuloEncuesta: boolean = false;
 
   // Datos de Redes Asistenciales
   dataRed: any[] = [];
@@ -64,31 +68,57 @@ export class HomePage implements OnInit {
   /* Métodos para el manejo de componentes */
   showSESVariables(): void {
     this.showModulosPrincipales = false;
-    this.showVariableSES = true;
+    this.showVariablesSES = true;
+    this.btnReturnModulos = true;
   }
 
   retornoMainModulos(): void {
     this.showModulosPrincipales = true;
-    this.showVariableSES = false;
+    this.showVariablesSES = false;
+    this.btnReturnModulos = false;
+    this.showModuloConsultaExterna = false;
+    this.showModuloCentroQuirurgico = false;
+    this.showModuloGestionDocumentaria = false;
+    this.showModuloEncuesta = false;
   }
 
   showMainConsultaExterna(): void {
     this.showModulosPrincipales = false;
-    this.showVariableSES = false;
+    this.btnReturnModulos = false;
     this.showModuloConsultaExterna = true;
   }
 
   retornoMainSES(): void {
     this.showModulosPrincipales = false;
-    this.showVariableSES = true;
+    this.btnReturnModulos = true;
     this.showModuloConsultaExterna = false;
     this.showModuloCentroQuirurgico = false;
   }
 
   showMainCentroQuirurgico(): void {
     this.showModulosPrincipales = false;
-    this.showVariableSES = false;
+    this.btnReturnModulos = false;
     this.showModuloCentroQuirurgico = true;
+  }
+
+  showMainGestionDocumentaria(): void {
+    if (!this.user?.roles?.includes('ADMIN')) {
+      this.router.navigate(['/documentos/reports-documento']);
+    } else {
+      this.btnReturnModulos = true;
+      this.showModulosPrincipales = false;
+      this.showModuloGestionDocumentaria = true;
+    }
+  }
+
+  showMainEncuesta(): void {
+    if (!this.user?.roles?.includes('ADMIN')) {
+      this.router.navigate(['/encuesta']);
+    } else {
+      this.btnReturnModulos = true;
+      this.showModulosPrincipales = false;
+      this.showModuloEncuesta = true;
+    }
   }
 
   ngOnInit(): void {
