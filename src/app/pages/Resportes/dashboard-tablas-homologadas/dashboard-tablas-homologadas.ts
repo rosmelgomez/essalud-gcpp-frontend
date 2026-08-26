@@ -568,8 +568,6 @@ export class DashboardTablasHomologadas implements OnInit {
     return true;
   }
 
-
-
   formatNumber(num: number): string {
     return new Intl.NumberFormat('es-PE').format(num);
   }
