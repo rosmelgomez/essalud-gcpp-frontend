@@ -6,6 +6,6 @@ import { AuditoriaDocumento } from './auditoria-documento/auditoria-documento';
 export const documentoRoutes: Routes = [
     /// ruta padre /documento/......
     { path: 'creacion', component: CreacionDocumentos },
-    { path: 'reports-documento', component: ReportsDocumento },
-    { path: 'auditoria-documento', component: AuditoriaDocumento, data: { role: ['ADMIN'] } },
+    { path: 'reports', component: ReportsDocumento },
+    { path: 'auditoria', component: AuditoriaDocumento, data: { role: ['ADMIN'] } },
 ];

@@ -311,13 +311,13 @@
     <!-- Subcomponentes de Gestion Documentaria-->
     <div class="modules-menu" *ngIf="showModuloGestionDocumentaria">
 
-      <a class="module" routerLink="/documentos/reports-documento">
+      <a class="module" routerLink="/documento/reports">
         <img src="/images/gestion_documentaria.png" alt="Gestion Documentaria" />
         <span>Gestión Documentaria</span>
       </a>
 
       <!-- Auditoría de Documentos (admin) -->
-      <a routerLink="/documentos/auditoria-documento" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+      <a routerLink="/documento/auditoria" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/gestion_documentaria.png" alt="Auditoría de Documentos" style="filter: hue-rotate(45deg);" />
         <span>Auditoría de Documentos</span>
       </a>
