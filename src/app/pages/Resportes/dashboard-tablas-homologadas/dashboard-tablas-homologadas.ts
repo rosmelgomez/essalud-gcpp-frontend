@@ -10,6 +10,9 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { TablasHomologadasService } from '../../../services/tablas-homologadas-service';
 import { ChangeDetectorRef } from '@angular/core';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { ClasificacionCamas } from '../../../model/clasificacion-camas';
+import { forkJoin } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard-tablas-homologadas',
@@ -21,6 +24,7 @@ import { FechaActualizacionService } from '../../../services/fecha-actualizacion
     MatPaginatorModule,
     MatSortModule,
     ScrollingModule,
+    FormsModule,
   ],
   templateUrl: './dashboard-tablas-homologadas.html',
   styleUrl: './dashboard-tablas-homologadas.css',
@@ -30,20 +34,31 @@ export class DashboardTablasHomologadas implements OnInit {
   currentDate: string = '';
 
 
-  nameCentro: string = '';
+  centroAtencion: string = '';
   codcas: string = '';
 
-  emergencia: boolean = false;
-  consultaExterna: boolean = false;
-  camas: boolean = false;
+  ///estados de emergencia
+  loadingEM: boolean = true;
+  errorEM: string = '';
 
+  ///estados de consulta externa
+  loadingCE: boolean = true;
+  errorCE: string = '';
+
+  ///estados de camas
+  loadingCAM: boolean = true;
+  errorCAM: string = '';
 
   dataEmergencia: any[] = [];
   dataEmergenciaFilter: any[] = [];
   dataConsultaExterna: any[] = [];
   dataConsultaExternaFilter: any[] = [];
+
   dataCamas: any[] = [];
   dataCamasFilter: any[] = [];
+  dataCamasCSV: any[] = [];
+
+  valoresClasificacion: Record<string, string> = {};
 
 
   dataServicio: any[] = [];
@@ -95,10 +110,11 @@ export class DashboardTablasHomologadas implements OnInit {
     "camestregcod": "",
     "camflgfun": "",
     "cametiqcod": "",
+    "arehosdes": "",
     "cenasides": "",
-    "servhosdes": ""
+    "servhosdes": "",
+    "descripcion_clasificacion": ""
   }
-
   constructor(
     private dataImport: LocalStorageService,
     private tablasHomologadasService: TablasHomologadasService,
@@ -107,8 +123,9 @@ export class DashboardTablasHomologadas implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.nameCentro = this.dataImport.getDataCentro()?.nameCentro || '';
+    this.centroAtencion = this.dataImport.getDataCentro()?.nameCentro || '';
     this.codcas = this.dataImport.getDataCentro()?.codcas || '';
+    this.loadFechaActualizacion();
   }
 
 
@@ -125,64 +142,129 @@ export class DashboardTablasHomologadas implements OnInit {
 
 
   loadDataEmergencia(): void {
+    this.loadingEM = true;
+    this.errorEM = '';
+
     this.tablasHomologadasService.getQueryTHE(this.codcas).subscribe({
       next: (response) => {
         this.dataEmergencia = response;
         this.dataEmergenciaFilter = response;
-        this.emergencia = true;
-        this.consultaExterna = false;
-        this.cdr.detectChanges();
+        this.loadingEM = false;
+
       },
       error: (error) => {
         console.error('Error al cargar datos de emergencia:', error);
+        this.loadingEM = false;
+        this.errorEM = error;
       },
     });
 
+    this.cdr.detectChanges();
   }
 
   loadDataConsultaExterna(): void {
+
+    this.loadingCE = true;
+    this.errorCE = '';
+
     this.tablasHomologadasService.getQueryTHCE().subscribe({
       next: (response) => {
         this.dataConsultaExterna = response;
         this.dataConsultaExternaFilter = response;
-        this.emergencia = false;
-        this.consultaExterna = true;
-        this.cdr.detectChanges();
+        this.loadingCE = false;
       },
       error: (error) => {
         console.error('Error al cargar datos de consulta externa:', error);
+        this.loadingCE = false;
+        this.errorCE = error;
       },
     });
+    this.cdr.detectChanges();
   }
 
   loadDataCamas(): void {
+
+    this.loadingCAM = true;
+    this.errorCAM = '';
+
     this.tablasHomologadasService.getQueryTHCAMA(this.codcas).subscribe({
       next: (response) => {
-        this.dataCamas = response;
-        this.dataCamasFilter = response;
-        this.emergencia = false;
-        this.consultaExterna = false;
-        this.camas = true;
-        this.loadDataServicio();
+        this.dataCamas = response.map((row: any) => {
+          const desc = row.descripcion_clasificacion || 'no seleccionado';
+          return {
+            ...row,
+            descripcion_clasificacion: desc,
+            original_descripcion: desc
+          };
+        });
+        this.dataCamasFilter = [...this.dataCamas];
+        this.dataCamasCSV = [...this.dataCamas];
+        this.loadingCAM = false;
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error al cargar datos de camas:', error);
+        this.loadingCAM = false;
+        this.errorCAM = error;
+        this.cdr.detectChanges();
+      },
+    });
+
+  }
+
+  guardarClasificacion(): void {
+    const { register, update } = this.buildClasificaciones();
+
+    if (register.length === 0 && update.length === 0) {
+      console.log('No hay cambios para guardar');
+      return;
+    }
+
+    const solicitudes = [
+      ...register.map((clasi) => this.tablasHomologadasService.registerClasificacionCamas(clasi)),
+      ...update.map((clasi) => this.tablasHomologadasService.updateClasificacionCamas(clasi))
+    ];
+
+    forkJoin(solicitudes).subscribe({
+      next: (responses) => {
+        this.loadDataCamas();
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Error al registrar o actualizar datos de camas:', error);
+        this.cdr.markForCheck();
       },
     });
   }
 
-  loadDataServicio(): void {
-    this.tablasHomologadasService.getQueryTHCAMASERV().subscribe({
-      next: (response) => {
-        this.dataServicio = response;
-        console.log(this.dataServicio);
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error al cargar datos de servicio:', error);
-      },
+  private buildClasificaciones(): { register: ClasificacionCamas[], update: ClasificacionCamas[] } {
+    const register: ClasificacionCamas[] = [];
+    const update: ClasificacionCamas[] = [];
+
+    this.dataCamasFilter.forEach((row) => {
+      // Check if the value has changed
+      if (row.descripcion_clasificacion === row.original_descripcion) {
+        return;
+      }
+
+      const clasi: ClasificacionCamas = {
+        id: row.id_clasificacion || 0,
+        cenasicod: row.cenasicod,
+        camcod: row.camcod,
+        arehoscod: row.arehoscod,
+        habcod: row.habcod,
+        servhoscod: row.servhoscod,
+        descripcion: row.descripcion_clasificacion
+      };
+
+      if (row.id_clasificacion) {
+        update.push(clasi);
+      } else {
+        register.push(clasi);
+      }
     });
+
+    return { register, update };
   }
 
 
@@ -406,6 +488,7 @@ export class DashboardTablasHomologadas implements OnInit {
     return true;
   }
 
+  ///filtro dinamico para la tabla de camas para cada columna
   filterDataCamas(column: keyof typeof this.filtersCamas, event: any): void {
     const filterValue = event.target.value.toLowerCase().trim();
     this.filtersCamas[column] = filterValue;
@@ -415,111 +498,105 @@ export class DashboardTablasHomologadas implements OnInit {
 
   private applyAllFiltersCamas(row: any): boolean {
     // Filtro oricenasicod
-    if (
-      this.filtersCamas.oricenasicod &&
-      !row.oricenasicod.toLowerCase().includes(this.filtersCamas.oricenasicod)
-    ) {
-      return false;
-    }
+    if (this.filtersCamas.oricenasicod && !row.oricenasicod.toLowerCase().includes(this.filtersCamas.oricenasicod)
+    ) { return false; }
     // Filtro cenario
-    if (
-      this.filtersCamas.cenasicod &&
-      !row.cenasicod.toLowerCase().includes(this.filtersCamas.cenasicod)
-    ) {
+    if (this.filtersCamas.cenasicod && !row.cenasicod.toLowerCase().includes(this.filtersCamas.cenasicod)) {
       return false;
     }
     // Filtro area
-    if (
-      this.filtersCamas.arehoscod &&
-      !row.arehoscod.toLowerCase().includes(this.filtersCamas.arehoscod)
-    ) {
+    if (this.filtersCamas.arehoscod && !row.arehoscod.toLowerCase().includes(this.filtersCamas.arehoscod)) {
       return false;
     }
     // Filtro servicio
-    if (
-      this.filtersCamas.servhoscod &&
-      !row.servhoscod.toLowerCase().includes(this.filtersCamas.servhoscod)
-    ) {
+    if (this.filtersCamas.servhoscod && !row.servhoscod.toLowerCase().includes(this.filtersCamas.servhoscod)) {
       return false;
     }
     // Filtro estenfcod
-    if (
-      this.filtersCamas.estenfcod &&
-      !row.estenfcod.toLowerCase().includes(this.filtersCamas.estenfcod)
-    ) {
+    if (this.filtersCamas.estenfcod && !row.estenfcod.toLowerCase().includes(this.filtersCamas.estenfcod)) {
       return false;
     }
     // Filtro habcod
-    if (
-      this.filtersCamas.habcod &&
-      !row.habcod.toLowerCase().includes(this.filtersCamas.habcod)
-    ) {
+    if (this.filtersCamas.habcod && !row.habcod.toLowerCase().includes(this.filtersCamas.habcod)) {
       return false;
     }
     // Filtro camcod
-    if (
-      this.filtersCamas.camcod &&
-      !row.camcod.toLowerCase().includes(this.filtersCamas.camcod)
-    ) {
+    if (this.filtersCamas.camcod && !row.camcod.toLowerCase().includes(this.filtersCamas.camcod)) {
       return false;
     }
     // Filtro tipcamcod
-    if (
-      this.filtersCamas.tipcamcod &&
-      !row.tipcamcod.toLowerCase().includes(this.filtersCamas.tipcamcod)
-    ) {
+    if (this.filtersCamas.tipcamcod && !row.tipcamcod.toLowerCase().includes(this.filtersCamas.tipcamcod)) {
       return false;
     }
     // Filtro estcamcod
-    if (
-      this.filtersCamas.estcamcod &&
-      !row.estcamcod.toLowerCase().includes(this.filtersCamas.estcamcod)
-    ) {
+    if (this.filtersCamas.estcamcod && !row.estcamcod.toLowerCase().includes(this.filtersCamas.estcamcod)) {
       return false;
     }
     // Filtro camobsdes
-    if (
-      this.filtersCamas.camobsdes &&
-      !row.camobsdes.toLowerCase().includes(this.filtersCamas.camobsdes)
-    ) {
+    if (this.filtersCamas.camobsdes && !row.camobsdes.toLowerCase().includes(this.filtersCamas.camobsdes)) {
       return false;
     }
     // Filtro camestregcod
-    if (
-      this.filtersCamas.camestregcod &&
-      !row.camestregcod.toLowerCase().includes(this.filtersCamas.camestregcod)
-    ) {
+    if (this.filtersCamas.camestregcod && !row.camestregcod.toLowerCase().includes(this.filtersCamas.camestregcod)) {
       return false;
     }
     // Filtro camflgfun
-    if (
-      this.filtersCamas.camflgfun &&
-      !row.camflgfun.toLowerCase().includes(this.filtersCamas.camflgfun)
-    ) {
+    if (this.filtersCamas.camflgfun && !row.camflgfun.toLowerCase().includes(this.filtersCamas.camflgfun)) {
       return false;
     }
     // Filtro cametiqcod
-    if (
-      this.filtersCamas.cametiqcod &&
-      !row.camtiqcod.toLowerCase().includes(this.filtersCamas.cametiqcod)
-    ) {
+    if (this.filtersCamas.cametiqcod && !row.camtiqcod.toLowerCase().includes(this.filtersCamas.cametiqcod)) {
       return false;
     }
     // Filtro cenasides
-    if (
-      this.filtersCamas.cenasides &&
-      !row.cenasides.toLowerCase().includes(this.filtersCamas.cenasides)
-    ) {
+    if (this.filtersCamas.cenasides && !row.cenasides.toLowerCase().includes(this.filtersCamas.cenasides)) {
+      return false;
+    }
+    //Filtro arehosdes
+    if (this.filtersCamas.arehosdes && !row.arehosdes.toLowerCase().includes(this.filtersCamas.arehosdes)) {
       return false;
     }
     // Filtro servhosdes
-    if (
-      this.filtersCamas.servhosdes &&
-      !row.servhosdes.toLowerCase().includes(this.filtersCamas.servhosdes)
-    ) {
+    if (this.filtersCamas.servhosdes && !row.servhosdes.toLowerCase().includes(this.filtersCamas.servhosdes)) {
       return false;
     }
+    // Filtro descripcion_clasificacion
+    if (this.filtersCamas.descripcion_clasificacion && !row.descripcion_clasificacion.toLowerCase().includes(this.filtersCamas.descripcion_clasificacion)) {
+      return false;
+    }
+
     return true;
+  }
+
+
+
+  formatNumber(num: number): string {
+    return new Intl.NumberFormat('es-PE').format(num);
+  }
+
+  // Tabs
+  activeTab:
+    | 'Tablas homolagadas - Emergencia'
+    | 'Tablas Homolagas - Consulta Externa'
+    | 'Tablas Homolagas - Camas' = 'Tablas homolagadas - Emergencia';
+
+  setActiveTab(
+    tab:
+      | 'Tablas homolagadas - Emergencia'
+      | 'Tablas Homolagas - Consulta Externa'
+      | 'Tablas Homolagas - Camas',
+  ): void {
+    this.activeTab = tab;
+
+    if (tab === 'Tablas Homolagas - Camas') {
+      this.loadDataCamas();
+    } else if (tab === 'Tablas Homolagas - Consulta Externa') {
+      this.loadDataConsultaExterna();
+    } else if (tab === 'Tablas homolagadas - Emergencia') {
+      this.loadDataEmergencia();
+    }
+
+    this.cdr.detectChanges();
   }
 
 }

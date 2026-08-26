@@ -1,317 +1,357 @@
 <div class="main">
+  <!-- Header con logo y título -->
   <div class="header">
-    <h1>Tablas Homologadas</h1>
-    <h2>Seleccione el tipo de tabla que desea consultar.</h2>
-    <div class="info-centro">
-      <div>
-        <h2>Centro : {{ nameCentro }}</h2>
-      </div>
-      <div>
-        <h2>Codigo : {{ codcas }}</h2>
-      </div>
+    <div class="header-content">
+      <h2 class="title">Tablas homolagadas</h2>
+      <p class="subtitle">
+        Información actualizada al {{ currentDate }} | centro de atención: {{ centroAtencion }}
+      </p>
     </div>
   </div>
 
-  <div class="container-btn">
-    <div class="btn btn-primary" (click)="loadDataEmergencia()">
-      <h3>Tablas homolagadas - Emergencia</h3>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-button" [class.active]="activeTab === 'Tablas homolagadas - Emergencia'"
+      (click)="setActiveTab('Tablas homolagadas - Emergencia')">
+      Tablas homolagadas - Emergencia
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Tablas Homolagas - Consulta Externa'"
+      (click)="setActiveTab('Tablas Homolagas - Consulta Externa')">
+      Tablas Homolagas - Consulta Externa
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'Tablas Homolagas - Camas'"
+      (click)="setActiveTab('Tablas Homolagas - Camas')">
+      Tablas Homolagas - Camas
+    </button>
+  </div>
+
+  <!-- CONTENIDO TABS -->
+  <!-- Tab Tablas homolagadas - Emergencia -->
+  <div *ngIf="activeTab === 'Tablas homolagadas - Emergencia'" class="tab-content">
+
+    <div class="header">
       <p>Relación de tópicos, emergencias y estándares por centro asistencial.</p>
     </div>
-    <div class="btn btn-primary" (click)="loadDataConsultaExterna()">
-      <h3>Tablas Homolagas - Consulta Externa</h3>
-      <p>
-        Relación homologada de grupo ocupacional, actividad, servicio, especialidad y variables.
-      </p>
+
+    <!-- Estado Loading-->
+    <div *ngIf="loadingEM" class="loading">
+      <p>Cargando datos...</p>
     </div>
-    <div class="btn btn-primary" (click)="loadDataCamas()">
-      <h3>Tablas Homolagas - Camas</h3>
-      <p>
-        Relación homologada de camas
-      </p>
+
+    <!-- Estado de Error -->
+    <div *ngIf="errorEM" class="alert alert-danger">
+      {{ errorEM }}
+    </div>
+
+    <!-- Contenido de tablas homologadas emergencia -->
+    <div *ngIf="!loadingEM && !errorEM" class="dashboard-content">
+      <mat-card class="resumen-table">
+        <h3>Detalle de tablas homologadas emergencia</h3>
+        <div class="resumen-wrapper">
+          <div class="resumen-grid-content">
+            <!-- HEADER -->
+            <div class="resumen-header">
+              <div class="cell cod_centro">COD_CENTRO</div>
+              <div class="cell cenasides">CENTRO</div>
+              <div class="cell cod_topico">COD_TOPICO</div>
+              <div class="cell topemedes">TOPICO</div>
+              <div class="cell cod_emergencia">COD_EMERGENCIA</div>
+              <div class="cell desc_emergencia">EMERGENCIA</div>
+              <div class="cell cod_estandar">COD_ESTANDAR</div>
+              <div class="cell des_estandar">ESTANDAR</div>
+            </div>
+
+            <!-- FILTERS ROW -->
+            <div class="resumen-filters">
+              <input type="text" class="filter-input cell cod_centro" placeholder="Buscar codigo centro..."
+                (keyup)="filterDataEmergencia('cod_centro', $event)" />
+              <input type="text" class="filter-input cell cenasides" placeholder="Buscar centro..."
+                (keyup)="filterDataEmergencia('cenasides', $event)" />
+              <input type="text" class="filter-input cell cod_topico" placeholder="Buscar codigo topico..."
+                (keyup)="filterDataEmergencia('cod_topico', $event)" />
+              <input type="text" class="filter-input cell topemedes" placeholder="Buscar topico..."
+                (keyup)="filterDataEmergencia('topemedes', $event)" />
+              <input type="text" class="filter-input cell cod_emergencia" placeholder="Buscar codigo emergencia..."
+                (keyup)="filterDataEmergencia('cod_emergencia', $event)" />
+              <input type="text" class="filter-input cell total_atenciones" placeholder="Buscar emergencia.."
+                (keyup)="filterDataEmergencia('desc_emergencia', $event)" />
+              <input type="text" class="filter-input cell cod_estandar" placeholder="Buscar codigo estandar.."
+                (keyup)="filterDataEmergencia('cod_estandar', $event)" />
+              <input type="text" class="filter-input cell des_estandar" placeholder="Buscar estandar.."
+                (keyup)="filterDataEmergencia('des_estandar', $event)" />
+            </div>
+
+            <!-- VIRTUAL SCROLL -->
+            <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="72">
+              <div *cdkVirtualFor="let row of dataEmergencia" class="resumen-row">
+                <div class="cell cod_centro">{{ row.cod_centro }}</div>
+                <div class="cell cenasides">{{ row.cenasides }}</div>
+                <div class="cell cod_topico">{{ row.cod_topico }}</div>
+                <div class="cell topemedes">{{ row.topemedes }}</div>
+                <div class="cell cod_emergencia">{{ row.cod_emergencia }}</div>
+                <div class="cell desc_emergencia">{{ row.desc_emergencia }}</div>
+                <div class="cell cod_estandar">{{ row.cod_estandar }}</div>
+                <div class="cell des_estandar">{{ row.des_estandar }}</div>
+              </div>
+            </cdk-virtual-scroll-viewport>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="table-footer">
+          <div class="footer-left"><strong>Total de filas:</strong></div>
+          <div class="footer-right num">
+            <strong>{{ dataEmergencia.length }}</strong>
+          </div>
+        </div>
+      </mat-card>
+
+      <ng-template #noTable>
+        <div class="no-data">Sin datos para tablas homologadas emergencia.</div>
+      </ng-template>
+
     </div>
   </div>
 
+  <!-- Tab Tablas Homolagas - Consulta Externa -->
+  <div *ngIf="activeTab === 'Tablas Homolagas - Consulta Externa'" class="tab-content">
+    <!-- Header con logo y título -->
+    <div class="header">
+      <p>Relación homologada de grupo ocupacional, actividad, servicio, especialidad y variables.</p>
+    </div>
 
-  <div class="tabla-emergencia" *ngIf="emergencia">
-    <mat-card class="resumen-table">
-      <h3>Detalle de tablas homologadas emergencia</h3>
-      <div class="resumen-wrapper">
-        <div class="resumen-grid-content">
-          <!-- HEADER -->
-          <div class="resumen-header">
-            <div class="cell cod_centro">COD_CENTRO</div>
-            <div class="cell cenasides">CENTRO</div>
-            <div class="cell cod_topico">COD_TOPICO</div>
-            <div class="cell topemedes">TOPICO</div>
-            <div class="cell cod_emergencia">COD_EMERGENCIA</div>
-            <div class="cell desc_emergencia">EMERGENCIA</div>
-            <div class="cell cod_estandar">COD_ESTANDAR</div>
-            <div class="cell des_estandar">ESTANDAR</div>
-          </div>
+    <!-- Estado Loading -->
+    <div *ngIf="loadingCE" class="loading">
+      <p>Cargando datos...</p>
+    </div>
 
-          <!-- FILTERS ROW -->
-          <div class="resumen-filters">
-            <input type="text" class="filter-input cell cod_centro" placeholder="Buscar codigo centro..."
-              (keyup)="filterDataEmergencia('cod_centro', $event)" />
-            <input type="text" class="filter-input cell cenasides" placeholder="Buscar centro..."
-              (keyup)="filterDataEmergencia('cenasides', $event)" />
-            <input type="text" class="filter-input cell cod_topico" placeholder="Buscar codigo topico..."
-              (keyup)="filterDataEmergencia('cod_topico', $event)" />
-            <input type="text" class="filter-input cell topemedes" placeholder="Buscar topico..."
-              (keyup)="filterDataEmergencia('topemedes', $event)" />
-            <input type="text" class="filter-input cell cod_emergencia" placeholder="Buscar codigo emergencia..."
-              (keyup)="filterDataEmergencia('cod_emergencia', $event)" />
-            <input type="text" class="filter-input cell total_atenciones" placeholder="Buscar emergencia.."
-              (keyup)="filterDataEmergencia('desc_emergencia', $event)" />
-            <input type="text" class="filter-input cell cod_estandar" placeholder="Buscar codigo estandar.."
-              (keyup)="filterDataEmergencia('cod_estandar', $event)" />
-            <input type="text" class="filter-input cell des_estandar" placeholder="Buscar estandar.."
-              (keyup)="filterDataEmergencia('des_estandar', $event)" />
-          </div>
 
-          <!-- VIRTUAL SCROLL -->
-          <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="72">
-            <div *cdkVirtualFor="let row of dataEmergencia" class="resumen-row">
-              <div class="cell cod_centro">{{ row.cod_centro }}</div>
-              <div class="cell cenasides">{{ row.cenasides }}</div>
-              <div class="cell cod_topico">{{ row.cod_topico }}</div>
-              <div class="cell topemedes">{{ row.topemedes }}</div>
-              <div class="cell cod_emergencia">{{ row.cod_emergencia }}</div>
-              <div class="cell desc_emergencia">{{ row.desc_emergencia }}</div>
-              <div class="cell cod_estandar">{{ row.cod_estandar }}</div>
-              <div class="cell des_estandar">{{ row.des_estandar }}</div>
+    <!-- Estado Error -->
+    <div *ngIf="errorCE" class="alert alert-danger">
+      {{ errorCE }}
+    </div>
+
+    <!-- Contenido de tablas homologadas consulta externa -->
+    <div *ngIf="!loadingCE && !errorCE " class="dashboard-content">
+      <mat-card class="resumen-table-consulta-externa">
+        <h3>Detalle de tablas homologadas consulta externa</h3>
+        <div class="resumen-wrapper-consulta-externa">
+          <div class="resumen-grid-content-consulta-externa">
+            <!-- HEADER -->
+            <div class="resumen-header-consulta-externa">
+              <div class="cell desc_gpo_ocup">GPO_OCUP</div>
+              <div class="cell cod_area">COD_AREA</div>
+              <div class="cell desc_area">AREA</div>
+              <div class="cell cod_actividad">COD_ACTIVIDAD</div>
+              <div class="cell desc_actividad">ACTIVIDAD</div>
+              <div class="cell cod_subactividad">COD_SUBACTIVIDAD</div>
+              <div class="cell desc_subactividad">SUBACTIVIDAD</div>
+              <div class="cell cod_servicio">COD_SERVICIO</div>
+              <div class="cell desc_servicio">SERVICIO</div>
+              <div class="cell cod_especialidad">COD_ESPECIALIDAD</div>
+              <div class="cell especialidad">ESPECIALIDAD</div>
+              <div class="cell cod_subespecialidad">COD_SUBESPECIALIDAD</div>
+              <div class="cell subespecialidad">SUBESPECIALIDAD</div>
+              <div class="cell cod_agrupador">COD_AGRUPADOR</div>
+              <div class="cell agrupador">AGRUPADOR</div>
+              <div class="cell cod_variable">COD_VARIABLE</div>
+              <div class="cell variable">VARIABLE</div>
+              <div class="cell anio">ANIO</div>
+              <div class="cell anio_uso">ANIO_USO</div>
             </div>
-          </cdk-virtual-scroll-viewport>
-        </div>
-      </div>
 
-      <!-- FOOTER -->
-      <div class="table-footer">
-        <div class="footer-left"><strong>Total de filas:</strong></div>
-        <div class="footer-right num">
-          <strong>{{ dataEmergencia.length }}</strong>
-        </div>
-      </div>
-    </mat-card>
+            <!-- FILTERS ROW -->
+            <div class="resumen-filters-consulta-externa">
+              <input type="text" class="filter-input-consulta-externa cell desc_gpo_ocup" placeholder="Buscar grupo..."
+                (keyup)="filterDataConsultaExterna('desc_gpo_ocup', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell cod_area" placeholder="Buscar codigo area..."
+                (keyup)="filterDataConsultaExterna('cod_area', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell desc_area" placeholder="Buscar area..."
+                (keyup)="filterDataConsultaExterna('desc_area', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell cod_actividad"
+                placeholder="Buscar codigo actividad..." (keyup)="filterDataConsultaExterna('cod_actividad', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell desc_actividad"
+                placeholder="Buscar actividad..." (keyup)="filterDataConsultaExterna('desc_actividad', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell cod_subactividad"
+                placeholder="Buscar codigo subactividad.."
+                (keyup)="filterDataConsultaExterna('cod_subactividad', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell desc_subactividad"
+                placeholder="Buscar subactividad.." (keyup)="filterDataConsultaExterna('desc_subactividad', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell cod_servicio"
+                placeholder="Buscar codigo servicio.." (keyup)="filterDataConsultaExterna('cod_servicio', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell desc_servicio"
+                placeholder="Buscar servicio.." (keyup)="filterDataConsultaExterna('desc_servicio', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell cod_especialidad"
+                placeholder="Buscar codigo especialidad.."
+                (keyup)="filterDataConsultaExterna('cod_especialidad', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell especialidad"
+                placeholder="Buscar especialidad.." (keyup)="filterDataConsultaExterna('especialidad', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell cod_subespecialidad"
+                placeholder="Buscar codigo subespecialidad.."
+                (keyup)="filterDataConsultaExterna('cod_subespecialidad', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell subespecialidad"
+                placeholder="Buscar subespecialidad.." (keyup)="filterDataConsultaExterna('subespecialidad', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell cod_agrupador"
+                placeholder="Buscar codigo agrupador.." (keyup)="filterDataConsultaExterna('cod_agrupador', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell agrupador" placeholder="Buscar agrupador.."
+                (keyup)="filterDataConsultaExterna('agrupador', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell cod_variable"
+                placeholder="Buscar codigo variable.." (keyup)="filterDataConsultaExterna('cod_variable', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell variable" placeholder="Buscar variable.."
+                (keyup)="filterDataConsultaExterna('variable', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell anio" placeholder="Buscar año.."
+                (keyup)="filterDataConsultaExterna('anio', $event)" />
+              <input type="text" class="filter-input-consulta-externa cell anio_uso" placeholder="Buscar año uso.."
+                (keyup)="filterDataConsultaExterna('anio_uso', $event)" />
+            </div>
 
-    <ng-template #noTable>
-      <div class="no-data">Sin datos para tablas homologadas emergencia.</div>
-    </ng-template>
+            <!-- VIRTUAL SCROLL -->
+            <cdk-virtual-scroll-viewport class="resumen-viewport-consulta-externa" [itemSize]="72">
+              <div *cdkVirtualFor="let row of dataConsultaExterna" class="resumen-row-consulta-externa">
+                <div class="cell desc_gpo_ocup">{{ row.desc_gpo_ocup }}</div>
+                <div class="cell cod_area">{{ row.cod_area }}</div>
+                <div class="cell desc_area">{{ row.desc_area }}</div>
+                <div class="cell cod_actividad">{{ row.cod_actividad }}</div>
+                <div class="cell desc_actividad">{{ row.desc_actividad }}</div>
+                <div class="cell cod_subactividad">{{ row.cod_subactividad }}</div>
+                <div class="cell desc_subactividad">{{ row.desc_subactividad }}</div>
+                <div class="cell cod_servicio">{{ row.cod_servicio }}</div>
+                <div class="cell desc_servicio">{{ row.desc_servicio }}</div>
+                <div class="cell cod_especialidad">{{ row.cod_especialidad }}</div>
+                <div class="cell especialidad">{{ row.especialidad }}</div>
+                <div class="cell cod_subespecialidad">{{ row.cod_subespecialidad }}</div>
+                <div class="cell subespecialidad">{{ row.subespecialidad }}</div>
+                <div class="cell cod_agrupador">{{ row.cod_agrupador }}</div>
+                <div class="cell agrupador">{{ row.agrupador }}</div>
+                <div class="cell cod_variable">{{ row.cod_variable }}</div>
+                <div class="cell variable">{{ row.variable }}</div>
+                <div class="cell anio">{{ row.anio }}</div>
+                <div class="cell anio_uso">{{ row.anio_uso || 'none' }}</div>
+              </div>
+            </cdk-virtual-scroll-viewport>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="table-footer-consulta-externa">
+          <div class="footer-left"><strong>Total de filas:</strong></div>
+          <div class="footer-right num">
+            <strong>{{ dataConsultaExterna.length }}</strong>
+          </div>
+        </div>
+      </mat-card>
+
+      <ng-template #noTable>
+        <div class="no-data">Sin datos para tablas homologadas consulta externa.</div>
+      </ng-template>
+    </div>
   </div>
 
-  <div class="tabla-consulta-externa" *ngIf="consultaExterna">
+  <!-- Tab Tablas Homolagas - Camas -->
+  <div *ngIf="activeTab === 'Tablas Homolagas - Camas'" class="tab-content">
 
-    <mat-card class="resumen-table-consulta-externa">
-      <h3>Detalle de tablas homologadas consulta externa</h3>
-      <div class="resumen-wrapper-consulta-externa">
-        <div class="resumen-grid-content-consulta-externa">
-          <!-- HEADER -->
-          <div class="resumen-header-consulta-externa">
-            <div class="cell desc_gpo_ocup">GPO_OCUP</div>
-            <div class="cell cod_area">COD_AREA</div>
-            <div class="cell desc_area">AREA</div>
-            <div class="cell cod_actividad">COD_ACTIVIDAD</div>
-            <div class="cell desc_actividad">ACTIVIDAD</div>
-            <div class="cell cod_subactividad">COD_SUBACTIVIDAD</div>
-            <div class="cell desc_subactividad">SUBACTIVIDAD</div>
-            <div class="cell cod_servicio">COD_SERVICIO</div>
-            <div class="cell desc_servicio">SERVICIO</div>
-            <div class="cell cod_especialidad">COD_ESPECIALIDAD</div>
-            <div class="cell especialidad">ESPECIALIDAD</div>
-            <div class="cell cod_subespecialidad">COD_SUBESPECIALIDAD</div>
-            <div class="cell subespecialidad">SUBESPECIALIDAD</div>
-            <div class="cell cod_agrupador">COD_AGRUPADOR</div>
-            <div class="cell agrupador">AGRUPADOR</div>
-            <div class="cell cod_variable">COD_VARIABLE</div>
-            <div class="cell variable">VARIABLE</div>
-            <div class="cell anio">ANIO</div>
-            <div class="cell anio_uso">ANIO_USO</div>
-          </div>
+    <!-- Header con logo y título -->
+    <div class="header">
+      <p>Relación homologada de camas por centro asistencial.</p>
+    </div>
 
-          <!-- FILTERS ROW -->
-          <div class="resumen-filters-consulta-externa">
-            <input type="text" class="filter-input-consulta-externa cell desc_gpo_ocup" placeholder="Buscar grupo..."
-              (keyup)="filterDataConsultaExterna('desc_gpo_ocup', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell cod_area" placeholder="Buscar codigo area..."
-              (keyup)="filterDataConsultaExterna('cod_area', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell desc_area" placeholder="Buscar area..."
-              (keyup)="filterDataConsultaExterna('desc_area', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell cod_actividad"
-              placeholder="Buscar codigo actividad..." (keyup)="filterDataConsultaExterna('cod_actividad', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell desc_actividad"
-              placeholder="Buscar actividad..." (keyup)="filterDataConsultaExterna('desc_actividad', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell cod_subactividad"
-              placeholder="Buscar codigo subactividad.."
-              (keyup)="filterDataConsultaExterna('cod_subactividad', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell desc_subactividad"
-              placeholder="Buscar subactividad.." (keyup)="filterDataConsultaExterna('desc_subactividad', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell cod_servicio"
-              placeholder="Buscar codigo servicio.." (keyup)="filterDataConsultaExterna('cod_servicio', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell desc_servicio" placeholder="Buscar servicio.."
-              (keyup)="filterDataConsultaExterna('desc_servicio', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell cod_especialidad"
-              placeholder="Buscar codigo especialidad.."
-              (keyup)="filterDataConsultaExterna('cod_especialidad', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell especialidad"
-              placeholder="Buscar especialidad.." (keyup)="filterDataConsultaExterna('especialidad', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell cod_subespecialidad"
-              placeholder="Buscar codigo subespecialidad.."
-              (keyup)="filterDataConsultaExterna('cod_subespecialidad', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell subespecialidad"
-              placeholder="Buscar subespecialidad.." (keyup)="filterDataConsultaExterna('subespecialidad', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell cod_agrupador"
-              placeholder="Buscar codigo agrupador.." (keyup)="filterDataConsultaExterna('cod_agrupador', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell agrupador" placeholder="Buscar agrupador.."
-              (keyup)="filterDataConsultaExterna('agrupador', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell cod_variable"
-              placeholder="Buscar codigo variable.." (keyup)="filterDataConsultaExterna('cod_variable', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell variable" placeholder="Buscar variable.."
-              (keyup)="filterDataConsultaExterna('variable', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell anio" placeholder="Buscar año.."
-              (keyup)="filterDataConsultaExterna('anio', $event)" />
-            <input type="text" class="filter-input-consulta-externa cell anio_uso" placeholder="Buscar año uso.."
-              (keyup)="filterDataConsultaExterna('anio_uso', $event)" />
-          </div>
+    <!-- Estado Loading -->
+    <div *ngIf="loadingCAM" class="loading">
+      <p>Cargando datos...</p>
+    </div>
 
-          <!-- VIRTUAL SCROLL -->
-          <cdk-virtual-scroll-viewport class="resumen-viewport-consulta-externa" [itemSize]="72">
-            <div *cdkVirtualFor="let row of dataConsultaExterna" class="resumen-row-consulta-externa">
-              <div class="cell desc_gpo_ocup">{{ row.desc_gpo_ocup }}</div>
-              <div class="cell cod_area">{{ row.cod_area }}</div>
-              <div class="cell desc_area">{{ row.desc_area }}</div>
-              <div class="cell cod_actividad">{{ row.cod_actividad }}</div>
-              <div class="cell desc_actividad">{{ row.desc_actividad }}</div>
-              <div class="cell cod_subactividad">{{ row.cod_subactividad }}</div>
-              <div class="cell desc_subactividad">{{ row.desc_subactividad }}</div>
-              <div class="cell cod_servicio">{{ row.cod_servicio }}</div>
-              <div class="cell desc_servicio">{{ row.desc_servicio }}</div>
-              <div class="cell cod_especialidad">{{ row.cod_especialidad }}</div>
-              <div class="cell especialidad">{{ row.especialidad }}</div>
-              <div class="cell cod_subespecialidad">{{ row.cod_subespecialidad }}</div>
-              <div class="cell subespecialidad">{{ row.subespecialidad }}</div>
-              <div class="cell cod_agrupador">{{ row.cod_agrupador }}</div>
-              <div class="cell agrupador">{{ row.agrupador }}</div>
-              <div class="cell cod_variable">{{ row.cod_variable }}</div>
-              <div class="cell variable">{{ row.variable }}</div>
-              <div class="cell anio">{{ row.anio }}</div>
-              <div class="cell anio_uso">{{ row.anio_uso || 'none' }}</div>
+
+    <!-- Estado Error -->
+    <div *ngIf="errorCAM" class="alert alert-danger">
+      {{ errorCAM }}
+    </div>
+
+    <!-- Contenido de tablas homologadas camas -->
+    <div *ngIf="!loadingCAM && !errorCAM" class="dashboard-content">
+      <mat-card class="resumen-table-camas">
+        <h3>Detalle de tablas homologadas camas</h3>
+        <div class="resumen-wrapper-camas">
+          <div class="resumen-grid-content-camas">
+            <!-- HEADER -->
+            <div class="resumen-header-camas">
+              <div class="cell cenasicod">Cod_Centro</div>
+              <div class="cell cenasides">Centro</div>
+              <div class="cell arehoscod">Cod_Area</div>
+              <div class="cell arehosdes">Area</div>
+              <div class="cell servhoscod">Cod_Servicio</div>
+              <div class="cell servhosdes">Servicio</div>
+              <div class="cell habcod">habcod</div>
+              <div class="cell camcod">Cod_Cama</div>
+              <div class="cell descripcion_clasificacion">Clasificacion</div>
+              <div class="cell clasificacion">clasificacion</div>
             </div>
-          </cdk-virtual-scroll-viewport>
-        </div>
-      </div>
 
-      <!-- FOOTER -->
-      <div class="table-footer-consulta-externa">
-        <div class="footer-left"><strong>Total de filas:</strong></div>
-        <div class="footer-right num">
-          <strong>{{ dataConsultaExterna.length }}</strong>
-        </div>
-      </div>
-    </mat-card>
+            <!-- FILTERS ROW -->
+            <div class="resumen-filters-camas">
+              <input type="text" class="filter-input-camas cell cenasicod" placeholder="Buscar cenasicod..."
+                (keyup)="filterDataCamas('cenasicod', $event)" />
+              <input type="text" class="filter-input-camas cell cenasides" placeholder="Buscar cenasides..."
+                (keyup)="filterDataCamas('cenasides', $event)" />
+              <input type="text" class="filter-input-camas cell arehoscod" placeholder="Buscar arehoscod..."
+                (keyup)="filterDataCamas('arehoscod', $event)" />
+              <input type="text" class="filter-input-camas cell arehosdes" placeholder="Buscar arehosdes..."
+                (keyup)="filterDataCamas('arehosdes', $event)" />
+              <input type="text" class="filter-input-camas cell servhoscod" placeholder="Buscar servhoscod..."
+                (keyup)="filterDataCamas('servhoscod', $event)" />
+              <input type="text" class="filter-input-camas cell servhosdes" placeholder="Buscar servhosdes..."
+                (keyup)="filterDataCamas('servhosdes', $event)" />
+              <input type="text" class="filter-input-camas cell habcod" placeholder="Buscar habcod..."
+                (keyup)="filterDataCamas('habcod', $event)" />
+              <input type="text" class="filter-input-camas cell camcod" placeholder="Buscar camcod..."
+                (keyup)="filterDataCamas('camcod', $event)" />
+              <input type="text" class="filter-input-camas cell descripcion_clasificacion"
+                placeholder="Buscar descripcion_clasificacion..."
+                (keyup)="filterDataCamas('descripcion_clasificacion', $event)" />
+            </div>
 
-    <ng-template #noTable>
-      <div class="no-data">Sin datos para tablas homologadas consulta externa.</div>
-    </ng-template>
+            <!-- VIRTUAL SCROLL -->
+            <cdk-virtual-scroll-viewport class="resumen-viewport-camas" [itemSize]="72">
+              <div *cdkVirtualFor="let row of dataCamas" class="resumen-row-camas">
+                <div class="cell cenasicod">{{ row.cenasicod }}</div>
+                <div class="cell cenasides">{{ row.cenasides }}</div>
+                <div class="cell arehoscod">{{ row.arehoscod }}</div>
+                <div class="cell arehosdes">{{ row.arehosdes }}</div>
+                <div class="cell servhoscod">{{ row.servhoscod }}</div>
+                <div class="cell servhosdes">{{ row.servhosdes }}</div>
+                <div class="cell habcod">{{ row.habcod }}</div>
+                <div class="cell camcod">{{ row.camcod }}</div>
+                <div class="cell descripcion_clasificacion">{{ row.descripcion_clasificacion || 'Sin
+                  Informacion' }}</div>
+                <div class="cell clasificacion">
+                  <select [(ngModel)]="row.descripcion_clasificacion" name="clasificacion" class="select-clasificacion">
+                    <option value="no seleccionado">no seleccionado</option>
+                    <option value="Virtual">Virtual</option>
+                    <option value="Fisico">Fisico</option>
+                  </select>
+                </div>
+              </div>
+            </cdk-virtual-scroll-viewport>
+
+
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="table-footer-consulta-externa">
+          <div class="footer-left"><strong>Total de filas:</strong></div>
+          <div class="footer-right num">
+            <strong>{{ dataCamas.length }}</strong>
+          </div>
+        </div>
+      </mat-card>
+
+      <ng-template #noTable>
+        <div class="no-data">Sin datos para tablas homologadas camas.</div>
+      </ng-template>
+
+    </div>
 
   </div>
-
-
-  <div class="tabla-camas" *ngIf="camas">
-
-    <mat-card class="resumen-table-camas">
-      <h3>Detalle de tablas homologadas camas</h3>
-      <div class="resumen-wrapper-camas">
-        <div class="resumen-grid-content-camas">
-          <!-- HEADER -->
-          <div class="resumen-header-camas">
-            <div class="cell oricenasicod">oricenasicod</div>
-            <div class="cell cenasicod">cenasicod</div>
-            <div class="cell arehoscod">arehoscod</div>
-            <div class="cell servhoscod">servhoscod</div>
-            <div class="cell estenfcod">estenfcod</div>
-            <div class="cell habcod">habcod</div>
-            <div class="cell camcod">camcod</div>
-            <div class="cell tipcamcod">tipcamcod</div>
-            <div class="cell estcamcod">estcamcod</div>
-            <div class="cell camobsdes">camobsdes</div>
-            <div class="cell camestregcod">camestregcod</div>
-            <div class="cell camflgfun">camflgfun</div>
-            <div class="cell cametiqcod">cametiqcod</div>
-            <div class="cell cenasides">cenasides</div>
-            <div class="cell servhosdes">servhosdes</div>
-          </div>
-
-          <!-- FILTERS ROW -->
-          <div class="resumen-filters-camas">
-            <input type="text" class="filter-input-camas cell oricenasicod" placeholder="Buscar oricenasicod.."
-              (keyup)="filterDataCamas('oricenasicod', $event)" />
-            <input type="text" class="filter-input-camas cell cenasicod" placeholder="Buscar cenasicod..."
-              (keyup)="filterDataCamas('cenasicod', $event)" />
-            <input type="text" class="filter-input-camas cell arehoscod" placeholder="Buscar arehoscod..."
-              (keyup)="filterDataCamas('arehoscod', $event)" />
-            <input type="text" class="filter-input-camas cell servhoscod" placeholder="Buscar servhoscod..."
-              (keyup)="filterDataCamas('servhoscod', $event)" />
-            <input type="text" class="filter-input-camas cell estenfcod" placeholder="Buscar estenfcod..."
-              (keyup)="filterDataCamas('estenfcod', $event)" />
-            <input type="text" class="filter-input-camas cell habcod" placeholder="Buscar habcod..."
-              (keyup)="filterDataCamas('habcod', $event)" />
-            <input type="text" class="filter-input-camas cell camcod" placeholder="Buscar camcod..."
-              (keyup)="filterDataCamas('camcod', $event)" />
-            <input type="text" class="filter-input-camas cell tipcamcod" placeholder="Buscar tipcamcod..."
-              (keyup)="filterDataCamas('tipcamcod', $event)" />
-            <input type="text" class="filter-input-camas cell estcamcod" placeholder="Buscar estcamcod..."
-              (keyup)="filterDataCamas('estcamcod', $event)" />
-            <input type="text" class="filter-input-camas cell camobsdes" placeholder="Buscar camobsdes..."
-              (keyup)="filterDataCamas('camobsdes', $event)" />
-            <input type="text" class="filter-input-camas cell camestregcod" placeholder="Buscar camestregcod..."
-              (keyup)="filterDataCamas('camestregcod', $event)" />
-            <input type="text" class="filter-input-camas cell camflgfun" placeholder="Buscar camflgfun..."
-              (keyup)="filterDataCamas('camflgfun', $event)" />
-            <input type="text" class="filter-input-camas cell cametiqcod" placeholder="Buscar cametiqcod..."
-              (keyup)="filterDataCamas('cametiqcod', $event)" />
-            <input type="text" class="filter-input-camas cell cenasides" placeholder="Buscar cenasides..."
-              (keyup)="filterDataCamas('cenasides', $event)" />
-            <input type="text" class="filter-input-camas cell servhosdes" placeholder="Buscar servhosdes..."
-              (keyup)="filterDataCamas('servhosdes', $event)" />
-          </div>
-
-          <!-- VIRTUAL SCROLL -->
-          <cdk-virtual-scroll-viewport class="resumen-viewport-camas" [itemSize]="72">
-            <div *cdkVirtualFor="let row of dataCamas" class="resumen-row-camas">
-              <div class="cell oricenasicod">{{ row.oricenasicod }}</div>
-              <div class="cell cenasicod">{{ row.cenasicod }}</div>
-              <div class="cell arehoscod">{{ row.arehoscod }}</div>
-              <div class="cell servhoscod">{{ row.servhoscod }}</div>
-              <div class="cell estenfcod">{{ row.estenfcod }}</div>
-              <div class="cell habcod">{{ row.habcod }}</div>
-              <div class="cell camcod">{{ row.camcod }}</div>
-              <div class="cell tipcamcod">{{ row.tipcamcod }}</div>
-              <div class="cell estcamcod">{{ row.estcamcod }}</div>
-              <div class="cell camobsdes">{{ row.camobsdes }}</div>
-              <div class="cell camestregcod">{{ row.camestregcod }}</div>
-              <div class="cell camflgfun">{{ row.camflgfun }}</div>
-              <div class="cell cametiqcod">{{ row.cametiqcod }}</div>
-              <div class="cell cenasides">{{ row.cenasides }}</div>
-              <div class="cell servhosdes">{{ row.servhosdes }}</div>
-            </div>
-          </cdk-virtual-scroll-viewport>
-        </div>
-      </div>
-
-      <!-- FOOTER -->
-      <div class="table-footer-consulta-externa">
-        <div class="footer-left"><strong>Total de filas:</strong></div>
-        <div class="footer-right num">
-          <strong>{{ dataCamas.length }}</strong>
-        </div>
-      </div>
-    </mat-card>
-
-    <ng-template #noTable>
-      <div class="no-data">Sin datos para tablas homologadas consulta externa.</div>
-    </ng-template>
-  </div>
-
-
 
 </div>

@@ -11,7 +11,6 @@ import { DashboardOdontologicas } from './dashboard-odontologicas/dashboard-odon
 import { DashboardReporteador } from './dashboard-reporteador/dashboard-reporteador';
 import { DashboardIntervencionesQuirurgicas } from './dashboard-intervenciones-quirurgicas/dashboard-intervenciones-quirurgicas';
 import { DashboardTablasHomologadas } from './dashboard-tablas-homologadas/dashboard-tablas-homologadas';
-import { DashboardHomologacionCama } from './dashboard-homologacion-cama/dashboard-homologacion-cama';
 import { DashboardPatologia } from './dashboard-patologia/dashboard-patologia';
 import { DashboardSeguimientoPaciente } from './dashboard-seguimiento-paciente/dashboard-seguimiento-paciente';
 import { DashboardFarmacia } from './dashboard-farmacia/dashboard-farmacia';
@@ -57,8 +56,6 @@ export const reportesRoutes: Routes = [
     ///dashboard-tablas-homologadas
     { path: 'dashboard-tablas-homologadas', component: DashboardTablasHomologadas },
 
-    ///dashboard-homologacion-cama
-    { path: 'dashboard-homologacion-cama', component: DashboardHomologacionCama },
 
     ///dashboard-patologia
     { path: 'dashboard-patologia', component: DashboardPatologia },
