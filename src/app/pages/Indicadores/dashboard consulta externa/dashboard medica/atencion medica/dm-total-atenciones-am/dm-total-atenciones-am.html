@@ -70,51 +70,56 @@
       <div #chartDiagnostico class="chart"></div>
     </div>
 
-    <mat-card class="resumen-table">
+    <mat-card class="table" style="--cols-table: repeat(6, minmax(0, 1fr));">
       <h3>Detalle de Diagnósticos</h3>
-      <!-- HEADER -->
-      <div class="resumen-header">
-        <div class="cell servicio">Servicio</div>
-        <div class="cell subactividad">Subactividad</div>
-        <div class="cell sexo">Sexo</div>
-        <div class="cell CodDiag">CodDiag</div>
-        <div class="cell descripcion_diagnostico">Diagnóstico</div>
-        <div class="cell total_atenciones num">Atenciones</div>
-      </div>
+      <div class="wrapper-table">
+        <div class="grid-table">
+          <!-- HEADER -->
 
-      <!-- FILTERS ROW -->
-      <div class="resumen-filters">
-        <input type="text" class="filter-input cell descripcion_servicio" placeholder="Buscar Servicio..."
-          (keyup)="filterData('descripcion_servicio', $event)" />
-        <input type="text" class="filter-input cell subactividad" placeholder="Buscar Subactividad..."
-          (keyup)="filterData('subactividad', $event)" />
-        <input type="text" class="filter-input cell sexo" placeholder="Buscar Sexo..."
-          (keyup)="filterData('sexo', $event)" />
-        <input type="text" class="filter-input cell cod_diag" placeholder="Buscar CodDiag..."
-          (keyup)="filterData('cod_diag', $event)" />
-        <input type="text" class="filter-input cell descripcion_diagnostico" placeholder="Buscar Diagnóstico..."
-          (keyup)="filterData('descripcion_diagnostico', $event)" />
-        <input type="text" class="filter-input cell total_atenciones" placeholder="Buscar atenciones.."
-          (keyup)="filterData('total_atenciones', $event)" />
-      </div>
-
-      <!-- WRAPPER PARA SCROLL HORIZONTAL -->
-      <div class="resumen-wrapper">
-        <!-- VIRTUAL SCROLL -->
-        <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48">
-          <div *cdkVirtualFor="let row of newtableQ4CountMap" class="resumen-row">
-            <div class="cell descripcion_servicio">{{ row.descripcion_servicio }}</div>
-            <div class="cell subactividad">{{ row.subactividad }}</div>
-            <div class="cell sexo">{{ row.sexo }}</div>
-            <div class="cell cod_diag">{{ row.cod_diag }}</div>
-            <div class="cell descripcion_diagnostico">{{ row.descripcion_diagnostico }}</div>
-            <div class="cell total_atenciones num">{{ row.total_atenciones }}</div>
+          <div class="header-table">
+            <div class="cell servicio">Servicio</div>
+            <div class="cell subactividad">Subactividad</div>
+            <div class="cell sexo">Sexo</div>
+            <div class="cell CodDiag">CodDiag</div>
+            <div class="cell descripcion_diagnostico">Diagnóstico</div>
+            <div class="cell total_atenciones num">Atenciones</div>
           </div>
-        </cdk-virtual-scroll-viewport>
+
+
+          <!-- FILTERS ROW -->
+          <div class="filters-table">
+            <input type="text" class="filter-input cell descripcion_servicio" placeholder="Buscar Servicio..."
+              (keyup)="filterData('descripcion_servicio', $event)" />
+            <input type="text" class="filter-input cell subactividad" placeholder="Buscar Subactividad..."
+              (keyup)="filterData('subactividad', $event)" />
+            <input type="text" class="filter-input cell sexo" placeholder="Buscar Sexo..."
+              (keyup)="filterData('sexo', $event)" />
+            <input type="text" class="filter-input cell cod_diag" placeholder="Buscar CodDiag..."
+              (keyup)="filterData('cod_diag', $event)" />
+            <input type="text" class="filter-input cell descripcion_diagnostico" placeholder="Buscar Diagnóstico..."
+              (keyup)="filterData('descripcion_diagnostico', $event)" />
+            <input type="text" class="filter-input cell total_atenciones" placeholder="Buscar atenciones.."
+              (keyup)="filterData('total_atenciones', $event)" />
+          </div>
+
+
+          <!-- VIRTUAL SCROLL -->
+          <cdk-virtual-scroll-viewport class="viewport-table" [itemSize]="48">
+            <div *cdkVirtualFor="let row of newtableQ4CountMap" class="row-table">
+              <div class="cell descripcion_servicio">{{ row.descripcion_servicio }}</div>
+              <div class="cell subactividad">{{ row.subactividad }}</div>
+              <div class="cell sexo">{{ row.sexo }}</div>
+              <div class="cell cod_diag">{{ row.cod_diag }}</div>
+              <div class="cell descripcion_diagnostico">{{ row.descripcion_diagnostico }}</div>
+              <div class="cell total_atenciones num">{{ row.total_atenciones }}</div>
+            </div>
+          </cdk-virtual-scroll-viewport>
+
+        </div>
       </div>
 
       <!-- FOOTER -->
-      <div class="table-footer">
+      <div class="footer-table">
         <div class="footer-left"><strong>Total de atenciones:</strong></div>
         <div class="footer-right num">
           <strong>{{ totalAtencionesQ4 }}</strong>

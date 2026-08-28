@@ -311,7 +311,7 @@ export class DashboardTablasHomologadas implements OnInit {
     //Filtro cod_emergencia
     if (
       this.filtersEmergencia.cod_emergencia &&
-      row.cod_emergencia.toLowerCase().includes(this.filtersEmergencia.cod_emergencia)
+      !row.cod_emergencia.toLowerCase().includes(this.filtersEmergencia.cod_emergencia)
     ) {
       return false;
     }
@@ -352,138 +352,15 @@ export class DashboardTablasHomologadas implements OnInit {
   }
 
   private applyAllFiltersConsultaExterna(row: any): boolean {
-    // Filtro desc_gpo_ocup
-    if (
-      this.filtersConsultaExterna.desc_gpo_ocup &&
-      !row.desc_gpo_ocup.toLowerCase().includes(this.filtersConsultaExterna.desc_gpo_ocup)
-    ) {
-      return false;
-    }
-    // Filtro cod_area
-    if (
-      this.filtersConsultaExterna.cod_area &&
-      !row.cod_area.toLowerCase().includes(this.filtersConsultaExterna.cod_area)
-    ) {
-      return false;
-    }
-    // Filtro desc_area
-    if (
-      this.filtersConsultaExterna.desc_area &&
-      !row.desc_area.toLowerCase().includes(this.filtersConsultaExterna.desc_area)
-    ) {
-      return false;
-    }
-    // Filtro cod_actividad
-    if (
-      this.filtersConsultaExterna.cod_actividad &&
-      !row.cod_actividad.toLowerCase().includes(this.filtersConsultaExterna.cod_actividad)
-    ) {
-      return false;
-    }
-    // Filtro desc_actividad
-    if (
-      this.filtersConsultaExterna.desc_actividad &&
-      !row.desc_actividad.toLowerCase().includes(this.filtersConsultaExterna.desc_actividad)
-    ) {
-      return false;
-    }
-    // Filtro cod_subactividad
-    if (
-      this.filtersConsultaExterna.cod_subactividad &&
-      !row.cod_subactividad.toLowerCase().includes(this.filtersConsultaExterna.cod_subactividad)
-    ) {
-      return false;
-    }
-    // Filtro desc_subactividad
-    if (
-      this.filtersConsultaExterna.desc_subactividad &&
-      !row.desc_subactividad.toLowerCase().includes(this.filtersConsultaExterna.desc_subactividad)
-    ) {
-      return false;
-    }
-    // Filtro cod_servicio
-    if (
-      this.filtersConsultaExterna.cod_servicio &&
-      !row.cod_servicio.toLowerCase().includes(this.filtersConsultaExterna.cod_servicio)
-    ) {
-      return false;
-    }
-    // Filtro desc_servicio
-    if (
-      this.filtersConsultaExterna.desc_servicio &&
-      !row.desc_servicio.toLowerCase().includes(this.filtersConsultaExterna.desc_servicio)
-    ) {
-      return false;
-    }
-    // Filtro cod_especialidad
-    if (
-      this.filtersConsultaExterna.cod_especialidad &&
-      !row.cod_especialidad.toLowerCase().includes(this.filtersConsultaExterna.cod_especialidad)
-    ) {
-      return false;
-    }
-    // Filtro especialidad
-    if (
-      this.filtersConsultaExterna.especialidad &&
-      !row.especialidad.toLowerCase().includes(this.filtersConsultaExterna.especialidad)
-    ) {
-      return false;
-    }
-    // Filtro cod_subespecialidad
-    if (
-      this.filtersConsultaExterna.cod_subespecialidad &&
-      !row.cod_subespecialidad.toLowerCase().includes(this.filtersConsultaExterna.cod_subespecialidad)
-    ) {
-      return false;
-    }
-    // Filtro subespecialidad
-    if (
-      this.filtersConsultaExterna.subespecialidad &&
-      !row.subespecialidad.toLowerCase().includes(this.filtersConsultaExterna.subespecialidad)
-    ) {
-      return false;
-    }
-    // Filtro cod_agrupador
-    if (
-      this.filtersConsultaExterna.cod_agrupador &&
-      !row.cod_agrupador.toLowerCase().includes(this.filtersConsultaExterna.cod_agrupador)
-    ) {
-      return false;
-    }
-    // Filtro agrupador
-    if (
-      this.filtersConsultaExterna.agrupador &&
-      !row.agrupador.toLowerCase().includes(this.filtersConsultaExterna.agrupador)
-    ) {
-      return false;
-    }
-    // Filtro cod_variable
-    if (
-      this.filtersConsultaExterna.cod_variable &&
-      !row.cod_variable.toLowerCase().includes(this.filtersConsultaExterna.cod_variable)
-    ) {
-      return false;
-    }
-    // Filtro variable
-    if (
-      this.filtersConsultaExterna.variable &&
-      !row.variable.toLowerCase().includes(this.filtersConsultaExterna.variable)
-    ) {
-      return false;
-    }
-    // Filtro anio
-    if (
-      this.filtersConsultaExterna.anio &&
-      !row.anio.toLowerCase().includes(this.filtersConsultaExterna.anio)
-    ) {
-      return false;
-    }
-    // Filtro anio_uso
-    if (
-      this.filtersConsultaExterna.anio_uso &&
-      !row.anio_uso.toLowerCase().includes(this.filtersConsultaExterna.anio_uso)
-    ) {
-      return false;
+    const keys = Object.keys(this.filtersConsultaExterna) as (keyof typeof this.filtersConsultaExterna)[];
+    for (const key of keys) {
+      const filterVal = this.filtersConsultaExterna[key];
+      if (filterVal) {
+        const rowVal = String(row[key] ?? '').toLowerCase();
+        if (!rowVal.includes(filterVal)) {
+          return false;
+        }
+      }
     }
     return true;
   }
@@ -574,23 +451,23 @@ export class DashboardTablasHomologadas implements OnInit {
 
   // Tabs
   activeTab:
-    | 'Tablas homolagadas - Emergencia'
-    | 'Tablas Homolagas - Consulta Externa'
-    | 'Tablas Homolagas - Camas' = 'Tablas homolagadas - Emergencia';
+    | 'Tablas homologadas - Emergencia'
+    | 'Tablas homologadas - Consulta Externa'
+    | 'Tablas homologadas - Camas' = 'Tablas homologadas - Emergencia';
 
   setActiveTab(
     tab:
-      | 'Tablas homolagadas - Emergencia'
-      | 'Tablas Homolagas - Consulta Externa'
-      | 'Tablas Homolagas - Camas',
+      | 'Tablas homologadas - Emergencia'
+      | 'Tablas homologadas - Consulta Externa'
+      | 'Tablas homologadas - Camas',
   ): void {
     this.activeTab = tab;
 
-    if (tab === 'Tablas Homolagas - Camas') {
+    if (tab === 'Tablas homologadas - Camas') {
       this.loadDataCamas();
-    } else if (tab === 'Tablas Homolagas - Consulta Externa') {
+    } else if (tab === 'Tablas homologadas - Consulta Externa') {
       this.loadDataConsultaExterna();
-    } else if (tab === 'Tablas homolagadas - Emergencia') {
+    } else if (tab === 'Tablas homologadas - Emergencia') {
       this.loadDataEmergencia();
     }
 
