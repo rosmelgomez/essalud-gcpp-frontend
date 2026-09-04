@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { TmiIndicadoresService } from '../../services/tmi-indicadores-service';
 
 @Component({
   selector: 'app-tmi-indicadores',
@@ -6,6 +7,27 @@ import { Component } from '@angular/core';
   templateUrl: './tmi-indicadores.html',
   styleUrl: './tmi-indicadores.css',
 })
-export class TmiIndicadores {
+export class TmiIndicadores implements OnInit {
+
+
+  constructor(private tmiIndicadoresService: TmiIndicadoresService) { }
+
+  ngOnInit(): void {
+    this.getQueryEstandares();
+    this.getQueryCentrosTMI();
+  }
+
+  getQueryEstandares() {
+    this.tmiIndicadoresService.getQueryEstandares().subscribe((res: any) => {
+      console.log(res);
+    });
+  }
+
+  getQueryCentrosTMI() {
+    this.tmiIndicadoresService.getQueryCentrosTMI().subscribe((res: any) => {
+      console.log(res);
+    });
+  }
+
 
 }

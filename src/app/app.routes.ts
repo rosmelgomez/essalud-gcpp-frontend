@@ -13,6 +13,7 @@ import { reportesRoutes } from './pages/Resportes/reportes.router';
 import { indicadoresRoutes } from './pages/Indicadores/indicadores.router';
 import { solicitudAccesoRoutes } from './pages/Solicitud-Acceso/solucitud-acceso.router';
 import { usuarioRoutes } from './pages/Usuarios/usuario.router';
+import { TmiIndicadores } from './pages/tmi-indicadores/tmi-indicadores';
 
 
 export const routes: Routes = [
@@ -25,7 +26,7 @@ export const routes: Routes = [
     { path: 'home', component: HomePage, canActivate: [authenticateGuard] },
 
     // usuarios
-    { path: 'usuario', children: usuarioRoutes , canActivate: [authenticateGuard]},
+    { path: 'usuario', children: usuarioRoutes, canActivate: [authenticateGuard] },
 
     //solicitud de acceso
     { path: 'solicitud-acceso', children: solicitudAccesoRoutes },
@@ -41,5 +42,8 @@ export const routes: Routes = [
 
     //Gestion de documentos
     { path: 'documento', children: documentoRoutes, canActivate: [authenticateGuard] },
+
+    //tmi
+    { path: 'tmi', component: TmiIndicadores, canActivate: [authenticateGuard] },
 
 ];
