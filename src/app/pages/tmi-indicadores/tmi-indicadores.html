@@ -1,1 +1,326 @@
-<p>tmi-indicadores works!</p>
+<div class="main">
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-button" [class.active]="activeTab === 'Estandares tmi'"
+            (click)="setActiveTab('Estandares tmi')">
+            Estandares tmi
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'Centros tmi'" (click)="setActiveTab('Centros tmi')">
+            Centros tmi
+        </button>
+
+    </div>
+
+    <!-- CONTENIDO TABS -->
+    <!-- Tab Tablas Estandares tmi -->
+    <div class="tab-content" *ngIf="activeTab === 'Estandares tmi'">
+        <div class="header">
+            <p>Tablas de estandares del tablero de monitoreo integrado (TMI)</p>
+        </div>
+
+        <!-- Estado Loading-->
+        <div *ngIf="loadingEstandar" class="loading">
+            <p>Cargando datos...</p>
+        </div>
+
+        <!-- Estado de Error -->
+        <div *ngIf="errorEstandar" class="alert alert-danger">
+            {{ errorEstandar }}
+        </div>
+
+        <!-- Contenido de tabla estandares tmi -->
+        <div *ngIf="!loadingEstandar && !errorEstandar" class="dashboard-content">
+            <mat-card class="table" style="--cols-table: repeat(12, minmax(0, 1fr));">
+                <h3>Detalle de tablas estandares tmi</h3>
+                <div class="wrapper-table">
+                    <div class="grid-table">
+                        <!-- HEADER -->
+                        <div class="header-table">
+                            <div class="cell id">ID</div>
+                            <div class="cell orden_indicador">ORDEN_INDICADOR</div>
+                            <div class="cell codigo_unico">CODIGO_UNICO</div>
+                            <div class="cell tipo">TIPO</div>
+                            <div class="cell indicador">INDICADOR</div>
+                            <div class="cell nivel_centro">NIVEL_CENTRO</div>
+                            <div class="cell tipo_centro">TIPO_CENTRO</div>
+                            <div class="cell nivel_estandar_centro">NIVEL_ESTANDAR_CENTRO</div>
+                            <div class="cell estandar">ESTANDAR</div>
+                            <div class="cell acept">ACEPT</div>
+                            <div class="cell aceptmenos">ACEPTMENOS</div>
+                            <div class="cell acciones">ACCIONES</div>
+                        </div>
+
+                        <!-- FILTERS ROW -->
+                        <div class="filters-table">
+                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
+                                (keyup)="filterDataEstandares('id', $event)" />
+                            <input type="text" class="filter-input cell orden_indicador"
+                                placeholder="Buscar orden indicador..."
+                                (keyup)="filterDataEstandares('orden_indicador', $event)" />
+                            <input type="text" class="filter-input cell codigo_unico"
+                                placeholder="Buscar codigo unico..."
+                                (keyup)="filterDataEstandares('codigo_unico', $event)" />
+                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
+                                (keyup)="filterDataEstandares('tipo', $event)" />
+                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
+                                (keyup)="filterDataEstandares('indicador', $event)" />
+                            <input type="text" class="filter-input cell nivel_centro"
+                                placeholder="Buscar nivel centro.."
+                                (keyup)="filterDataEstandares('nivel_centro', $event)" />
+                            <input type="text" class="filter-input cell tipo_centro" placeholder="Buscar tipo centro.."
+                                (keyup)="filterDataEstandares('tipo_centro', $event)" />
+                            <input type="text" class="filter-input cell nivel_estandar_centro"
+                                placeholder="Buscar nivel estandar centro.."
+                                (keyup)="filterDataEstandares('nivel_estandar_centro', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estandar.."
+                                (keyup)="filterDataEstandares('estandar', $event)" />
+                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept.."
+                                (keyup)="filterDataEstandares('acept', $event)" />
+                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos.."
+                                (keyup)="filterDataEstandares('aceptmenos', $event)" />
+                        </div>
+
+                        <!-- VIRTUAL SCROLL -->
+                        <cdk-virtual-scroll-viewport class="viewport-table" [itemSize]="72">
+                            <div *cdkVirtualFor="let row of dataEstandar" class="row-table">
+                                <div class="cell id">{{ row.id }}</div>
+                                <div class="cell orden_indicador">{{ row.orden_indicador }}</div>
+                                <div class="cell codigo_unico">{{ row.codigo_unico }}</div>
+                                <div class="cell tipo">{{ row.tipo }}</div>
+                                <div class="cell indicador">{{ row.indicador }}</div>
+                                <div class="cell nivel_centro">{{ row.nivel_centro }}</div>
+                                <div class="cell tipo_centro">{{ row.tipo_centro }}</div>
+                                <div class="cell nivel_estandar_centro">{{ row.nivel_estandar_centro }}</div>
+                                <div class="cell estandar">{{ row.estandar }}</div>
+                                <div class="cell acept">{{ row.acept }}</div>
+                                <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
+                                <div class="cell acciones">
+                                    <mat-icon (click)="mostrarFormularioEstandar = true">
+                                        edit</mat-icon>
+                                </div>
+                            </div>
+                        </cdk-virtual-scroll-viewport>
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="footer-table">
+                    <div class="footer-left"><strong>Total de filas:</strong></div>
+                    <div class="footer-right num">
+                        <strong>{{ dataEstandar.length }}</strong>
+                    </div>
+                </div>
+            </mat-card>
+
+            <ng-template #noTable>
+                <div class="no-data">Sin datos para tablas homologadas emergencia.</div>
+            </ng-template>
+
+        </div>
+
+        <!---Formulario de estandares-->
+        <div class="form" *ngIf="mostrarFormularioEstandar">
+            <h2>Formulario de estandares</h2>
+            <form [formGroup]="estandarForm" (ngSubmit)="updateQueryEstandar()">
+                <div class="form-group">
+                    <label for="id">ID</label>
+                    <input type="number" id="id" formControlName="id">
+                </div>
+                <div class="form-group">
+                    <label for="orden_indicador">Orden Indicador</label>
+                    <input type="number" id="orden_indicador" formControlName="orden_indicador">
+                </div>
+                <div class="form-group">
+                    <label for="codigo_unico">Codigo Unico</label>
+                    <input type="text" id="codigo_unico" formControlName="codigo_unico">
+                </div>
+                <div class="form-group">
+                    <label for="tipo">Tipo</label>
+                    <input type="text" id="tipo" formControlName="tipo">
+                </div>
+                <div class="form-group">
+                    <label for="indicador">Indicador</label>
+                    <input type="text" id="indicador" formControlName="indicador">
+                </div>
+                <div class="form-group">
+                    <label for="nivel_centro">Nivel Centro</label>
+                    <input type="text" id="nivel_centro" formControlName="nivel_centro">
+                </div>
+                <div class="form-group">
+                    <label for="tipo_centro">Tipo Centro</label>
+                    <input type="text" id="tipo_centro" formControlName="tipo_centro">
+                </div>
+                <div class="form-group">
+                    <label for="nivel_estandar_centro">Nivel Estandar Centro</label>
+                    <input type="text" id="nivel_estandar_centro" formControlName="nivel_estandar_centro">
+                </div>
+                <div class="form-group">
+                    <label for="estandar">Estandar</label>
+                    <input type="text" id="estandar" formControlName="estandar">
+                </div>
+                <div class="form-group">
+                    <label for="acept">Acept</label>
+                    <input type="number" id="acept" formControlName="acept">
+                </div>
+                <div class="form-group">
+                    <label for="aceptmenos">Acept Menos</label>
+                    <input type="number" id="aceptmenos" formControlName="aceptmenos">
+                </div>
+                <div class="form-group">
+                    <button type="submit">Guardar</button>
+                    <button type="button" (click)="mostrarFormularioEstandar = false">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+
+    </div>
+
+    <!-- Tab Tablas Centros tmi -->
+    <div class="tab-content" *ngIf="activeTab === 'Centros tmi'">
+        <div class="header">
+            <p>Tablas de centros asistenciales del tablero de monitoreo integrado (TMI)</p>
+        </div>
+
+        <!-- Estado Loading-->
+        <div *ngIf="loadingCentrosTMI" class="loading">
+            <p>Cargando datos...</p>
+        </div>
+
+        <!-- Estado de Error -->
+        <div *ngIf="errorCentrosTMI" class="alert alert-danger">
+            {{ errorCentrosTMI }}
+        </div>
+
+        <!-- contenido de la tabla de centro tmi -->
+        <div *ngIf="!loadingCentrosTMI && !errorCentrosTMI" class="dashboard-content">
+            <mat-card class="table" style="--cols-table: repeat(11, minmax(0, 1fr));">
+                <h3>Detalle de tablas centros tmi</h3>
+                <div class="wrapper-table">
+                    <div class="grid-table">
+                        <!-- HEADER -->
+                        <div class="header-table">
+                            <div class="cell id">ID</div>
+                            <div class="cell red">RED</div>
+                            <div class="cell orden">ORDEN</div>
+                            <div class="cell orden_tipo">ORDEN_TIPO</div>
+                            <div class="cell codcentro">CODCENTRO</div>
+                            <div class="cell tipo">TIPO</div>
+                            <div class="cell nivel">NIVEL</div>
+                            <div class="cell nivel_estandar">NIVEL_ESTANDAR</div>
+                            <div class="cell centro">CENTRO</div>
+                            <div class="cell estado">ESTADO</div>
+                            <div class="cell acciones">ACCIONES</div>
+                        </div>
+
+                        <!-- FILTERS ROW -->
+                        <div class="filters-table">
+                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
+                                (keyup)="filterDataCentrosTMI('id', $event)" />
+                            <input type="text" class="filter-input cell red" placeholder="Buscar red..."
+                                (keyup)="filterDataCentrosTMI('red', $event)" />
+                            <input type="text" class="filter-input cell orden" placeholder="Buscar orden..."
+                                (keyup)="filterDataCentrosTMI('orden', $event)" />
+                            <input type="text" class="filter-input cell orden_tipo" placeholder="Buscar orden_tipo..."
+                                (keyup)="filterDataCentrosTMI('orden_tipo', $event)" />
+                            <input type="text" class="filter-input cell codcentro" placeholder="Buscar codcentro..."
+                                (keyup)="filterDataCentrosTMI('codcentro', $event)" />
+                            <input type="text" class="filter-input cell nivel" placeholder="Buscar nivel..."
+                                (keyup)="filterDataCentrosTMI('nivel', $event)" />
+                            <input type="text" class="filter-input cell nivel_estandar"
+                                placeholder="Buscar nivel_estandar..."
+                                (keyup)="filterDataCentrosTMI('nivel_estandar', $event)" />
+                            <input type="text" class="filter-input cell centro" placeholder="Buscar centro..."
+                                (keyup)="filterDataCentrosTMI('centro', $event)" />
+                            <input type="text" class="filter-input cell estado" placeholder="Buscar estado..."
+                                (keyup)="filterDataCentrosTMI('estado', $event)" />
+                        </div>
+
+                        <!-- VIRTUAL SCROLL -->
+                        <cdk-virtual-scroll-viewport class="viewport-table" [itemSize]="72">
+                            <div *cdkVirtualFor="let row of dataCentrosTMI" class="row-table">
+                                <div class="cell id">{{ row.id }}</div>
+                                <div class="cell red">{{ row.red }}</div>
+                                <div class="cell orden">{{ row.orden }}</div>
+                                <div class="cell orden_tipo">{{ row.orden_tipo }}</div>
+                                <div class="cell codcentro">{{ row.codcentro }}</div>
+                                <div class="cell nivel">{{ row.nivel }}</div>
+                                <div class="cell nivel_estandar">{{ row.nivel_estandar }}</div>
+                                <div class="cell centro">{{ row.centro }}</div>
+                                <div class="cell estado">{{ row.estado }}</div>
+                                <div class="cell acciones">
+                                    <mat-icon (click)="mostrarFormularioCentrosTMI = true">edit</mat-icon>
+                                </div>
+                            </div>
+                        </cdk-virtual-scroll-viewport>
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="footer-table">
+                    <div class="footer-left"><strong>Total de filas:</strong></div>
+                    <div class="footer-right num">
+                        <strong>{{ dataCentrosTMI.length }}</strong>
+                    </div>
+                </div>
+            </mat-card>
+
+            <ng-template #noTable>
+                <div class="no-data">Sin datos para tablas homologadas emergencia.</div>
+            </ng-template>
+
+        </div>
+
+        <!---Formulario de centro tmi-->
+        <div class="form" *ngIf="mostrarFormularioCentrosTMI">
+            <h2>Formulario de centro tmi</h2>
+            <form [formGroup]="centrosForm" (ngSubmit)="updateQueryCentrosTMI()">
+                <div class="form-group">
+                    <label for="id">ID</label>
+                    <input type="number" id="id" formControlName="id">
+                </div>
+                <div class="form-group">
+                    <label for="red">Red</label>
+                    <input type="text" id="red" formControlName="red">
+                </div>
+                <div class="form-group">
+                    <label for="orden">Orden</label>
+                    <input type="number" id="orden" formControlName="orden">
+                </div>
+                <div class="form-group">
+                    <label for="orden_tipo">Orden Tipo</label>
+                    <input type="text" id="orden_tipo" formControlName="orden_tipo">
+                </div>
+                <div class="form-group">
+                    <label for="codcentro">CodCentro</label>
+                    <input type="text" id="codcentro" formControlName="codcentro">
+                </div>
+                <div class="form-group">
+                    <label for="nivel">Nivel</label>
+                    <input type="text" id="nivel" formControlName="nivel">
+                </div>
+                <div class="form-group">
+                    <label for="nivel_estandar">Nivel Estandar</label>
+                    <input type="text" id="nivel_estandar" formControlName="nivel_estandar">
+                </div>
+                <div class="form-group">
+                    <label for="centro">Centro</label>
+                    <input type="text" id="centro" formControlName="centro">
+                </div>
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <input type="text" id="estado" formControlName="estado">
+                </div>
+                <div class="form-group">
+                    <button type="submit">Actualizar</button>
+                    <button type="button" (click)="mostrarFormularioCentrosTMI = false">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+
+
+</div>

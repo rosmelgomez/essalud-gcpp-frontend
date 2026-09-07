@@ -1,10 +1,6 @@
 import { Routes } from '@angular/router';
 import { Login } from './pages/login/login';
-import { Register } from './pages/Usuarios/register/register';
-import { ManageUsers } from './pages/Usuarios/manage-users/manage-users';
-import { Perfil } from './pages/Usuarios/perfil/perfil'
 import { HomePage } from './pages/home-page/home-page';
-import { LogsReports } from './pages/logs-reports/logs-reports';
 import { authenticateGuard } from './guards/authenticate-guard';
 import { redirectGuard } from './guards/redirect-guard'
 import { encuestaRoutes } from './pages/Encuestas/encuesta.router';

@@ -23,7 +23,7 @@ export class TmiIndicadoresService {
 
   /// update estandar
   putQueryEstandares(dto: any) {
-    return this.http.put<any[]>(base_url + `/update-estandar`, dto);
+    return this.http.put(base_url + `/update-estandar`, dto);
   }
 
   /// centros TMI
@@ -33,7 +33,7 @@ export class TmiIndicadoresService {
 
   /// update centro TMI
   putQueryCentrosTMI(dto: any) {
-    return this.http.put<any[]>(base_url + `/update-centro`, dto);
+    return this.http.put(base_url + `/update-centro`, dto);
   }
 
   /// CE concent
