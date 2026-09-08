@@ -33,6 +33,8 @@ export class TmiIndicadores implements OnInit {
   public dataEstandar: any[] = [];
   public dataEstandarFilter: any[] = [];
 
+  periodoEstandar: string = "202608";
+
   ///estado estandares
   public loadingEstandar: boolean = false;
   public errorEstandar: string = '';
@@ -42,6 +44,7 @@ export class TmiIndicadores implements OnInit {
   ///data centros tmi
   public dataCentrosTMI: any[] = [];
   public dataCentrosTMIFilter: any[] = [];
+  periodoCentrosTMI: string = "202608";
 
   ///estado centros tmi
   public loadingCentrosTMI: boolean = false;
@@ -100,9 +103,8 @@ export class TmiIndicadores implements OnInit {
     this.loadingEstandar = true;
     this.errorEstandar = '';
 
-    this.tmiIndicadoresService.getQueryEstandares().subscribe(
+    this.tmiIndicadoresService.getQueryEstandares(this.periodoEstandar).subscribe(
       (res: any) => {
-        console.log(res);
         this.dataEstandar = res;
         this.dataEstandarFilter = res;
 
@@ -124,7 +126,7 @@ export class TmiIndicadores implements OnInit {
     console.log(this.estandarForm.value);
     this.tmiIndicadoresService.putQueryEstandares(this.estandarForm.value).subscribe(
       (res: any) => {
-        console.log(res);
+
         this.getQueryEstandares();
         this.mostrarFormularioEstandar = false
         alert("Data actualizada correctamente")
@@ -145,9 +147,9 @@ export class TmiIndicadores implements OnInit {
     this.loadingCentrosTMI = true;
     this.errorCentrosTMI = '';
 
-    this.tmiIndicadoresService.getQueryCentrosTMI().subscribe(
+    this.tmiIndicadoresService.getQueryCentrosTMI(this.periodoCentrosTMI).subscribe(
       (res: any) => {
-        console.log(res);
+
         this.dataCentrosTMI = res;
         this.dataCentrosTMIFilter = res;
 
@@ -167,7 +169,6 @@ export class TmiIndicadores implements OnInit {
     console.log(this.centrosForm.value);
     this.tmiIndicadoresService.putQueryCentrosTMI(this.centrosForm.value).subscribe(
       (res: any) => {
-        console.log(res);
         this.getQueryCentrosTMI();
         this.mostrarFormularioCentrosTMI = false
         alert("Data actualizada correctamente")
@@ -195,7 +196,8 @@ export class TmiIndicadores implements OnInit {
     "nivel_estandar_centro": "",
     "estandar": "",
     "acept": "",
-    "aceptmenos": ""
+    "aceptmenos": "",
+    "periodo": ""
   }
 
   ///filtro dinamico para la tabla indicadores
@@ -251,6 +253,11 @@ export class TmiIndicadores implements OnInit {
       return false;
     }
 
+    // Filtro periodo
+    if (this.filtersEstandares.periodo && !row.periodo.toLowerCase().includes(this.filtersEstandares.periodo)) {
+      return false;
+    }
+
     return true;
   }
 
@@ -266,7 +273,8 @@ export class TmiIndicadores implements OnInit {
     "nivel": "",
     "nivel_estandar": "",
     "centro": "",
-    "estado": ""
+    "estado": "",
+    "periodo": ""
   }
 
   ///filtro dinamico para la tabla centros tmi
@@ -317,8 +325,14 @@ export class TmiIndicadores implements OnInit {
       return false;
     }
 
+    //Filtro periodo
+    if (this.filtersCentrosTMI.periodo && !row.periodo.toLowerCase().includes(this.filtersCentrosTMI.periodo)) {
+      return false;
+    }
+
     return true;
   }
+
 
 
 

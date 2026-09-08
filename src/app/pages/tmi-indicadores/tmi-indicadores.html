@@ -31,7 +31,7 @@
 
         <!-- Contenido de tabla estandares tmi -->
         <div *ngIf="!loadingEstandar && !errorEstandar" class="dashboard-content">
-            <mat-card class="table" style="--cols-table: repeat(12, minmax(0, 1fr));">
+            <mat-card class="table" style="--cols-table: repeat(13, minmax(0, 1fr));">
                 <h3>Detalle de tablas estandares tmi</h3>
                 <div class="wrapper-table">
                     <div class="grid-table">
@@ -49,6 +49,7 @@
                             <div class="cell acept">ACEPT</div>
                             <div class="cell aceptmenos">ACEPTMENOS</div>
                             <div class="cell acciones">ACCIONES</div>
+                            <div class="cell periodo">PERIODO</div>
                         </div>
 
                         <!-- FILTERS ROW -->
@@ -79,6 +80,8 @@
                                 (keyup)="filterDataEstandares('acept', $event)" />
                             <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos.."
                                 (keyup)="filterDataEstandares('aceptmenos', $event)" />
+                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo.."
+                                (keyup)="filterDataEstandares('periodo', $event)" />
                         </div>
 
                         <!-- VIRTUAL SCROLL -->
@@ -95,6 +98,7 @@
                                 <div class="cell estandar">{{ row.estandar }}</div>
                                 <div class="cell acept">{{ row.acept }}</div>
                                 <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
+                                <div class="cell periodo">{{ row.periodo }}</div>
                                 <div class="cell acciones">
                                     <mat-icon (click)="mostrarFormularioEstandar = true">
                                         edit</mat-icon>
@@ -195,7 +199,7 @@
 
         <!-- contenido de la tabla de centro tmi -->
         <div *ngIf="!loadingCentrosTMI && !errorCentrosTMI" class="dashboard-content">
-            <mat-card class="table" style="--cols-table: repeat(11, minmax(0, 1fr));">
+            <mat-card class="table" style="--cols-table: repeat(12, minmax(0, 1fr));">
                 <h3>Detalle de tablas centros tmi</h3>
                 <div class="wrapper-table">
                     <div class="grid-table">
@@ -211,6 +215,7 @@
                             <div class="cell nivel_estandar">NIVEL_ESTANDAR</div>
                             <div class="cell centro">CENTRO</div>
                             <div class="cell estado">ESTADO</div>
+                            <div class="cell periodo">PERIODO</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
@@ -235,6 +240,8 @@
                                 (keyup)="filterDataCentrosTMI('centro', $event)" />
                             <input type="text" class="filter-input cell estado" placeholder="Buscar estado..."
                                 (keyup)="filterDataCentrosTMI('estado', $event)" />
+                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..."
+                                (keyup)="filterDataCentrosTMI('periodo', $event)" />
                         </div>
 
                         <!-- VIRTUAL SCROLL -->
@@ -249,6 +256,7 @@
                                 <div class="cell nivel_estandar">{{ row.nivel_estandar }}</div>
                                 <div class="cell centro">{{ row.centro }}</div>
                                 <div class="cell estado">{{ row.estado }}</div>
+                                <div class="cell periodo">{{ row.periodo }}</div>
                                 <div class="cell acciones">
                                     <mat-icon (click)="mostrarFormularioCentrosTMI = true">edit</mat-icon>
                                 </div>
