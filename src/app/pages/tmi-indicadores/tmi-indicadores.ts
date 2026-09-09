@@ -39,6 +39,8 @@ export class TmiIndicadores implements OnInit {
   public loadingEstandar: boolean = false;
   public errorEstandar: string = '';
   public mostrarFormularioEstandar: boolean = false;
+  public savingEstandar: boolean = false;
+  public errorEstandarForm: string = '';
 
 
   ///data centros tmi
@@ -50,6 +52,8 @@ export class TmiIndicadores implements OnInit {
   public loadingCentrosTMI: boolean = false;
   public errorCentrosTMI: string = '';
   public mostrarFormularioCentrosTMI: boolean = false;
+  public savingCentrosTMI: boolean = false;
+  public errorCentroForm: string = '';
 
   ///formularios
   public estandarForm!: FormGroup;
@@ -62,6 +66,7 @@ export class TmiIndicadores implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.reactiveForm();
     this.getQueryEstandares();
     this.getQueryCentrosTMI();
   }
@@ -79,7 +84,7 @@ export class TmiIndicadores implements OnInit {
       estandar: ['', [Validators.required]],
       acept: ['', [Validators.required]],
       aceptmenos: ['', [Validators.required]],
-
+      periodo: ['', []]
     });
 
     this.centrosForm = this.formBuilder.group({
@@ -93,13 +98,11 @@ export class TmiIndicadores implements OnInit {
       nivel_estandar: ['', [Validators.required]],
       centro: ['', [Validators.required]],
       estado: ['', [Validators.required]],
+      periodo: ['', []]
     });
-
   }
 
-
   getQueryEstandares() {
-
     this.loadingEstandar = true;
     this.errorEstandar = '';
 
@@ -107,81 +110,144 @@ export class TmiIndicadores implements OnInit {
       (res: any) => {
         this.dataEstandar = res;
         this.dataEstandarFilter = res;
-
         this.loadingEstandar = false;
-        this.mostrarFormularioEstandar = false;
       },
       (error: any) => {
-        console.log(error);
+        console.error(error);
         this.errorEstandar = error;
         this.loadingEstandar = false;
-        this.loadingCentrosTMI = false;
       }
     );
     this.cdr.detectChanges();
   }
 
-  updateQueryEstandar() {
+  iniciarEdicionEstandar(row: any): void {
+    if (!this.estandarForm) {
+      this.reactiveForm();
+    }
+    this.estandarForm.reset();
+    this.estandarForm.patchValue({
+      id: row.id ?? '',
+      orden_indicador: row.orden_indicador ?? '',
+      codigo_unico: row.codigo_unico ?? '',
+      tipo: row.tipo ?? '',
+      indicador: row.indicador ?? '',
+      nivel_centro: row.nivel_centro ?? '',
+      tipo_centro: row.tipo_centro ?? '',
+      nivel_estandar_centro: row.nivel_estandar_centro ?? '',
+      estandar: row.estandar ?? '',
+      acept: row.acept ?? '',
+      aceptmenos: row.aceptmenos ?? '',
+      periodo: row.periodo ?? this.periodoEstandar
+    });
+    this.errorEstandarForm = '';
+    this.mostrarFormularioEstandar = true;
+    this.cdr.detectChanges();
+  }
 
-    console.log(this.estandarForm.value);
+  cancelarEdicionEstandar(): void {
+    this.mostrarFormularioEstandar = false;
+    this.errorEstandarForm = '';
+    this.savingEstandar = false;
+    this.cdr.detectChanges();
+  }
+
+  updateQueryEstandar(): void {
+    if (this.estandarForm.invalid) {
+      this.estandarForm.markAllAsTouched();
+      this.errorEstandarForm = 'Por favor, complete todos los campos obligatorios del formulario.';
+      return;
+    }
+
+    this.savingEstandar = true;
+    this.errorEstandarForm = '';
+
     this.tmiIndicadoresService.putQueryEstandares(this.estandarForm.value).subscribe(
       (res: any) => {
-
+        this.savingEstandar = false;
+        this.mostrarFormularioEstandar = false;
         this.getQueryEstandares();
-        this.mostrarFormularioEstandar = false
-        alert("Data actualizada correctamente")
       },
       (error: any) => {
-        console.log(error);
-        this.errorEstandar = error;
-        this.loadingEstandar = false;
-        alert("Error al actualizar data")
+        console.error(error);
+        this.savingEstandar = false;
+        this.errorEstandarForm = typeof error === 'string' ? error : (error?.error?.message || 'Error al actualizar data de estándar');
       }
     );
     this.cdr.detectChanges();
   }
 
-
   getQueryCentrosTMI() {
-
     this.loadingCentrosTMI = true;
     this.errorCentrosTMI = '';
 
     this.tmiIndicadoresService.getQueryCentrosTMI(this.periodoCentrosTMI).subscribe(
       (res: any) => {
-
         this.dataCentrosTMI = res;
         this.dataCentrosTMIFilter = res;
-
         this.loadingCentrosTMI = false;
-        this.mostrarFormularioCentrosTMI = false;
       },
       (error: any) => {
-        console.log(error);
+        console.error(error);
         this.errorCentrosTMI = error;
         this.loadingCentrosTMI = false;
       }
     );
   }
 
+  iniciarEdicionCentro(row: any): void {
+    if (!this.centrosForm) {
+      this.reactiveForm();
+    }
+    this.centrosForm.reset();
+    this.centrosForm.patchValue({
+      id: row.id ?? '',
+      red: row.red ?? '',
+      orden: row.orden ?? '',
+      orden_tipo: row.orden_tipo ?? '',
+      codcentro: row.codcentro ?? '',
+      tipo: row.tipo ?? '',
+      nivel: row.nivel ?? '',
+      nivel_estandar: row.nivel_estandar ?? '',
+      centro: row.centro ?? '',
+      estado: row.estado ?? '',
+      periodo: row.periodo ?? this.periodoCentrosTMI
+    });
+    this.errorCentroForm = '';
+    this.mostrarFormularioCentrosTMI = true;
+    this.cdr.detectChanges();
+  }
 
-  updateQueryCentrosTMI() {
-    console.log(this.centrosForm.value);
+  cancelarEdicionCentro(): void {
+    this.mostrarFormularioCentrosTMI = false;
+    this.errorCentroForm = '';
+    this.savingCentrosTMI = false;
+    this.cdr.detectChanges();
+  }
+
+  updateQueryCentrosTMI(): void {
+    if (this.centrosForm.invalid) {
+      this.centrosForm.markAllAsTouched();
+      this.errorCentroForm = 'Por favor, complete todos los campos obligatorios del formulario.';
+      return;
+    }
+
+    this.savingCentrosTMI = true;
+    this.errorCentroForm = '';
+
     this.tmiIndicadoresService.putQueryCentrosTMI(this.centrosForm.value).subscribe(
       (res: any) => {
+        this.savingCentrosTMI = false;
+        this.mostrarFormularioCentrosTMI = false;
         this.getQueryCentrosTMI();
-        this.mostrarFormularioCentrosTMI = false
-        alert("Data actualizada correctamente")
       },
       (error: any) => {
-        console.log(error);
-        this.errorCentrosTMI = error;
-        this.loadingCentrosTMI = false;
-        alert("Error al actualizar data")
+        console.error(error);
+        this.savingCentrosTMI = false;
+        this.errorCentroForm = typeof error === 'string' ? error : (error?.error?.message || 'Error al actualizar data de centro');
       }
     );
     this.cdr.detectChanges();
-
   }
 
   ///filtros estandares
@@ -198,7 +264,7 @@ export class TmiIndicadores implements OnInit {
     "acept": "",
     "aceptmenos": "",
     "periodo": ""
-  }
+  };
 
   ///filtro dinamico para la tabla indicadores
   filterDataEstandares(column: keyof typeof this.filtersEstandares, event: any): void {
@@ -209,58 +275,23 @@ export class TmiIndicadores implements OnInit {
   }
 
   private applyAllFiltersEstandares(row: any): boolean {
-    // Filtro id
-    if (this.filtersEstandares.id && !row.id.toLowerCase().includes(this.filtersEstandares.id)
-    ) { return false; }
-    // Filtro orden_indicador
-    if (this.filtersEstandares.orden_indicador && !row.orden_indicador.toLowerCase().includes(this.filtersEstandares.orden_indicador)) {
-      return false;
-    }
-    // Filtro codigo_unico
-    if (this.filtersEstandares.codigo_unico && !row.codigo_unico.toLowerCase().includes(this.filtersEstandares.codigo_unico)) {
-      return false;
-    }
-    // Filtro tipo
-    if (this.filtersEstandares.tipo && !row.tipo.toLowerCase().includes(this.filtersEstandares.tipo)) {
-      return false;
-    }
-    // Filtro indicador
-    if (this.filtersEstandares.indicador && !row.indicador.toLowerCase().includes(this.filtersEstandares.indicador)) {
-      return false;
-    }
-    // Filtro nivel_centro
-    if (this.filtersEstandares.nivel_centro && !row.nivel_centro.toLowerCase().includes(this.filtersEstandares.nivel_centro)) {
-      return false;
-    }
-    // Filtro tipo_centro
-    if (this.filtersEstandares.tipo_centro && !row.tipo_centro.toLowerCase().includes(this.filtersEstandares.tipo_centro)) {
-      return false;
-    }
-    // Filtro nivel_estandar_centro
-    if (this.filtersEstandares.nivel_estandar_centro && !row.nivel_estandar_centro.toLowerCase().includes(this.filtersEstandares.nivel_estandar_centro)) {
-      return false;
-    }
-    // Filtro estandar
-    if (this.filtersEstandares.estandar && !row.estandar.toLowerCase().includes(this.filtersEstandares.estandar)) {
-      return false;
-    }
-    // Filtro acept
-    if (this.filtersEstandares.acept && !row.acept.toLowerCase().includes(this.filtersEstandares.acept)) {
-      return false;
-    }
-    // Filtro aceptmenos
-    if (this.filtersEstandares.aceptmenos && !row.aceptmenos.toLowerCase().includes(this.filtersEstandares.aceptmenos)) {
-      return false;
-    }
+    const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
 
-    // Filtro periodo
-    if (this.filtersEstandares.periodo && !row.periodo.toLowerCase().includes(this.filtersEstandares.periodo)) {
-      return false;
-    }
+    if (!check(row.id, this.filtersEstandares.id)) return false;
+    if (!check(row.orden_indicador, this.filtersEstandares.orden_indicador)) return false;
+    if (!check(row.codigo_unico, this.filtersEstandares.codigo_unico)) return false;
+    if (!check(row.tipo, this.filtersEstandares.tipo)) return false;
+    if (!check(row.indicador, this.filtersEstandares.indicador)) return false;
+    if (!check(row.nivel_centro, this.filtersEstandares.nivel_centro)) return false;
+    if (!check(row.tipo_centro, this.filtersEstandares.tipo_centro)) return false;
+    if (!check(row.nivel_estandar_centro, this.filtersEstandares.nivel_estandar_centro)) return false;
+    if (!check(row.estandar, this.filtersEstandares.estandar)) return false;
+    if (!check(row.acept, this.filtersEstandares.acept)) return false;
+    if (!check(row.aceptmenos, this.filtersEstandares.aceptmenos)) return false;
+    if (!check(row.periodo, this.filtersEstandares.periodo)) return false;
 
     return true;
   }
-
 
   ///filtros centros tmi
   filtersCentrosTMI = {
@@ -275,7 +306,7 @@ export class TmiIndicadores implements OnInit {
     "centro": "",
     "estado": "",
     "periodo": ""
-  }
+  };
 
   ///filtro dinamico para la tabla centros tmi
   filterDataCentrosTMI(column: keyof typeof this.filtersCentrosTMI, event: any): void {
@@ -286,68 +317,27 @@ export class TmiIndicadores implements OnInit {
   }
 
   private applyAllFiltersCentrosTMI(row: any): boolean {
-    // Filtro id
-    if (this.filtersCentrosTMI.id && !row.id.toLowerCase().includes(this.filtersCentrosTMI.id)) { return false; }
-    // Filtro red
-    if (this.filtersCentrosTMI.red && !row.red.toLowerCase().includes(this.filtersCentrosTMI.red)) {
-      return false;
-    }
-    // Filtro orden
-    if (this.filtersCentrosTMI.orden && !row.orden.toLowerCase().includes(this.filtersCentrosTMI.orden)) {
-      return false;
-    }
-    // Filtro orden_tipo
-    if (this.filtersCentrosTMI.orden_tipo && !row.orden_tipo.toLowerCase().includes(this.filtersCentrosTMI.orden_tipo)) {
-      return false;
-    }
-    // Filtro codcentro
-    if (this.filtersCentrosTMI.codcentro && !row.codcentro.toLowerCase().includes(this.filtersCentrosTMI.codcentro)) {
-      return false;
-    }
-    // Filtro tipo
-    if (this.filtersCentrosTMI.tipo && !row.tipo.toLowerCase().includes(this.filtersCentrosTMI.tipo)) {
-      return false;
-    }
-    // Filtro nivel
-    if (this.filtersCentrosTMI.nivel && !row.nivel.toLowerCase().includes(this.filtersCentrosTMI.nivel)) {
-      return false;
-    }
-    // Filtro nivel_estandar
-    if (this.filtersCentrosTMI.nivel_estandar && !row.nivel_estandar.toLowerCase().includes(this.filtersCentrosTMI.nivel_estandar)) {
-      return false;
-    }
-    // Filtro centro
-    if (this.filtersCentrosTMI.centro && !row.centro.toLowerCase().includes(this.filtersCentrosTMI.centro)) {
-      return false;
-    }
-    // Filtro estado
-    if (this.filtersCentrosTMI.estado && !row.estado.toLowerCase().includes(this.filtersCentrosTMI.estado)) {
-      return false;
-    }
+    const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
 
-    //Filtro periodo
-    if (this.filtersCentrosTMI.periodo && !row.periodo.toLowerCase().includes(this.filtersCentrosTMI.periodo)) {
-      return false;
-    }
+    if (!check(row.id, this.filtersCentrosTMI.id)) return false;
+    if (!check(row.red, this.filtersCentrosTMI.red)) return false;
+    if (!check(row.orden, this.filtersCentrosTMI.orden)) return false;
+    if (!check(row.orden_tipo, this.filtersCentrosTMI.orden_tipo)) return false;
+    if (!check(row.codcentro, this.filtersCentrosTMI.codcentro)) return false;
+    if (!check(row.tipo, this.filtersCentrosTMI.tipo)) return false;
+    if (!check(row.nivel, this.filtersCentrosTMI.nivel)) return false;
+    if (!check(row.nivel_estandar, this.filtersCentrosTMI.nivel_estandar)) return false;
+    if (!check(row.centro, this.filtersCentrosTMI.centro)) return false;
+    if (!check(row.estado, this.filtersCentrosTMI.estado)) return false;
+    if (!check(row.periodo, this.filtersCentrosTMI.periodo)) return false;
 
     return true;
   }
 
-
-
-
-
-
   // Tabs
-  activeTab:
-    | 'Estandares tmi'
-    | 'Centros tmi' = 'Estandares tmi';
+  activeTab: 'Estandares tmi' | 'Centros tmi' = 'Estandares tmi';
 
-  setActiveTab(
-    tab:
-      | 'Estandares tmi'
-      | 'Centros tmi'
-  ): void {
+  setActiveTab(tab: 'Estandares tmi' | 'Centros tmi'): void {
     this.activeTab = tab;
 
     if (tab === 'Estandares tmi') {
@@ -358,6 +348,5 @@ export class TmiIndicadores implements OnInit {
 
     this.cdr.detectChanges();
   }
-
-
 }
+
