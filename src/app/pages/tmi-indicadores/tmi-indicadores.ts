@@ -9,6 +9,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
+import { FechaActualizacionService } from '../../services/fecha-actualizacion-service';
 
 @Component({
   selector: 'app-tmi-indicadores',
@@ -28,6 +29,7 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './tmi-indicadores.css',
 })
 export class TmiIndicadores implements OnInit {
+  currentDate: string = '';
 
   ///data estandares
   public dataEstandar: any[] = [];
@@ -63,12 +65,24 @@ export class TmiIndicadores implements OnInit {
     private tmiIndicadoresService: TmiIndicadoresService,
     private formBuilder: FormBuilder,
     private cdr: ChangeDetectorRef,
+    private fechaService: FechaActualizacionService
   ) { }
 
   ngOnInit(): void {
     this.reactiveForm();
     this.getQueryEstandares();
     this.getQueryCentrosTMI();
+  }
+
+  loadFechaActualizacion() {
+    this.fechaService.queryFechaActualizacion().subscribe({
+      next: (data) => {
+        this.currentDate = data.fecha_act;
+      },
+      error: (error) => {
+        console.error('Error al cargar la fecha de actualizacion', error);
+      }
+    });
   }
 
   reactiveForm() {
