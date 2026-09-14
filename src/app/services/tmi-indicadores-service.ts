@@ -11,21 +11,6 @@ export class TmiIndicadoresService {
 
   constructor(private http: HttpClient) { }
 
-  /// estandares
-  getQueryEstandares(periodo: string) {
-    return this.http.get<any[]>(base_url + `/lista-estandar/${periodo}`);
-  }
-
-  /// estandares by centro
-  getQueryEstandaresByCentro(codcentro: string, periodo: string) {
-    return this.http.get<any[]>(base_url + `/lista-estandar-by-centro/${codcentro}/${periodo}`);
-  }
-
-  /// update estandar
-  putQueryEstandares(dto: any) {
-    return this.http.put(base_url + `/update-estandar`, dto);
-  }
-
   /// estandares tipo
   getQueryEstandarTipo(periodo: string) {
     return this.http.get<any[]>(base_url + `/lista-estandar-tipo/${periodo}`);
