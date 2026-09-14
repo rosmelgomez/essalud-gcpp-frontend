@@ -1,107 +1,109 @@
 <div class="main">
 
-    <!-- TABS -->
+    <!-- TABS DE NAVEGACIÓN -->
     <div class="tabs">
-        <button class="tab-button" [class.active]="activeTab === 'Estandares tmi'"
-            (click)="setActiveTab('Estandares tmi')">
-            Estandares tmi
+        <button class="tab-button" [class.active]="activeTab === 'Estandares Tipo'"
+            (click)="setActiveTab('Estandares Tipo')">
+            Estándares Tipo
         </button>
-        <button class="tab-button" [class.active]="activeTab === 'Centros tmi'" (click)="setActiveTab('Centros tmi')">
-            Centros tmi
+        <button class="tab-button" [class.active]="activeTab === 'Estandares Nivel'"
+            (click)="setActiveTab('Estandares Nivel')">
+            Estándares Nivel
         </button>
-
+        <button class="tab-button" [class.active]="activeTab === 'Estandares Categoria'"
+            (click)="setActiveTab('Estandares Categoria')">
+            Estándares Categoría
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'Centros TMI'"
+            (click)="setActiveTab('Centros TMI')">
+            Centros TMI
+        </button>
     </div>
 
-    <!-- CONTENIDO TABS -->
-    <!-- Tab Tablas Estandares tmi -->
-    <div class="tab-content" *ngIf="activeTab === 'Estandares tmi'">
+    <!-- ================================================================================= -->
+    <!-- TAB 1: ESTÁNDARES TIPO (tmi_estandar_tipo) -->
+    <!-- ================================================================================= -->
+    <div class="tab-content" *ngIf="activeTab === 'Estandares Tipo'">
         <div class="header">
-            <p>Tablas de estandares del tablero de monitoreo integrado (TMI)</p>
+            <p>Tabla de Estándares TMI por Tipo de Centro (tmi_estandar_tipo)</p>
+            <div class="header-actions">
+                <div class="buscar-group">
+                    <select [(ngModel)]="anioEstandarTipo" class="anio-select">
+                        <option value="">Seleccione un Año</option>
+                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
+                    </select>
+                    <select [(ngModel)]="mesEstandarTipo" class="periodo-select">
+                        <option value="">Seleccione un periodo</option>
+                        <option *ngFor="let m of mesesDisponibles" [value]="m.value">{{ m.label }}</option>
+                    </select>
+                    <button (click)="onBuscarEstandarTipo()" class="btn-search">Buscar</button>
+                </div>
+            </div>
         </div>
 
-        <!-- Estado Loading-->
-        <div *ngIf="loadingEstandar" class="loading">
-            <p>Cargando datos...</p>
+        <!-- Selecciona Periodo -->
+        <div *ngIf="selectPeriodoEstandarTipo && !loadingEstandarTipo" class="select-periodo">
+            <p>Por favor, seleccione un año y periodo y haga clic en Buscar para ver la información de Estándares por Tipo</p>
         </div>
 
-        <!-- Estado de Error -->
-        <div *ngIf="errorEstandar" class="alert alert-danger">
-            {{ errorEstandar }}
+        <div *ngIf="loadingEstandarTipo" class="loading">
+            <p>Cargando datos de estándares tipo...</p>
         </div>
 
-        <!-- Contenido de tabla estandares tmi -->
-        <div *ngIf="!loadingEstandar && !errorEstandar" class="dashboard-content">
-            <mat-card class="table" style="--cols-table: repeat(13, minmax(0, 1fr));">
-                <h3>Detalle de tablas estandares tmi</h3>
+        <div *ngIf="errorEstandarTipo" class="alert alert-danger">
+            {{ errorEstandarTipo }}
+        </div>
+
+        <div *ngIf="!loadingEstandarTipo && !errorEstandarTipo && !selectPeriodoEstandarTipo" class="dashboard-content">
+            <mat-card class="table" style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(110px, 1.2fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(55px, 0.6fr);">
+                <h3>Detalle de Estándares por Tipo</h3>
                 <div class="wrapper-table">
                     <div class="grid-table">
                         <!-- HEADER -->
                         <div class="header-table">
                             <div class="cell id">ID</div>
-                            <div class="cell orden_indicador">ORDEN_INDICADOR</div>
-                            <div class="cell codigo_unico">CODIGO_UNICO</div>
                             <div class="cell tipo">TIPO</div>
                             <div class="cell indicador">INDICADOR</div>
-                            <div class="cell nivel_centro">NIVEL_CENTRO</div>
                             <div class="cell tipo_centro">TIPO_CENTRO</div>
-                            <div class="cell nivel_estandar_centro">NIVEL_ESTANDAR_CENTRO</div>
-                            <div class="cell estandar">ESTANDAR</div>
+                            <div class="cell anio">AÑO</div>
+                            <div class="cell mes">MES</div>
+                            <div class="cell periodo">PERIODO</div>
+                            <div class="cell estandar">ESTÁNDAR</div>
                             <div class="cell acept">ACEPT</div>
                             <div class="cell aceptmenos">ACEPTMENOS</div>
-                            <div class="cell periodo">PERIODO</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
-                        <!-- FILTERS ROW -->
+                        <!-- FILTERS -->
                         <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
-                                (keyup)="filterDataEstandares('id', $event)" />
-                            <input type="text" class="filter-input cell orden_indicador" placeholder="Buscar orden..."
-                                (keyup)="filterDataEstandares('orden_indicador', $event)" />
-                            <input type="text" class="filter-input cell codigo_unico"
-                                placeholder="Buscar código único..."
-                                (keyup)="filterDataEstandares('codigo_unico', $event)" />
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
-                                (keyup)="filterDataEstandares('tipo', $event)" />
-                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
-                                (keyup)="filterDataEstandares('indicador', $event)" />
-                            <input type="text" class="filter-input cell nivel_centro"
-                                placeholder="Buscar nivel centro..."
-                                (keyup)="filterDataEstandares('nivel_centro', $event)" />
-                            <input type="text" class="filter-input cell tipo_centro" placeholder="Buscar tipo centro..."
-                                (keyup)="filterDataEstandares('tipo_centro', $event)" />
-                            <input type="text" class="filter-input cell nivel_estandar_centro"
-                                placeholder="Buscar nivel estándar..."
-                                (keyup)="filterDataEstandares('nivel_estandar_centro', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
-                                (keyup)="filterDataEstandares('estandar', $event)" />
-                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..."
-                                (keyup)="filterDataEstandares('acept', $event)" />
-                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..."
-                                (keyup)="filterDataEstandares('aceptmenos', $event)" />
-                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..."
-                                (keyup)="filterDataEstandares('periodo', $event)" />
+                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..." (keyup)="filterDataEstandarTipo('id', $event)" />
+                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..." (keyup)="filterDataEstandarTipo('tipo', $event)" />
+                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..." (keyup)="filterDataEstandarTipo('indicador', $event)" />
+                            <input type="text" class="filter-input cell tipo_centro" placeholder="Buscar tipo centro..." (keyup)="filterDataEstandarTipo('tipo_centro', $event)" />
+                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..." (keyup)="filterDataEstandarTipo('anio', $event)" />
+                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..." (keyup)="filterDataEstandarTipo('mes', $event)" />
+                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..." (keyup)="filterDataEstandarTipo('periodo', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..." (keyup)="filterDataEstandarTipo('estandar', $event)" />
+                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..." (keyup)="filterDataEstandarTipo('acept', $event)" />
+                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..." (keyup)="filterDataEstandarTipo('aceptmenos', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
-                        <!-- VIRTUAL SCROLL -->
-                        <cdk-virtual-scroll-viewport class="viewport-table" [itemSize]="72">
-                            <div *cdkVirtualFor="let row of dataEstandar" class="row-table">
+                        <!-- ROWS -->
+                        <cdk-virtual-scroll-viewport #viewportTipo class="viewport-table" [itemSize]="44">
+                            <div *cdkVirtualFor="let row of dataEstandarTipo" class="row-table">
                                 <div class="cell id">{{ row.id }}</div>
-                                <div class="cell orden_indicador">{{ row.orden_indicador }}</div>
-                                <div class="cell codigo_unico">{{ row.codigo_unico }}</div>
                                 <div class="cell tipo">{{ row.tipo }}</div>
                                 <div class="cell indicador">{{ row.indicador }}</div>
-                                <div class="cell nivel_centro">{{ row.nivel_centro }}</div>
                                 <div class="cell tipo_centro">{{ row.tipo_centro }}</div>
-                                <div class="cell nivel_estandar_centro">{{ row.nivel_estandar_centro }}</div>
+                                <div class="cell anio">{{ row.anio }}</div>
+                                <div class="cell mes">{{ row.mes }}</div>
+                                <div class="cell periodo">{{ row.periodo }}</div>
                                 <div class="cell estandar">{{ row.estandar }}</div>
                                 <div class="cell acept">{{ row.acept }}</div>
                                 <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
-                                <div class="cell periodo">{{ row.periodo }}</div>
                                 <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionEstandar(row)"
-                                        title="Editar estándar">
+                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionEstandarTipo(row)" title="Editar registro">
                                         <mat-icon>edit</mat-icon>
                                     </button>
                                 </div>
@@ -110,264 +112,171 @@
                     </div>
                 </div>
 
-                <!-- FOOTER -->
                 <div class="footer-table">
                     <div class="footer-left"><strong>Total de filas:</strong></div>
-                    <div class="footer-right num">
-                        <strong>{{ dataEstandar.length }}</strong>
-                    </div>
+                    <div class="footer-right num"><strong>{{ dataEstandarTipo.length }}</strong></div>
                 </div>
             </mat-card>
-
-            <ng-template #noTable>
-                <div class="no-data">Sin datos para tablas homologadas emergencia.</div>
-            </ng-template>
-
         </div>
 
-        <!-- MODAL FLOTANTE DE FORMULARIO ESTÁNDARES TMI -->
-        <div class="modal-overlay" *ngIf="mostrarFormularioEstandar" (click)="cancelarEdicionEstandar()">
+        <!-- MODAL EDITAR ESTÁNDAR TIPO -->
+        <div class="modal-overlay" *ngIf="mostrarFormularioEstandarTipo" (click)="cancelarEdicionEstandarTipo()">
             <div class="modal-card" (click)="$event.stopPropagation()">
                 <header class="modal-header">
                     <div class="modal-header-info">
-                        <h2>Formulario de Estándar TMI</h2>
-                        <p class="modal-subtitle" *ngIf="estandarForm.get('id')?.value">
-                            Edición del registro ID: {{ estandarForm.get('id')?.value }}
+                        <h2>Formulario de Estándar Tipo</h2>
+                        <p class="modal-subtitle" *ngIf="estandarTipoForm.get('id')?.value">
+                            Edición del registro ID: {{ estandarTipoForm.get('id')?.value }}
                         </p>
                     </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandar()"
-                        aria-label="Cerrar modal">&times;</button>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarTipo()">&times;</button>
                 </header>
 
-                <form [formGroup]="estandarForm" (ngSubmit)="updateQueryEstandar()" class="modal-form-container">
+                <form [formGroup]="estandarTipoForm" (ngSubmit)="updateQueryEstandarTipo()" class="modal-form-container">
                     <div class="modal-body">
-                        <!-- Banner Informativo -->
-                        <div class="info-preview-banner" *ngIf="estandarForm.get('id')?.value">
-                            <div class="preview-tag">
-                                <span>ID Registro</span>
-                                <strong>#{{ estandarForm.get('id')?.value }}</strong>
-                            </div>
-                            <div class="preview-tag">
-                                <span>Periodo</span>
-                                <strong>{{ estandarForm.get('periodo')?.value || periodoEstandar }}</strong>
-                            </div>
-                            <div class="preview-tag" *ngIf="estandarForm.get('codigo_unico')?.value">
-                                <span>Código Único</span>
-                                <strong>{{ estandarForm.get('codigo_unico')?.value }}</strong>
-                            </div>
-                        </div>
-
                         <div class="form-grid">
                             <input type="hidden" formControlName="id" />
                             <input type="hidden" formControlName="periodo" />
 
                             <div class="field-input">
-                                <label for="estandar_orden_indicador">Orden Indicador <span
-                                        class="required">*</span></label>
-                                <input type="number" id="estandar_orden_indicador" formControlName="orden_indicador"
-                                    placeholder="Ej. 1"
-                                    [class.is-invalid]="estandarForm.get('orden_indicador')?.touched && estandarForm.get('orden_indicador')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="estandarForm.get('orden_indicador')?.touched && estandarForm.get('orden_indicador')?.hasError('required')">El
-                                    orden es requerido.</span>
-                            </div>
-
-                            <div class="field-input">
-                                <label for="estandar_codigo_unico">Código Único <span class="required">*</span></label>
-                                <input type="text" id="estandar_codigo_unico" formControlName="codigo_unico"
-                                    placeholder="Ingrese código único"
-                                    [class.is-invalid]="estandarForm.get('codigo_unico')?.touched && estandarForm.get('codigo_unico')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="estandarForm.get('codigo_unico')?.touched && estandarForm.get('codigo_unico')?.hasError('required')">El
-                                    código único es requerido.</span>
-                            </div>
-
-                            <div class="field-input">
-                                <label for="estandar_tipo">Tipo <span class="required">*</span></label>
-                                <input type="text" id="estandar_tipo" formControlName="tipo" placeholder="Ingrese tipo"
-                                    [class.is-invalid]="estandarForm.get('tipo')?.touched && estandarForm.get('tipo')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="estandarForm.get('tipo')?.touched && estandarForm.get('tipo')?.hasError('required')">El
-                                    tipo es requerido.</span>
+                                <label for="st_tipo">Tipo <span class="required">*</span></label>
+                                <input type="text" id="st_tipo" formControlName="tipo" placeholder="Tipo" />
                             </div>
 
                             <div class="field-input full-width">
-                                <label for="estandar_indicador">Indicador <span class="required">*</span></label>
-                                <textarea id="estandar_indicador" formControlName="indicador" rows="2"
-                                    placeholder="Nombre o descripción del indicador"
-                                    [class.is-invalid]="estandarForm.get('indicador')?.touched && estandarForm.get('indicador')?.invalid"></textarea>
-                                <span class="field-error"
-                                    *ngIf="estandarForm.get('indicador')?.touched && estandarForm.get('indicador')?.hasError('required')">El
-                                    indicador es requerido.</span>
+                                <label for="st_indicador">Indicador <span class="required">*</span></label>
+                                <textarea id="st_indicador" formControlName="indicador" rows="2" placeholder="Indicador"></textarea>
                             </div>
 
                             <div class="field-input">
-                                <label for="estandar_nivel_centro">Nivel Centro <span class="required">*</span></label>
-                                <input type="text" id="estandar_nivel_centro" formControlName="nivel_centro"
-                                    placeholder="Nivel centro"
-                                    [class.is-invalid]="estandarForm.get('nivel_centro')?.touched && estandarForm.get('nivel_centro')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="estandarForm.get('nivel_centro')?.touched && estandarForm.get('nivel_centro')?.hasError('required')">El
-                                    nivel de centro es requerido.</span>
+                                <label for="st_tipo_centro">Tipo Centro <span class="required">*</span></label>
+                                <input type="text" id="st_tipo_centro" formControlName="tipo_centro" placeholder="Tipo Centro" />
                             </div>
 
                             <div class="field-input">
-                                <label for="estandar_tipo_centro">Tipo Centro <span class="required">*</span></label>
-                                <input type="text" id="estandar_tipo_centro" formControlName="tipo_centro"
-                                    placeholder="Tipo centro"
-                                    [class.is-invalid]="estandarForm.get('tipo_centro')?.touched && estandarForm.get('tipo_centro')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="estandarForm.get('tipo_centro')?.touched && estandarForm.get('tipo_centro')?.hasError('required')">El
-                                    tipo de centro es requerido.</span>
+                                <label for="st_estandar">Estándar <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_estandar" formControlName="estandar" placeholder="Estándar" />
                             </div>
 
                             <div class="field-input">
-                                <label for="estandar_nivel_estandar_centro">Nivel Estándar Centro <span
-                                        class="required">*</span></label>
-                                <input type="text" id="estandar_nivel_estandar_centro"
-                                    formControlName="nivel_estandar_centro" placeholder="Nivel estándar centro"
-                                    [class.is-invalid]="estandarForm.get('nivel_estandar_centro')?.touched && estandarForm.get('nivel_estandar_centro')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="estandarForm.get('nivel_estandar_centro')?.touched && estandarForm.get('nivel_estandar_centro')?.hasError('required')">El
-                                    nivel de estándar es requerido.</span>
+                                <label for="st_acept">Aceptable <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_acept" formControlName="acept" placeholder="Aceptable" />
                             </div>
 
                             <div class="field-input">
-                                <label for="estandar_estandar">Estándar <span class="required">*</span></label>
-                                <input type="text" id="estandar_estandar" formControlName="estandar"
-                                    placeholder="Estándar"
-                                    [class.is-invalid]="estandarForm.get('estandar')?.touched && estandarForm.get('estandar')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="estandarForm.get('estandar')?.touched && estandarForm.get('estandar')?.hasError('required')">El
-                                    estándar es requerido.</span>
+                                <label for="st_aceptmenos">Aceptable Menos <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_aceptmenos" formControlName="aceptmenos" placeholder="Aceptable Menos" />
                             </div>
 
                             <div class="field-input">
-                                <label for="estandar_acept">Aceptable <span class="required">*</span></label>
-                                <input type="number" id="estandar_acept" formControlName="acept"
-                                    placeholder="Valor aceptable"
-                                    [class.is-invalid]="estandarForm.get('acept')?.touched && estandarForm.get('acept')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="estandarForm.get('acept')?.touched && estandarForm.get('acept')?.hasError('required')">El
-                                    campo aceptable es requerido.</span>
+                                <label for="st_anio">Año</label>
+                                <input type="number" id="st_anio" formControlName="anio" placeholder="Año" />
                             </div>
 
                             <div class="field-input">
-                                <label for="estandar_aceptmenos">Aceptable Menos <span class="required">*</span></label>
-                                <input type="number" id="estandar_aceptmenos" formControlName="aceptmenos"
-                                    placeholder="Valor aceptable menos"
-                                    [class.is-invalid]="estandarForm.get('aceptmenos')?.touched && estandarForm.get('aceptmenos')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="estandarForm.get('aceptmenos')?.touched && estandarForm.get('aceptmenos')?.hasError('required')">El
-                                    campo aceptable menos es requerido.</span>
+                                <label for="st_mes">Mes</label>
+                                <input type="number" id="st_mes" formControlName="mes" placeholder="Mes" />
                             </div>
                         </div>
 
-                        <!-- Mensaje de Validación / Error -->
-                        <div class="validation-message-banner" *ngIf="errorEstandarForm">
-                            <span>⚠️ {{ errorEstandarForm }}</span>
+                        <div class="validation-message-banner" *ngIf="errorEstandarTipoForm">
+                            <span>⚠️ {{ errorEstandarTipoForm }}</span>
                         </div>
                     </div>
 
                     <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionEstandar()"
-                            [disabled]="savingEstandar">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandar">
-                            <span *ngIf="!savingEstandar">💾 Guardar Cambios</span>
-                            <span *ngIf="savingEstandar">⏳ Guardando...</span>
+                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionEstandarTipo()" [disabled]="savingEstandarTipo">Cancelar</button>
+                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarTipo">
+                            <span *ngIf="!savingEstandarTipo">💾 Guardar Cambios</span>
+                            <span *ngIf="savingEstandarTipo">⏳ Guardando...</span>
                         </button>
                     </footer>
                 </form>
             </div>
         </div>
-
     </div>
 
-    <!-- Tab Tablas Centros tmi -->
-    <div class="tab-content" *ngIf="activeTab === 'Centros tmi'">
+    <!-- ================================================================================= -->
+    <!-- TAB 2: ESTÁNDARES NIVEL (tmi_estandar_nivel) -->
+    <!-- ================================================================================= -->
+    <div class="tab-content" *ngIf="activeTab === 'Estandares Nivel'">
         <div class="header">
-            <p>Tablas de centros asistenciales del tablero de monitoreo integrado (TMI)</p>
+            <p>Tabla de Estándares TMI por Nivel de Centro (tmi_estandar_nivel)</p>
+            <div class="header-actions">
+                <div class="buscar-group">
+                    <select [(ngModel)]="anioEstandarNivel" class="anio-select">
+                        <option value="">Seleccione un Año</option>
+                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
+                    </select>
+                    <select [(ngModel)]="mesEstandarNivel" class="periodo-select">
+                        <option value="">Seleccione un periodo</option>
+                        <option *ngFor="let m of mesesDisponibles" [value]="m.value">{{ m.label }}</option>
+                    </select>
+                    <button (click)="onBuscarEstandarNivel()" class="btn-search">Buscar</button>
+                </div>
+            </div>
         </div>
 
-        <!-- Estado Loading-->
-        <div *ngIf="loadingCentrosTMI" class="loading">
-            <p>Cargando datos...</p>
+        <!-- Selecciona Periodo -->
+        <div *ngIf="selectPeriodoEstandarNivel && !loadingEstandarNivel" class="select-periodo">
+            <p>Por favor, seleccione un año y periodo y haga clic en Buscar para ver la información de Estándares por Nivel</p>
         </div>
 
-        <!-- Estado de Error -->
-        <div *ngIf="errorCentrosTMI" class="alert alert-danger">
-            {{ errorCentrosTMI }}
+        <div *ngIf="loadingEstandarNivel" class="loading">
+            <p>Cargando datos de estándares nivel...</p>
         </div>
 
-        <!-- contenido de la tabla de centro tmi -->
-        <div *ngIf="!loadingCentrosTMI && !errorCentrosTMI" class="dashboard-content">
-            <mat-card class="table" style="--cols-table: repeat(12, minmax(0, 1fr));">
-                <h3>Detalle de tablas centros tmi</h3>
+        <div *ngIf="errorEstandarNivel" class="alert alert-danger">
+            {{ errorEstandarNivel }}
+        </div>
+
+        <div *ngIf="!loadingEstandarNivel && !errorEstandarNivel && !selectPeriodoEstandarNivel" class="dashboard-content">
+            <mat-card class="table" style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(110px, 1.2fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(55px, 0.6fr);">
+                <h3>Detalle de Estándares por Nivel</h3>
                 <div class="wrapper-table">
                     <div class="grid-table">
-                        <!-- HEADER -->
                         <div class="header-table">
                             <div class="cell id">ID</div>
-                            <div class="cell red">RED</div>
-                            <div class="cell orden">ORDEN</div>
-                            <div class="cell orden_tipo">ORDEN_TIPO</div>
-                            <div class="cell codcentro">CODCENTRO</div>
                             <div class="cell tipo">TIPO</div>
-                            <div class="cell nivel">NIVEL</div>
-                            <div class="cell nivel_estandar">NIVEL_ESTANDAR</div>
-                            <div class="cell centro">CENTRO</div>
-                            <div class="cell estado">ESTADO</div>
+                            <div class="cell indicador">INDICADOR</div>
+                            <div class="cell nivel_centro">NIVEL_CENTRO</div>
+                            <div class="cell anio">AÑO</div>
+                            <div class="cell mes">MES</div>
                             <div class="cell periodo">PERIODO</div>
+                            <div class="cell estandar">ESTÁNDAR</div>
+                            <div class="cell acept">ACEPT</div>
+                            <div class="cell aceptmenos">ACEPTMENOS</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
-                        <!-- FILTERS ROW -->
                         <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
-                                (keyup)="filterDataCentrosTMI('id', $event)" />
-                            <input type="text" class="filter-input cell red" placeholder="Buscar red..."
-                                (keyup)="filterDataCentrosTMI('red', $event)" />
-                            <input type="text" class="filter-input cell orden" placeholder="Buscar orden..."
-                                (keyup)="filterDataCentrosTMI('orden', $event)" />
-                            <input type="text" class="filter-input cell orden_tipo" placeholder="Buscar orden_tipo..."
-                                (keyup)="filterDataCentrosTMI('orden_tipo', $event)" />
-                            <input type="text" class="filter-input cell codcentro" placeholder="Buscar codcentro..."
-                                (keyup)="filterDataCentrosTMI('codcentro', $event)" />
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
-                                (keyup)="filterDataCentrosTMI('tipo', $event)" />
-                            <input type="text" class="filter-input cell nivel" placeholder="Buscar nivel..."
-                                (keyup)="filterDataCentrosTMI('nivel', $event)" />
-                            <input type="text" class="filter-input cell nivel_estandar"
-                                placeholder="Buscar nivel_estandar..."
-                                (keyup)="filterDataCentrosTMI('nivel_estandar', $event)" />
-                            <input type="text" class="filter-input cell centro" placeholder="Buscar centro..."
-                                (keyup)="filterDataCentrosTMI('centro', $event)" />
-                            <input type="text" class="filter-input cell estado" placeholder="Buscar estado..."
-                                (keyup)="filterDataCentrosTMI('estado', $event)" />
-                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..."
-                                (keyup)="filterDataCentrosTMI('periodo', $event)" />
+                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..." (keyup)="filterDataEstandarNivel('id', $event)" />
+                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..." (keyup)="filterDataEstandarNivel('tipo', $event)" />
+                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..." (keyup)="filterDataEstandarNivel('indicador', $event)" />
+                            <input type="text" class="filter-input cell nivel_centro" placeholder="Buscar nivel centro..." (keyup)="filterDataEstandarNivel('nivel_centro', $event)" />
+                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..." (keyup)="filterDataEstandarNivel('anio', $event)" />
+                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..." (keyup)="filterDataEstandarNivel('mes', $event)" />
+                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..." (keyup)="filterDataEstandarNivel('periodo', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..." (keyup)="filterDataEstandarNivel('estandar', $event)" />
+                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..." (keyup)="filterDataEstandarNivel('acept', $event)" />
+                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..." (keyup)="filterDataEstandarNivel('aceptmenos', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
-                        <!-- VIRTUAL SCROLL -->
-                        <cdk-virtual-scroll-viewport class="viewport-table" [itemSize]="72">
-                            <div *cdkVirtualFor="let row of dataCentrosTMI" class="row-table">
+                        <cdk-virtual-scroll-viewport #viewportNivel class="viewport-table" [itemSize]="44">
+                            <div *cdkVirtualFor="let row of dataEstandarNivel" class="row-table">
                                 <div class="cell id">{{ row.id }}</div>
-                                <div class="cell red">{{ row.red }}</div>
-                                <div class="cell orden">{{ row.orden }}</div>
-                                <div class="cell orden_tipo">{{ row.orden_tipo }}</div>
-                                <div class="cell codcentro">{{ row.codcentro }}</div>
                                 <div class="cell tipo">{{ row.tipo }}</div>
-                                <div class="cell nivel">{{ row.nivel }}</div>
-                                <div class="cell nivel_estandar">{{ row.nivel_estandar }}</div>
-                                <div class="cell centro">{{ row.centro }}</div>
-                                <div class="cell estado">{{ row.estado }}</div>
+                                <div class="cell indicador">{{ row.indicador }}</div>
+                                <div class="cell nivel_centro">{{ row.nivel_centro }}</div>
+                                <div class="cell anio">{{ row.anio }}</div>
+                                <div class="cell mes">{{ row.mes }}</div>
                                 <div class="cell periodo">{{ row.periodo }}</div>
+                                <div class="cell estandar">{{ row.estandar }}</div>
+                                <div class="cell acept">{{ row.acept }}</div>
+                                <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
                                 <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionCentro(row)"
-                                        title="Editar centro">
+                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionEstandarNivel(row)" title="Editar registro">
                                         <mat-icon>edit</mat-icon>
                                     </button>
                                 </div>
@@ -376,22 +285,372 @@
                     </div>
                 </div>
 
-                <!-- FOOTER -->
                 <div class="footer-table">
                     <div class="footer-left"><strong>Total de filas:</strong></div>
-                    <div class="footer-right num">
-                        <strong>{{ dataCentrosTMI.length }}</strong>
-                    </div>
+                    <div class="footer-right num"><strong>{{ dataEstandarNivel.length }}</strong></div>
                 </div>
             </mat-card>
-
-            <ng-template #noTable>
-                <div class="no-data">Sin datos para tablas homologadas emergencia.</div>
-            </ng-template>
-
         </div>
 
-        <!-- MODAL FLOTANTE DE FORMULARIO CENTROS TMI -->
+        <!-- MODAL EDITAR ESTÁNDAR NIVEL -->
+        <div class="modal-overlay" *ngIf="mostrarFormularioEstandarNivel" (click)="cancelarEdicionEstandarNivel()">
+            <div class="modal-card" (click)="$event.stopPropagation()">
+                <header class="modal-header">
+                    <div class="modal-header-info">
+                        <h2>Formulario de Estándar Nivel</h2>
+                        <p class="modal-subtitle" *ngIf="estandarNivelForm.get('id')?.value">
+                            Edición del registro ID: {{ estandarNivelForm.get('id')?.value }}
+                        </p>
+                    </div>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarNivel()">&times;</button>
+                </header>
+
+                <form [formGroup]="estandarNivelForm" (ngSubmit)="updateQueryEstandarNivel()" class="modal-form-container">
+                    <div class="modal-body">
+                        <div class="form-grid">
+                            <input type="hidden" formControlName="id" />
+                            <input type="hidden" formControlName="periodo" />
+
+                            <div class="field-input">
+                                <label for="sn_tipo">Tipo <span class="required">*</span></label>
+                                <input type="text" id="sn_tipo" formControlName="tipo" placeholder="Tipo" />
+                            </div>
+
+                            <div class="field-input full-width">
+                                <label for="sn_indicador">Indicador <span class="required">*</span></label>
+                                <textarea id="sn_indicador" formControlName="indicador" rows="2" placeholder="Indicador"></textarea>
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sn_nivel_centro">Nivel Centro <span class="required">*</span></label>
+                                <input type="text" id="sn_nivel_centro" formControlName="nivel_centro" placeholder="Nivel Centro" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sn_estandar">Estándar <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_estandar" formControlName="estandar" placeholder="Estándar" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sn_acept">Aceptable <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_acept" formControlName="acept" placeholder="Aceptable" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sn_aceptmenos">Aceptable Menos <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_aceptmenos" formControlName="aceptmenos" placeholder="Aceptable Menos" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sn_anio">Año</label>
+                                <input type="number" id="sn_anio" formControlName="anio" placeholder="Año" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sn_mes">Mes</label>
+                                <input type="number" id="sn_mes" formControlName="mes" placeholder="Mes" />
+                            </div>
+                        </div>
+
+                        <div class="validation-message-banner" *ngIf="errorEstandarNivelForm">
+                            <span>⚠️ {{ errorEstandarNivelForm }}</span>
+                        </div>
+                    </div>
+
+                    <footer class="modal-footer">
+                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionEstandarNivel()" [disabled]="savingEstandarNivel">Cancelar</button>
+                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarNivel">
+                            <span *ngIf="!savingEstandarNivel">💾 Guardar Cambios</span>
+                            <span *ngIf="savingEstandarNivel">⏳ Guardando...</span>
+                        </button>
+                    </footer>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================================= -->
+    <!-- TAB 3: ESTÁNDARES CATEGORÍA (tmi_estandar_categoria) -->
+    <!-- ================================================================================= -->
+    <div class="tab-content" *ngIf="activeTab === 'Estandares Categoria'">
+        <div class="header">
+            <p>Tabla de Estándares TMI por Categoría de Centro (tmi_estandar_categoria)</p>
+            <div class="header-actions">
+                <div class="buscar-group">
+                    <select [(ngModel)]="anioEstandarCategoria" class="anio-select">
+                        <option value="">Seleccione un Año</option>
+                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
+                    </select>
+                    <select [(ngModel)]="mesEstandarCategoria" class="periodo-select">
+                        <option value="">Seleccione un periodo</option>
+                        <option *ngFor="let m of mesesDisponibles" [value]="m.value">{{ m.label }}</option>
+                    </select>
+                    <button (click)="onBuscarEstandarCategoria()" class="btn-search">Buscar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selecciona Periodo -->
+        <div *ngIf="selectPeriodoEstandarCategoria && !loadingEstandarCategoria" class="select-periodo">
+            <p>Por favor, seleccione un año y periodo y haga clic en Buscar para ver la información de Estándares por Categoría</p>
+        </div>
+
+        <div *ngIf="loadingEstandarCategoria" class="loading">
+            <p>Cargando datos de estándares categoría...</p>
+        </div>
+
+        <div *ngIf="errorEstandarCategoria" class="alert alert-danger">
+            {{ errorEstandarCategoria }}
+        </div>
+
+        <div *ngIf="!loadingEstandarCategoria && !errorEstandarCategoria && !selectPeriodoEstandarCategoria" class="dashboard-content">
+            <mat-card class="table" style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(120px, 1.3fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(55px, 0.6fr);">
+                <h3>Detalle de Estándares por Categoría</h3>
+                <div class="wrapper-table">
+                    <div class="grid-table">
+                        <div class="header-table">
+                            <div class="cell id">ID</div>
+                            <div class="cell tipo">TIPO</div>
+                            <div class="cell indicador">INDICADOR</div>
+                            <div class="cell categoria_centro">CATEGORIA_CENTRO</div>
+                            <div class="cell anio">AÑO</div>
+                            <div class="cell mes">MES</div>
+                            <div class="cell periodo">PERIODO</div>
+                            <div class="cell estandar">ESTÁNDAR</div>
+                            <div class="cell acept">ACEPT</div>
+                            <div class="cell aceptmenos">ACEPTMENOS</div>
+                            <div class="cell acciones">ACCIONES</div>
+                        </div>
+
+                        <div class="filters-table">
+                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..." (keyup)="filterDataEstandarCategoria('id', $event)" />
+                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..." (keyup)="filterDataEstandarCategoria('tipo', $event)" />
+                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..." (keyup)="filterDataEstandarCategoria('indicador', $event)" />
+                            <input type="text" class="filter-input cell categoria_centro" placeholder="Buscar categoría centro..." (keyup)="filterDataEstandarCategoria('categoria_centro', $event)" />
+                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..." (keyup)="filterDataEstandarCategoria('anio', $event)" />
+                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..." (keyup)="filterDataEstandarCategoria('mes', $event)" />
+                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..." (keyup)="filterDataEstandarCategoria('periodo', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..." (keyup)="filterDataEstandarCategoria('estandar', $event)" />
+                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..." (keyup)="filterDataEstandarCategoria('acept', $event)" />
+                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..." (keyup)="filterDataEstandarCategoria('aceptmenos', $event)" />
+                            <div class="cell acciones"></div>
+                        </div>
+
+                        <cdk-virtual-scroll-viewport #viewportCategoria class="viewport-table" [itemSize]="44">
+                            <div *cdkVirtualFor="let row of dataEstandarCategoria" class="row-table">
+                                <div class="cell id">{{ row.id }}</div>
+                                <div class="cell tipo">{{ row.tipo }}</div>
+                                <div class="cell indicador">{{ row.indicador }}</div>
+                                <div class="cell categoria_centro">{{ row.categoria_centro }}</div>
+                                <div class="cell anio">{{ row.anio }}</div>
+                                <div class="cell mes">{{ row.mes }}</div>
+                                <div class="cell periodo">{{ row.periodo }}</div>
+                                <div class="cell estandar">{{ row.estandar }}</div>
+                                <div class="cell acept">{{ row.acept }}</div>
+                                <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
+                                <div class="cell acciones">
+                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionEstandarCategoria(row)" title="Editar registro">
+                                        <mat-icon>edit</mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </cdk-virtual-scroll-viewport>
+                    </div>
+                </div>
+
+                <div class="footer-table">
+                    <div class="footer-left"><strong>Total de filas:</strong></div>
+                    <div class="footer-right num"><strong>{{ dataEstandarCategoria.length }}</strong></div>
+                </div>
+            </mat-card>
+        </div>
+
+        <!-- MODAL EDITAR ESTÁNDAR CATEGORÍA -->
+        <div class="modal-overlay" *ngIf="mostrarFormularioEstandarCategoria" (click)="cancelarEdicionEstandarCategoria()">
+            <div class="modal-card" (click)="$event.stopPropagation()">
+                <header class="modal-header">
+                    <div class="modal-header-info">
+                        <h2>Formulario de Estándar Categoría</h2>
+                        <p class="modal-subtitle" *ngIf="estandarCategoriaForm.get('id')?.value">
+                            Edición del registro ID: {{ estandarCategoriaForm.get('id')?.value }}
+                        </p>
+                    </div>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarCategoria()">&times;</button>
+                </header>
+
+                <form [formGroup]="estandarCategoriaForm" (ngSubmit)="updateQueryEstandarCategoria()" class="modal-form-container">
+                    <div class="modal-body">
+                        <div class="form-grid">
+                            <input type="hidden" formControlName="id" />
+                            <input type="hidden" formControlName="periodo" />
+
+                            <div class="field-input">
+                                <label for="sc_tipo">Tipo <span class="required">*</span></label>
+                                <input type="text" id="sc_tipo" formControlName="tipo" placeholder="Tipo" />
+                            </div>
+
+                            <div class="field-input full-width">
+                                <label for="sc_indicador">Indicador <span class="required">*</span></label>
+                                <textarea id="sc_indicador" formControlName="indicador" rows="2" placeholder="Indicador"></textarea>
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sc_categoria_centro">Categoría Centro <span class="required">*</span></label>
+                                <input type="text" id="sc_categoria_centro" formControlName="categoria_centro" placeholder="Categoría Centro" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sc_estandar">Estándar <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_estandar" formControlName="estandar" placeholder="Estándar" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sc_acept">Aceptable <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_acept" formControlName="acept" placeholder="Aceptable" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sc_aceptmenos">Aceptable Menos <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_aceptmenos" formControlName="aceptmenos" placeholder="Aceptable Menos" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sc_anio">Año</label>
+                                <input type="number" id="sc_anio" formControlName="anio" placeholder="Año" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="sc_mes">Mes</label>
+                                <input type="number" id="sc_mes" formControlName="mes" placeholder="Mes" />
+                            </div>
+                        </div>
+
+                        <div class="validation-message-banner" *ngIf="errorEstandarCategoriaForm">
+                            <span>⚠️ {{ errorEstandarCategoriaForm }}</span>
+                        </div>
+                    </div>
+
+                    <footer class="modal-footer">
+                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionEstandarCategoria()" [disabled]="savingEstandarCategoria">Cancelar</button>
+                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarCategoria">
+                            <span *ngIf="!savingEstandarCategoria">💾 Guardar Cambios</span>
+                            <span *ngIf="savingEstandarCategoria">⏳ Guardando...</span>
+                        </button>
+                    </footer>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================================= -->
+    <!-- TAB 4: CENTROS TMI (tmi_centro) -->
+    <!-- ================================================================================= -->
+    <div class="tab-content" *ngIf="activeTab === 'Centros TMI'">
+        <div class="header">
+            <p>Tabla de Centros Asistenciales TMI (tmi_centro)</p>
+            <div class="header-actions">
+                <div class="buscar-group">
+                    <select [(ngModel)]="anioCentrosTMI" class="anio-select">
+                        <option value="">Seleccione un Año</option>
+                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
+                    </select>
+                    <select [(ngModel)]="mesCentrosTMI" class="periodo-select">
+                        <option value="">Seleccione un periodo</option>
+                        <option *ngFor="let m of mesesDisponibles" [value]="m.value">{{ m.label }}</option>
+                    </select>
+                    <button (click)="onBuscarCentrosTMI()" class="btn-search">Buscar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selecciona Periodo -->
+        <div *ngIf="selectPeriodoCentrosTMI && !loadingCentrosTMI" class="select-periodo">
+            <p>Por favor, seleccione un año y periodo y haga clic en Buscar para ver la información de Centros TMI</p>
+        </div>
+
+        <div *ngIf="loadingCentrosTMI" class="loading">
+            <p>Cargando datos de centros TMI...</p>
+        </div>
+
+        <div *ngIf="errorCentrosTMI" class="alert alert-danger">
+            {{ errorCentrosTMI }}
+        </div>
+
+        <div *ngIf="!loadingCentrosTMI && !errorCentrosTMI && !selectPeriodoCentrosTMI" class="dashboard-content">
+            <mat-card class="table" style="--cols-table: minmax(45px, 0.5fr) minmax(110px, 1.2fr) minmax(60px, 0.6fr) minmax(50px, 0.5fr) minmax(70px, 0.7fr) minmax(70px, 0.7fr) minmax(80px, 0.8fr) minmax(70px, 0.7fr) minmax(65px, 0.7fr) minmax(180px, 2fr) minmax(60px, 0.6fr) minmax(50px, 0.5fr) minmax(45px, 0.4fr) minmax(70px, 0.7fr) minmax(55px, 0.5fr);">
+                <h3>Detalle de Centros TMI</h3>
+                <div class="wrapper-table">
+                    <div class="grid-table">
+                        <div class="header-table">
+                            <div class="cell id">ID</div>
+                            <div class="cell red">RED</div>
+                            <div class="cell codred">CODRED</div>
+                            <div class="cell orden">ORDEN</div>
+                            <div class="cell orden_tipo">ORDEN_TIPO</div>
+                            <div class="cell codcentro">CODCENTRO</div>
+                            <div class="cell categoria">CATEGORIA</div>
+                            <div class="cell tipo">TIPO</div>
+                            <div class="cell nivel">NIVEL</div>
+                            <div class="cell centro">CENTRO</div>
+                            <div class="cell estado">ESTADO</div>
+                            <div class="cell anio">AÑO</div>
+                            <div class="cell mes">MES</div>
+                            <div class="cell periodo">PERIODO</div>
+                            <div class="cell acciones">ACCIONES</div>
+                        </div>
+
+                        <div class="filters-table">
+                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..." (keyup)="filterDataCentrosTMI('id', $event)" />
+                            <input type="text" class="filter-input cell red" placeholder="Buscar red..." (keyup)="filterDataCentrosTMI('red', $event)" />
+                            <input type="text" class="filter-input cell codred" placeholder="Buscar codred..." (keyup)="filterDataCentrosTMI('codred', $event)" />
+                            <input type="text" class="filter-input cell orden" placeholder="Buscar orden..." (keyup)="filterDataCentrosTMI('orden', $event)" />
+                            <input type="text" class="filter-input cell orden_tipo" placeholder="Buscar orden_tipo..." (keyup)="filterDataCentrosTMI('orden_tipo', $event)" />
+                            <input type="text" class="filter-input cell codcentro" placeholder="Buscar codcentro..." (keyup)="filterDataCentrosTMI('codcentro', $event)" />
+                            <input type="text" class="filter-input cell categoria" placeholder="Buscar categoría..." (keyup)="filterDataCentrosTMI('categoria', $event)" />
+                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..." (keyup)="filterDataCentrosTMI('tipo', $event)" />
+                            <input type="text" class="filter-input cell nivel" placeholder="Buscar nivel..." (keyup)="filterDataCentrosTMI('nivel', $event)" />
+                            <input type="text" class="filter-input cell centro" placeholder="Buscar centro..." (keyup)="filterDataCentrosTMI('centro', $event)" />
+                            <input type="text" class="filter-input cell estado" placeholder="Buscar estado..." (keyup)="filterDataCentrosTMI('estado', $event)" />
+                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..." (keyup)="filterDataCentrosTMI('anio', $event)" />
+                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..." (keyup)="filterDataCentrosTMI('mes', $event)" />
+                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..." (keyup)="filterDataCentrosTMI('periodo', $event)" />
+                            <div class="cell acciones"></div>
+                        </div>
+
+                        <cdk-virtual-scroll-viewport #viewportCentros class="viewport-table" [itemSize]="44">
+                            <div *cdkVirtualFor="let row of dataCentrosTMI" class="row-table">
+                                <div class="cell id">{{ row.id }}</div>
+                                <div class="cell red">{{ row.red }}</div>
+                                <div class="cell codred">{{ row.codred }}</div>
+                                <div class="cell orden">{{ row.orden }}</div>
+                                <div class="cell orden_tipo">{{ row.orden_tipo }}</div>
+                                <div class="cell codcentro">{{ row.codcentro }}</div>
+                                <div class="cell categoria">{{ row.categoria }}</div>
+                                <div class="cell tipo">{{ row.tipo }}</div>
+                                <div class="cell nivel">{{ row.nivel }}</div>
+                                <div class="cell centro">{{ row.centro }}</div>
+                                <div class="cell estado">{{ row.estado }}</div>
+                                <div class="cell anio">{{ row.anio }}</div>
+                                <div class="cell mes">{{ row.mes }}</div>
+                                <div class="cell periodo">{{ row.periodo }}</div>
+                                <div class="cell acciones">
+                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionCentro(row)" title="Editar centro">
+                                        <mat-icon>edit</mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </cdk-virtual-scroll-viewport>
+                    </div>
+                </div>
+
+                <div class="footer-table">
+                    <div class="footer-left"><strong>Total de filas:</strong></div>
+                    <div class="footer-right num"><strong>{{ dataCentrosTMI.length }}</strong></div>
+                </div>
+            </mat-card>
+        </div>
+
+        <!-- MODAL EDITAR CENTRO TMI -->
         <div class="modal-overlay" *ngIf="mostrarFormularioCentrosTMI" (click)="cancelarEdicionCentro()">
             <div class="modal-card" (click)="$event.stopPropagation()">
                 <header class="modal-header">
@@ -401,131 +660,83 @@
                             Edición del registro ID: {{ centrosForm.get('id')?.value }}
                         </p>
                     </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionCentro()"
-                        aria-label="Cerrar modal">&times;</button>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionCentro()">&times;</button>
                 </header>
 
                 <form [formGroup]="centrosForm" (ngSubmit)="updateQueryCentrosTMI()" class="modal-form-container">
                     <div class="modal-body">
-                        <!-- Banner Informativo -->
-                        <div class="info-preview-banner" *ngIf="centrosForm.get('id')?.value">
-                            <div class="preview-tag">
-                                <span>ID Registro</span>
-                                <strong>#{{ centrosForm.get('id')?.value }}</strong>
-                            </div>
-                            <div class="preview-tag">
-                                <span>Periodo</span>
-                                <strong>{{ centrosForm.get('periodo')?.value || periodoCentrosTMI }}</strong>
-                            </div>
-                            <div class="preview-tag" *ngIf="centrosForm.get('codcentro')?.value">
-                                <span>Código Centro</span>
-                                <strong>{{ centrosForm.get('codcentro')?.value }}</strong>
-                            </div>
-                        </div>
-
                         <div class="form-grid">
                             <input type="hidden" formControlName="id" />
                             <input type="hidden" formControlName="periodo" />
 
                             <div class="field-input">
                                 <label for="centro_red">Red Asistencial <span class="required">*</span></label>
-                                <input type="text" id="centro_red" formControlName="red" placeholder="Ingrese Red"
-                                    [class.is-invalid]="centrosForm.get('red')?.touched && centrosForm.get('red')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="centrosForm.get('red')?.touched && centrosForm.get('red')?.hasError('required')">La
-                                    Red es requerida.</span>
+                                <input type="text" id="centro_red" formControlName="red" placeholder="Ingrese Red" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="centro_codred">Código Red</label>
+                                <input type="text" id="centro_codred" formControlName="codred" placeholder="Código de Red" />
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_orden">Orden <span class="required">*</span></label>
-                                <input type="number" id="centro_orden" formControlName="orden" placeholder="Ej. 1"
-                                    [class.is-invalid]="centrosForm.get('orden')?.touched && centrosForm.get('orden')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="centrosForm.get('orden')?.touched && centrosForm.get('orden')?.hasError('required')">El
-                                    orden es requerido.</span>
+                                <input type="text" id="centro_orden" formControlName="orden" placeholder="Ej. 1" />
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_orden_tipo">Orden Tipo <span class="required">*</span></label>
-                                <input type="text" id="centro_orden_tipo" formControlName="orden_tipo"
-                                    placeholder="Orden Tipo"
-                                    [class.is-invalid]="centrosForm.get('orden_tipo')?.touched && centrosForm.get('orden_tipo')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="centrosForm.get('orden_tipo')?.touched && centrosForm.get('orden_tipo')?.hasError('required')">El
-                                    orden tipo es requerido.</span>
+                                <input type="text" id="centro_orden_tipo" formControlName="orden_tipo" placeholder="Orden Tipo" />
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_codcentro">Código Centro <span class="required">*</span></label>
-                                <input type="text" id="centro_codcentro" formControlName="codcentro"
-                                    placeholder="Código de centro"
-                                    [class.is-invalid]="centrosForm.get('codcentro')?.touched && centrosForm.get('codcentro')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="centrosForm.get('codcentro')?.touched && centrosForm.get('codcentro')?.hasError('required')">El
-                                    código de centro es requerido.</span>
+                                <input type="text" id="centro_codcentro" formControlName="codcentro" placeholder="Código de centro" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="centro_categoria">Categoría</label>
+                                <input type="text" id="centro_categoria" formControlName="categoria" placeholder="Categoría" />
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_tipo">Tipo <span class="required">*</span></label>
-                                <input type="text" id="centro_tipo" formControlName="tipo" placeholder="Tipo"
-                                    [class.is-invalid]="centrosForm.get('tipo')?.touched && centrosForm.get('tipo')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="centrosForm.get('tipo')?.touched && centrosForm.get('tipo')?.hasError('required')">El
-                                    tipo es requerido.</span>
+                                <input type="text" id="centro_tipo" formControlName="tipo" placeholder="Tipo" />
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_nivel">Nivel <span class="required">*</span></label>
-                                <input type="text" id="centro_nivel" formControlName="nivel" placeholder="Nivel"
-                                    [class.is-invalid]="centrosForm.get('nivel')?.touched && centrosForm.get('nivel')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="centrosForm.get('nivel')?.touched && centrosForm.get('nivel')?.hasError('required')">El
-                                    nivel es requerido.</span>
-                            </div>
-
-                            <div class="field-input">
-                                <label for="centro_nivel_estandar">Nivel Estándar <span
-                                        class="required">*</span></label>
-                                <input type="text" id="centro_nivel_estandar" formControlName="nivel_estandar"
-                                    placeholder="Nivel estándar"
-                                    [class.is-invalid]="centrosForm.get('nivel_estandar')?.touched && centrosForm.get('nivel_estandar')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="centrosForm.get('nivel_estandar')?.touched && centrosForm.get('nivel_estandar')?.hasError('required')">El
-                                    nivel estándar es requerido.</span>
+                                <input type="text" id="centro_nivel" formControlName="nivel" placeholder="Nivel" />
                             </div>
 
                             <div class="field-input full-width">
                                 <label for="centro_centro">Centro Asistencial <span class="required">*</span></label>
-                                <input type="text" id="centro_centro" formControlName="centro"
-                                    placeholder="Nombre del centro asistencial"
-                                    [class.is-invalid]="centrosForm.get('centro')?.touched && centrosForm.get('centro')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="centrosForm.get('centro')?.touched && centrosForm.get('centro')?.hasError('required')">El
-                                    centro es requerido.</span>
+                                <input type="text" id="centro_centro" formControlName="centro" placeholder="Nombre del centro" />
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_estado">Estado <span class="required">*</span></label>
-                                <input type="text" id="centro_estado" formControlName="estado"
-                                    placeholder="Estado (Ej. ACTIVO)"
-                                    [class.is-invalid]="centrosForm.get('estado')?.touched && centrosForm.get('estado')?.invalid" />
-                                <span class="field-error"
-                                    *ngIf="centrosForm.get('estado')?.touched && centrosForm.get('estado')?.hasError('required')">El
-                                    estado es requerido.</span>
+                                <input type="text" id="centro_estado" formControlName="estado" placeholder="Estado" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="centro_anio">Año</label>
+                                <input type="number" id="centro_anio" formControlName="anio" placeholder="Ej. 2026" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="centro_mes">Mes</label>
+                                <input type="number" id="centro_mes" formControlName="mes" placeholder="Ej. 8" />
                             </div>
                         </div>
 
-                        <!-- Mensaje de Validación / Error -->
                         <div class="validation-message-banner" *ngIf="errorCentroForm">
                             <span>⚠️ {{ errorCentroForm }}</span>
                         </div>
                     </div>
 
                     <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionCentro()"
-                            [disabled]="savingCentrosTMI">
-                            Cancelar
-                        </button>
+                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionCentro()" [disabled]="savingCentrosTMI">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingCentrosTMI">
                             <span *ngIf="!savingCentrosTMI">💾 Guardar Cambios</span>
                             <span *ngIf="savingCentrosTMI">⏳ Guardando...</span>
@@ -534,7 +745,6 @@
                 </form>
             </div>
         </div>
-
     </div>
 
 </div>

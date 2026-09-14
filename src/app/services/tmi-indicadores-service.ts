@@ -26,6 +26,30 @@ export class TmiIndicadoresService {
     return this.http.put(base_url + `/update-estandar`, dto);
   }
 
+  /// estandares tipo
+  getQueryEstandarTipo(periodo: string) {
+    return this.http.get<any[]>(base_url + `/lista-estandar-tipo/${periodo}`);
+  }
+  putQueryEstandarTipo(dto: any) {
+    return this.http.put(base_url + `/update-estandar-tipo`, dto);
+  }
+
+  /// estandares nivel
+  getQueryEstandarNivel(periodo: string) {
+    return this.http.get<any[]>(base_url + `/lista-estandar-nivel/${periodo}`);
+  }
+  putQueryEstandarNivel(dto: any) {
+    return this.http.put(base_url + `/update-estandar-nivel`, dto);
+  }
+
+  /// estandares categoria
+  getQueryEstandarCategoria(periodo: string) {
+    return this.http.get<any[]>(base_url + `/lista-estandar-categoria/${periodo}`);
+  }
+  putQueryEstandarCategoria(dto: any) {
+    return this.http.put(base_url + `/update-estandar-categoria`, dto);
+  }
+
   /// centros TMI
   getQueryCentrosTMI(periodo: string) {
     return this.http.get<any[]>(base_url + `/lista-centros/${periodo}`);
