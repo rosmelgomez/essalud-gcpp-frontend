@@ -14,18 +14,15 @@
             (click)="setActiveTab('Estandares Categoria')">
             Estándares Categoría
         </button>
-        <button class="tab-button" [class.active]="activeTab === 'Centros TMI'"
-            (click)="setActiveTab('Centros TMI')">
+        <button class="tab-button" [class.active]="activeTab === 'Centros TMI'" (click)="setActiveTab('Centros TMI')">
             Centros TMI
         </button>
     </div>
 
-    <!-- ================================================================================= -->
-    <!-- TAB 1: ESTÁNDARES TIPO (tmi_estandar_tipo) -->
-    <!-- ================================================================================= -->
+    <!-- tap 1: tmi_estandar_tipo -->
     <div class="tab-content" *ngIf="activeTab === 'Estandares Tipo'">
         <div class="header">
-            <p>Tabla de Estándares TMI por Tipo de Centro (tmi_estandar_tipo)</p>
+            <p>Tabla de Estándares TMI por Tipo de Centro</p>
             <div class="header-actions">
                 <div class="buscar-group">
                     <select [(ngModel)]="anioEstandarTipo" class="anio-select">
@@ -43,7 +40,8 @@
 
         <!-- Selecciona Periodo -->
         <div *ngIf="selectPeriodoEstandarTipo && !loadingEstandarTipo" class="select-periodo">
-            <p>Por favor, seleccione un año y periodo y haga clic en Buscar para ver la información de Estándares por Tipo</p>
+            <p>Por favor, seleccione un año y periodo y haga clic en Buscar para ver la información de Estándares por
+                Tipo</p>
         </div>
 
         <div *ngIf="loadingEstandarTipo" class="loading">
@@ -55,7 +53,8 @@
         </div>
 
         <div *ngIf="!loadingEstandarTipo && !errorEstandarTipo && !selectPeriodoEstandarTipo" class="dashboard-content">
-            <mat-card class="table" style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(110px, 1.2fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(55px, 0.6fr);">
+            <mat-card class="table"
+                style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(110px, 1.2fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(55px, 0.6fr);">
                 <h3>Detalle de Estándares por Tipo</h3>
                 <div class="wrapper-table">
                     <div class="grid-table">
@@ -76,16 +75,26 @@
 
                         <!-- FILTERS -->
                         <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..." (keyup)="filterDataEstandarTipo('id', $event)" />
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..." (keyup)="filterDataEstandarTipo('tipo', $event)" />
-                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..." (keyup)="filterDataEstandarTipo('indicador', $event)" />
-                            <input type="text" class="filter-input cell tipo_centro" placeholder="Buscar tipo centro..." (keyup)="filterDataEstandarTipo('tipo_centro', $event)" />
-                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..." (keyup)="filterDataEstandarTipo('anio', $event)" />
-                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..." (keyup)="filterDataEstandarTipo('mes', $event)" />
-                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..." (keyup)="filterDataEstandarTipo('periodo', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..." (keyup)="filterDataEstandarTipo('estandar', $event)" />
-                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..." (keyup)="filterDataEstandarTipo('acept', $event)" />
-                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..." (keyup)="filterDataEstandarTipo('aceptmenos', $event)" />
+                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
+                                (keyup)="filterDataEstandarTipo('id', $event)" />
+                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
+                                (keyup)="filterDataEstandarTipo('tipo', $event)" />
+                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
+                                (keyup)="filterDataEstandarTipo('indicador', $event)" />
+                            <input type="text" class="filter-input cell tipo_centro" placeholder="Buscar tipo centro..."
+                                (keyup)="filterDataEstandarTipo('tipo_centro', $event)" />
+                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
+                                (keyup)="filterDataEstandarTipo('anio', $event)" />
+                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..."
+                                (keyup)="filterDataEstandarTipo('mes', $event)" />
+                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..."
+                                (keyup)="filterDataEstandarTipo('periodo', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarTipo('estandar', $event)" />
+                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..."
+                                (keyup)="filterDataEstandarTipo('acept', $event)" />
+                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..."
+                                (keyup)="filterDataEstandarTipo('aceptmenos', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
@@ -103,7 +112,8 @@
                                 <div class="cell acept">{{ row.acept }}</div>
                                 <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
                                 <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionEstandarTipo(row)" title="Editar registro">
+                                    <button type="button" class="btn-icon-edit"
+                                        (click)="iniciarEdicionEstandarTipo(row)" title="Editar registro">
                                         <mat-icon>edit</mat-icon>
                                     </button>
                                 </div>
@@ -129,10 +139,12 @@
                             Edición del registro ID: {{ estandarTipoForm.get('id')?.value }}
                         </p>
                     </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarTipo()">&times;</button>
+                    <button type="button" class="close-modal-btn"
+                        (click)="cancelarEdicionEstandarTipo()">&times;</button>
                 </header>
 
-                <form [formGroup]="estandarTipoForm" (ngSubmit)="updateQueryEstandarTipo()" class="modal-form-container">
+                <form [formGroup]="estandarTipoForm" (ngSubmit)="updateQueryEstandarTipo()"
+                    class="modal-form-container">
                     <div class="modal-body">
                         <div class="form-grid">
                             <input type="hidden" formControlName="id" />
@@ -145,27 +157,32 @@
 
                             <div class="field-input full-width">
                                 <label for="st_indicador">Indicador <span class="required">*</span></label>
-                                <textarea id="st_indicador" formControlName="indicador" rows="2" placeholder="Indicador"></textarea>
+                                <textarea id="st_indicador" formControlName="indicador" rows="2"
+                                    placeholder="Indicador"></textarea>
                             </div>
 
                             <div class="field-input">
                                 <label for="st_tipo_centro">Tipo Centro <span class="required">*</span></label>
-                                <input type="text" id="st_tipo_centro" formControlName="tipo_centro" placeholder="Tipo Centro" />
+                                <input type="text" id="st_tipo_centro" formControlName="tipo_centro"
+                                    placeholder="Tipo Centro" />
                             </div>
 
                             <div class="field-input">
                                 <label for="st_estandar">Estándar <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar" formControlName="estandar" placeholder="Estándar" />
+                                <input type="number" step="any" id="st_estandar" formControlName="estandar"
+                                    placeholder="Estándar" />
                             </div>
 
                             <div class="field-input">
                                 <label for="st_acept">Aceptable <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_acept" formControlName="acept" placeholder="Aceptable" />
+                                <input type="number" step="any" id="st_acept" formControlName="acept"
+                                    placeholder="Aceptable" />
                             </div>
 
                             <div class="field-input">
                                 <label for="st_aceptmenos">Aceptable Menos <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_aceptmenos" formControlName="aceptmenos" placeholder="Aceptable Menos" />
+                                <input type="number" step="any" id="st_aceptmenos" formControlName="aceptmenos"
+                                    placeholder="Aceptable Menos" />
                             </div>
 
                             <div class="field-input">
@@ -185,7 +202,8 @@
                     </div>
 
                     <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionEstandarTipo()" [disabled]="savingEstandarTipo">Cancelar</button>
+                        <button type="button" class="btn-modal-action btn-cancel"
+                            (click)="cancelarEdicionEstandarTipo()" [disabled]="savingEstandarTipo">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarTipo">
                             <span *ngIf="!savingEstandarTipo">💾 Guardar Cambios</span>
                             <span *ngIf="savingEstandarTipo">⏳ Guardando...</span>
@@ -196,12 +214,10 @@
         </div>
     </div>
 
-    <!-- ================================================================================= -->
-    <!-- TAB 2: ESTÁNDARES NIVEL (tmi_estandar_nivel) -->
-    <!-- ================================================================================= -->
+    <!-- tap 2: tmi_estandar_nivel -->
     <div class="tab-content" *ngIf="activeTab === 'Estandares Nivel'">
         <div class="header">
-            <p>Tabla de Estándares TMI por Nivel de Centro (tmi_estandar_nivel)</p>
+            <p>Tabla de Estándares TMI por Nivel de Centro</p>
             <div class="header-actions">
                 <div class="buscar-group">
                     <select [(ngModel)]="anioEstandarNivel" class="anio-select">
@@ -219,7 +235,8 @@
 
         <!-- Selecciona Periodo -->
         <div *ngIf="selectPeriodoEstandarNivel && !loadingEstandarNivel" class="select-periodo">
-            <p>Por favor, seleccione un año y periodo y haga clic en Buscar para ver la información de Estándares por Nivel</p>
+            <p>Por favor, seleccione un año y periodo y haga clic en Buscar para ver la información de Estándares por
+                Nivel</p>
         </div>
 
         <div *ngIf="loadingEstandarNivel" class="loading">
@@ -230,8 +247,10 @@
             {{ errorEstandarNivel }}
         </div>
 
-        <div *ngIf="!loadingEstandarNivel && !errorEstandarNivel && !selectPeriodoEstandarNivel" class="dashboard-content">
-            <mat-card class="table" style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(110px, 1.2fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(55px, 0.6fr);">
+        <div *ngIf="!loadingEstandarNivel && !errorEstandarNivel && !selectPeriodoEstandarNivel"
+            class="dashboard-content">
+            <mat-card class="table"
+                style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(110px, 1.2fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(55px, 0.6fr);">
                 <h3>Detalle de Estándares por Nivel</h3>
                 <div class="wrapper-table">
                     <div class="grid-table">
@@ -250,16 +269,27 @@
                         </div>
 
                         <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..." (keyup)="filterDataEstandarNivel('id', $event)" />
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..." (keyup)="filterDataEstandarNivel('tipo', $event)" />
-                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..." (keyup)="filterDataEstandarNivel('indicador', $event)" />
-                            <input type="text" class="filter-input cell nivel_centro" placeholder="Buscar nivel centro..." (keyup)="filterDataEstandarNivel('nivel_centro', $event)" />
-                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..." (keyup)="filterDataEstandarNivel('anio', $event)" />
-                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..." (keyup)="filterDataEstandarNivel('mes', $event)" />
-                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..." (keyup)="filterDataEstandarNivel('periodo', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..." (keyup)="filterDataEstandarNivel('estandar', $event)" />
-                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..." (keyup)="filterDataEstandarNivel('acept', $event)" />
-                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..." (keyup)="filterDataEstandarNivel('aceptmenos', $event)" />
+                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
+                                (keyup)="filterDataEstandarNivel('id', $event)" />
+                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
+                                (keyup)="filterDataEstandarNivel('tipo', $event)" />
+                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
+                                (keyup)="filterDataEstandarNivel('indicador', $event)" />
+                            <input type="text" class="filter-input cell nivel_centro"
+                                placeholder="Buscar nivel centro..."
+                                (keyup)="filterDataEstandarNivel('nivel_centro', $event)" />
+                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
+                                (keyup)="filterDataEstandarNivel('anio', $event)" />
+                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..."
+                                (keyup)="filterDataEstandarNivel('mes', $event)" />
+                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..."
+                                (keyup)="filterDataEstandarNivel('periodo', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarNivel('estandar', $event)" />
+                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..."
+                                (keyup)="filterDataEstandarNivel('acept', $event)" />
+                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..."
+                                (keyup)="filterDataEstandarNivel('aceptmenos', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
@@ -276,7 +306,8 @@
                                 <div class="cell acept">{{ row.acept }}</div>
                                 <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
                                 <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionEstandarNivel(row)" title="Editar registro">
+                                    <button type="button" class="btn-icon-edit"
+                                        (click)="iniciarEdicionEstandarNivel(row)" title="Editar registro">
                                         <mat-icon>edit</mat-icon>
                                     </button>
                                 </div>
@@ -302,10 +333,12 @@
                             Edición del registro ID: {{ estandarNivelForm.get('id')?.value }}
                         </p>
                     </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarNivel()">&times;</button>
+                    <button type="button" class="close-modal-btn"
+                        (click)="cancelarEdicionEstandarNivel()">&times;</button>
                 </header>
 
-                <form [formGroup]="estandarNivelForm" (ngSubmit)="updateQueryEstandarNivel()" class="modal-form-container">
+                <form [formGroup]="estandarNivelForm" (ngSubmit)="updateQueryEstandarNivel()"
+                    class="modal-form-container">
                     <div class="modal-body">
                         <div class="form-grid">
                             <input type="hidden" formControlName="id" />
@@ -318,27 +351,32 @@
 
                             <div class="field-input full-width">
                                 <label for="sn_indicador">Indicador <span class="required">*</span></label>
-                                <textarea id="sn_indicador" formControlName="indicador" rows="2" placeholder="Indicador"></textarea>
+                                <textarea id="sn_indicador" formControlName="indicador" rows="2"
+                                    placeholder="Indicador"></textarea>
                             </div>
 
                             <div class="field-input">
                                 <label for="sn_nivel_centro">Nivel Centro <span class="required">*</span></label>
-                                <input type="text" id="sn_nivel_centro" formControlName="nivel_centro" placeholder="Nivel Centro" />
+                                <input type="text" id="sn_nivel_centro" formControlName="nivel_centro"
+                                    placeholder="Nivel Centro" />
                             </div>
 
                             <div class="field-input">
                                 <label for="sn_estandar">Estándar <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar" formControlName="estandar" placeholder="Estándar" />
+                                <input type="number" step="any" id="sn_estandar" formControlName="estandar"
+                                    placeholder="Estándar" />
                             </div>
 
                             <div class="field-input">
                                 <label for="sn_acept">Aceptable <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_acept" formControlName="acept" placeholder="Aceptable" />
+                                <input type="number" step="any" id="sn_acept" formControlName="acept"
+                                    placeholder="Aceptable" />
                             </div>
 
                             <div class="field-input">
                                 <label for="sn_aceptmenos">Aceptable Menos <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_aceptmenos" formControlName="aceptmenos" placeholder="Aceptable Menos" />
+                                <input type="number" step="any" id="sn_aceptmenos" formControlName="aceptmenos"
+                                    placeholder="Aceptable Menos" />
                             </div>
 
                             <div class="field-input">
@@ -358,7 +396,8 @@
                     </div>
 
                     <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionEstandarNivel()" [disabled]="savingEstandarNivel">Cancelar</button>
+                        <button type="button" class="btn-modal-action btn-cancel"
+                            (click)="cancelarEdicionEstandarNivel()" [disabled]="savingEstandarNivel">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarNivel">
                             <span *ngIf="!savingEstandarNivel">💾 Guardar Cambios</span>
                             <span *ngIf="savingEstandarNivel">⏳ Guardando...</span>
@@ -369,12 +408,10 @@
         </div>
     </div>
 
-    <!-- ================================================================================= -->
-    <!-- TAB 3: ESTÁNDARES CATEGORÍA (tmi_estandar_categoria) -->
-    <!-- ================================================================================= -->
+    <!-- tap 3: tmi_estandar_categoria -->
     <div class="tab-content" *ngIf="activeTab === 'Estandares Categoria'">
         <div class="header">
-            <p>Tabla de Estándares TMI por Categoría de Centro (tmi_estandar_categoria)</p>
+            <p>Tabla de Estándares TMI por Categoría de Centro</p>
             <div class="header-actions">
                 <div class="buscar-group">
                     <select [(ngModel)]="anioEstandarCategoria" class="anio-select">
@@ -392,7 +429,8 @@
 
         <!-- Selecciona Periodo -->
         <div *ngIf="selectPeriodoEstandarCategoria && !loadingEstandarCategoria" class="select-periodo">
-            <p>Por favor, seleccione un año y periodo y haga clic en Buscar para ver la información de Estándares por Categoría</p>
+            <p>Por favor, seleccione un año y periodo y haga clic en Buscar para ver la información de Estándares por
+                Categoría</p>
         </div>
 
         <div *ngIf="loadingEstandarCategoria" class="loading">
@@ -403,8 +441,10 @@
             {{ errorEstandarCategoria }}
         </div>
 
-        <div *ngIf="!loadingEstandarCategoria && !errorEstandarCategoria && !selectPeriodoEstandarCategoria" class="dashboard-content">
-            <mat-card class="table" style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(120px, 1.3fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(55px, 0.6fr);">
+        <div *ngIf="!loadingEstandarCategoria && !errorEstandarCategoria && !selectPeriodoEstandarCategoria"
+            class="dashboard-content">
+            <mat-card class="table"
+                style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(120px, 1.3fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(55px, 0.6fr);">
                 <h3>Detalle de Estándares por Categoría</h3>
                 <div class="wrapper-table">
                     <div class="grid-table">
@@ -423,16 +463,27 @@
                         </div>
 
                         <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..." (keyup)="filterDataEstandarCategoria('id', $event)" />
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..." (keyup)="filterDataEstandarCategoria('tipo', $event)" />
-                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..." (keyup)="filterDataEstandarCategoria('indicador', $event)" />
-                            <input type="text" class="filter-input cell categoria_centro" placeholder="Buscar categoría centro..." (keyup)="filterDataEstandarCategoria('categoria_centro', $event)" />
-                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..." (keyup)="filterDataEstandarCategoria('anio', $event)" />
-                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..." (keyup)="filterDataEstandarCategoria('mes', $event)" />
-                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..." (keyup)="filterDataEstandarCategoria('periodo', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..." (keyup)="filterDataEstandarCategoria('estandar', $event)" />
-                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..." (keyup)="filterDataEstandarCategoria('acept', $event)" />
-                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..." (keyup)="filterDataEstandarCategoria('aceptmenos', $event)" />
+                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
+                                (keyup)="filterDataEstandarCategoria('id', $event)" />
+                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
+                                (keyup)="filterDataEstandarCategoria('tipo', $event)" />
+                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
+                                (keyup)="filterDataEstandarCategoria('indicador', $event)" />
+                            <input type="text" class="filter-input cell categoria_centro"
+                                placeholder="Buscar categoría centro..."
+                                (keyup)="filterDataEstandarCategoria('categoria_centro', $event)" />
+                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
+                                (keyup)="filterDataEstandarCategoria('anio', $event)" />
+                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..."
+                                (keyup)="filterDataEstandarCategoria('mes', $event)" />
+                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..."
+                                (keyup)="filterDataEstandarCategoria('periodo', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar', $event)" />
+                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..."
+                                (keyup)="filterDataEstandarCategoria('acept', $event)" />
+                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..."
+                                (keyup)="filterDataEstandarCategoria('aceptmenos', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
@@ -449,7 +500,8 @@
                                 <div class="cell acept">{{ row.acept }}</div>
                                 <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
                                 <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionEstandarCategoria(row)" title="Editar registro">
+                                    <button type="button" class="btn-icon-edit"
+                                        (click)="iniciarEdicionEstandarCategoria(row)" title="Editar registro">
                                         <mat-icon>edit</mat-icon>
                                     </button>
                                 </div>
@@ -466,7 +518,8 @@
         </div>
 
         <!-- MODAL EDITAR ESTÁNDAR CATEGORÍA -->
-        <div class="modal-overlay" *ngIf="mostrarFormularioEstandarCategoria" (click)="cancelarEdicionEstandarCategoria()">
+        <div class="modal-overlay" *ngIf="mostrarFormularioEstandarCategoria"
+            (click)="cancelarEdicionEstandarCategoria()">
             <div class="modal-card" (click)="$event.stopPropagation()">
                 <header class="modal-header">
                     <div class="modal-header-info">
@@ -475,10 +528,12 @@
                             Edición del registro ID: {{ estandarCategoriaForm.get('id')?.value }}
                         </p>
                     </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarCategoria()">&times;</button>
+                    <button type="button" class="close-modal-btn"
+                        (click)="cancelarEdicionEstandarCategoria()">&times;</button>
                 </header>
 
-                <form [formGroup]="estandarCategoriaForm" (ngSubmit)="updateQueryEstandarCategoria()" class="modal-form-container">
+                <form [formGroup]="estandarCategoriaForm" (ngSubmit)="updateQueryEstandarCategoria()"
+                    class="modal-form-container">
                     <div class="modal-body">
                         <div class="form-grid">
                             <input type="hidden" formControlName="id" />
@@ -491,27 +546,33 @@
 
                             <div class="field-input full-width">
                                 <label for="sc_indicador">Indicador <span class="required">*</span></label>
-                                <textarea id="sc_indicador" formControlName="indicador" rows="2" placeholder="Indicador"></textarea>
+                                <textarea id="sc_indicador" formControlName="indicador" rows="2"
+                                    placeholder="Indicador"></textarea>
                             </div>
 
                             <div class="field-input">
-                                <label for="sc_categoria_centro">Categoría Centro <span class="required">*</span></label>
-                                <input type="text" id="sc_categoria_centro" formControlName="categoria_centro" placeholder="Categoría Centro" />
+                                <label for="sc_categoria_centro">Categoría Centro <span
+                                        class="required">*</span></label>
+                                <input type="text" id="sc_categoria_centro" formControlName="categoria_centro"
+                                    placeholder="Categoría Centro" />
                             </div>
 
                             <div class="field-input">
                                 <label for="sc_estandar">Estándar <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar" formControlName="estandar" placeholder="Estándar" />
+                                <input type="number" step="any" id="sc_estandar" formControlName="estandar"
+                                    placeholder="Estándar" />
                             </div>
 
                             <div class="field-input">
                                 <label for="sc_acept">Aceptable <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_acept" formControlName="acept" placeholder="Aceptable" />
+                                <input type="number" step="any" id="sc_acept" formControlName="acept"
+                                    placeholder="Aceptable" />
                             </div>
 
                             <div class="field-input">
                                 <label for="sc_aceptmenos">Aceptable Menos <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_aceptmenos" formControlName="aceptmenos" placeholder="Aceptable Menos" />
+                                <input type="number" step="any" id="sc_aceptmenos" formControlName="aceptmenos"
+                                    placeholder="Aceptable Menos" />
                             </div>
 
                             <div class="field-input">
@@ -531,7 +592,9 @@
                     </div>
 
                     <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionEstandarCategoria()" [disabled]="savingEstandarCategoria">Cancelar</button>
+                        <button type="button" class="btn-modal-action btn-cancel"
+                            (click)="cancelarEdicionEstandarCategoria()"
+                            [disabled]="savingEstandarCategoria">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarCategoria">
                             <span *ngIf="!savingEstandarCategoria">💾 Guardar Cambios</span>
                             <span *ngIf="savingEstandarCategoria">⏳ Guardando...</span>
@@ -542,12 +605,10 @@
         </div>
     </div>
 
-    <!-- ================================================================================= -->
-    <!-- TAB 4: CENTROS TMI (tmi_centro) -->
-    <!-- ================================================================================= -->
+    <!-- tap 4: tmi_centro -->
     <div class="tab-content" *ngIf="activeTab === 'Centros TMI'">
         <div class="header">
-            <p>Tabla de Centros Asistenciales TMI (tmi_centro)</p>
+            <p>Tabla de Centros Asistenciales TMI</p>
             <div class="header-actions">
                 <div class="buscar-group">
                     <select [(ngModel)]="anioCentrosTMI" class="anio-select">
@@ -577,7 +638,8 @@
         </div>
 
         <div *ngIf="!loadingCentrosTMI && !errorCentrosTMI && !selectPeriodoCentrosTMI" class="dashboard-content">
-            <mat-card class="table" style="--cols-table: minmax(45px, 0.5fr) minmax(110px, 1.2fr) minmax(60px, 0.6fr) minmax(50px, 0.5fr) minmax(70px, 0.7fr) minmax(70px, 0.7fr) minmax(80px, 0.8fr) minmax(70px, 0.7fr) minmax(65px, 0.7fr) minmax(180px, 2fr) minmax(60px, 0.6fr) minmax(50px, 0.5fr) minmax(45px, 0.4fr) minmax(70px, 0.7fr) minmax(55px, 0.5fr);">
+            <mat-card class="table"
+                style="--cols-table: minmax(45px, 0.5fr) minmax(110px, 1.2fr) minmax(60px, 0.6fr) minmax(50px, 0.5fr) minmax(70px, 0.7fr) minmax(70px, 0.7fr) minmax(80px, 0.8fr) minmax(70px, 0.7fr) minmax(65px, 0.7fr) minmax(180px, 2fr) minmax(60px, 0.6fr) minmax(50px, 0.5fr) minmax(45px, 0.4fr) minmax(70px, 0.7fr) minmax(55px, 0.5fr);">
                 <h3>Detalle de Centros TMI</h3>
                 <div class="wrapper-table">
                     <div class="grid-table">
@@ -600,20 +662,34 @@
                         </div>
 
                         <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..." (keyup)="filterDataCentrosTMI('id', $event)" />
-                            <input type="text" class="filter-input cell red" placeholder="Buscar red..." (keyup)="filterDataCentrosTMI('red', $event)" />
-                            <input type="text" class="filter-input cell codred" placeholder="Buscar codred..." (keyup)="filterDataCentrosTMI('codred', $event)" />
-                            <input type="text" class="filter-input cell orden" placeholder="Buscar orden..." (keyup)="filterDataCentrosTMI('orden', $event)" />
-                            <input type="text" class="filter-input cell orden_tipo" placeholder="Buscar orden_tipo..." (keyup)="filterDataCentrosTMI('orden_tipo', $event)" />
-                            <input type="text" class="filter-input cell codcentro" placeholder="Buscar codcentro..." (keyup)="filterDataCentrosTMI('codcentro', $event)" />
-                            <input type="text" class="filter-input cell categoria" placeholder="Buscar categoría..." (keyup)="filterDataCentrosTMI('categoria', $event)" />
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..." (keyup)="filterDataCentrosTMI('tipo', $event)" />
-                            <input type="text" class="filter-input cell nivel" placeholder="Buscar nivel..." (keyup)="filterDataCentrosTMI('nivel', $event)" />
-                            <input type="text" class="filter-input cell centro" placeholder="Buscar centro..." (keyup)="filterDataCentrosTMI('centro', $event)" />
-                            <input type="text" class="filter-input cell estado" placeholder="Buscar estado..." (keyup)="filterDataCentrosTMI('estado', $event)" />
-                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..." (keyup)="filterDataCentrosTMI('anio', $event)" />
-                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..." (keyup)="filterDataCentrosTMI('mes', $event)" />
-                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..." (keyup)="filterDataCentrosTMI('periodo', $event)" />
+                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
+                                (keyup)="filterDataCentrosTMI('id', $event)" />
+                            <input type="text" class="filter-input cell red" placeholder="Buscar red..."
+                                (keyup)="filterDataCentrosTMI('red', $event)" />
+                            <input type="text" class="filter-input cell codred" placeholder="Buscar codred..."
+                                (keyup)="filterDataCentrosTMI('codred', $event)" />
+                            <input type="text" class="filter-input cell orden" placeholder="Buscar orden..."
+                                (keyup)="filterDataCentrosTMI('orden', $event)" />
+                            <input type="text" class="filter-input cell orden_tipo" placeholder="Buscar orden_tipo..."
+                                (keyup)="filterDataCentrosTMI('orden_tipo', $event)" />
+                            <input type="text" class="filter-input cell codcentro" placeholder="Buscar codcentro..."
+                                (keyup)="filterDataCentrosTMI('codcentro', $event)" />
+                            <input type="text" class="filter-input cell categoria" placeholder="Buscar categoría..."
+                                (keyup)="filterDataCentrosTMI('categoria', $event)" />
+                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
+                                (keyup)="filterDataCentrosTMI('tipo', $event)" />
+                            <input type="text" class="filter-input cell nivel" placeholder="Buscar nivel..."
+                                (keyup)="filterDataCentrosTMI('nivel', $event)" />
+                            <input type="text" class="filter-input cell centro" placeholder="Buscar centro..."
+                                (keyup)="filterDataCentrosTMI('centro', $event)" />
+                            <input type="text" class="filter-input cell estado" placeholder="Buscar estado..."
+                                (keyup)="filterDataCentrosTMI('estado', $event)" />
+                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
+                                (keyup)="filterDataCentrosTMI('anio', $event)" />
+                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..."
+                                (keyup)="filterDataCentrosTMI('mes', $event)" />
+                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..."
+                                (keyup)="filterDataCentrosTMI('periodo', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
@@ -634,7 +710,8 @@
                                 <div class="cell mes">{{ row.mes }}</div>
                                 <div class="cell periodo">{{ row.periodo }}</div>
                                 <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionCentro(row)" title="Editar centro">
+                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionCentro(row)"
+                                        title="Editar centro">
                                         <mat-icon>edit</mat-icon>
                                     </button>
                                 </div>
@@ -676,7 +753,8 @@
 
                             <div class="field-input">
                                 <label for="centro_codred">Código Red</label>
-                                <input type="text" id="centro_codred" formControlName="codred" placeholder="Código de Red" />
+                                <input type="text" id="centro_codred" formControlName="codred"
+                                    placeholder="Código de Red" />
                             </div>
 
                             <div class="field-input">
@@ -686,17 +764,20 @@
 
                             <div class="field-input">
                                 <label for="centro_orden_tipo">Orden Tipo <span class="required">*</span></label>
-                                <input type="text" id="centro_orden_tipo" formControlName="orden_tipo" placeholder="Orden Tipo" />
+                                <input type="text" id="centro_orden_tipo" formControlName="orden_tipo"
+                                    placeholder="Orden Tipo" />
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_codcentro">Código Centro <span class="required">*</span></label>
-                                <input type="text" id="centro_codcentro" formControlName="codcentro" placeholder="Código de centro" />
+                                <input type="text" id="centro_codcentro" formControlName="codcentro"
+                                    placeholder="Código de centro" />
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_categoria">Categoría</label>
-                                <input type="text" id="centro_categoria" formControlName="categoria" placeholder="Categoría" />
+                                <input type="text" id="centro_categoria" formControlName="categoria"
+                                    placeholder="Categoría" />
                             </div>
 
                             <div class="field-input">
@@ -711,7 +792,8 @@
 
                             <div class="field-input full-width">
                                 <label for="centro_centro">Centro Asistencial <span class="required">*</span></label>
-                                <input type="text" id="centro_centro" formControlName="centro" placeholder="Nombre del centro" />
+                                <input type="text" id="centro_centro" formControlName="centro"
+                                    placeholder="Nombre del centro" />
                             </div>
 
                             <div class="field-input">
@@ -736,7 +818,8 @@
                     </div>
 
                     <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionCentro()" [disabled]="savingCentrosTMI">Cancelar</button>
+                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionCentro()"
+                            [disabled]="savingCentrosTMI">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingCentrosTMI">
                             <span *ngIf="!savingCentrosTMI">💾 Guardar Cambios</span>
                             <span *ngIf="savingCentrosTMI">⏳ Guardando...</span>

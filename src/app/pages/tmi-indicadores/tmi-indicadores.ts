@@ -107,9 +107,8 @@ export class TmiIndicadores implements OnInit {
     this.getQueryCentrosTMI();
   }
 
-  // -------------------------------------------------------------
-  // 1. TABLA 1: tmi_estandar_tipo
-  // -------------------------------------------------------------
+
+  // tmi_estandar_tipo
   public dataEstandarTipo: any[] = [];
   public dataEstandarTipoFilter: any[] = [];
   anioEstandarTipo: string = '';
@@ -134,11 +133,9 @@ export class TmiIndicadores implements OnInit {
     estandar: "",
     acept: "",
     aceptmenos: ""
-  };
+  }
 
-  // -------------------------------------------------------------
-  // 2. TABLA 2: tmi_estandar_nivel
-  // -------------------------------------------------------------
+  // tmi_estandar_nivel
   public dataEstandarNivel: any[] = [];
   public dataEstandarNivelFilter: any[] = [];
   anioEstandarNivel: string = '';
@@ -165,9 +162,7 @@ export class TmiIndicadores implements OnInit {
     aceptmenos: ""
   };
 
-  // -------------------------------------------------------------
-  // 3. TABLA 3: tmi_estandar_categoria
-  // -------------------------------------------------------------
+  // tmi_estandar_categoria
   public dataEstandarCategoria: any[] = [];
   public dataEstandarCategoriaFilter: any[] = [];
   anioEstandarCategoria: string = '';
@@ -194,9 +189,7 @@ export class TmiIndicadores implements OnInit {
     aceptmenos: ""
   };
 
-  // -------------------------------------------------------------
-  // 4. TABLA 4: tmi_centro
-  // -------------------------------------------------------------
+  // tmi_centro
   public dataCentrosTMI: any[] = [];
   public dataCentrosTMIFilter: any[] = [];
   anioCentrosTMI: string = '';
@@ -331,10 +324,7 @@ export class TmiIndicadores implements OnInit {
       periodo: ['', []]
     });
   }
-
-  // -------------------------------------------------------------
-  // CONTROLES TAB 1: tmi_estandar_tipo
-  // -------------------------------------------------------------
+  // tmi_estandar_tipo
   getQueryEstandarTipo() {
     this.loadingEstandarTipo = true;
     this.errorEstandarTipo = '';
@@ -428,9 +418,7 @@ export class TmiIndicadores implements OnInit {
     );
   }
 
-  // -------------------------------------------------------------
-  // CONTROLES TAB 2: tmi_estandar_nivel
-  // -------------------------------------------------------------
+  // tmi_estandar_nivel
   getQueryEstandarNivel() {
     this.loadingEstandarNivel = true;
     this.errorEstandarNivel = '';
@@ -524,9 +512,7 @@ export class TmiIndicadores implements OnInit {
     );
   }
 
-  // -------------------------------------------------------------
-  // CONTROLES TAB 3: tmi_estandar_categoria
-  // -------------------------------------------------------------
+  // tmi_estandar_categoria
   getQueryEstandarCategoria() {
     this.loadingEstandarCategoria = true;
     this.errorEstandarCategoria = '';
@@ -620,9 +606,7 @@ export class TmiIndicadores implements OnInit {
     );
   }
 
-  // -------------------------------------------------------------
-  // CONTROLES TAB 4: tmi_centro
-  // -------------------------------------------------------------
+  // tmi_centro
   getQueryCentrosTMI() {
     this.loadingCentrosTMI = true;
     this.errorCentrosTMI = '';
@@ -724,9 +708,7 @@ export class TmiIndicadores implements OnInit {
     );
   }
 
-  // -------------------------------------------------------------
-  // GESTIÓN DE PESTAÑAS (TABS)
-  // -------------------------------------------------------------
+  // tabs
   setActiveTab(tab: TabType): void {
     this.activeTab = tab;
     this.cdr.detectChanges();
