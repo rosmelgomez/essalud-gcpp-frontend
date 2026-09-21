@@ -10,6 +10,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { FechaActualizacionService } from '../../services/fecha-actualizacion-service';
+import { forkJoin } from 'rxjs';
 
 export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI';
 
@@ -324,6 +325,7 @@ export class TmiIndicadores implements OnInit {
       periodo: ['', []]
     });
   }
+
   // tmi_estandar_tipo
   getQueryEstandarTipo() {
     this.loadingEstandarTipo = true;
@@ -342,6 +344,8 @@ export class TmiIndicadores implements OnInit {
       },
       error: (error: any) => {
         console.error(error);
+
+
         this.errorEstandarTipo = 'Error al cargar los estándares por tipo';
         this.loadingEstandarTipo = false;
         this.cdr.detectChanges();
@@ -606,7 +610,7 @@ export class TmiIndicadores implements OnInit {
     );
   }
 
-  // tmi_centro
+  /// tmi_centro
   getQueryCentrosTMI() {
     this.loadingCentrosTMI = true;
     this.errorCentrosTMI = '';
@@ -617,6 +621,7 @@ export class TmiIndicadores implements OnInit {
         this.dataCentrosTMIFilter = res || [];
         this.loadingCentrosTMI = false;
         this.cdr.detectChanges();
+        this.getQuerysTmiConsultas();
         setTimeout(() => {
           this.viewportCentros?.checkViewportSize();
           this.cdr.detectChanges();
@@ -707,6 +712,120 @@ export class TmiIndicadores implements OnInit {
       check(row.periodo, this.filtersCentrosTMI.periodo)
     );
   }
+
+  ///  consultas
+  dataCeConcent: any[] = [];
+   dataCeGCHProg: any[] = [];
+  dataCeRecetas: any[] = [];
+  dataCeRHrMedico: any[] = [];
+  dataEmPrioI_II: any[] = [];
+  dataEmPrioIV_V: any[] = [];
+  dataHEstancias: any[] = [];
+  dataHISust: any[] = [];
+  dataHOcamas: any[] = [];
+  dataHRcama: any[] = [];
+  dataHTBMHosp: any[] = [];
+  dataOConcent: any[] = [];
+  dataOGCHodon: any[] = [];
+  dataOHrOdont: any[] = [];
+  dataONTOdontS: any[] = [];
+  dataQxGCHProg: any[] = [];
+  dataQxHTCesareas: any[] = [];
+  dataQxIAlta: any[] = [];
+  dataQxIMenor: any[] = [];
+  dataQxIntSusp: any[] = [];
+  dataQRendSO: any[] = [];
+
+  getQuerysTmiConsultas() : void {
+
+     forkJoin({
+      CeConcent: this.tmiIndicadoresService.getQueryCeConcent(this.periodoCentrosTMI),
+      CeGCHProg: this.tmiIndicadoresService.getQueryCeGCHProg(this.periodoCentrosTMI),
+      CeRecetas: this.tmiIndicadoresService.getQueryCeRecetas(this.periodoCentrosTMI),
+      CeRHrMedico: this.tmiIndicadoresService.getQueryCeRHrMedico(this.periodoCentrosTMI),
+      EmPrioI_II: this.tmiIndicadoresService.getQueryEmPrioI_II(this.periodoCentrosTMI),
+      EmPrioIV_V: this.tmiIndicadoresService.getQueryEmPrioIV_V(this.periodoCentrosTMI),
+      HEstancias: this.tmiIndicadoresService.getQueryHEstancias(this.periodoCentrosTMI),
+      HISust: this.tmiIndicadoresService.getQueryHISust(this.periodoCentrosTMI),
+      HOcamas: this.tmiIndicadoresService.getQueryHOCamas(this.periodoCentrosTMI),
+      HRcama: this.tmiIndicadoresService.getQueryHRCama(this.periodoCentrosTMI),
+      HTBMHosp: this.tmiIndicadoresService.getQueryHTBHosp(this.periodoCentrosTMI),
+      OConcent: this.tmiIndicadoresService.getQueryOConcent(this.periodoCentrosTMI),
+      OGCHodon: this.tmiIndicadoresService.getQueryOGCHodon(this.periodoCentrosTMI),
+      OHrOdont: this.tmiIndicadoresService.getQueryOHrOdont(this.periodoCentrosTMI),
+      ONTOdontS: this.tmiIndicadoresService.getQueryONTOdontS(this.periodoCentrosTMI),
+      QxGCHProg: this.tmiIndicadoresService.getQueryQxGCHProg(this.periodoCentrosTMI),
+      QxHTCesareas: this.tmiIndicadoresService.getQueryQxHTCesareas(this.periodoCentrosTMI),
+      QxIAlta: this.tmiIndicadoresService.getQueryQxIAlta(this.periodoCentrosTMI),
+      QxIMenor: this.tmiIndicadoresService.getQueryQxIMenor(this.periodoCentrosTMI),
+      QxIntSusp: this.tmiIndicadoresService.getQueryQxIntSusp(this.periodoCentrosTMI),
+      QRendSO: this.tmiIndicadoresService.getQueryQRendSO(this.periodoCentrosTMI)
+     }).subscribe({
+       next: (data) => {
+        console.log('Datos de consultas TMI:', data);
+          this.dataCeConcent = data.CeConcent || [];
+          this.dataCeGCHProg = data.CeGCHProg || [];
+          this.dataCeRecetas = data.CeRecetas || [];
+          this.dataCeRHrMedico = data.CeRHrMedico || [];
+          this.dataEmPrioI_II = data.EmPrioI_II || [];
+          this.dataEmPrioIV_V = data.EmPrioIV_V || [];
+          this.dataHEstancias = data.HEstancias || [];
+          this.dataHISust = data.HISust || [];
+          this.dataHOcamas = data.HOcamas || [];
+          this.dataHRcama = data.HRcama || [];
+          this.dataHTBMHosp = data.HTBMHosp || [];
+          this.dataOConcent = data.OConcent || [];
+          this.dataOGCHodon = data.OGCHodon || [];
+          this.dataOHrOdont = data.OHrOdont || [];
+          this.dataONTOdontS = data.ONTOdontS || [];
+          this.dataQxGCHProg = data.QxGCHProg || [];
+          this.dataQxHTCesareas = data.QxHTCesareas || [];
+          this.dataQxIAlta = data.QxIAlta || [];
+          this.dataQxIMenor = data.QxIMenor || [];
+          this.dataQxIntSusp = data.QxIntSusp || [];
+          this.dataQRendSO = data.QRendSO || [];
+
+
+       }
+
+
+
+
+
+
+
+
+
+     })
+
+
+  }
+
+
+  downloadCSV(): void {
+    if (!this.dataCentrosTMI?.length) {
+      console.warn('No hay datos para descargar');
+      return;
+    }
+
+    const fileName = `tmi_centros_${this.periodoCentrosTMI}.csv`;
+
+    const headers = Object.keys(this.dataCentrosTMI[0]);
+    const csvContent = [
+      headers.join(';'),
+      ...this.dataCentrosTMI.map((row) =>
+        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName.endsWith('.csv') ? fileName : `${fileName}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
 
   // tabs
   setActiveTab(tab: TabType): void {
