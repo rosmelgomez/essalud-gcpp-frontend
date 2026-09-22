@@ -802,6 +802,43 @@ export class TmiIndicadores implements OnInit {
   }
 
 
+  public descargandoExcelTMI: boolean = false;
+  public errorExcelTMI: string = '';
+
+  descargarExcelTMI(): void {
+    if (!this.periodoCentrosTMI) {
+      this.errorExcelTMI = 'Por favor seleccione un año y periodo válidos.';
+      return;
+    }
+    this.descargandoExcelTMI = true;
+    this.errorExcelTMI = '';
+
+    this.tmiIndicadoresService.getExcelTMI(this.periodoCentrosTMI).subscribe({
+      next: (response: any) => {
+        const blob = response.body;
+        if (blob) {
+          const fileBlob = new Blob([blob], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          });
+          const url = window.URL.createObjectURL(fileBlob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `TMI_Prelim_${this.periodoCentrosTMI}.xlsx`;
+          link.click();
+          window.URL.revokeObjectURL(url);
+        }
+        this.descargandoExcelTMI = false;
+        this.cdr.detectChanges();
+      },
+      error: (error: any) => {
+        console.error('Error al descargar el Excel TMI', error);
+        this.errorExcelTMI = 'Error al generar/descargar el Excel del TMI.';
+        this.descargandoExcelTMI = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   downloadCSV(): void {
     if (!this.dataCentrosTMI?.length) {
       console.warn('No hay datos para descargar');

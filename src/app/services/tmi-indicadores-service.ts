@@ -152,6 +152,14 @@ export class TmiIndicadoresService {
     return this.http.get<any[]>(base_url + `/lista-qx-rendso/${periodo}`);
   }
 
+  /// Descarga del Excel TMI (todas las consultas de vistas, CE_Concent hacia abajo)
+  getExcelTMI(periodo: string) {
+    return this.http.get(base_url + `/generar-excel/${periodo}`, {
+      responseType: 'blob',
+      observe: 'response' as 'response',
+    });
+  }
+
 
 
 

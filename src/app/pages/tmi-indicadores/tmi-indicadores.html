@@ -620,6 +620,11 @@
                         <option *ngFor="let m of mesesDisponibles" [value]="m.value">{{ m.label }}</option>
                     </select>
                     <button (click)="onBuscarCentrosTMI()" class="btn-search">Buscar</button>
+                    <button (click)="descargarExcelTMI()" class="btn-search"
+                        [disabled]="descargandoExcelTMI || !periodoCentrosTMI || selectPeriodoCentrosTMI">
+                        <mat-icon>download</mat-icon>
+                        {{ descargandoExcelTMI ? 'Generando Excel...' : 'Descargar Excel TMI' }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -635,6 +640,10 @@
 
         <div *ngIf="errorCentrosTMI" class="alert alert-danger">
             {{ errorCentrosTMI }}
+        </div>
+
+        <div *ngIf="errorExcelTMI" class="alert alert-danger">
+            {{ errorExcelTMI }}
         </div>
 
         <div *ngIf="!loadingCentrosTMI && !errorCentrosTMI && !selectPeriodoCentrosTMI" class="dashboard-content">
