@@ -98,93 +98,121 @@
     <div *ngIf="!loadingO && !errorO && !selectPeriodoO && !noDataO" class="dashboard-content">
       <!-- Fila 1: -->
       <div class="cards-row">
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a class="card-link" href="/indicador/consulta-externa/dashboard-no-medicas/obstetricia/dnm-total-atenciones-ob">
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/consulta-externa/dashboard-no-medicas/obstetricia/dnm-total-atenciones-ob"
+                class="card-link">
                 <h5 class="card-title">Total de atenciones Obstétricas</h5>
               </a>
-              <h2 class="card-value">{{ formatNumber(atencionesO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioO }}-{{ periodoO }} | {{ centroAtencion }}</p>
             </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
           </div>
-        </div>
-        <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Atenciones prenatales</h5>
-              </a>
+              <h2 class="card-value">{{ formatNumber(atencionesO) }}</h2>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioO }}-{{ periodoO }} | {{
+                centroAtencion }}</p>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Atenciones prenatales</h5>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(atencionesPrenatalesO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioO }}-{{ periodoO }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioO }}-{{ periodoO }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataAtencionesPrenatalesO" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+                <span>{{ item.actespnom }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
+
       </div>
 
       <!-- Fila 2: -->
       <div class="cards-row">
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Atención de planificación familiar</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Atención de planificación familiar</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(atencionesPlanificacionFamiliarO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioO }}-{{ periodoO }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioO }}-{{ periodoO }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataAtencionesPlanificacionFamiliarO" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+                <span>{{ item.actespnom }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Actividades complementarias</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Actividades complementarias</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(actividadesComplementariasO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioO }}-{{ periodoO }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioO }}-{{ periodoO }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataActividadesComplementariasO" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+                <span>{{ item.actespnom }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
+
       </div>
 
       <!-- Fila 3: -->
       <div class="cards-row">
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Atención preconcepcional</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Atención preconcepcional</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(atencionesPreconcepcionalO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioO }}-{{ periodoO }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioO }}-{{ periodoO }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataAtencionesPreconcepcionalO" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+                <span>{{ item.actespnom }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -245,101 +273,126 @@
     <div *ngIf="!loadingPP && !errorPP && !selectPeriodoPP && !noDataPP" class="dashboard-content">
       <!-- Fila 1: -->
       <div class="cards-row">
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a class="card-link" href="/indicador/consulta-externa/dashboard-no-medicas/preventivo-promocional/dnm-total-atenciones-pp">
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/consulta-externa/dashboard-no-medicas/preventivo-promocional/dnm-total-atenciones-pp"
+                class="card-link">
                 <h5 class="card-title">Total de atenciones preventivo promocional</h5>
               </a>
-              <h2 class="card-value">{{ formatNumber(atencionesPP) }}</h2>
-              <p class="card-subtitle">
-                Periodo {{ anioPP }}-{{ periodoPP }} | {{ centroAtencion }}
-              </p>
             </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
           </div>
-        </div>
-        <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Visitas domiciliarias</h5>
-              </a>
+              <h2 class="card-value">{{ formatNumber(atencionesPP) }}</h2>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioPP }}-{{ periodoPP }} | {{
+                centroAtencion }}</p>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Visitas domiciliarias</h5>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(visitasDomiciliariasPP) }}</h2>
-              <p class="card-subtitle">
-                Periodo {{ anioPP }}-{{ periodoPP }} | {{ centroAtencion }}
-              </p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioPP }}-{{ periodoPP }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataVisitasDomiciliariasPP" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+                <span>{{ item.actespnom }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
+
+
+
       </div>
+
       <!-- Fila 2: -->
       <div class="cards-row">
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Educación grupal</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Educación grupal</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(educacionGrupalPP) }}</h2>
-              <p class="card-subtitle">
-                Periodo {{ anioPP }}-{{ periodoPP }} | {{ centroAtencion }}
-              </p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioPP }}-{{ periodoPP }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataEducacionGrupalPP" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+                <span>{{ item.actespnom }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Psicoprofilaxis</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Psicoprofilaxis</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(psicoprofilaxisPP) }}</h2>
-              <p class="card-subtitle">
-                Periodo {{ anioPP }}-{{ periodoPP }} | {{ centroAtencion }}
-              </p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioPP }}-{{ periodoPP }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataPsicoprofilaxisPP" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+                <span>{{ item.actespnom }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
+
       </div>
       <!-- Fila 3: -->
       <div class="cards-row">
+
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Consejería</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Consejería</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(consejeriaPP) }}</h2>
-              <p class="card-subtitle">
-                Periodo {{ anioPP }}-{{ periodoPP }} | {{ centroAtencion }}
-              </p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioPP }}-{{ periodoPP }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataConsejeriaPP" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+                <span>{{ item.actespnom }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
+
+
+
+
       </div>
     </div>
   </div>
@@ -400,23 +453,34 @@
     <div *ngIf="!loadingN && !errorN && !selectPeriodoN && !noDataN" class="dashboard-content">
       <!-- Fila 1: -->
       <div class="cards-row">
-        <div class="card">
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/consulta-externa/dashboard-no-medicas/nutricion/dnm-total-atenciones-nu"
+                class="card-link">
+                <h5 class="card-title">Total de atenciones nutricion</h5>
+              </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link" href="/indicador/consulta-externa/dashboard-no-medicas/nutricion/dnm-total-atenciones-nu">
-                <h5 class="card-title">Total de atenciones de nutrición</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(atencionesN) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioN }}-{{ periodoN }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioN }}-{{ periodoN }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataAtencionesN" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+                <span>{{ item.actespnom }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
+
+
+
       </div>
     </div>
   </div>
@@ -482,7 +546,8 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link" href="/indicador/consulta-externa/dashboard-no-medicas/enfermeria/dnm-total-atenciones-en">
+              <a class="card-link"
+                href="/indicador/consulta-externa/dashboard-no-medicas/enfermeria/dnm-total-atenciones-en">
                 <h5 class="card-title">Total de atenciones de enfermeria</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(atencionesE) }}</h2>
@@ -663,7 +728,8 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link" href="/indicador/consulta-externa/dashboard-no-medicas/psicologia/dnm-total-atenciones-ps">
+              <a class="card-link"
+                href="/indicador/consulta-externa/dashboard-no-medicas/psicologia/dnm-total-atenciones-ps">
                 <h5 class="card-title">Total de consultas de psicologia</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(consultasPs) }}</h2>
@@ -812,10 +878,25 @@
         <div class="card">
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link" href="/indicador/consulta-externa/dashboard-no-medicas/trabajo-social/dnm-total-atenciones-ts">
+              <a class="card-link"
+                href="/indicador/consulta-externa/dashboard-no-medicas/trabajo-social/dnm-total-atenciones-ts">
                 <h5 class="card-title">Total de atenciones de trabajo social</h5>
               </a>
               <h2 class="card-value">{{ formatNumber(trabajoSocialAtenciones) }}</h2>
+              <p class="card-subtitle">
+                Periodo {{ anioTs }}-{{ periodoTs }} | {{ centroAtencion }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="contend_left">
+              <a class="card-link">
+                <h5 class="card-title">Total procedimientos de trabajo social</h5>
+              </a>
+              <h2 class="card-value">{{ formatNumber(trabajoSocialProcedimientos) }}</h2>
               <p class="card-subtitle">
                 Periodo {{ anioTs }}-{{ periodoTs }} | {{ centroAtencion }}
               </p>

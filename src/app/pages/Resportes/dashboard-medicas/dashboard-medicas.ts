@@ -207,8 +207,8 @@ export class DashboardMedicas implements OnInit {
     });
   }
 
-  downloadFichaTecnica(): void {
-    this.fileService.getFile('f_consulta_externa.pdf').subscribe({
+  downloadFichaTecnica(nombre: string): void {
+    this.fileService.getFile(nombre).subscribe({
       next: (blob: Blob) => {
         // Validar que el archivo se descargó correctamente
         if (!blob || blob.size === 0) {
@@ -222,7 +222,7 @@ export class DashboardMedicas implements OnInit {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'FICHA_TECNICA_MEDICAS.pdf';
+        link.download = nombre;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

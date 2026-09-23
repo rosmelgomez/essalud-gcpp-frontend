@@ -156,6 +156,7 @@ export class DashboardNoMedicas implements OnInit {
 
   //indicadores trabajo social
   trabajoSocialAtenciones: number = 0;
+  trabajoSocialProcedimientos: number = 0;
 
   //indicadores procedimientos terapeuticos
   procedimientosTerapeuticosAtenciones: number = 0;
@@ -750,16 +751,12 @@ export class DashboardNoMedicas implements OnInit {
     this.selectPeriodoTs = false;
     this.cdr.detectChanges();
     forkJoin({
-      trabajoSocialAtenciones: this.RDNMS.getQueryDNMTST(
-        this.anioTs,
-        this.periodoTs,
-        this.codcas,
-        this.tipo_aseguradoTs,
-      ),
+      trabajoSocialAtenciones: this.RDNMS.getQueryDNMTST(this.anioTs, this.periodoTs, this.codcas, this.tipo_aseguradoTs,),
+      trabajoSocialProcedimientos: this.RDNMS.getQueryDNMTSTP(this.anioTs, this.periodoTs, this.codcas, this.tipo_aseguradoTs,),
     }).subscribe({
       next: (results) => {
         this.trabajoSocialAtenciones = results.trabajoSocialAtenciones.length || 0;
-
+        this.trabajoSocialProcedimientos = results.trabajoSocialProcedimientos.length || 0;
         this.dataImport.saveDataDNMTS(this.anioTs, this.periodoTs, this.tipo_aseguradoTs);
         this.loadingTs = false;
         this.cdr.detectChanges();

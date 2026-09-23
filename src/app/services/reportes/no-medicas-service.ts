@@ -120,6 +120,13 @@ export class NoMedicasService {
     return this.http.get<any>(base_url + `/queryDNMTST/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
   }
 
+  ///Trabajo - social - total - procedimientos terapéuticos
+  getQueryDNMTSTP(anio: string, periodo: string, codcas: string, codasegu: string) {
+    return this.http.get<any>(base_url + `/queryDNMTSTP/${anio}/${periodo}/${codcas}/${codasegu}`, { withCredentials: true });
+  }
+
+
+
   /// Procedimientos terapéuticos (PT)
   /// Procedimientos terapéuticos - total
   getQueryDNMPTT(anio: string, periodo: string, codcas: string, codasegu: string) {

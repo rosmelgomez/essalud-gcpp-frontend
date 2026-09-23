@@ -160,7 +160,7 @@ export class DnmTotalAtencionesPp implements OnInit, OnDestroy {
         this.query1DATA = q1;
         //this.query2DATA = q2;
         //this.query3DATA = q3;
-        this.query4DATA = q2;
+        //this.query4DATA = q2;
 
         this.dataCSV = q2;
 
@@ -299,7 +299,7 @@ export class DnmTotalAtencionesPp implements OnInit, OnDestroy {
   buildBarDiagnosticoChart(): void {
     setTimeout(() => {
       this.renderTopBarChart(
-        this.query4DATA,
+        this.query1DATA,
         (d) => d.diagdes,
         this.chartDiagnosticoBarEl?.nativeElement,
         this.chartDiagnosticoBar,
