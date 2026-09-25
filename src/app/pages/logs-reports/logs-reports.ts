@@ -1,33 +1,56 @@
-import { Component, ElementRef, OnInit, QueryList, ViewChildren, ViewChild, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChild,
+  ViewChildren,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTableModule } from '@angular/material/table';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { ChangeDetectorRef } from '@angular/core';
-import { LogsUsersService } from '../../services/usuario/logs-users-service';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { EstablecimientoService } from '../../services/establecimiento-service';
+import { Subscription, catchError, forkJoin, of } from 'rxjs';
 import ApexCharts, { ApexOptions } from 'apexcharts';
-import { User } from '../../model/user';
+import { LogsUsersService } from '../../services/usuario/logs-users-service';
+import { EstablecimientoService } from '../../services/establecimiento-service';
 import { UsersService } from '../../services/usuario/users-service';
+import { User } from '../../model/user';
+
+type ChartKey = 'rol' | 'fecha' | 'browser' | 'url';
+
+/** Log tal como llega del backend, más campos derivados calculados una sola vez al cargar. */
+interface LogRow {
+  [key: string]: any;
+  id?: any;
+  full_name?: string;
+  ip_user?: string;
+  dni?: string;
+  url?: string;
+  browser?: string;
+  user_role?: string;
+  _year: string;
+  _month: string;
+  _day: string;
+  _ymd: string;
+  _fecha: string;
+  _redName: string;
+  _centroName: string;
+  _isLogin: boolean;
+}
+
+const CHART_FONT = "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+const CHART_INK = '#56697d';
+const CHART_GRID = '#edf1f5';
+const BRAND = '#0064af';
+const DONUT_COLORS = ['#0064af', '#3d8fd1', '#00aeef', '#7fb6e6', '#17324d', '#9aa9b8', '#c6d2de'];
 
 @Component({
   selector: 'app-logs-reports',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatTableModule,
-    MatCardModule,
-    MatButtonModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    ScrollingModule,
-  ],
+  imports: [CommonModule, FormsModule, ScrollingModule],
   templateUrl: './logs-reports.html',
   styleUrl: './logs-reports.css',
 })
@@ -35,63 +58,61 @@ export class LogsReports implements OnInit, OnDestroy {
   @ViewChildren('userOption') userOptions!: QueryList<ElementRef<HTMLElement>>;
   @ViewChildren('redOption') redOptions!: QueryList<ElementRef<HTMLElement>>;
   @ViewChildren('centroOption') centroOptions!: QueryList<ElementRef<HTMLElement>>;
-  @ViewChild('chartRolContainer') chartRolContainer!: ElementRef<HTMLDivElement>;
-  @ViewChild('chartFechaContainer') chartFechaContainer!: ElementRef<HTMLDivElement>;
-  @ViewChild('chartBrowserContainer') chartBrowserContainer!: ElementRef<HTMLDivElement>;
-  @ViewChild('chartUrlContainer') chartUrlContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('chartRolContainer') chartRolContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('chartFechaContainer') chartFechaContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('chartBrowserContainer') chartBrowserContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('chartUrlContainer') chartUrlContainer?: ElementRef<HTMLDivElement>;
 
-  //Datos para los usuarios
+  // Usuarios
   dataUser: User[] = [];
-  filteredUser: User[] = [];
-
   searchUser: string = '';
   isDropdownUserOpen: boolean = false;
   filteredAvailableUsers: Array<{ id: string; label: string }> = [];
   selectedUserLabel: string = 'Todos los usuarios';
   activeUserIndex: number = -1;
 
-  /// Datos para el dropdown de Red Asistencial
+  // Red asistencial
   dataRed: any[] = [];
   filteredRed: any[] = [];
-
   searchRed: string = '';
   isDropdownRedOpen: boolean = false;
   selectedRedName: string = '';
   selectedRedCode: string = '';
   activeRedIndex: number = -1;
 
-  ///Datos para el dropdown de Centro Asistencial
+  // Centro asistencial
   dataCentro: any[] = [];
   dataCentroCompleto: any[] = [];
   filteredCentro: any[] = [];
-
   searchCentro: string = '';
   isDropdownCentroOpen: boolean = false;
   selectedCentroName: string = '';
   selectedCentroCode: string = '';
-  isCentroEnabled: boolean = true;
   activeCentroIndex: number = -1;
 
-  dataSource = new MatTableDataSource<any>();
-  allLogsData: any[] = [];
-  tableLogsData: any[] = [];
-  allLogs: any[] = [];
-  allLogsOriginal: any[] = [];
-  loginLogs: any[] = [];
+  // Datos
+  allLogsData: LogRow[] = [];
+  loginLogs: LogRow[] = [];
+  /** Logs que cumplen los filtros generales (año, mes, día, usuario, red, centro). */
+  private globalFiltered: LogRow[] = [];
+  /** Filas visibles en la tabla: filtros generales + filtros por columna. */
+  allLogs: LogRow[] = [];
 
   totalIngresos = 0;
   filteredCount = 0;
+  usuariosConIngreso = 0;
+
   isLoading = true;
-  private pendingLoads = 0;
+  loadError: string | null = null;
+  chartEmpty: Record<ChartKey, boolean> = { rol: false, fecha: false, browser: false, url: false };
 
-  // ApexCharts instances
-  private chartRolInstance?: ApexCharts;
-  private chartFechaInstance?: ApexCharts;
-  private chartBrowserInstance?: ApexCharts;
-  private chartUrlInstance?: ApexCharts;
+  private charts: Partial<Record<ChartKey, ApexCharts>> = {};
+  private loadSub?: Subscription;
+  private columnFilterTimer?: ReturnType<typeof setTimeout>;
+  private redNameByCode = new Map<string, string>();
+  private centroNameByCode = new Map<string, string>();
 
-  // Filtros
-
+  // Filtros por columna de la tabla
   filters = {
     dni: '',
     full_name: '',
@@ -134,575 +155,161 @@ export class LogsReports implements OnInit, OnDestroy {
     private userService: UsersService,
   ) {}
 
-  openDropdownRed() {
-    this.isDropdownRedOpen = true;
-    if (!this.searchRed) {
-      this.filteredRed = this.dataRed;
-    }
-    this.activeRedIndex = this.filteredRed.length > 0 ? 0 : -1;
-    this.scrollActiveRedIntoView();
-  }
-
-  closeDropdownRed() {
-    this.isDropdownRedOpen = false;
-    this.searchRed = '';
-    this.activeRedIndex = -1;
-
-    // Si no hay red seleccionada, mostrar todos los centros
-    if (!this.selectedRedName) {
-      this.selectedRedCode = '';
-      this.refreshCentrosBySelectedRed();
-      this.applyFilters();
-    }
-  }
-
-  filterRed(event: any) {
-    const searchValue = event.target.value.toLowerCase();
-    this.searchRed = searchValue;
-    this.isDropdownRedOpen = true;
-
-    // Cuando el usuario edita el input, limpiar la selección actual
-    if (this.selectedRedName) {
-      this.selectedRedName = '';
-      this.selectedRedCode = '';
-      this.refreshCentrosBySelectedRed();
-      this.applyFilters();
-    }
-
-    if (searchValue.trim() === '') {
-      this.filteredRed = this.dataRed;
-    } else {
-      this.filteredRed = this.dataRed.filter((red: any) =>
-        red.redasisdes.toLowerCase().includes(searchValue),
-      );
-    }
-    this.activeRedIndex = this.filteredRed.length > 0 ? 0 : -1;
-    this.scrollActiveRedIntoView();
-  }
-
-  selectOptionRed(red: any) {
-    this.selectedRedName = red.redasisdes;
-    this.selectedRedCode = String(red.redasiscod ?? '').trim();
-    this.isDropdownRedOpen = false;
-    this.searchRed = '';
-    this.activeRedIndex = -1;
-
-    // Filtrar centros por la red seleccionada
-    this.refreshCentrosBySelectedRed();
-
-    this.applyFilters();
-  }
-
-  /// Centro Asistencial Metodos
-
-  openDropdownCentro() {
-    this.isDropdownCentroOpen = true;
-    this.filteredCentro = this.dataCentro;
-    const options = this.getCentroOptions();
-    this.activeCentroIndex = options.length > 0 ? 0 : -1;
-    this.scrollActiveCentroIntoView();
-  }
-
-  closeDropdownCentro() {
-    this.isDropdownCentroOpen = false;
-    this.searchCentro = '';
-    this.activeCentroIndex = -1;
-
-    // Si no hay centro seleccionado, limpiar el código
-    if (!this.selectedCentroName) {
-      this.selectedCentroCode = '';
-      this.applyFilters();
-    }
-  }
-
-  filterCentro(event: any) {
-    const searchValue = event.target.value.toLowerCase();
-    this.searchCentro = searchValue;
-    this.isDropdownCentroOpen = true;
-
-    // Cuando el usuario edita el input, limpiar la selección actual
-    if (this.selectedCentroName) {
-      this.selectedCentroName = '';
-      this.selectedCentroCode = '';
-      this.applyFilters();
-    }
-
-    if (searchValue.trim() === '') {
-      this.filteredCentro = this.dataCentro;
-    } else {
-      this.filteredCentro = this.dataCentro.filter((centro: any) =>
-        centro.cenasides.toLowerCase().includes(searchValue),
-      );
-    }
-    const options = this.getCentroOptions();
-    this.activeCentroIndex = options.length > 0 ? 0 : -1;
-    this.scrollActiveCentroIntoView();
-  }
-  selectOptionCentro(centro: any) {
-    this.selectedCentroName = centro.cenasides;
-    this.selectedCentroCode = String(centro.cenasicod ?? '').trim();
-    this.isDropdownCentroOpen = false;
-    this.searchCentro = '';
-    this.activeCentroIndex = -1;
-
-    this.applyFilters();
-  }
-
   ngOnInit(): void {
-    this.isLoading = true;
-    this.getUser();
-    this.GetLogsUsers();
-    this.getRed();
-    this.getCentroWithRed();
+    this.loadData();
   }
-
 
   ngOnDestroy(): void {
-    // Clean up chart instances to prevent memory leaks
-    this.chartRolInstance?.destroy();
-    this.chartFechaInstance?.destroy();
-    this.chartBrowserInstance?.destroy();
-    this.chartUrlInstance?.destroy();
+    this.loadSub?.unsubscribe();
+    clearTimeout(this.columnFilterTimer);
+    this.destroyCharts();
   }
 
-  private getCentroOptions(): any[] {
-    return this.searchCentro ? this.filteredCentro : this.dataCentro;
-  }
+  // ---------------------------------------------------------------------------
+  // Carga de datos
+  // ---------------------------------------------------------------------------
 
-  getAllUserOptions(): Array<{ id: string; label: string }> {
-    return [{ id: 'todos', label: 'Todos los usuarios' }, ...this.availableUsers];
-  }
-
-  private getUserOptions(): Array<{ id: string; label: string }> {
-    return this.searchUser ? this.filteredAvailableUsers : this.getAllUserOptions();
-  }
-
-  private syncSelectedUserLabel(): void {
-    if (this.selectedUserId === 'todos') {
-      this.selectedUserLabel = 'Todos los usuarios';
-      return;
-    }
-
-    const selectedUser = this.availableUsers.find((user) => user.id === this.selectedUserId);
-    this.selectedUserLabel = selectedUser?.label ?? 'Todos los usuarios';
-  }
-
-  openDropdownUser() {
-    this.isDropdownUserOpen = true;
-    if (!this.searchUser) {
-      this.filteredAvailableUsers = this.getAllUserOptions();
-    }
-    const options = this.getUserOptions();
-    this.activeUserIndex = options.length > 0 ? 0 : -1;
-    this.scrollActiveUserIntoView();
-  }
-
-  focusDropdownUser() {
-    this.searchUser = '';
-    this.isDropdownUserOpen = true;
-    this.filteredAvailableUsers = this.getAllUserOptions();
-    const options = this.getUserOptions();
-    this.activeUserIndex = options.length > 0 ? 0 : -1;
-    this.scrollActiveUserIntoView();
-  }
-
-  closeDropdownUser() {
-    this.isDropdownUserOpen = false;
-    this.searchUser = '';
-    this.activeUserIndex = -1;
-    this.syncSelectedUserLabel();
-  }
-
-  filterUser(event: any) {
-    const rawValue = String(event.target.value ?? '');
-    const searchValue = rawValue.toLowerCase();
-    this.searchUser = rawValue;
-    this.isDropdownUserOpen = true;
-
-    const allOptions = this.getAllUserOptions();
-    if (searchValue.trim() === '') {
-      this.filteredAvailableUsers = allOptions;
-    } else {
-      this.filteredAvailableUsers = allOptions.filter((user) =>
-        user.label.toLowerCase().includes(searchValue) || user.id.toLowerCase().includes(searchValue),
-      );
-    }
-
-    const options = this.getUserOptions();
-    this.activeUserIndex = options.length > 0 ? 0 : -1;
-    this.scrollActiveUserIntoView();
-  }
-
-  selectOptionUser(user: { id: string; label: string }) {
-    this.selectedUserId = user.id;
-    this.selectedUserLabel = user.label;
-    this.isDropdownUserOpen = false;
-    this.searchUser = '';
-    this.activeUserIndex = -1;
-
-    this.onUserChange();
-  }
-
-  handleRedKeydown(event: KeyboardEvent) {
-    const key = event.key;
-
-    if (key === 'ArrowDown') {
-      event.preventDefault();
-      if (!this.isDropdownRedOpen) {
-        this.openDropdownRed();
-      }
-      const options = this.filteredRed;
-      if (options.length === 0) {
-        this.activeRedIndex = -1;
-        return;
-      }
-      this.activeRedIndex = Math.min(this.activeRedIndex + 1, options.length - 1);
-      this.scrollActiveRedIntoView();
-      return;
-    }
-
-    if (key === 'ArrowUp') {
-      event.preventDefault();
-      if (!this.isDropdownRedOpen) {
-        this.openDropdownRed();
-      }
-      const options = this.filteredRed;
-      if (options.length === 0) {
-        this.activeRedIndex = -1;
-        return;
-      }
-      this.activeRedIndex = Math.max(this.activeRedIndex - 1, 0);
-      this.scrollActiveRedIntoView();
-      return;
-    }
-
-    if (key === 'Enter') {
-      if (!this.isDropdownRedOpen) {
-        return;
-      }
-      event.preventDefault();
-      const options = this.filteredRed;
-      const index = this.activeRedIndex >= 0 ? this.activeRedIndex : 0;
-      if (options.length > 0 && options[index]) {
-        this.selectOptionRed(options[index]);
-      }
-      return;
-    }
-
-    if (key === 'Escape') {
-      this.closeDropdownRed();
-    }
-  }
-
-  handleUserKeydown(event: KeyboardEvent) {
-    const key = event.key;
-
-    if (key === 'ArrowDown') {
-      event.preventDefault();
-      if (!this.isDropdownUserOpen) {
-        this.openDropdownUser();
-      }
-      const options = this.getUserOptions();
-      if (options.length === 0) {
-        this.activeUserIndex = -1;
-        return;
-      }
-      this.activeUserIndex = Math.min(this.activeUserIndex + 1, options.length - 1);
-      this.scrollActiveUserIntoView();
-      return;
-    }
-
-    if (key === 'ArrowUp') {
-      event.preventDefault();
-      if (!this.isDropdownUserOpen) {
-        this.openDropdownUser();
-      }
-      const options = this.getUserOptions();
-      if (options.length === 0) {
-        this.activeUserIndex = -1;
-        return;
-      }
-      this.activeUserIndex = Math.max(this.activeUserIndex - 1, 0);
-      this.scrollActiveUserIntoView();
-      return;
-    }
-
-    if (key === 'Enter') {
-      if (!this.isDropdownUserOpen) {
-        return;
-      }
-      event.preventDefault();
-      const options = this.getUserOptions();
-      const index = this.activeUserIndex >= 0 ? this.activeUserIndex : 0;
-      if (options.length > 0 && options[index]) {
-        this.selectOptionUser(options[index]);
-      }
-      return;
-    }
-
-    if (key === 'Escape') {
-      this.closeDropdownUser();
-    }
-  }
-
-  handleCentroKeydown(event: KeyboardEvent) {
-    const key = event.key;
-
-    if (key === 'ArrowDown') {
-      event.preventDefault();
-      if (!this.isDropdownCentroOpen) {
-        this.openDropdownCentro();
-      }
-      const options = this.getCentroOptions();
-      if (options.length === 0) {
-        this.activeCentroIndex = -1;
-        return;
-      }
-      this.activeCentroIndex = Math.min(this.activeCentroIndex + 1, options.length - 1);
-      this.scrollActiveCentroIntoView();
-      return;
-    }
-
-    if (key === 'ArrowUp') {
-      event.preventDefault();
-      if (!this.isDropdownCentroOpen) {
-        this.openDropdownCentro();
-      }
-      const options = this.getCentroOptions();
-      if (options.length === 0) {
-        this.activeCentroIndex = -1;
-        return;
-      }
-      this.activeCentroIndex = Math.max(this.activeCentroIndex - 1, 0);
-      this.scrollActiveCentroIntoView();
-      return;
-    }
-
-    if (key === 'Enter') {
-      if (!this.isDropdownCentroOpen) {
-        return;
-      }
-      event.preventDefault();
-      const options = this.getCentroOptions();
-      const index = this.activeCentroIndex >= 0 ? this.activeCentroIndex : 0;
-      if (options.length > 0 && options[index]) {
-        this.selectOptionCentro(options[index]);
-      }
-      return;
-    }
-
-    if (key === 'Escape') {
-      this.closeDropdownCentro();
-    }
-  }
-
-  private scrollActiveRedIntoView() {
-    if (!this.isDropdownRedOpen || this.activeRedIndex < 0) {
-      return;
-    }
-    setTimeout(() => {
-      const items = this.redOptions?.toArray();
-      const target = items?.[this.activeRedIndex]?.nativeElement;
-      target?.scrollIntoView({ block: 'nearest' });
-    }, 0);
-  }
-
-  private scrollActiveUserIntoView() {
-    if (!this.isDropdownUserOpen || this.activeUserIndex < 0) {
-      return;
-    }
-    setTimeout(() => {
-      const items = this.userOptions?.toArray();
-      const target = items?.[this.activeUserIndex]?.nativeElement;
-      target?.scrollIntoView({ block: 'nearest' });
-    }, 0);
-  }
-
-  private scrollActiveCentroIntoView() {
-    if (!this.isDropdownCentroOpen || this.activeCentroIndex < 0) {
-      return;
-    }
-    setTimeout(() => {
-      const items = this.centroOptions?.toArray();
-      const target = items?.[this.activeCentroIndex]?.nativeElement;
-      target?.scrollIntoView({ block: 'nearest' });
-    }, 0);
-  }
-
-  private beginLoading(): void {
-    this.pendingLoads += 1;
+  /**
+   * Carga logs, redes, centros y usuarios en una sola operación.
+   * Solo los logs son obligatorios: si fallan redes, centros o usuarios el
+   * dashboard se muestra igual (con códigos en lugar de nombres).
+   * La app no usa zone.js, por eso cada cambio de estado pide detección de cambios.
+   */
+  loadData(): void {
+    this.loadSub?.unsubscribe();
+    this.destroyCharts();
     this.isLoading = true;
-  }
+    this.loadError = null;
+    this.cdr.markForCheck();
 
-  private endLoading(): void {
-    this.pendingLoads = Math.max(0, this.pendingLoads - 1);
-    this.isLoading = this.pendingLoads > 0;
-  }
+    const optional = <T>(source: string) => (err: unknown) => {
+      console.error(`Error al obtener ${source}`, err);
+      return of([] as T[]);
+    };
 
-  getUser() {
-    this.userService.getAllUsers().subscribe({
-      next: (resp) => {
-        this.dataUser = resp;
-        this.filteredUser = resp;
-        this.setupUserFilter();
-      },
-      error: (err) => {
-        console.log('Error al obtener los usuarios', err);
-      },
-    });
-  }
-
-  getRed() {
-    this.beginLoading();
-    this.establecimientoService.getRed().subscribe({
-      next: (resp) => {
-        this.dataRed = resp;
-        this.endLoading();
-      },
-      error: (err) => {
-        console.log('Error al obtener las redes', err);
-        this.endLoading();
-      },
-    });
-  }
-
-  getCentroWithRed() {
-    this.beginLoading();
-    this.establecimientoService.getCentrosWithRed().subscribe({
-      next: (resp) => {
-        this.dataCentroCompleto = resp;
+    this.loadSub = forkJoin({
+      logs: this.logsusersService.getLogs(),
+      redes: this.establecimientoService.getRed().pipe(catchError(optional<any>('las redes'))),
+      centros: this.establecimientoService
+        .getCentrosWithRed()
+        .pipe(catchError(optional<any>('los centros'))),
+      users: this.userService.getAllUsers().pipe(catchError(optional<User>('los usuarios'))),
+    }).subscribe({
+      next: ({ logs, redes, centros, users }) => {
+        this.dataRed = Array.isArray(redes) ? redes : [];
+        this.dataCentroCompleto = Array.isArray(centros) ? centros : [];
+        this.dataUser = Array.isArray(users) ? users : [];
+        this.buildNameMaps();
         this.refreshCentrosBySelectedRed();
-        this.endLoading();
-      },
-      error: (err) => {
-        console.log('Error al obtener los centros', err);
-        this.endLoading();
-      },
-    });
-  }
 
-   GetLogsUsers(): void {
-    this.beginLoading();
-    this.logsusersService.getLogs().subscribe({
-      next: (data) => {
-        this.allLogsData = data;
-        this.tableLogsData = [...data];
-        this.allLogs = [...this.tableLogsData];
-        this.allLogsOriginal = [...this.tableLogsData];
-        this.loginLogs = data.filter((log) => this.isLoginUrl(log.url));
-        this.dataSource.data = this.allLogs;
+        this.allLogsData = this.prepareLogs(Array.isArray(logs) ? logs : []);
+        this.loginLogs = this.allLogsData.filter((log) => log._isLogin);
+
         this.setupYearFilter();
-        this.setupDayFilter();
         this.setDefaultFilters();
+
+        this.isLoading = false;
         this.applyFilters();
-        this.cdr.detectChanges();
-        this.endLoading();
       },
       error: (err) => {
-        console.error('Error al obtener los logs de usuarios');
-        this.endLoading();
+        console.error('Error al obtener los logs de usuarios', err);
+        this.loadError = this.describeLoadError(err);
+        this.isLoading = false;
+        this.cdr.markForCheck();
       },
     });
   }
 
-  private refreshCentrosBySelectedRed(): void {
-    const selectedRedCode = this.normalizeCode(this.selectedRedCode);
-
-    if (selectedRedCode) {
-      this.dataCentro = this.dataCentroCompleto.filter(
-        (centro: any) => this.normalizeCode(centro.redasiscod) === selectedRedCode,
-      );
-    } else {
-      this.dataCentro = [...this.dataCentroCompleto];
+  private describeLoadError(err: unknown): string {
+    const status = err instanceof HttpErrorResponse ? err.status : -1;
+    if (status === 0) {
+      return 'No se pudo conectar con el servidor. Verifique su conexión e intente de nuevo.';
     }
+    if (status === 401 || status === 403) {
+      return 'Su sesión no tiene permiso para ver los logs de auditoría. Inicie sesión nuevamente o solicite acceso.';
+    }
+    if (status > 0) {
+      return `El servidor respondió con un error (código ${status}) al obtener los logs. Intente de nuevo en unos minutos.`;
+    }
+    return 'Ocurrió un error inesperado al procesar los logs. Intente de nuevo.';
+  }
 
-    this.filteredCentro = this.searchCentro
-      ? this.dataCentro.filter((centro: any) =>
-          String(centro.cenasides ?? '').toLowerCase().includes(this.searchCentro),
-        )
-      : this.dataCentro;
-
-    if (this.selectedCentroCode) {
-      const selectedCentroCode = this.normalizeCode(this.selectedCentroCode);
-      const selectedCentro = this.dataCentro.find(
-        (centro: any) => this.normalizeCode(centro.cenasicod) === selectedCentroCode,
-      );
-
-      if (!selectedCentro) {
-        this.selectedCentroName = '';
-        this.selectedCentroCode = '';
-      }
+  private buildNameMaps(): void {
+    this.redNameByCode.clear();
+    this.centroNameByCode.clear();
+    for (const red of this.dataRed) {
+      this.redNameByCode.set(this.normalizeCode(red.redasiscod), String(red.redasisdes ?? ''));
+    }
+    for (const centro of this.dataCentroCompleto) {
+      this.centroNameByCode.set(this.normalizeCode(centro.cenasicod), String(centro.cenasides ?? ''));
     }
   }
 
-  private normalizeCode(value: unknown): string {
-    return String(value ?? '').trim().toLowerCase();
+  /** Calcula una vez los campos derivados (fecha, nombres) para no repetir el trabajo en cada filtro. */
+  private prepareLogs(raw: any[]): LogRow[] {
+    const rows = raw.map((log) => {
+      const parts = this.dateParts(log?.date);
+      const redCode = String(log?.code_red ?? '').trim();
+      const centroCode = String(log?.codcas ?? '').trim();
+      return {
+        ...log,
+        _year: parts.year,
+        _month: parts.month,
+        _day: parts.day,
+        _ymd: parts.year ? `${parts.year}-${parts.month}-${parts.day}` : '',
+        _fecha: this.formatDate(log?.date),
+        _redName: this.redNameByCode.get(this.normalizeCode(redCode)) || redCode,
+        _centroName: this.centroNameByCode.get(this.normalizeCode(centroCode)) || centroCode,
+        _isLogin: this.isLoginUrl(log?.url),
+      } as LogRow;
+    });
+    // Lo más reciente primero
+    return rows.sort((a, b) => String(b['date'] ?? '').localeCompare(String(a['date'] ?? '')));
   }
 
+  /**
+   * Año/mes/día leídos del texto de la fecha (YYYY-MM-DD...), igual que se muestran
+   * en la tabla, para que los filtros no se desfasen por la zona horaria.
+   */
+  private dateParts(value: unknown): { year: string; month: string; day: string } {
+    const text = String(value ?? '').trim();
+    const match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return { year: match[1], month: match[2], day: match[3] };
+    }
+    const date = text ? new Date(text) : null;
+    if (date && !isNaN(date.getTime())) {
+      return {
+        year: String(date.getFullYear()),
+        month: String(date.getMonth() + 1).padStart(2, '0'),
+        day: String(date.getDate()).padStart(2, '0'),
+      };
+    }
+    return { year: '', month: '', day: '' };
+  }
 
+  // ---------------------------------------------------------------------------
+  // Filtros generales
+  // ---------------------------------------------------------------------------
 
   private setupYearFilter(): void {
-    if (this.loginLogs.length === 0) return;
-
-    const years = new Set<number>();
-    this.loginLogs.forEach((log) => {
-      if (log.date) {
-        const year = new Date(log.date).getFullYear();
-        if (!isNaN(year)) years.add(year);
-      }
-    });
-
-    this.availableYears = Array.from(years)
-      .sort((a, b) => a - b)
-      .map(String);
-  }
-
-  private setupDayFilter(): void {
-    if (this.loginLogs.length === 0) return;
-
-    const days = new Set<string>();
-    this.loginLogs.forEach((log) => {
-      if (log.date) {
-        const day = String(new Date(log.date).getDate()).padStart(2, '0');
-        days.add(day);
-      }
-    });
-
-    this.availableDays = Array.from(days)
-      .sort((a, b) => parseInt(a) - parseInt(b))
-      .map(String);
+    const years = new Set<string>();
+    for (const log of this.loginLogs) {
+      if (log._year) years.add(log._year);
+    }
+    this.availableYears = Array.from(years).sort();
   }
 
   private updateDaysForSelectedMonth(): void {
-    if (this.loginLogs.length === 0) {
-      this.availableDays = [];
-      return;
-    }
-
-    // Extract unique days from filtered data
     const days = new Set<string>();
-    this.loginLogs.forEach((log: any) => {
-      if (!log.date) return;
+    for (const log of this.loginLogs) {
+      if (!log._day) continue;
+      if (this.selectedYear !== 'todos' && log._year !== this.selectedYear) continue;
+      if (this.selectedMonth !== 'todos' && log._month !== this.selectedMonth) continue;
+      days.add(log._day);
+    }
+    this.availableDays = Array.from(days).sort();
 
-      // Apply year filter
-      if (this.selectedYear !== 'todos' && String(new Date(log.date).getFullYear()) !== this.selectedYear) {
-        return;
-      }
-
-      // Apply month filter
-      if (this.selectedMonth !== 'todos' && String(new Date(log.date).getMonth() + 1).padStart(2, '0') !== this.selectedMonth) {
-        return;
-      }
-
-      const day = String(new Date(log.date).getDate()).padStart(2, '0');
-      days.add(day);
-    });
-
-    this.availableDays = Array.from(days)
-      .sort((a, b) => parseInt(a) - parseInt(b))
-      .map(String);
-
-    // Reset selected day if not available
     if (this.selectedDay && !this.availableDays.includes(this.selectedDay)) {
       this.selectedDay = '';
     }
@@ -710,13 +317,12 @@ export class LogsReports implements OnInit, OnDestroy {
 
   private setDefaultFilters(): void {
     const now = new Date();
-    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
     const currentYear = String(now.getFullYear());
 
-    this.selectedMonth = currentMonth;
     this.selectedYear = this.availableYears.includes(currentYear)
       ? currentYear
       : this.availableYears[this.availableYears.length - 1] || 'todos';
+    this.selectedMonth = String(now.getMonth() + 1).padStart(2, '0');
 
     this.updateDaysForSelectedMonth();
     this.setupUserFilter();
@@ -729,36 +335,25 @@ export class LogsReports implements OnInit, OnDestroy {
       const id = String(user.id ?? '').trim();
       if (!id) return;
 
-      const name = String(user.name ?? '').trim();
-      const lastname = String(user.lastname ?? '').trim();
-      const dni = String(user.dni ?? '').trim();
+      const fullName = `${String(user.name ?? '').trim()} ${String(user.lastname ?? '').trim()}`.trim();
       const username = String(user.username ?? '').trim();
-      const fullName = `${name} ${lastname}`.trim();
-
+      const dni = String(user.dni ?? '').trim();
       const labelBase = fullName || username || `Usuario ${id}`;
-      const label = dni ? `${labelBase} (${dni})` : labelBase;
 
       if (!usersMap.has(id)) {
-        usersMap.set(id, label);
+        usersMap.set(id, dni ? `${labelBase} (${dni})` : labelBase);
       }
     });
 
+    // Sin acceso a la lista de usuarios: se arma desde los propios logs
     if (usersMap.size === 0) {
       this.loginLogs.forEach((log) => {
-        const id = String(log.id_user ?? '').trim();
-        if (!id) return;
+        const id = String(log['id_user'] ?? '').trim();
+        if (!id || usersMap.has(id)) return;
 
-        const fullName = String(log.full_name ?? '').trim();
-        const dni = String(log.dni ?? '').trim();
-        const label = fullName
-          ? `${fullName}${dni ? ` (${dni})` : ''}`
-          : dni
-            ? dni
-            : `Usuario ${id}`;
-
-        if (!usersMap.has(id)) {
-          usersMap.set(id, label);
-        }
+        const fullName = String(log['full_name'] ?? '').trim();
+        const dni = String(log['dni'] ?? '').trim();
+        usersMap.set(id, fullName ? `${fullName}${dni ? ` (${dni})` : ''}` : dni || `Usuario ${id}`);
       });
     }
 
@@ -766,89 +361,60 @@ export class LogsReports implements OnInit, OnDestroy {
       .sort((a, b) => a[1].localeCompare(b[1]))
       .map(([id, label]) => ({ id, label }));
 
-    if (this.selectedUserId !== 'todos' && !this.availableUsers.some((user) => user.id === this.selectedUserId)) {
+    if (this.selectedUserId !== 'todos' && !this.availableUsers.some((u) => u.id === this.selectedUserId)) {
       this.selectedUserId = 'todos';
     }
 
     this.syncSelectedUserLabel();
-
     if (!this.searchUser) {
       this.filteredAvailableUsers = this.getAllUserOptions();
     }
   }
 
+  get hasActiveFilters(): boolean {
+    return (
+      this.selectedYear !== 'todos' ||
+      this.selectedMonth !== 'todos' ||
+      !!this.selectedDay ||
+      this.selectedUserId !== 'todos' ||
+      !!this.selectedRedCode ||
+      !!this.selectedCentroCode ||
+      Object.values(this.filters).some((value) => !!value)
+    );
+  }
+
   applyFilters(): void {
+    if (this.isLoading || this.loadError) {
+      return;
+    }
 
-    const dataLogin = this.applyAllFiltersOptimized([...this.loginLogs]);
-    const dataTotalLogs = this.applyAllFiltersOptimized([...this.allLogsData]);
-    const tableData = this.applyColumnFilters(this.tableLogsData);
+    const selectedRed = this.normalizeCode(this.selectedRedCode);
+    const selectedCentro = this.normalizeCode(this.selectedCentroCode);
 
-    this.totalIngresos = dataLogin.length;
-    this.filteredCount = dataTotalLogs.length;
-    this.allLogsOriginal = [...this.tableLogsData];
-    this.allLogs = [...tableData];
-    this.dataSource.data = this.allLogs;
-
-
-    this.renderCharts(dataLogin, dataTotalLogs);
-    this.isLoading = false;
-  }
-
-  private applyColumnFilters(data: any[]): any[] {
-    return data.filter((row) => this.applyAllFilters(row));
-  }
-
-  private applyAllFiltersOptimized(data: any[]): any[] {
-    return data.filter((log) => {
-      // Filter by year
-      if (this.selectedYear !== 'todos') {
-        if (!log.date || String(new Date(log.date).getFullYear()) !== this.selectedYear) {
-          return false;
-        }
+    this.globalFiltered = this.allLogsData.filter((log) => {
+      if (this.selectedYear !== 'todos' && log._year !== this.selectedYear) return false;
+      if (this.selectedMonth !== 'todos' && log._month !== this.selectedMonth) return false;
+      if (this.selectedDay && log._day !== this.selectedDay) return false;
+      if (selectedRed && this.normalizeCode(log['code_red']) !== selectedRed) return false;
+      if (selectedCentro && this.normalizeCode(log['codcas']) !== selectedCentro) return false;
+      if (this.selectedUserId !== 'todos' && String(log['id_user'] ?? '').trim() !== this.selectedUserId) {
+        return false;
       }
-
-      // Filter by month
-      if (this.selectedMonth !== 'todos') {
-        if (!log.date || String(new Date(log.date).getMonth() + 1).padStart(2, '0') !== this.selectedMonth) {
-          return false;
-        }
-      }
-
-      // Filter by day
-      if (this.selectedDay) {
-        if (!log.date || String(new Date(log.date).getDate()).padStart(2, '0') !== this.selectedDay) {
-          return false;
-        }
-      }
-
-      // Filter by red code
-      if (this.selectedRedCode) {
-        const logRedCode = String(log.code_red ?? '').trim().toLowerCase();
-        const selectedRedCode = String(this.selectedRedCode).trim().toLowerCase();
-        if (logRedCode !== selectedRedCode) {
-          return false;
-        }
-      }
-
-      // Filter by centro code
-      if (this.selectedCentroCode) {
-        const logCentroCode = String(log.codcas ?? '').trim().toLowerCase();
-        const selectedCentroCode = String(this.selectedCentroCode).trim().toLowerCase();
-        if (logCentroCode !== selectedCentroCode) {
-          return false;
-        }
-      }
-
-      // Filter by user id
-      if (this.selectedUserId !== 'todos') {
-        const logUserId = String(log.id_user ?? '').trim();
-        if (logUserId !== this.selectedUserId) {
-          return false;
-        }
-      }
-
       return true;
     });
+
+    const logins = this.globalFiltered.filter((log) => log._isLogin);
+    this.totalIngresos = logins.length;
+    this.filteredCount = this.globalFiltered.length;
+    this.usuariosConIngreso = new Set(
+      logins.map((log) => String(log['id_user'] ?? log['dni'] ?? '').trim()).filter(Boolean),
+    ).size;
+
+    this.applyTableFilters();
+
+    // Pintar primero la vista para que existan los contenedores de los gráficos
+    this.cdr.detectChanges();
+    this.renderCharts(logins, this.globalFiltered);
   }
 
   onMonthChange(): void {
@@ -869,511 +435,6 @@ export class LogsReports implements OnInit, OnDestroy {
 
   onUserChange(): void {
     this.applyFilters();
-  }
-
-  private isLoginUrl(url: unknown): boolean {
-    if (!url) return false;
-    const value = String(url).toLowerCase().trim();
-    return value === '/login' || value.startsWith('/login?') || value.includes('/login');
-  }
-
-  private renderCharts(dataLogin: any[], dataTotalLogs: any[], retryCount = 0): void {
-    setTimeout(() => {
-      if (!this.chartRolContainer || !this.chartFechaContainer || !this.chartBrowserContainer || !this.chartUrlContainer) {
-        if (retryCount < 5) {
-          this.renderCharts(dataLogin, dataTotalLogs, retryCount + 1);
-        }
-        return;
-      }
-
-      const conteoRol = this.contarPorRol(dataLogin);
-      const { labels: fechaLabels, values: fechaValues } = this.procesarDatosPorFecha(dataLogin);
-      const conteoBrowser = this.contarPorNavegador(dataTotalLogs);
-      const { labels: urlLabels, values: urlValues } = this.contarTopUrls(dataTotalLogs);
-
-      this.renderChartRol(conteoRol);
-      this.renderChartFecha(fechaLabels, fechaValues);
-      this.renderChartBrowser(conteoBrowser);
-      this.renderChartUrl(urlLabels, urlValues);
-
-      this.cdr.detectChanges();
-    }, 100);
-  }
-
-  private renderChartRol(conteo: Record<string, number>): void {
-    const container = this.chartRolContainer?.nativeElement;
-    if (!container) {
-      return;
-    }
-
-    if (Object.keys(conteo).length === 0) {
-      if (this.chartRolInstance) {
-        this.chartRolInstance.destroy();
-        this.chartRolInstance = undefined;
-      }
-      return;
-    }
-
-    const labels = Object.keys(conteo);
-    const values = Object.values(conteo);
-
-    // Si el gráfico ya existe, actualizarlo en lugar de recrearlo
-    if (this.chartRolInstance) {
-      this.chartRolInstance.updateOptions({
-        xaxis: {
-          categories: labels
-        },
-        series: [{
-          name: 'Logs por Rol',
-          data: values
-        }]
-      });
-      return;
-    }
-
-    const options: ApexOptions = {
-      series: [{
-        name: 'Logs por Rol',
-        data: values
-      }],
-      chart: {
-        type: 'bar',
-        height: 350,
-        toolbar: { show: true }
-      },
-      plotOptions: {
-        bar: {
-          horizontal: false,
-          columnWidth: '55%',
-          borderRadius: 4,
-          distributed: true,
-        },
-      },
-      dataLabels: {
-        enabled: false,
-      },
-      stroke: {
-        show: true,
-        width: 1,
-        colors: ['transparent'],
-      },
-      xaxis: {
-        categories: labels,
-        labels: {
-          style: {
-            fontSize: '11px',
-          },
-          rotate: -45,
-        },
-      },
-      yaxis: {
-        title: {
-          text: 'Cantidad de Logs',
-          style: {
-            fontSize: '12px',
-            fontWeight: 'bold',
-          },
-        },
-      },
-      colors: ['#0064AF', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B88B'],
-      tooltip: {
-        y: {
-          formatter: (val: number) => `${val} logs`,
-        },
-      },
-      legend: {
-        show: false,
-      },
-      responsive: [
-        {
-          breakpoint: 1100,
-          options: {
-            chart: { height: 300 },
-          },
-        },
-        {
-          breakpoint: 768,
-          options: {
-            chart: { height: 260 },
-            plotOptions: {
-              bar: {
-                columnWidth: '70%',
-              },
-            },
-            xaxis: {
-              labels: {
-                rotate: -25,
-                trim: true,
-                maxHeight: 60,
-                style: { fontSize: '10px' },
-              },
-            },
-          },
-        },
-      ],
-    };
-
-    this.chartRolInstance = new ApexCharts(container, options);
-    this.chartRolInstance.render();
-  }
-
-  private renderChartFecha(labels: string[], values: number[]): void {
-    const container = this.chartFechaContainer?.nativeElement;
-    if (!container) {
-      return;
-    }
-
-    if (labels.length === 0) {
-      if (this.chartFechaInstance) {
-        this.chartFechaInstance.destroy();
-        this.chartFechaInstance = undefined;
-      }
-      return;
-    }
-
-    // Si el gráfico ya existe, actualizarlo en lugar de recrearlo
-    if (this.chartFechaInstance) {
-      this.chartFechaInstance.updateOptions({
-        xaxis: {
-          categories: labels
-        },
-        series: [{
-          name: 'Logs por Fecha',
-          data: values
-        }]
-      });
-      return;
-    }
-
-    const options: ApexOptions = {
-      series: [{
-        name: 'Logs por Fecha',
-        data: values
-      }],
-      chart: {
-        type: 'line',
-        height: 350,
-        toolbar: { show: true },
-      },
-      stroke: {
-        curve: 'smooth',
-        width: 2,
-      },
-      dataLabels: {
-        enabled: false,
-      },
-      markers: {
-        size: 5,
-        hover: {
-          size: 7,
-        },
-      },
-      xaxis: {
-        categories: labels,
-        title: {
-          text: 'FECHA',
-          style: {
-            fontSize: '12px',
-            fontWeight: 'bold',
-          },
-        },
-        labels: {
-          style: {
-            fontSize: '11px',
-          },
-          rotate: -45,
-        },
-      },
-      yaxis: {
-        title: {
-          text: 'Cantidad de Logs',
-          style: {
-            fontSize: '12px',
-            fontWeight: 'bold',
-          },
-        },
-      },
-      colors: ['#00AEEF'],
-      fill: {
-        type: 'gradient',
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.45,
-          opacityTo: 0.05,
-          stops: [20, 100, 100, 100],
-        },
-      },
-      tooltip: {
-        y: {
-          formatter: (val: number) => `${val} logs`,
-        },
-      },
-      legend: {
-        show: false,
-      },
-      responsive: [
-        {
-          breakpoint: 1100,
-          options: {
-            chart: { height: 300 },
-          },
-        },
-        {
-          breakpoint: 768,
-          options: {
-            chart: { height: 260 },
-            markers: { size: 4 },
-            xaxis: {
-              labels: {
-                rotate: -25,
-                trim: true,
-                maxHeight: 60,
-                style: { fontSize: '10px' },
-              },
-            },
-          },
-        },
-      ],
-    };
-
-    this.chartFechaInstance = new ApexCharts(container, options);
-    this.chartFechaInstance.render();
-  }
-
-  private renderChartBrowser(conteo: Record<string, number>): void {
-    const container = this.chartBrowserContainer?.nativeElement;
-    if (!container) {
-      return;
-    }
-
-    const labels = Object.keys(conteo);
-    const values = Object.values(conteo);
-
-    if (labels.length === 0) {
-      this.chartBrowserInstance?.destroy();
-      this.chartBrowserInstance = undefined;
-      return;
-    }
-
-    if (this.chartBrowserInstance) {
-      this.chartBrowserInstance.updateOptions({
-        labels,
-        series: values,
-      });
-      return;
-    }
-
-    const options: ApexOptions = {
-      chart: {
-        type: 'donut',
-        height: 350,
-      },
-      labels,
-      series: values,
-      legend: {
-        position: 'bottom',
-      },
-      dataLabels: {
-        enabled: true,
-      },
-      tooltip: {
-        y: {
-          formatter: (val: number) => `${val} logs`,
-        },
-      },
-      colors: ['#0B63A7', '#00AEEF', '#45B7D1', '#5BC0DE', '#88D498', '#F9C74F'],
-      responsive: [
-        {
-          breakpoint: 1100,
-          options: {
-            chart: { height: 300 },
-          },
-        },
-        {
-          breakpoint: 768,
-          options: {
-            chart: { height: 250 },
-            legend: {
-              position: 'bottom',
-              fontSize: '11px',
-            },
-          },
-        },
-      ],
-    };
-
-    this.chartBrowserInstance = new ApexCharts(container, options);
-    this.chartBrowserInstance.render();
-  }
-
-  private renderChartUrl(labels: string[], values: number[]): void {
-    const container = this.chartUrlContainer?.nativeElement;
-    if (!container) {
-      return;
-    }
-
-    if (labels.length === 0) {
-      this.chartUrlInstance?.destroy();
-      this.chartUrlInstance = undefined;
-      return;
-    }
-
-    if (this.chartUrlInstance) {
-      this.chartUrlInstance.updateOptions({
-        xaxis: {
-          categories: labels,
-        },
-        series: [
-          {
-            name: 'Logs por URL',
-            data: values,
-          },
-        ],
-      });
-      return;
-    }
-
-    const options: ApexOptions = {
-      series: [
-        {
-          name: 'Logs por URL',
-          data: values,
-        },
-      ],
-      chart: {
-        type: 'bar',
-        height: 350,
-        toolbar: { show: true },
-      },
-      plotOptions: {
-        bar: {
-          horizontal: true,
-          borderRadius: 4,
-        },
-      },
-      dataLabels: {
-        enabled: false,
-      },
-      xaxis: {
-        categories: labels,
-        title: {
-          text: 'Cantidad de Logs',
-        },
-      },
-      colors: ['#0B63A7'],
-      tooltip: {
-        y: {
-          formatter: (val: number) => `${val} logs`,
-        },
-      },
-      legend: {
-        show: false,
-      },
-      responsive: [
-        {
-          breakpoint: 1100,
-          options: {
-            chart: { height: 300 },
-          },
-        },
-        {
-          breakpoint: 768,
-          options: {
-            chart: { height: 260 },
-            yaxis: {
-              labels: {
-                style: {
-                  fontSize: '10px',
-                },
-              },
-            },
-          },
-        },
-      ],
-    };
-
-    this.chartUrlInstance = new ApexCharts(container, options);
-    this.chartUrlInstance.render();
-  }
-
-  private contarPorRol(data: any[]): Record<string, number> {
-    return data.reduce(
-      (acc, log) => {
-        const role = String(log.user_role ?? '');
-        acc[role] = (acc[role] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-  }
-
-  private procesarDatosPorFecha(data: any[]): { labels: string[]; values: number[] } {
-    const conteo: Record<string, number> = {};
-
-    data.forEach((log) => {
-      if (!log.date) return;
-      const fecha = String(log.date).substring(0, 10);
-      conteo[fecha] = (conteo[fecha] || 0) + 1;
-    });
-
-    const sortedEntries = Object.entries(conteo).sort((a, b) => a[0].localeCompare(b[0]));
-
-    return {
-      labels: sortedEntries.map(([fecha]) => {
-        const [year, month, day] = fecha.split('-');
-        return `${day}/${month}/${year}`;
-      }),
-      values: sortedEntries.map(([, count]) => count),
-    };
-  }
-
-  private contarPorNavegador(data: any[]): Record<string, number> {
-    return data.reduce((acc, log) => {
-      const browser = String(log.browser ?? 'Desconocido').trim() || 'Desconocido';
-      acc[browser] = (acc[browser] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  }
-
-  private contarTopUrls(data: any[]): { labels: string[]; values: number[] } {
-    const conteo = data.reduce((acc, log) => {
-      const url = String(log.url ?? 'Sin URL').trim() || 'Sin URL';
-      acc[url] = (acc[url] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const topEntries = (Object.entries(conteo) as Array<[string, number]>)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10);
-
-    return {
-      labels: topEntries.map(([url]) => url),
-      values: topEntries.map(([, count]) => count),
-    };
-  }
-
-  //  FORMATEAR FECHA (dd/mm/yyyy hh:mm)
-  formatDate(date: any): string {
-    if (!date) return '';
-    try {
-      const dateStr = String(date).trim();
-      // Formato ISO: YYYY-MM-DDTHH:mm:ss.mmmmmZ
-      const match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
-      if (match) {
-        const [, year, month, day, hour, minute] = match;
-        return `${day}/${month}/${year} ${hour}:${minute}`;
-      }
-      return dateStr;
-    } catch (e) {
-      return '';
-    }
-  }
-
-  // Filtrar datos de la tabla por columna - Se usa cuando se termina de escribir en los inputs
-  private updateTableFilters(): void {
-    const filtered = this.applyColumnFilters([...this.tableLogsData]);
-    this.allLogs = filtered;
-    this.dataSource.data = this.allLogs;
   }
 
   clearFilters(): void {
@@ -1398,9 +459,8 @@ export class LogsReports implements OnInit, OnDestroy {
     this.isDropdownCentroOpen = false;
     this.activeCentroIndex = -1;
 
-    Object.keys(this.filters).forEach((key) => {
-      const filterKey = key as keyof typeof this.filters;
-      this.filters[filterKey] = '';
+    (Object.keys(this.filters) as Array<keyof typeof this.filters>).forEach((key) => {
+      this.filters[key] = '';
     });
 
     this.refreshCentrosBySelectedRed();
@@ -1408,102 +468,642 @@ export class LogsReports implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  // Obtener nombre de Red por código
-  getRedNombre(codeRed: string): string {
-    if (!codeRed) return '';
-    const red = this.dataRed.find((r: any) => this.normalizeCode(r.redasiscod) === this.normalizeCode(codeRed));
-    return red ? String(red.redasisdes ?? '') : codeRed;
+  // ---------------------------------------------------------------------------
+  // Tabla
+  // ---------------------------------------------------------------------------
+
+  /** Filtros por columna: se aplican 200 ms después de dejar de escribir. */
+  onColumnFilterChange(): void {
+    clearTimeout(this.columnFilterTimer);
+    this.columnFilterTimer = setTimeout(() => {
+      this.applyTableFilters();
+      this.cdr.markForCheck();
+    }, 200);
   }
 
-  // Obtener nombre de Centro por código
-  getCentroNombre(codCas: string): string {
-    if (!codCas) return '';
-    const centro = this.dataCentroCompleto.find((c: any) => this.normalizeCode(c.cenasicod) === this.normalizeCode(codCas));
-    return centro ? String(centro.cenasides ?? '') : codCas;
+  private applyTableFilters(): void {
+    const f = {
+      code_red: this.filters.code_red.trim().toLowerCase(),
+      codcas: this.filters.codcas.trim().toLowerCase(),
+      full_name: this.filters.full_name.trim().toLowerCase(),
+      ip_user: this.filters.ip_user.trim().toLowerCase(),
+      dni: this.filters.dni.trim().toLowerCase(),
+      url: this.filters.url.trim().toLowerCase(),
+      browser: this.filters.browser.trim().toLowerCase(),
+      user_role: this.filters.user_role.trim().toLowerCase(),
+      date: this.filters.date.trim().toLowerCase(),
+    };
+    const has = (value: unknown, term: string) => !term || String(value ?? '').toLowerCase().includes(term);
+    const hasAny = (term: string, ...values: unknown[]) => !term || values.some((value) => has(value, term));
+
+    this.allLogs = this.globalFiltered.filter(
+      (row) =>
+        hasAny(f.code_red, row._redName, row['code_red']) &&
+        hasAny(f.codcas, row._centroName, row['codcas']) &&
+        has(row['full_name'], f.full_name) &&
+        has(row['ip_user'], f.ip_user) &&
+        has(row['dni'], f.dni) &&
+        has(row['url'], f.url) &&
+        has(row['browser'], f.browser) &&
+        has(row['user_role'], f.user_role) &&
+        hasAny(f.date, row._fecha, row['date']),
+    );
   }
 
-  //Aplicar todos los filtros activos a una fila
+  trackLog = (index: number, row: LogRow) => row['id'] ?? index;
 
-  private applyAllFilters(row: any): boolean {
-    // Filtro Red
-    if (this.filters.code_red && !String(row.code_red ?? '').toLowerCase().includes(this.filters.code_red)) {
-      return false;
+  //  FORMATEAR FECHA (dd/mm/yyyy hh:mm)
+  formatDate(date: any): string {
+    if (!date) return '';
+    const dateStr = String(date).trim();
+    const match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (match) {
+      const [, year, month, day, hour, minute] = match;
+      return `${day}/${month}/${year} ${hour}:${minute}`;
     }
-
-    // Filtro Centro
-    if (this.filters.codcas && !String(row.codcas ?? '').toLowerCase().includes(this.filters.codcas)) {
-      return false;
-    }
-
-    // Filtro Usuario
-    if (this.filters.full_name && !String(row.full_name ?? '').toLowerCase().includes(this.filters.full_name)) {
-      return false;
-    }
-
-    // Filtro IP
-    if (this.filters.ip_user && !String(row.ip_user ?? '').toLowerCase().includes(this.filters.ip_user)) {
-      return false;
-    }
-
-    // Filtro DNI
-    if (this.filters.dni && !String(row.dni ?? '').toLowerCase().includes(this.filters.dni)) {
-      return false;
-    }
-
-
-
-    // Filtro URL
-    if (this.filters.url && !String(row.url ?? '').toLowerCase().includes(this.filters.url)) {
-      return false;
-    }
-
-    // Filtro Browser
-    if (this.filters.browser && !String(row.browser ?? '').toLowerCase().includes(this.filters.browser)) {
-      return false;
-    }
-
-    // Filtro Rol
-    if (this.filters.user_role && !String(row.user_role ?? '').toLowerCase().includes(this.filters.user_role)) {
-      return false;
-    }
-
-    // Filtro Fecha
-    if (this.filters.date && !String(row.date ?? '').toLowerCase().includes(this.filters.date)) {
-      return false;
-    }
-
-    return true;
+    return dateStr;
   }
 
-  //  EXPORTAR CSV - Optimized
+  //  EXPORTAR CSV: exporta las filas visibles en la tabla
   exportCSV(): void {
-    const headers = ['ID', 'IP', 'Usuario', 'Evento', 'Método', 'URL', 'Navegador', 'Estado', 'Rol', 'Fecha'];
+    const headers = ['ID', 'Red', 'Centro', 'Usuario', 'DNI', 'IP', 'Evento', 'Método', 'URL', 'Navegador', 'Estado', 'Rol', 'Fecha'];
+    const escape = (value: unknown) => {
+      const text = String(value ?? '');
+      return /[",;\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    };
+
     const csvRows = [headers.join(',')];
+    for (const log of this.allLogs) {
+      const usuario =
+        String(log['full_name'] ?? '').trim() || `Usuario ${String(log['id_user'] ?? '').trim() || 'N/A'}`;
+      csvRows.push(
+        [
+          log['id'],
+          log._redName,
+          log._centroName,
+          usuario,
+          log['dni'],
+          log['ip_user'],
+          log['action'],
+          log['http_method'],
+          log['url'],
+          log['browser'],
+          log['status'],
+          log['user_role'],
+          log['date'],
+        ]
+          .map(escape)
+          .join(','),
+      );
+    }
 
-    this.dataSource.data.forEach((log) => {
-      const usuario = String(log.full_name ?? '').trim() || `Usuario ${String(log.id_user ?? '').trim() || 'N/A'}`;
-      const row = [
-        log.id,
-        log.ip_user,
-        usuario,
-        log.log,
-        log.request,
-        log.url,
-        log.browser,
-        log.status,
-        log.user_role,
-        log.date,
-      ];
-      csvRows.push(row.join(','));
-    });
-
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // BOM para que Excel abra correctamente tildes y eñes
+    const blob = new Blob(['﻿' + csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = `logs_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Desplegables: usuario
+  // ---------------------------------------------------------------------------
+
+  getAllUserOptions(): Array<{ id: string; label: string }> {
+    return [{ id: 'todos', label: 'Todos los usuarios' }, ...this.availableUsers];
+  }
+
+  private getUserOptions(): Array<{ id: string; label: string }> {
+    return this.searchUser ? this.filteredAvailableUsers : this.getAllUserOptions();
+  }
+
+  private syncSelectedUserLabel(): void {
+    if (this.selectedUserId === 'todos') {
+      this.selectedUserLabel = 'Todos los usuarios';
+      return;
+    }
+    const selectedUser = this.availableUsers.find((user) => user.id === this.selectedUserId);
+    this.selectedUserLabel = selectedUser?.label ?? 'Todos los usuarios';
+  }
+
+  focusDropdownUser() {
+    this.searchUser = '';
+    this.isDropdownUserOpen = true;
+    this.filteredAvailableUsers = this.getAllUserOptions();
+    this.activeUserIndex = this.getUserOptions().length > 0 ? 0 : -1;
+    this.scrollActiveIntoView(this.userOptions, this.activeUserIndex);
+  }
+
+  closeDropdownUser() {
+    this.isDropdownUserOpen = false;
+    this.searchUser = '';
+    this.activeUserIndex = -1;
+    this.syncSelectedUserLabel();
+  }
+
+  filterUser(event: Event) {
+    const rawValue = String((event.target as HTMLInputElement).value ?? '');
+    const searchValue = rawValue.toLowerCase().trim();
+    this.searchUser = rawValue;
+    this.isDropdownUserOpen = true;
+
+    const allOptions = this.getAllUserOptions();
+    this.filteredAvailableUsers = searchValue
+      ? allOptions.filter(
+          (user) => user.label.toLowerCase().includes(searchValue) || user.id.toLowerCase().includes(searchValue),
+        )
+      : allOptions;
+
+    this.activeUserIndex = this.getUserOptions().length > 0 ? 0 : -1;
+    this.scrollActiveIntoView(this.userOptions, this.activeUserIndex);
+  }
+
+  selectOptionUser(user: { id: string; label: string }) {
+    this.selectedUserId = user.id;
+    this.selectedUserLabel = user.label;
+    this.isDropdownUserOpen = false;
+    this.searchUser = '';
+    this.activeUserIndex = -1;
+    this.onUserChange();
+  }
+
+  handleUserKeydown(event: KeyboardEvent) {
+    this.handleListKeydown(event, {
+      isOpen: this.isDropdownUserOpen,
+      open: () => this.focusDropdownUser(),
+      close: () => this.closeDropdownUser(),
+      options: () => this.getUserOptions(),
+      getIndex: () => this.activeUserIndex,
+      setIndex: (i) => {
+        this.activeUserIndex = i;
+        this.scrollActiveIntoView(this.userOptions, i);
+      },
+      select: (option) => this.selectOptionUser(option),
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Desplegables: red asistencial
+  // ---------------------------------------------------------------------------
+
+  openDropdownRed() {
+    this.isDropdownRedOpen = true;
+    if (!this.searchRed) {
+      this.filteredRed = this.dataRed;
+    }
+    this.activeRedIndex = this.filteredRed.length > 0 ? 0 : -1;
+    this.scrollActiveIntoView(this.redOptions, this.activeRedIndex);
+  }
+
+  closeDropdownRed() {
+    this.isDropdownRedOpen = false;
+    this.searchRed = '';
+    this.activeRedIndex = -1;
+
+    // Texto escrito sin elegir una red: se vuelve a "todas"
+    if (!this.selectedRedName && this.selectedRedCode) {
+      this.selectedRedCode = '';
+      this.refreshCentrosBySelectedRed();
+      this.applyFilters();
+    }
+  }
+
+  filterRed(event: Event) {
+    const searchValue = String((event.target as HTMLInputElement).value ?? '').toLowerCase();
+    this.searchRed = searchValue;
+    this.isDropdownRedOpen = true;
+
+    // Al editar el texto se descarta la red elegida
+    if (this.selectedRedName) {
+      this.selectedRedName = '';
+      this.selectedRedCode = '';
+      this.refreshCentrosBySelectedRed();
+      this.applyFilters();
+    }
+
+    this.filteredRed = searchValue.trim()
+      ? this.dataRed.filter((red: any) => String(red.redasisdes ?? '').toLowerCase().includes(searchValue))
+      : this.dataRed;
+    this.activeRedIndex = this.filteredRed.length > 0 ? 0 : -1;
+    this.scrollActiveIntoView(this.redOptions, this.activeRedIndex);
+  }
+
+  selectOptionRed(red: any) {
+    this.selectedRedName = red.redasisdes;
+    this.selectedRedCode = String(red.redasiscod ?? '').trim();
+    this.isDropdownRedOpen = false;
+    this.searchRed = '';
+    this.activeRedIndex = -1;
+    this.refreshCentrosBySelectedRed();
+    this.applyFilters();
+  }
+
+  handleRedKeydown(event: KeyboardEvent) {
+    this.handleListKeydown(event, {
+      isOpen: this.isDropdownRedOpen,
+      open: () => this.openDropdownRed(),
+      close: () => this.closeDropdownRed(),
+      options: () => this.filteredRed,
+      getIndex: () => this.activeRedIndex,
+      setIndex: (i) => {
+        this.activeRedIndex = i;
+        this.scrollActiveIntoView(this.redOptions, i);
+      },
+      select: (option) => this.selectOptionRed(option),
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Desplegables: centro asistencial
+  // ---------------------------------------------------------------------------
+
+  private getCentroOptions(): any[] {
+    return this.searchCentro ? this.filteredCentro : this.dataCentro;
+  }
+
+  openDropdownCentro() {
+    this.isDropdownCentroOpen = true;
+    this.filteredCentro = this.dataCentro;
+    this.activeCentroIndex = this.getCentroOptions().length > 0 ? 0 : -1;
+    this.scrollActiveIntoView(this.centroOptions, this.activeCentroIndex);
+  }
+
+  closeDropdownCentro() {
+    this.isDropdownCentroOpen = false;
+    this.searchCentro = '';
+    this.activeCentroIndex = -1;
+
+    if (!this.selectedCentroName && this.selectedCentroCode) {
+      this.selectedCentroCode = '';
+      this.applyFilters();
+    }
+  }
+
+  filterCentro(event: Event) {
+    const searchValue = String((event.target as HTMLInputElement).value ?? '').toLowerCase();
+    this.searchCentro = searchValue;
+    this.isDropdownCentroOpen = true;
+
+    if (this.selectedCentroName) {
+      this.selectedCentroName = '';
+      this.selectedCentroCode = '';
+      this.applyFilters();
+    }
+
+    this.filteredCentro = searchValue.trim()
+      ? this.dataCentro.filter((centro: any) =>
+          String(centro.cenasides ?? '').toLowerCase().includes(searchValue),
+        )
+      : this.dataCentro;
+    this.activeCentroIndex = this.getCentroOptions().length > 0 ? 0 : -1;
+    this.scrollActiveIntoView(this.centroOptions, this.activeCentroIndex);
+  }
+
+  selectOptionCentro(centro: any) {
+    this.selectedCentroName = centro.cenasides;
+    this.selectedCentroCode = String(centro.cenasicod ?? '').trim();
+    this.isDropdownCentroOpen = false;
+    this.searchCentro = '';
+    this.activeCentroIndex = -1;
+    this.applyFilters();
+  }
+
+  handleCentroKeydown(event: KeyboardEvent) {
+    this.handleListKeydown(event, {
+      isOpen: this.isDropdownCentroOpen,
+      open: () => this.openDropdownCentro(),
+      close: () => this.closeDropdownCentro(),
+      options: () => this.getCentroOptions(),
+      getIndex: () => this.activeCentroIndex,
+      setIndex: (i) => {
+        this.activeCentroIndex = i;
+        this.scrollActiveIntoView(this.centroOptions, i);
+      },
+      select: (option) => this.selectOptionCentro(option),
+    });
+  }
+
+  private refreshCentrosBySelectedRed(): void {
+    const selectedRedCode = this.normalizeCode(this.selectedRedCode);
+
+    this.dataCentro = selectedRedCode
+      ? this.dataCentroCompleto.filter((centro: any) => this.normalizeCode(centro.redasiscod) === selectedRedCode)
+      : [...this.dataCentroCompleto];
+
+    this.filteredCentro = this.searchCentro
+      ? this.dataCentro.filter((centro: any) =>
+          String(centro.cenasides ?? '').toLowerCase().includes(this.searchCentro),
+        )
+      : this.dataCentro;
+
+    if (this.selectedCentroCode) {
+      const selectedCentroCode = this.normalizeCode(this.selectedCentroCode);
+      const stillAvailable = this.dataCentro.some(
+        (centro: any) => this.normalizeCode(centro.cenasicod) === selectedCentroCode,
+      );
+      if (!stillAvailable) {
+        this.selectedCentroName = '';
+        this.selectedCentroCode = '';
+      }
+    }
+  }
+
+  /** Navegación por teclado compartida por los tres desplegables. */
+  private handleListKeydown(
+    event: KeyboardEvent,
+    list: {
+      isOpen: boolean;
+      open: () => void;
+      close: () => void;
+      options: () => any[];
+      getIndex: () => number;
+      setIndex: (index: number) => void;
+      select: (option: any) => void;
+    },
+  ): void {
+    const key = event.key;
+
+    if (key === 'ArrowDown' || key === 'ArrowUp') {
+      event.preventDefault();
+      if (!list.isOpen) {
+        list.open();
+      }
+      const options = list.options();
+      if (options.length === 0) {
+        list.setIndex(-1);
+        return;
+      }
+      const current = list.getIndex();
+      list.setIndex(
+        key === 'ArrowDown' ? Math.min(current + 1, options.length - 1) : Math.max(current - 1, 0),
+      );
+      return;
+    }
+
+    if (key === 'Enter') {
+      if (!list.isOpen) return;
+      event.preventDefault();
+      const options = list.options();
+      const index = list.getIndex() >= 0 ? list.getIndex() : 0;
+      if (options[index]) {
+        list.select(options[index]);
+      }
+      return;
+    }
+
+    if (key === 'Escape') {
+      list.close();
+    }
+  }
+
+  private scrollActiveIntoView(items: QueryList<ElementRef<HTMLElement>> | undefined, index: number) {
+    if (index < 0) return;
+    setTimeout(() => items?.toArray()[index]?.nativeElement.scrollIntoView({ block: 'nearest' }), 0);
+  }
+
+  private normalizeCode(value: unknown): string {
+    return String(value ?? '').trim().toLowerCase();
+  }
+
+  private isLoginUrl(url: unknown): boolean {
+    if (!url) return false;
+    return String(url).toLowerCase().includes('/login');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Gráficos
+  // ---------------------------------------------------------------------------
+
+  private renderCharts(dataLogin: LogRow[], dataTotalLogs: LogRow[]): void {
+    const conteoRol = this.contarPorRol(dataLogin);
+    const fecha = this.procesarDatosPorFecha(dataLogin);
+    const conteoBrowser = this.contarPorNavegador(dataTotalLogs);
+    const url = this.contarTopUrls(dataTotalLogs);
+
+    this.renderChartRol(conteoRol);
+    this.renderChartFecha(fecha.labels, fecha.values);
+    this.renderChartBrowser(conteoBrowser);
+    this.renderChartUrl(url.labels, url.values);
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Crea el gráfico o lo actualiza. Si el contenedor cambió (la vista se volvió a
+   * crear) la instancia anterior se descarta: actualizarla pintaría en un nodo
+   * que ya no está en la página, que era la causa de los gráficos en blanco.
+   */
+  private upsertChart(
+    key: ChartKey,
+    container: HTMLElement | undefined,
+    hasData: boolean,
+    build: () => ApexOptions,
+    update: () => ApexOptions,
+  ): void {
+    this.chartEmpty[key] = !hasData;
+    if (!container) return;
+
+    const current = this.charts[key];
+    if (!hasData) {
+      current?.destroy();
+      delete this.charts[key];
+      return;
+    }
+
+    if (current && (current as any).el === container) {
+      current.updateOptions(update());
+      return;
+    }
+
+    current?.destroy();
+    const chart = new ApexCharts(container, build());
+    this.charts[key] = chart;
+    chart.render();
+  }
+
+  private destroyCharts(): void {
+    (Object.keys(this.charts) as ChartKey[]).forEach((key) => this.charts[key]?.destroy());
+    this.charts = {};
+  }
+
+  private baseChart(type: 'bar' | 'area' | 'donut', height: number): ApexOptions['chart'] {
+    return {
+      type,
+      height,
+      fontFamily: CHART_FONT,
+      foreColor: CHART_INK,
+      toolbar: { show: false },
+      zoom: { enabled: false },
+      animations: { enabled: true, speed: 300 },
+    };
+  }
+
+  private renderChartRol(conteo: Record<string, number>): void {
+    const entries = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+    const labels = entries.map(([role]) => role || 'Sin rol');
+    const values = entries.map(([, count]) => count);
+
+    this.upsertChart(
+      'rol',
+      this.chartRolContainer?.nativeElement,
+      entries.length > 0,
+      () => ({
+        series: [{ name: 'Ingresos', data: values }],
+        chart: this.baseChart('bar', 300),
+        plotOptions: { bar: { horizontal: true, barHeight: '62%', borderRadius: 3 } },
+        dataLabels: { enabled: false },
+        colors: [BRAND],
+        grid: { borderColor: CHART_GRID, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+        xaxis: { categories: labels, labels: { formatter: (v: string) => this.formatInt(Number(v)) } },
+        yaxis: { labels: { maxWidth: 180 } },
+        tooltip: { y: { formatter: (val: number) => `${this.formatInt(val)} ingresos` } },
+        legend: { show: false },
+      }),
+      () => ({ xaxis: { categories: labels }, series: [{ name: 'Ingresos', data: values }] }),
+    );
+  }
+
+  private renderChartFecha(labels: string[], values: number[]): void {
+    this.upsertChart(
+      'fecha',
+      this.chartFechaContainer?.nativeElement,
+      labels.length > 0,
+      () => ({
+        series: [{ name: 'Ingresos', data: values }],
+        chart: this.baseChart('area', 280),
+        stroke: { curve: 'monotoneCubic', width: 2 },
+        dataLabels: { enabled: false },
+        markers: { size: labels.length > 31 ? 0 : 3, strokeWidth: 0, hover: { size: 5 } },
+        colors: [BRAND],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.22, opacityTo: 0.02, stops: [0, 100] } },
+        grid: { borderColor: CHART_GRID, strokeDashArray: 3 },
+        xaxis: {
+          categories: labels,
+          tickAmount: Math.min(labels.length, 12),
+          labels: { rotate: 0, hideOverlappingLabels: true, style: { fontSize: '11px' } },
+          axisBorder: { color: CHART_GRID },
+          axisTicks: { show: false },
+        },
+        yaxis: { min: 0, forceNiceScale: true, labels: { formatter: (v: number) => this.formatInt(v) } },
+        tooltip: { y: { formatter: (val: number) => `${this.formatInt(val)} ingresos` } },
+        legend: { show: false },
+      }),
+      () => ({
+        xaxis: { categories: labels, tickAmount: Math.min(labels.length, 12) },
+        markers: { size: labels.length > 31 ? 0 : 3 },
+        series: [{ name: 'Ingresos', data: values }],
+      }),
+    );
+  }
+
+  private renderChartBrowser(conteo: Record<string, number>): void {
+    const entries = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+    const labels = entries.map(([browser]) => browser);
+    const values = entries.map(([, count]) => count);
+
+    this.upsertChart(
+      'browser',
+      this.chartBrowserContainer?.nativeElement,
+      entries.length > 0,
+      () => ({
+        series: values,
+        labels,
+        chart: this.baseChart('donut', 300),
+        colors: DONUT_COLORS,
+        stroke: { width: 2, colors: ['#ffffff'] },
+        dataLabels: { enabled: false },
+        plotOptions: {
+          pie: {
+            donut: {
+              size: '68%',
+              labels: {
+                show: true,
+                value: { fontSize: '22px', fontWeight: 700, color: '#17324d', formatter: (v: string) => this.formatInt(Number(v)) },
+                total: {
+                  show: true,
+                  label: 'Registros',
+                  color: CHART_INK,
+                  formatter: (w: any) => this.formatInt(w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)),
+                },
+              },
+            },
+          },
+        },
+        legend: { position: 'bottom', fontSize: '12px', markers: { size: 5 }, itemMargin: { horizontal: 8, vertical: 2 } },
+        tooltip: { y: { formatter: (val: number) => `${this.formatInt(val)} registros` } },
+      }),
+      () => ({ labels, series: values }),
+    );
+  }
+
+  private renderChartUrl(labels: string[], values: number[]): void {
+    this.upsertChart(
+      'url',
+      this.chartUrlContainer?.nativeElement,
+      labels.length > 0,
+      () => ({
+        series: [{ name: 'Visitas', data: values }],
+        chart: this.baseChart('bar', 320),
+        plotOptions: { bar: { horizontal: true, barHeight: '62%', borderRadius: 3 } },
+        dataLabels: { enabled: false },
+        colors: [BRAND],
+        grid: { borderColor: CHART_GRID, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+        xaxis: { categories: labels, labels: { formatter: (v: string) => this.formatInt(Number(v)) } },
+        yaxis: { labels: { maxWidth: 260, style: { fontSize: '12px' } } },
+        tooltip: { y: { formatter: (val: number) => `${this.formatInt(val)} visitas` } },
+        legend: { show: false },
+      }),
+      () => ({ xaxis: { categories: labels }, series: [{ name: 'Visitas', data: values }] }),
+    );
+  }
+
+  private contarPorRol(data: LogRow[]): Record<string, number> {
+    const acc: Record<string, number> = {};
+    for (const log of data) {
+      const role = String(log['user_role'] ?? '').trim();
+      acc[role] = (acc[role] || 0) + 1;
+    }
+    return acc;
+  }
+
+  private procesarDatosPorFecha(data: LogRow[]): { labels: string[]; values: number[] } {
+    const conteo: Record<string, number> = {};
+    for (const log of data) {
+      if (log._ymd) conteo[log._ymd] = (conteo[log._ymd] || 0) + 1;
+    }
+    const sorted = Object.entries(conteo).sort((a, b) => a[0].localeCompare(b[0]));
+    return {
+      labels: sorted.map(([ymd]) => {
+        const [year, month, day] = ymd.split('-');
+        return `${day}/${month}/${year}`;
+      }),
+      values: sorted.map(([, count]) => count),
+    };
+  }
+
+  private contarPorNavegador(data: LogRow[]): Record<string, number> {
+    const acc: Record<string, number> = {};
+    for (const log of data) {
+      const browser = String(log['browser'] ?? '').trim() || 'Desconocido';
+      acc[browser] = (acc[browser] || 0) + 1;
+    }
+    return acc;
+  }
+
+  private contarTopUrls(data: LogRow[]): { labels: string[]; values: number[] } {
+    const acc: Record<string, number> = {};
+    for (const log of data) {
+      const url = String(log['url'] ?? '').trim() || 'Sin URL';
+      acc[url] = (acc[url] || 0) + 1;
+    }
+    const top = Object.entries(acc)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+    return { labels: top.map(([url]) => url), values: top.map(([, count]) => count) };
+  }
+
+  formatInt(value: number): string {
+    return new Intl.NumberFormat('es-PE', { maximumFractionDigits: 0 }).format(Number(value) || 0);
   }
 }

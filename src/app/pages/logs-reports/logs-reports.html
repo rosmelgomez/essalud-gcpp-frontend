@@ -1,200 +1,258 @@
-<div class="main">
-  <div class="dashboard-shell">
-    <div class="header-panel">
-      <div>
-        <h1>Dashboard de Auditoria</h1>
-        <p>Analisis de actividad de usuarios y trazabilidad de accesos al sistema.</p>
-      </div>
-      <div class="header-actions">
-        <button class="btn-export" type="button" (click)="exportCSV()" [disabled]="isLoading">
-          Exportar CSV
-        </button>
-      </div>
+<div class="main rpt logs">
+
+  <!-- Cabecera de página -->
+  <div class="header">
+    <div class="header-content">
+      <h2 class="title">Dashboard de Auditoría</h2>
+      <p class="subtitle">Análisis de actividad de usuarios y trazabilidad de accesos al sistema.</p>
     </div>
-
-    <div class="loading-panel" *ngIf="isLoading">
-      Cargando datos del dashboard de auditoria...
+    <div class="header-content header-content-actions">
+      <button class="btn-download" type="button" (click)="exportCSV()"
+        [disabled]="isLoading || !!loadError || allLogs.length === 0">
+        <i class="bi bi-filetype-csv"></i>
+        Exportar CSV
+      </button>
     </div>
+  </div>
 
-    <ng-container *ngIf="!isLoading">
-      <section class="filters-panel">
-        <div class="filters-grid">
-          <label>
-            Anio
-            <select [(ngModel)]="selectedYear" (change)="onYearChange()" class="style-select">
-              <option value="todos">Todos los anios</option>
-              <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
-            </select>
-          </label>
+  <!-- Carga -->
+  <div class="loading" *ngIf="isLoading" role="status">
+    <p>Cargando datos del dashboard de auditoría...</p>
+  </div>
 
-          <label>
-            Mes
-            <select [(ngModel)]="selectedMonth" (change)="onMonthChange()" class="style-select">
-              <option *ngFor="let month of months" [value]="month.value">
-                {{ month.label }}
-              </option>
-            </select>
-          </label>
+  <!-- Error de carga -->
+  <div class="load-error" *ngIf="!isLoading && loadError" role="alert">
+    <div class="alert alert-danger">{{ loadError }}</div>
+    <button class="btn-search" type="button" (click)="loadData()">
+      <i class="bi bi-arrow-clockwise"></i>
+      Reintentar
+    </button>
+  </div>
 
-          <label>
-            Dia
-            <select [(ngModel)]="selectedDay" (change)="onDayChange()" class="style-select">
-              <option value="">Todos los dias</option>
-              <option *ngFor="let day of availableDays" [value]="day">{{ day }}</option>
-            </select>
-          </label>
+  <ng-container *ngIf="!isLoading && !loadError">
 
-          <label>
-            Usuario
-            <div class="custom-dropdown" (mouseleave)="closeDropdownUser()" (mouseenter)="openDropdownUser()">
-              <input type="text" placeholder="Buscar usuario..." (input)="filterUser($event)"
-                (keydown)="handleUserKeydown($event)" (focus)="focusDropdownUser()"
-                [value]="isDropdownUserOpen ? searchUser : selectedUserLabel" class="dropdown-input" />
-              <div class="dropdown-list" *ngIf="isDropdownUserOpen">
-                <div *ngFor="let user of searchUser ? filteredAvailableUsers : getAllUserOptions(); let i = index"
-                  #userOption class="dropdown-item" [class.active]="i === activeUserIndex"
-                  (click)="selectOptionUser(user)">
-                  {{ user.label }}
-                </div>
-                <div *ngIf="(searchUser ? filteredAvailableUsers : getAllUserOptions()).length === 0"
-                  class="dropdown-item disabled">
-                  No hay resultados
-                </div>
+    <!-- Filtros generales -->
+    <section class="header dash-filters" aria-label="Filtros">
+      <div class="dash-filters__grid logs-grid">
+        <label class="field">
+          <span class="field-label">Año</span>
+          <select [(ngModel)]="selectedYear" (change)="onYearChange()" class="style-select">
+            <option value="todos">Todos los años</option>
+            <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Mes</span>
+          <select [(ngModel)]="selectedMonth" (change)="onMonthChange()" class="style-select">
+            <option *ngFor="let month of months" [value]="month.value">{{ month.label }}</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Día</span>
+          <select [(ngModel)]="selectedDay" (change)="onDayChange()" class="style-select">
+            <option value="">Todos los días</option>
+            <option *ngFor="let day of availableDays" [value]="day">{{ day }}</option>
+          </select>
+        </label>
+
+        <label class="field logs-wide">
+          <span class="field-label">Usuario</span>
+          <div class="combo">
+            <input type="text" class="combo__input" placeholder="Buscar usuario..." autocomplete="off"
+              role="combobox" [attr.aria-expanded]="isDropdownUserOpen"
+              [value]="isDropdownUserOpen ? searchUser : selectedUserLabel"
+              (focus)="focusDropdownUser()" (blur)="closeDropdownUser()"
+              (input)="filterUser($event)" (keydown)="handleUserKeydown($event)" />
+            <div class="combo__list" *ngIf="isDropdownUserOpen" role="listbox">
+              <div *ngFor="let user of searchUser ? filteredAvailableUsers : getAllUserOptions(); let i = index"
+                #userOption class="combo__item" role="option" [class.is-active]="i === activeUserIndex"
+                [attr.aria-selected]="i === activeUserIndex"
+                (mousedown)="$event.preventDefault(); selectOptionUser(user)">
+                {{ user.label }}
+              </div>
+              <div *ngIf="(searchUser ? filteredAvailableUsers : getAllUserOptions()).length === 0"
+                class="combo__item is-empty">
+                Ningún usuario coincide con la búsqueda
               </div>
             </div>
-          </label>
-
-          <label>
-            Red asistencial
-            <div class="custom-dropdown" (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
-              <input type="text" placeholder="Buscar red..." (input)="filterRed($event)"
-                (keydown)="handleRedKeydown($event)" [value]="selectedRedName" class="dropdown-input" />
-              <div class="dropdown-list" *ngIf="isDropdownRedOpen">
-                <div *ngFor="let red of filteredRed; let i = index" #redOption class="dropdown-item"
-                  [class.active]="i === activeRedIndex" (click)="selectOptionRed(red)">
-                  {{ red.redasisdes }}
-                </div>
-                <div *ngIf="filteredRed.length === 0" class="dropdown-item disabled">
-                  No hay resultados
-                </div>
-              </div>
-            </div>
-          </label>
-
-          <label>
-            Centro asistencial
-            <div class="custom-dropdown centro-dropdown" (mouseleave)="closeDropdownCentro()"
-              (mouseenter)="openDropdownCentro()">
-              <input type="text" placeholder="Buscar centro..." (input)="filterCentro($event)"
-                (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName" class="dropdown-input" />
-              <div class="dropdown-list" *ngIf="isDropdownCentroOpen">
-                <div *ngFor="let centro of searchCentro ? filteredCentro : dataCentro; let i = index" #centroOption
-                  class="dropdown-item" [class.active]="i === activeCentroIndex" (click)="selectOptionCentro(centro)">
-                  {{ centro.cenasides }}
-                </div>
-                <div *ngIf="(searchCentro ? filteredCentro : dataCentro).length === 0" class="dropdown-item disabled">
-                  No hay resultados
-                </div>
-              </div>
-            </div>
-          </label>
-
-          <div class="filters-actions">
-            <button class="btn-clear" type="button" (click)="clearFilters()" [disabled]="isLoading">
-              Limpiar filtros
-            </button>
           </div>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Red asistencial</span>
+          <div class="combo">
+            <input type="text" class="combo__input" placeholder="Todas las redes" autocomplete="off"
+              role="combobox" [attr.aria-expanded]="isDropdownRedOpen"
+              [value]="isDropdownRedOpen ? searchRed : selectedRedName"
+              (focus)="openDropdownRed()" (blur)="closeDropdownRed()"
+              (input)="filterRed($event)" (keydown)="handleRedKeydown($event)" />
+            <div class="combo__list" *ngIf="isDropdownRedOpen" role="listbox">
+              <div *ngFor="let red of filteredRed; let i = index" #redOption class="combo__item" role="option"
+                [class.is-active]="i === activeRedIndex" [attr.aria-selected]="i === activeRedIndex"
+                (mousedown)="$event.preventDefault(); selectOptionRed(red)">
+                {{ red.redasisdes }}
+              </div>
+              <div *ngIf="filteredRed.length === 0" class="combo__item is-empty">
+                Ninguna red coincide con la búsqueda
+              </div>
+            </div>
+          </div>
+        </label>
+
+        <label class="field logs-wide">
+          <span class="field-label">Centro asistencial</span>
+          <div class="combo">
+            <input type="text" class="combo__input" placeholder="Todos los centros" autocomplete="off"
+              role="combobox" [attr.aria-expanded]="isDropdownCentroOpen"
+              [value]="isDropdownCentroOpen ? searchCentro : selectedCentroName"
+              (focus)="openDropdownCentro()" (blur)="closeDropdownCentro()"
+              (input)="filterCentro($event)" (keydown)="handleCentroKeydown($event)" />
+            <div class="combo__list" *ngIf="isDropdownCentroOpen" role="listbox">
+              <div *ngFor="let centro of searchCentro ? filteredCentro : dataCentro; let i = index" #centroOption
+                class="combo__item" role="option" [class.is-active]="i === activeCentroIndex"
+                [attr.aria-selected]="i === activeCentroIndex" [title]="centro.cenasides"
+                (mousedown)="$event.preventDefault(); selectOptionCentro(centro)">
+                {{ centro.cenasides }}
+              </div>
+              <div *ngIf="(searchCentro ? filteredCentro : dataCentro).length === 0" class="combo__item is-empty">
+                Ningún centro coincide con la búsqueda
+              </div>
+            </div>
+          </div>
+        </label>
+
+        <div class="dash-filters__actions">
+          <button class="btn-download" type="button" (click)="clearFilters()" [disabled]="!hasActiveFilters">
+            <i class="bi bi-x-circle"></i>
+            Limpiar filtros
+          </button>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="kpi-grid">
-        <article class="kpi-card">
-          <span>Total de ingresos</span>
-          <strong>{{ totalIngresos }}</strong>
-        </article>
-        <article class="kpi-card kpi-note">
-          <span>Total de logs</span>
-          <strong>{{ filteredCount }}</strong>
-        </article>
-      </section>
+    <!-- Indicadores -->
+    <section class="dash-kpis" aria-label="Indicadores">
+      <div class="dash-kpi">
+        <span class="dash-kpi__label">Total de ingresos</span>
+        <strong class="dash-kpi__value">{{ formatInt(totalIngresos) }}</strong>
+        <span class="dash-kpi__hint">Inicios de sesión en el periodo filtrado</span>
+      </div>
+      <div class="dash-kpi">
+        <span class="dash-kpi__label">Usuarios con ingreso</span>
+        <strong class="dash-kpi__value">{{ formatInt(usuariosConIngreso) }}</strong>
+        <span class="dash-kpi__hint">Usuarios distintos que iniciaron sesión</span>
+      </div>
+      <div class="dash-kpi">
+        <span class="dash-kpi__label">Total de logs</span>
+        <strong class="dash-kpi__value">{{ formatInt(filteredCount) }}</strong>
+        <span class="dash-kpi__hint">Todas las acciones registradas</span>
+      </div>
+    </section>
 
-      <section class="charts-grid">
-        <article class="chart-card">
-          <h3>Cantidad de ingresos por rol</h3>
-          <div #chartRolContainer class="chart-container"></div>
-        </article>
+    <!-- Gráficos -->
+    <section class="dash-charts">
+      <article class="dash-panel dash-charts__wide">
+        <header class="dash-panel__head">
+          <h3>Ingresos por fecha</h3>
+        </header>
+        <div class="dash-chart">
+          <div #chartFechaContainer class="dash-chart__canvas"></div>
+          <p class="dash-chart__empty" *ngIf="chartEmpty.fecha">No hay ingresos en el periodo seleccionado.</p>
+        </div>
+      </article>
 
-        <article class="chart-card">
-          <h3>Cantidad de ingresos por fecha</h3>
-          <div #chartFechaContainer class="chart-container"></div>
-        </article>
+      <article class="dash-panel">
+        <header class="dash-panel__head">
+          <h3>Ingresos por rol</h3>
+        </header>
+        <div class="dash-chart">
+          <div #chartRolContainer class="dash-chart__canvas"></div>
+          <p class="dash-chart__empty" *ngIf="chartEmpty.rol">No hay ingresos en el periodo seleccionado.</p>
+        </div>
+      </article>
 
-        <article class="chart-card">
-          <h3>Distribucion por navegador</h3>
-          <div #chartBrowserContainer class="chart-container"></div>
-        </article>
+      <article class="dash-panel">
+        <header class="dash-panel__head">
+          <h3>Distribución por navegador</h3>
+        </header>
+        <div class="dash-chart">
+          <div #chartBrowserContainer class="dash-chart__canvas"></div>
+          <p class="dash-chart__empty" *ngIf="chartEmpty.browser">No hay registros en el periodo seleccionado.</p>
+        </div>
+      </article>
 
-        <article class="chart-card">
-          <h3>Top URLs mas visitadas</h3>
-          <div #chartUrlContainer class="chart-container"></div>
-        </article>
-      </section>
+      <article class="dash-panel dash-charts__wide">
+        <header class="dash-panel__head">
+          <h3>Top 10 URLs más visitadas</h3>
+        </header>
+        <div class="dash-chart">
+          <div #chartUrlContainer class="dash-chart__canvas"></div>
+          <p class="dash-chart__empty" *ngIf="chartEmpty.url">No hay registros en el periodo seleccionado.</p>
+        </div>
+      </article>
+    </section>
 
-      <section class="table-card resumen-table">
-        <div class="resumen-wrapper">
-        <div class="resumen-header">
+    <!-- Tabla de logs -->
+    <section class="dash-panel dash-table logs-table">
+      <header class="dash-panel__head">
+        <h3>Registro de actividad</h3>
+        <span class="dash-panel__meta">{{ formatInt(allLogs.length) }} de {{ formatInt(filteredCount) }} registros</span>
+      </header>
+
+      <div class="dash-table__scroll">
+        <div class="dash-table__head" role="row">
           <div class="cell code_red">Red</div>
           <div class="cell codcas">Centro</div>
           <div class="cell full_name">Usuario</div>
           <div class="cell ip_user">IP</div>
           <div class="cell dni">DNI</div>
           <div class="cell url">URL</div>
-          <div class="cell browser">Browser</div>
+          <div class="cell browser">Navegador</div>
           <div class="cell user_role">Rol</div>
           <div class="cell date">Fecha</div>
         </div>
 
-        <div class="resumen-filters">
-          <input type="text" class="filter-input cell code_red" placeholder="Buscar Red..."
-            [(ngModel)]="filters.code_red" />
-          <input type="text" class="filter-input cell codcas" placeholder="Buscar Centro..."
-            [(ngModel)]="filters.codcas" />
-          <input type="text" class="filter-input cell full_name" placeholder="Buscar Usuario..."
-            [(ngModel)]="filters.full_name" />
-          <input type="text" class="filter-input cell ip_user" placeholder="Buscar IP..."
-            [(ngModel)]="filters.ip_user" />
-          <input type="text" class="filter-input cell dni" placeholder="Buscar DNI..." [(ngModel)]="filters.dni" />
-
-          <input type="text" class="filter-input cell url" placeholder="Buscar URL..." [(ngModel)]="filters.url" />
-          <input type="text" class="filter-input cell browser" placeholder="Buscar Navegador..."
-            [(ngModel)]="filters.browser" />
-          <input type="text" class="filter-input cell user_role" placeholder="Buscar Rol..."
-            [(ngModel)]="filters.user_role" />
-          <input type="text" class="filter-input cell date" placeholder="Buscar Fecha..." [(ngModel)]="filters.date" />
+        <div class="dash-table__filters">
+          <input type="search" class="filter-input" placeholder="Filtrar red" aria-label="Filtrar por red"
+            [(ngModel)]="filters.code_red" (ngModelChange)="onColumnFilterChange()" />
+          <input type="search" class="filter-input" placeholder="Filtrar centro" aria-label="Filtrar por centro"
+            [(ngModel)]="filters.codcas" (ngModelChange)="onColumnFilterChange()" />
+          <input type="search" class="filter-input" placeholder="Filtrar usuario" aria-label="Filtrar por usuario"
+            [(ngModel)]="filters.full_name" (ngModelChange)="onColumnFilterChange()" />
+          <input type="search" class="filter-input" placeholder="Filtrar IP" aria-label="Filtrar por IP"
+            [(ngModel)]="filters.ip_user" (ngModelChange)="onColumnFilterChange()" />
+          <input type="search" class="filter-input" placeholder="Filtrar DNI" aria-label="Filtrar por DNI"
+            [(ngModel)]="filters.dni" (ngModelChange)="onColumnFilterChange()" />
+          <input type="search" class="filter-input" placeholder="Filtrar URL" aria-label="Filtrar por URL"
+            [(ngModel)]="filters.url" (ngModelChange)="onColumnFilterChange()" />
+          <input type="search" class="filter-input" placeholder="Filtrar navegador" aria-label="Filtrar por navegador"
+            [(ngModel)]="filters.browser" (ngModelChange)="onColumnFilterChange()" />
+          <input type="search" class="filter-input" placeholder="Filtrar rol" aria-label="Filtrar por rol"
+            [(ngModel)]="filters.user_role" (ngModelChange)="onColumnFilterChange()" />
+          <input type="search" class="filter-input" placeholder="dd/mm/aaaa" aria-label="Filtrar por fecha"
+            [(ngModel)]="filters.date" (ngModelChange)="onColumnFilterChange()" />
         </div>
 
-          <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="72">
-            <div *cdkVirtualFor="let row of allLogs" class="resumen-row">
-              <div class="cell code_red">{{ getRedNombre(row.code_red) }}</div>
-              <div class="cell codcas">{{ getCentroNombre(row.codcas) }}</div>
-              <div class="cell full_name">{{ row.full_name }}</div>
-              <div class="cell ip_user">{{ row.ip_user }}</div>
-              <div class="cell dni">{{ row.dni }}</div>
-              <div class="cell url">{{ row.url }}</div>
-              <div class="cell browser">{{ row.browser }}</div>
-              <div class="cell user_role">{{ row.user_role }}</div>
-              <div class="cell date">{{ formatDate(row.date) }}</div>
-            </div>
-          </cdk-virtual-scroll-viewport>
+        <cdk-virtual-scroll-viewport class="dash-table__viewport" [itemSize]="44" *ngIf="allLogs.length > 0">
+          <div *cdkVirtualFor="let row of allLogs; trackBy: trackLog" class="dash-table__row" role="row">
+            <div class="cell code_red" [title]="row._redName">{{ row._redName }}</div>
+            <div class="cell codcas" [title]="row._centroName">{{ row._centroName }}</div>
+            <div class="cell full_name strong" [title]="row.full_name">{{ row.full_name }}</div>
+            <div class="cell ip_user num">{{ row.ip_user }}</div>
+            <div class="cell dni num">{{ row.dni }}</div>
+            <div class="cell url" [title]="row.url">{{ row.url }}</div>
+            <div class="cell browser">{{ row.browser }}</div>
+            <div class="cell user_role">{{ row.user_role }}</div>
+            <div class="cell date num">{{ row._fecha }}</div>
+          </div>
+        </cdk-virtual-scroll-viewport>
 
-          <div class="empty" *ngIf="allLogs.length === 0">No hay datos de logs para los filtros seleccionados.</div>
+        <div class="dash-table__empty" *ngIf="allLogs.length === 0">
+          No hay registros para los filtros seleccionados.
         </div>
-
-        <div class="table-footer">
-          <div class="footer-left"><strong>Total de logs:</strong></div>
-          <div class="footer-right"> {{ allLogs.length }}</div>
-        </div>
-      </section>
-    </ng-container>
-  </div>
+      </div>
+    </section>
+  </ng-container>
 </div>

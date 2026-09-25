@@ -78,6 +78,12 @@ export class DashboardOdontologicas implements OnInit {
     return new Intl.NumberFormat('es-PE').format(num);
   }
 
+  // Ancho de la barra de desglose, relativo al mayor valor de la lista
+  barWidth(value: number, list: any[], key: string = 'total'): number {
+    const max = Math.max(0, ...list.map((row) => Number(row[key]) || 0));
+    return max > 0 ? ((Number(value) || 0) / max) * 100 : 0;
+  }
+
   downloadFichaTecnica(): void {
     this.fileService.getFile('f_consulta_externa_odo.pdf').subscribe({
       next: (blob: Blob) => {

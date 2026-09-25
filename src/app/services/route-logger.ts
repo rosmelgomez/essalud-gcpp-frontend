@@ -8,6 +8,9 @@ import { Backend } from '../model/api';
 
 const log_url = Backend.api + '/log/register';
 
+// Rutas cuyo acceso no se guarda en el log de auditoría
+const EXCLUDED_ROUTES = new Set(['/home', '/logs-reports']);
+
 @Injectable({
   providedIn: 'root',
 })
@@ -44,6 +47,14 @@ export class RouteLogger {
 
     // Obtener la última URL registrada del sessionStorage
     const lastLoggedUrl = sessionStorage.getItem(this.LAST_LOGGED_URL_KEY);
+
+    // No registrar rutas excluidas de la auditoría (se ignoran query params y fragmentos).
+    // Se guarda igual como última URL para que, al volver a la ruta anterior, esta sí se registre.
+    const path = url.split(/[?#]/)[0].replace(/\/+$/, '');
+    if (EXCLUDED_ROUTES.has(path)) {
+      sessionStorage.setItem(this.LAST_LOGGED_URL_KEY, url);
+      return;
+    }
 
     // No registrar si es la misma URL que ya fue registrada
     if (url === lastLoggedUrl) {

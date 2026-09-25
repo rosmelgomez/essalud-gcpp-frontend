@@ -328,14 +328,14 @@
     <div class="modules-menu" *ngIf="showModuloEncuesta">
 
       <!-- Encuesta -->
-      <a routerLink="/encuesta" class="module">
+      <a routerLink="/encuesta/register" class="module">
         <div class=""></div>
         <img src="/images/survey.png" alt="Encuesta" />
         <span>Encuesta de Conformidad</span>
       </a>
 
       <!-- Dashboard Encuesta (admin) -->
-      <a routerLink="/dashboard-encuesta" class="module" *ngIf="user?.roles?.includes('ADMIN')">
+      <a routerLink="/encuesta/dashboard" class="module" *ngIf="user?.roles?.includes('ADMIN')">
         <img src="/images/respuesta-encuesta.png" alt="Encuesta" />
         <span>Respuesta de Encuestas</span>
       </a>

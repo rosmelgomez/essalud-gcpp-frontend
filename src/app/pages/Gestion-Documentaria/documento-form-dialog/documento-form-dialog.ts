@@ -14,10 +14,7 @@ import { UsersService } from '../../../services/usuario/users-service';
 
 export type DocumentoFormMode = 'documento' | 'version' | 'tipo';
 
-/**
- * Formulario flotante de registro de Gestión Documentaria.
- * Reemplaza la antigua página /documento/creacion: tipo de documento (ADMIN), documento y versión.
- */
+
 @Component({
   selector: 'app-documento-form-dialog',
   standalone: true,

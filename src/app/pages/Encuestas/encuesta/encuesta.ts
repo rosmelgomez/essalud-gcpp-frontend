@@ -1,8 +1,9 @@
 import { LocalStorageService } from '../../../services/local-storage-service';
-import { Component, OnInit, inject, ChangeDetectionStrategy, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { forkJoin } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Subscription, forkJoin } from 'rxjs';
 import { Categoria, Modulo, Subcategoria, Variable } from '../../../model/encuesta';
 import { ChangeDetectorRef } from '@angular/core';
 import {
@@ -13,9 +14,17 @@ import {
   MatDialogTitle,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { EncuestaService } from '../../../services/encuesta/encuesta-service';
+
+type Calificacion = 'valido' | 'no_valido' | '';
+
+type VariableEvaluada = Variable & {
+  index: number;
+  calificacion: Calificacion;
+  observacion: string;
+  /** La observación se muestra al marcar "No válido" o cuando el usuario la abre. */
+  mostrarObservacion: boolean;
+};
 
 @Component({
   selector: 'app-encuesta',
@@ -26,10 +35,20 @@ import { EncuestaService } from '../../../services/encuesta/encuesta-service';
   templateUrl: './encuesta.html',
   styleUrl: './encuesta.css',
 })
-export class Encuesta implements OnInit {
+export class Encuesta implements OnInit, OnDestroy {
   readonly dialog = inject(MatDialog);
 
   nameCentro: string = '';
+
+  // Estado de carga del catálogo
+  cargando = true;
+  errorCarga = '';
+  private cargaSub?: Subscription;
+
+  // Estado del guardado
+  guardando = false;
+  errorGuardado = '';
+  ultimaGuardada = '';
 
   // Subcategorías ya guardadas en esta sesión
   subcategoriasGuardadas = new Set<number>();
@@ -52,9 +71,16 @@ export class Encuesta implements OnInit {
   categoriasFiltradas: Categoria[] = [];
   subcategoriasFiltradas: Subcategoria[] = [];
 
-  // Variables para el módulo/subcategoría seleccionada
-  currentVariableIndex: number = -1;
-  variablesConCalificacion: Array<Variable & { index: number; calificacion: 'valido' | 'no_valido' | ''; observacion: string }> = [];
+  // Variables de la subcategoría seleccionada
+  variablesConCalificacion: VariableEvaluada[] = [];
+
+  readonly pasosGuia = [
+    'Selecciona un módulo de consulta.',
+    'Selecciona una categoría y luego una subcategoría.',
+    'En cada variable marca Válido o No válido.',
+    'Si marcas No válido, describe la observación en el campo correspondiente.',
+    'Revisa el avance y finalmente presiona Guardar encuesta.',
+  ];
 
   constructor(
     private encuestaService: EncuestaService,
@@ -63,116 +89,168 @@ export class Encuesta implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.getInfo();
     this.nameCentro = this.dataImport.getDataCentro()?.nameCentro || '';
+    this.getInfo();
   }
 
+  ngOnDestroy(): void {
+    this.cargaSub?.unsubscribe();
+  }
+
+  /** La app no usa zone.js: cada cambio de estado asíncrono pide detección de cambios. */
   getInfo(): void {
-    forkJoin({
+    this.cargaSub?.unsubscribe();
+    this.cargando = true;
+    this.errorCarga = '';
+    this.cdr.markForCheck();
+
+    this.cargaSub = forkJoin({
       modulos: this.encuestaService.getModulos(),
       categorias: this.encuestaService.getCategorias(),
       subcategorias: this.encuestaService.getSubcategorias(),
-      variables: this.encuestaService.getVariables()
+      variables: this.encuestaService.getVariables(),
     }).subscribe({
       next: (res) => {
-        this.modulosCompleto = res.modulos;
-        this.categoriasCompleto = res.categorias;
-        this.subcategoriasCompleto = res.subcategorias;
-        this.variablesCompleto = res.variables;
-        this.cdr.detectChanges();
+        this.modulosCompleto = res.modulos || [];
+        this.categoriasCompleto = res.categorias || [];
+        this.subcategoriasCompleto = res.subcategorias || [];
+        this.variablesCompleto = res.variables || [];
+        this.cargando = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error al cargar datos:', err);
-      }
+        this.cargando = false;
+        this.errorCarga = this.describirError(err, 'cargar los módulos de la encuesta');
+        this.cdr.markForCheck();
+      },
     });
   }
 
-  // ===== MÉTODOS PARA SELECCIONAR MÓDULO =====
+  private describirError(err: unknown, accion: string): string {
+    const status = err instanceof HttpErrorResponse ? err.status : -1;
+    if (status === 0) {
+      return `No se pudo conectar con el servidor para ${accion}. Verifique su conexión e intente de nuevo.`;
+    }
+    if (status === 401 || status === 403) {
+      return `Su sesión no tiene permiso para ${accion}. Inicie sesión nuevamente.`;
+    }
+    if (status > 0) {
+      return `El servidor respondió con un error (código ${status}) al ${accion}. Intente de nuevo.`;
+    }
+    return `Ocurrió un error inesperado al ${accion}. Intente de nuevo.`;
+  }
+
+  // ===== CONTEOS PARA LA NAVEGACIÓN =====
+
+  contarCategorias(moduloId: number): number {
+    return this.categoriasCompleto.filter((c) => c.id_modulo === moduloId).length;
+  }
+
+  contarSubcategorias(categoriaId: number): number {
+    return this.subcategoriasCompleto.filter((s) => s.id_categoria === categoriaId).length;
+  }
+
+  contarVariables(subcategoriaId: number): number {
+    return this.variablesCompleto.filter((v) => v.id_subcategoria === subcategoriaId).length;
+  }
+
+  get subcategoriasGuardadasEnCategoria(): number {
+    return this.subcategoriasFiltradas.filter((s) => this.subcategoriasGuardadas.has(s.id)).length;
+  }
+
+  // ===== SELECCIÓN EN CASCADA =====
+
   selectModulo(modulo: Modulo): void {
     this.selectedModuloId = modulo.id;
     this.selectedModuloName = modulo.name_modulo;
-    this.currentVariableIndex = -1;
     this.selectedCategoriaId = null;
     this.selectedCategoriaName = '';
-    this.selectedSubcategoriaId = null;
-    this.selectedSubcategoriaName = '';
-    this.variablesConCalificacion = [];
+    this.subcategoriasFiltradas = [];
+    this.resetAlSubcategoria();
     this.subcategoriasGuardadas.clear();
+    this.ultimaGuardada = '';
 
-    // Filtrar categorías por módulo
-    this.categoriasFiltradas = this.categoriasCompleto.filter(
-      (cat) => cat.id_modulo === modulo.id
-    );
+    this.categoriasFiltradas = this.categoriasCompleto.filter((cat) => cat.id_modulo === modulo.id);
+
+    // Con una sola categoría no hay nada que elegir
+    if (this.categoriasFiltradas.length === 1) {
+      this.selectCategoria(this.categoriasFiltradas[0]);
+    }
   }
 
-  // ===== MÉTODOS PARA SELECCIONAR CATEGORÍA =====
   selectCategoria(categoria: Categoria): void {
     this.selectedCategoriaId = categoria.id;
     this.selectedCategoriaName = categoria.name_categoria;
-    this.selectedSubcategoriaId = null;
-    this.selectedSubcategoriaName = '';
-    this.currentVariableIndex = -1;
-    this.variablesConCalificacion = [];
+    this.resetAlSubcategoria();
+    this.ultimaGuardada = '';
 
-    // Filtrar subcategorías por categoría
     this.subcategoriasFiltradas = this.subcategoriasCompleto.filter(
-      (subcat) => subcat.id_categoria === categoria.id
+      (subcat) => subcat.id_categoria === categoria.id,
     );
   }
 
-  // ===== MÉTODOS PARA SELECCIONAR SUBCATEGORÍA =====
   selectSubcategoria(subcategoria: Subcategoria): void {
-    this.selectedSubcategoriaId = subcategoria.id;
-    this.selectedSubcategoriaName = subcategoria.name_categoria;
-    this.currentVariableIndex = -1;
-
-    const variables = this.variablesCompleto.filter(
-      (v) => v.id_subcategoria === subcategoria.id
-    );
-
-    this.variablesConCalificacion = variables.map((v, index) => ({
-      ...v,
-      index: index + 1,
-      calificacion: '',
-      observacion: ''
-    }));
-
-    if (this.variablesConCalificacion.length > 0) {
-      this.currentVariableIndex = 0;
-    }
-  }
-
-  getCurrentVariable(): (Variable & { index: number; calificacion: 'valido' | 'no_valido' | ''; observacion: string }) | null {
-    if (this.currentVariableIndex >= 0 && this.currentVariableIndex < this.variablesConCalificacion.length) {
-      return this.variablesConCalificacion[this.currentVariableIndex];
-    }
-    return null;
-  }
-
-  irAnterior(): void {
-    if (this.currentVariableIndex > 0) {
-      this.currentVariableIndex--;
-    }
-  }
-
-  irSiguiente(): void {
-    if (this.currentVariableIndex < this.variablesConCalificacion.length - 1) {
-      this.currentVariableIndex++;
-    }
-  }
-
-  // ===== MÉTODOS DE GUARDADO Y RESET =====
-  guardarEncuesta(): void {
-    if (!this.selectedModuloId || !this.selectedCategoriaId || !this.selectedSubcategoriaId || this.variablesConCalificacion.length === 0) {
-      alert('Por favor selecciona módulo, categoría, subcategoría y variables');
+    if (this.subcategoriasGuardadas.has(subcategoria.id)) {
       return;
     }
 
-    const variablesSinCalificar = this.variablesConCalificacion.filter(
-      v => !v.calificacion || v.calificacion.trim() === ''
-    );
-    if (variablesSinCalificar.length > 0) {
-      alert('Por favor califica todas las variables');
+    this.selectedSubcategoriaId = subcategoria.id;
+    this.selectedSubcategoriaName = subcategoria.name_categoria;
+    this.errorGuardado = '';
+    this.ultimaGuardada = '';
+
+    this.variablesConCalificacion = this.variablesCompleto
+      .filter((v) => v.id_subcategoria === subcategoria.id)
+      .map((v, index) => ({
+        ...v,
+        index: index + 1,
+        calificacion: '' as Calificacion,
+        observacion: '',
+        mostrarObservacion: false,
+      }));
+  }
+
+  // ===== CALIFICACIÓN =====
+
+  calificar(variable: VariableEvaluada, calificacion: Calificacion): void {
+    variable.calificacion = calificacion;
+    if (calificacion === 'no_valido') {
+      variable.mostrarObservacion = true;
+    }
+    this.errorGuardado = '';
+  }
+
+  get totalCalificadas(): number {
+    return this.variablesConCalificacion.filter((v) => !!v.calificacion).length;
+  }
+
+  get totalNoValidas(): number {
+    return this.variablesConCalificacion.filter((v) => v.calificacion === 'no_valido').length;
+  }
+
+  get faltantes(): number {
+    return this.variablesConCalificacion.length - this.totalCalificadas;
+  }
+
+  get progreso(): number {
+    const total = this.variablesConCalificacion.length;
+    return total ? Math.round((this.totalCalificadas / total) * 100) : 0;
+  }
+
+  trackVariable = (_: number, variable: VariableEvaluada) => variable.id;
+
+  // ===== GUARDADO =====
+
+  guardarEncuesta(): void {
+    if (!this.selectedModuloId || !this.selectedCategoriaId || !this.selectedSubcategoriaId
+      || this.variablesConCalificacion.length === 0) {
+      this.errorGuardado = 'Selecciona módulo, categoría y subcategoría antes de guardar.';
+      return;
+    }
+
+    if (this.faltantes > 0) {
+      this.errorGuardado = `Faltan ${this.faltantes} variable${this.faltantes === 1 ? '' : 's'} por calificar.`;
       return;
     }
 
@@ -182,50 +260,60 @@ export class Encuesta implements OnInit {
     const codcas = dataCentro?.codcas;
 
     if (!id_user || !codcas) {
-      alert('No se encontraron id_user o codcas en DataImport');
+      this.errorGuardado = 'No se encontró el usuario o el centro de la sesión. Vuelve a iniciar sesión e intenta de nuevo.';
       return;
     }
 
     const dialogRef = this.dialog.open(EncuestaConfirmDialogComponent, {
-      width: '420px',
+      width: '440px',
+      maxWidth: 'calc(100vw - 32px)',
+      autoFocus: 'dialog',
       data: {
-        title: 'Guardar Encuesta',
-        message: `¿Estás seguro de que deseas guardar la evaluación para la categoría "${this.selectedCategoriaName}"? Esta acción no se puede deshacer.`,
+        subcategoria: this.selectedSubcategoriaName,
+        categoria: this.selectedCategoriaName,
         totalVariables: this.variablesConCalificacion.length,
+        totalNoValidas: this.totalNoValidas,
       },
-      enterAnimationDuration: '300ms',
-      exitAnimationDuration: '300ms',
     });
 
     dialogRef.afterClosed().subscribe((confirmed) => {
       if (!confirmed) return;
 
-      const subcategoriaGuardadaId = this.selectedSubcategoriaId!;
+      const subcategoriaId = this.selectedSubcategoriaId!;
+      const subcategoriaNombre = this.selectedSubcategoriaName;
+      this.guardando = true;
+      this.errorGuardado = '';
+      this.cdr.markForCheck();
 
-      const requests = this.variablesConCalificacion.map(variable =>
+      const requests = this.variablesConCalificacion.map((variable) =>
         this.encuestaService.createEncuesta({
           id: 0,
           codcas: codcas,
           status: variable.calificacion,
-          comment: variable.observacion || '',
+          comment: variable.observacion?.trim() || '',
           date_creation: '',
           id_user: id_user,
           id_modulo: this.selectedModuloId,
           id_categoria: this.selectedCategoriaId,
-          id_subcategoria: this.selectedSubcategoriaId,
-          id_variable: variable.id
-        })
+          id_subcategoria: subcategoriaId,
+          id_variable: variable.id,
+        }),
       );
 
       forkJoin(requests).subscribe({
         next: () => {
-          this.subcategoriasGuardadas.add(subcategoriaGuardadaId);
+          this.guardando = false;
+          this.subcategoriasGuardadas.add(subcategoriaId);
           this.resetAlSubcategoria();
+          this.ultimaGuardada = subcategoriaNombre;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error al guardar encuesta:', err);
-          alert('Ocurrió un error al guardar la encuesta. Intenta nuevamente.');
-        }
+          this.guardando = false;
+          this.errorGuardado = this.describirError(err, 'guardar la encuesta');
+          this.cdr.markForCheck();
+        },
       });
     });
   }
@@ -234,8 +322,8 @@ export class Encuesta implements OnInit {
   resetAlSubcategoria(): void {
     this.selectedSubcategoriaId = null;
     this.selectedSubcategoriaName = '';
-    this.currentVariableIndex = -1;
     this.variablesConCalificacion = [];
+    this.errorGuardado = '';
   }
 
   // Vuelve completamente al inicio (selección de módulo)
@@ -244,145 +332,157 @@ export class Encuesta implements OnInit {
     this.selectedModuloName = '';
     this.selectedCategoriaId = null;
     this.selectedCategoriaName = '';
-    this.selectedSubcategoriaId = null;
-    this.selectedSubcategoriaName = '';
     this.categoriasFiltradas = [];
     this.subcategoriasFiltradas = [];
-    this.currentVariableIndex = -1;
-    this.variablesConCalificacion = [];
+    this.resetAlSubcategoria();
     this.subcategoriasGuardadas.clear();
+    this.ultimaGuardada = '';
   }
 }
 
-// ===== COMPONENTE DE DIÁLOGO DE CONFIRMACIÓN PARA ENCUESTA =====
+// ===== DIÁLOGO DE CONFIRMACIÓN =====
 @Component({
   selector: 'encuesta-confirm-dialog',
   template: `
-    <div class="enc-dialog-container">
-      <div class="enc-dialog-header">
-        <mat-icon class="enc-dialog-icon">save_alt</mat-icon>
-        <h2 mat-dialog-title class="enc-dialog-title">{{ data.title }}</h2>
-      </div>
-      <mat-dialog-content class="enc-dialog-message">
-        <p>{{ data.message }}</p>
-        <div class="enc-dialog-summary">
-          <mat-icon class="enc-summary-icon">checklist</mat-icon>
-          <span>{{ data.totalVariables }} variable{{ data.totalVariables !== 1 ? 's' : '' }} a guardar</span>
-        </div>
+    <div class="enc-dialog">
+      <h2 mat-dialog-title class="enc-dialog__title">Guardar evaluación</h2>
+      <mat-dialog-content class="enc-dialog__body">
+        <p>
+          Se guardará la evaluación de <strong>{{ data.subcategoria }}</strong>
+          ({{ data.categoria }}). Una vez guardada no se puede modificar.
+        </p>
+        <dl class="enc-dialog__summary">
+          <div>
+            <dt>Variables</dt>
+            <dd>{{ data.totalVariables }}</dd>
+          </div>
+          <div>
+            <dt>Válidas</dt>
+            <dd>{{ data.totalVariables - data.totalNoValidas }}</dd>
+          </div>
+          <div>
+            <dt>No válidas</dt>
+            <dd [class.is-bad]="data.totalNoValidas > 0">{{ data.totalNoValidas }}</dd>
+          </div>
+        </dl>
       </mat-dialog-content>
-      <mat-dialog-actions class="enc-dialog-actions">
-        <button mat-stroked-button class="enc-btn-cancel" (click)="onCancel()">
-          <mat-icon>close</mat-icon>
-          Cancelar
-        </button>
-        <button mat-raised-button color="primary" class="enc-btn-confirm" (click)="onConfirm()">
-          <mat-icon>save</mat-icon>
-          Guardar
-        </button>
+      <mat-dialog-actions class="enc-dialog__actions">
+        <button type="button" class="enc-btn enc-btn--ghost" (click)="onCancel()">Seguir revisando</button>
+        <button type="button" class="enc-btn enc-btn--primary" (click)="onConfirm()">Guardar evaluación</button>
       </mat-dialog-actions>
     </div>
   `,
   styles: [`
-    .enc-dialog-container { width: 100%; }
-
-    .enc-dialog-header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 20px 24px;
-      border-radius: 8px 8px 0 0;
-      background: linear-gradient(135deg, #0f766e 0%, #25a391 100%);
-      color: white;
+    .enc-dialog {
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #17324d;
     }
 
-    .enc-dialog-icon { font-size: 28px; width: 28px; height: 28px; }
-
-    .enc-dialog-title {
+    .enc-dialog__title {
       margin: 0;
+      padding: 22px 24px 4px;
+      font-family: inherit;
+      font-size: 19px;
+      font-weight: 700;
+      color: #17324d;
+    }
+
+    .enc-dialog__body {
+      padding: 8px 24px 4px;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #34495e;
+    }
+
+    .enc-dialog__body p {
+      margin: 0 0 16px;
+    }
+
+    .enc-dialog__summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin: 0;
+      border: 1px solid #dfe6ee;
+      border-radius: 10px;
+    }
+
+    .enc-dialog__summary div {
+      padding: 10px 14px;
+    }
+
+    .enc-dialog__summary div + div {
+      border-left: 1px solid #edf1f5;
+    }
+
+    .enc-dialog__summary dt {
+      font-size: 12px;
+      color: #56697d;
+    }
+
+    .enc-dialog__summary dd {
+      margin: 2px 0 0;
       font-size: 20px;
       font-weight: 700;
-      letter-spacing: 0.3px;
+      font-variant-numeric: tabular-nums;
+      color: #17324d;
     }
 
-    .enc-dialog-message {
-      padding: 20px 24px 12px;
-      font-size: 15px;
-      line-height: 1.6;
-      color: rgba(0,0,0,0.85);
-      border-bottom: 1px solid rgba(0,0,0,0.08);
+    .enc-dialog__summary dd.is-bad {
+      color: #b3122b;
     }
 
-    .enc-dialog-message p { margin: 0 0 14px; }
-
-    .enc-dialog-summary {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #e6f6f4;
-      border: 1px solid #b2dfdb;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #0f766e;
-    }
-
-    .enc-summary-icon { font-size: 20px; width: 20px; height: 20px; color: #0f766e; }
-
-    .enc-dialog-actions {
+    .enc-dialog__actions {
       display: flex;
       justify-content: flex-end;
-      gap: 12px;
-      padding: 16px 24px;
-      background-color: #fafafa;
-      border-radius: 0 0 8px 8px;
+      gap: 8px;
+      padding: 16px 24px 20px;
     }
 
-    .enc-btn-cancel {
-      min-width: 110px;
-      height: 40px;
+    .enc-btn {
+      height: 38px;
+      padding: 0 16px;
+      font: inherit;
       font-size: 14px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      transition: all 0.25s ease;
-    }
-
-    .enc-btn-cancel:hover {
-      background-color: #e0e0e0;
-      transform: translateY(-1px);
-    }
-
-    .enc-btn-confirm {
-      min-width: 110px;
-      height: 40px;
-      font-size: 14px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      transition: all 0.25s ease;
-    }
-
-    .enc-btn-confirm:hover { transform: translateY(-1px); }
-
-    button mat-icon { margin-right: 6px; font-size: 18px; width: 18px; height: 18px; }
-
-    ::ng-deep .mat-mdc-dialog-container {
+      font-weight: 600;
       border-radius: 8px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .enc-btn:focus-visible {
+      outline: 2px solid #0064af;
+      outline-offset: 2px;
+    }
+
+    .enc-btn--ghost {
+      color: #17324d;
+      background: #ffffff;
+      border: 1px solid #c6d2de;
+    }
+
+    .enc-btn--ghost:hover {
+      background: #f8fafc;
+    }
+
+    .enc-btn--primary {
+      color: #ffffff;
+      background: #0064af;
+      border: 1px solid #0064af;
+    }
+
+    .enc-btn--primary:hover {
+      background: #004f8c;
+      border-color: #004f8c;
     }
   `],
   imports: [
     CommonModule,
-    MatButtonModule,
     MatDialogActions,
     MatDialogTitle,
     MatDialogContent,
-    MatIconModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-
 export class EncuestaConfirmDialogComponent {
   readonly dialogRef = inject(MatDialogRef<EncuestaConfirmDialogComponent>);
 

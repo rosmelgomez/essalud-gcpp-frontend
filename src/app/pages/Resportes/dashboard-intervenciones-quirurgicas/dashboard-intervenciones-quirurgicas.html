@@ -1,4 +1,4 @@
-<div class="main">
+<div class="main rpt">
   <!-- Header con logo y título -->
   <div class="header">
     <div class="header-content">
@@ -83,15 +83,22 @@
     <div *ngIf="!loadingGC && !errorGC && !selectPeriodoGC" class="dashboard-content">
       <!-- Fila 1: -->
       <div class="cards-row">
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a class="card-link"
-                href="/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-a-gc">
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-a-gc"
+                class="card-link">
                 <h5 class="card-title">Complejidad A</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(complejidadA) }}</h2>
-              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio_gc }}-{{ periodo_gc }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataComplejidadA" class="item-data">
@@ -101,15 +108,22 @@
             </div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a class="card-link"
-                href="/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-b-gc">
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-b-gc"
+                class="card-link">
                 <h5 class="card-title">Complejidad B</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(complejidadB) }}</h2>
-              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio_gc }}-{{ periodo_gc }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataComplejidadB" class="item-data">
@@ -119,19 +133,30 @@
             </div>
           </div>
         </div>
+
+
+
       </div>
 
       <!-- Fila 2: -->
       <div class="cards-row">
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a [href]="'/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-c-gc'"
+
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-c-gc"
                 class="card-link">
                 <h5 class="card-title">Complejidad C</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(complejidadC) }}</h2>
-              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio_gc }}-{{ periodo_gc }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataComplejidadC" class="item-data">
@@ -141,15 +166,23 @@
             </div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a [href]="'/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-d-gc'"
+
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-d-gc"
                 class="card-link">
                 <h5 class="card-title">Complejidad D</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(complejidadD) }}</h2>
-              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio_gc }}-{{ periodo_gc }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataComplejidadD" class="item-data">
@@ -159,19 +192,30 @@
             </div>
           </div>
         </div>
+
+
+
+
       </div>
 
       <!-- Fila 3-->
       <div class="cards-row">
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a [href]="'/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-e-gc'"
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-complejidad-e-gc"
                 class="card-link">
                 <h5 class="card-title">Complejidad E</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(complejidadE) }}</h2>
-              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio_gc }}-{{ periodo_gc }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataComplejidadE" class="item-data">
@@ -181,15 +225,24 @@
             </div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a [href]="'/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-sin-complejidad-gc'"
+
+
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/diq-sin-complejidad-gc"
                 class="card-link">
                 <h5 class="card-title">Sin Complejidad</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(sinComplejidad) }}</h2>
-              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio_gc }}-{{ periodo_gc }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataSinComplejidad" class="item-data">
@@ -199,71 +252,100 @@
             </div>
           </div>
         </div>
+
+
+
+
+
       </div>
 
       <!-- Fila 4-->
       <div class="cards-row">
+
+
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Intervenciones Quirúrgicas Ejecutadas Emergencia</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Intervenciones Quirúrgicas Ejecutadas Emergencia</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(intervacionesEmergencia) }}</h2>
-              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio_gc }}-{{ periodo_gc }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of dataInternvacionesEmergencia" class="item-data">
-                <span> {{ item.area }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+                <span>{{ item.area }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
               </div>
             </div>
           </div>
         </div>
+
+
+
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Horas quirúrgicas realizadas IQ electivas</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Horas quirúrgicas realizadas IQ electivas</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(horasQuirurgicasElectivas) }}</h2>
-              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio_gc }}-{{ periodo_gc }} | {{
+                centroAtencion }}</p>
             </div>
+
           </div>
         </div>
+
+
+
       </div>
 
       <!-- Fila 5-->
       <div class="cards-row">
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Horas quirúrgicas realizadas IQ emergencia</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Horas quirúrgicas realizadas IQ emergencia</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(horasQuirurgicasEmergencia) }}</h2>
-              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio_gc }}-{{ periodo_gc }} | {{
+                centroAtencion }}</p>
             </div>
+
           </div>
         </div>
-      </div>
 
-      <!-- Fila 5-->
-      <div class="cards-row">
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Intervenciones Quirúrgicas Suspendidas</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Intervenciones Quirúrgicas Suspendidas</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(intervencionesSuspendidas) }}</h2>
-              <p class="card-subtitle">Periodo {{ anio_gc }}-{{ periodo_gc }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio_gc }}-{{ periodo_gc }} | {{
+                centroAtencion }}</p>
             </div>
+
           </div>
         </div>
+
+
       </div>
-
-
 
 
 

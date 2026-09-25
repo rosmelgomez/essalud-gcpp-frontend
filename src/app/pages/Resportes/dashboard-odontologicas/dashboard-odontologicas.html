@@ -1,15 +1,19 @@
-<div class="main">
+<div class="main rpt">
 
-  <!-- Header con logo y título -->
+  <!-- Cabecera de página -->
   <div class="header">
     <div class="header-content">
-      <h2 class="title">Consulta externa - Odontológicas (En desarrollo- Por validar)</h2>
+      <h2 class="title">
+        Consulta externa - Odontológicas
+        <span class="status-badge">En desarrollo · Por validar</span>
+      </h2>
       <p class="subtitle">
-        Información actualizada al {{ currentDate }} | Centro de Atención: {{ "centroAtencion" }}
+        <span><i class="bi bi-clock-history"></i>Información actualizada al {{ currentDate }}</span>
+        <span><i class="bi bi-hospital"></i>Centro de Atención: {{ centroAtencion }}</span>
       </p>
     </div>
     <div class="header-content header-content-actions">
-      <button class="btn-download btn-ficha-tecnica" (click)="downloadFichaTecnica()">
+      <button type="button" class="btn-download btn-ficha-tecnica" (click)="downloadFichaTecnica()">
         <i class="bi bi-file-earmark-pdf"></i>
         Ficha Técnica
       </button>
@@ -17,178 +21,223 @@
   </div>
 
   <!-- TABS -->
-  <div class="tabs">
-    <button class="tab-button" [class.active]="activeTab === 'Sesiones Odontológicas'"
-      (click)="setActiveTab('Sesiones Odontológicas')">
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" class="tab-button" [class.active]="activeTab === 'Sesiones Odontológicas'"
+      [attr.aria-selected]="activeTab === 'Sesiones Odontológicas'" (click)="setActiveTab('Sesiones Odontológicas')">
       Sesiones Odontológicas
     </button>
   </div>
 
-
-  <!-- CONTENIDO TABS -->
   <!-- Contenido para Sesiones Odontológicas -->
   <div *ngIf="activeTab === 'Sesiones Odontológicas'" class="tab-content">
+
+    <!-- Filtros -->
     <div class="header">
-      <div class="header-actions">
+      <form class="header-actions" (ngSubmit)="loadSesionesOdontologicas()">
         <div class="buscar-group">
-          <select [(ngModel)]="anioSO" class="anio-select">
-            <option value="">Seleccione un Año</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
-          </select>
-          <select [(ngModel)]="periodoSO" class="periodo-select">
-            <option value="">Seleccione un periodo</option>
-            <option value="01">Enero</option>
-            <option value="02">Febrero</option>
-            <option value="03">Marzo</option>
-            <option value="04">Abril</option>
-            <option value="05">Mayo</option>
-            <option value="06">Junio</option>
-            <option value="07">Julio</option>
-            <option value="08">Agosto</option>
-            <option value="09">Septiembre</option>
-            <option value="10">Octubre</option>
-            <option value="11">Noviembre</option>
-            <option value="12">Diciembre</option>
-          </select>
-          <select [(ngModel)]="tipo_aseguradoSO" class="tipo-asegurado-select">
-            <option value="">Seleccione tipo de asegurado</option>
-            <option value="1">Asegurado</option>
-            <option value="2">No Asegurado</option>
-            <option value="3">Todos</option>
-          </select>
-          <!-- Botón búsqueda -->
-          <button (click)="loadSesionesOdontologicas()" class="btn-search">Buscar</button>
+          <label class="field">
+            <span class="field-label">Año</span>
+            <select [(ngModel)]="anioSO" name="anioSO" class="anio-select">
+              <option value="">Seleccione un año</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">Periodo</span>
+            <select [(ngModel)]="periodoSO" name="periodoSO" class="periodo-select">
+              <option value="">Seleccione un periodo</option>
+              <option value="01">Enero</option>
+              <option value="02">Febrero</option>
+              <option value="03">Marzo</option>
+              <option value="04">Abril</option>
+              <option value="05">Mayo</option>
+              <option value="06">Junio</option>
+              <option value="07">Julio</option>
+              <option value="08">Agosto</option>
+              <option value="09">Septiembre</option>
+              <option value="10">Octubre</option>
+              <option value="11">Noviembre</option>
+              <option value="12">Diciembre</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">Tipo de asegurado</span>
+            <select [(ngModel)]="tipo_aseguradoSO" name="tipo_aseguradoSO" class="tipo-asegurado-select">
+              <option value="">Seleccione tipo de asegurado</option>
+              <option value="1">Asegurado</option>
+              <option value="2">No Asegurado</option>
+              <option value="3">Todos</option>
+            </select>
+          </label>
+          <button type="submit" class="btn-search" [disabled]="loadingSO">
+            <i class="bi bi-search"></i>
+            Buscar
+          </button>
         </div>
-      </div>
+      </form>
     </div>
 
-    <!-- Estado Loading  -->
-    <div *ngIf="loadingSO" class="loading">
+    <!-- Estado de carga -->
+    <div *ngIf="loadingSO" class="loading" role="status">
       <p>Cargando datos...</p>
     </div>
 
-    <!-- Selecciona Periodo -->
+    <!-- Periodo sin seleccionar -->
     <div *ngIf="selectPeriodoSO && !loadingSO" class="select-periodo">
-      <p>Por favor, seleccione un período para ver la información odontologicas</p>
+      <p>Seleccione el año, el periodo y el tipo de asegurado, luego pulse <strong>Buscar</strong> para ver las
+        sesiones odontológicas.</p>
     </div>
 
-    <!-- Estado de Error -->
-    <div *ngIf="errorSO" class="alert alert-danger">
+    <!-- Estado de error -->
+    <div *ngIf="errorSO" class="alert alert-danger" role="alert">
       {{ errorSO }}
     </div>
 
-    <!-- Contenido de Obstetricia -->
+    <!-- Indicadores -->
     <div *ngIf="!loadingSO && !errorSO && !selectPeriodoSO && !noDataSO" class="dashboard-content">
-      <!-- Fila 1: -->
+
+      <!-- Fila 1: consultantes -->
       <div class="cards-row">
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Total de consultantes a la atención médica</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Total de consultantes a la atención médica</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(totalConsultantesAtencionSO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioSO }}-{{ periodoSO }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioSO }}-{{ periodoSO }} | {{
+                centroAtencion }}</p>
             </div>
           </div>
         </div>
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Total de consultantes al servicio</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Total de consultantes al servicio</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(totalConsultantesServicioSO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioSO }}-{{ periodoSO }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioSO }}-{{ periodoSO }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
-              <div *ngFor="let item of dataTotalConsultantesServicioSO" class="item-data">
-                <span> {{ item.agrupador }}</span>
-                <span> {{ formatNumber(item.cantidad) }}</span>
+              <div *ngFor="let item of dataTotalConsultantesServicioSO" class="item-data has-bar">
+                <span [title]="item.agrupador">{{ item.agrupador }}</span>
+                <span>{{ formatNumber(item.cantidad) }}</span>
+                <div class="item-bar"><i [style.width.%]="barWidth(item.cantidad, dataTotalConsultantesServicioSO, 'cantidad')"></i></div>
               </div>
             </div>
           </div>
         </div>
+
       </div>
 
-      <!-- Fila 2: -->
+      <!-- Fila 2: consultas y médicos -->
       <div class="cards-row">
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Total de Consultas</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Total de Consultas</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(atencionesSO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioSO }}-{{ periodoSO }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioSO }}-{{ periodoSO }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
-              <div *ngFor="let item of dataAtencionesSO" class="item-data">
-                <span> {{ item.agrupador }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+              <div *ngFor="let item of dataAtencionesSO" class="item-data has-bar">
+                <span [title]="item.agrupador">{{ item.agrupador }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
+                <div class="item-bar"><i [style.width.%]="barWidth(item.total, dataAtencionesSO)"></i></div>
               </div>
             </div>
           </div>
         </div>
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Número de Médicos</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Número de Médicos</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(totalMedicosSO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioSO }}-{{ periodoSO }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioSO }}-{{ periodoSO }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
-              <div *ngFor="let item of dataMedicosSO" class="item-data">
-                <span> {{ item.agrupador }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+              <div *ngFor="let item of dataMedicosSO" class="item-data has-bar">
+                <span [title]="item.agrupador">{{ item.agrupador }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
+                <div class="item-bar"><i [style.width.%]="barWidth(item.total, dataMedicosSO)"></i></div>
               </div>
             </div>
           </div>
         </div>
+
       </div>
 
-      <!-- Fila 3: -->
+      <!-- Fila 3: horas -->
       <div class="cards-row">
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Total horas programadas</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Total horas programadas</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(horasProgramadasSO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioSO }}-{{ periodoSO }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioSO }}-{{ periodoSO }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
-              <div *ngFor="let item of dataHorasProgramadasSO" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+              <div *ngFor="let item of dataHorasProgramadasSO" class="item-data has-bar">
+                <span [title]="item.agrupador">{{ item.agrupador }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
+                <div class="item-bar"><i [style.width.%]="barWidth(item.total, dataHorasProgramadasSO)"></i></div>
               </div>
             </div>
           </div>
         </div>
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Total de horas Efectivas (Ejecutada)</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Total de horas Efectivas (Ejecutada)</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(horasEfectivasSO) }}</h2>
-              <p class="card-subtitle">Periodo {{ anioSO }}-{{ periodoSO }} | {{ centroAtencion }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioSO }}-{{ periodoSO }} | {{
+                centroAtencion }}</p>
             </div>
             <div class="contend_right">
-              <div *ngFor="let item of dataHorasEfectivasSO" class="item-data">
-                <span> {{ item.actespnom }}</span>
-                <span> {{ formatNumber(item.total) }}</span>
+              <div *ngFor="let item of dataHorasEfectivasSO" class="item-data has-bar">
+                <span [title]="item.agrupador">{{ item.agrupador }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
+                <div class="item-bar"><i [style.width.%]="barWidth(item.total, dataHorasEfectivasSO)"></i></div>
               </div>
             </div>
           </div>
         </div>
+
       </div>
+
     </div>
   </div>
-
 
 </div>

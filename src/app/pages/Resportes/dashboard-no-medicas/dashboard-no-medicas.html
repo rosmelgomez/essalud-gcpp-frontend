@@ -1,4 +1,4 @@
-<div class="main">
+<div class="main rpt">
   <!-- Header con logo y título -->
   <div class="header">
     <div class="header-content">
@@ -140,6 +140,26 @@
           </div>
         </div>
 
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Atenciones prenatales</h5>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
+              <h2 class="card-value">{{ formatNumber(atencionesPrenatalesO) }}</h2>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioO }}-{{ periodoO }} | {{
+                centroAtencion }}</p>
+            </div>
+            <div class="contend_right">
+              <div *ngFor="let item of dataAtencionesPrenatalesO" class="item-data">
+                <span>{{ item.actespnom }}</span>
+                <span>{{ formatNumber(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Fila 2: -->
@@ -747,7 +767,6 @@
       <!-- Fila 1: -->
       <div class="cards-row">
 
-
         <div class="card">
           <div class="card-header">
             <div class="card-title-group">
@@ -762,10 +781,6 @@
             </div>
           </div>
         </div>
-
-
-
-
 
         <div class="card card-interactive">
           <div class="card-header">
@@ -785,9 +800,6 @@
             </div>
           </div>
         </div>
-
-
-
 
       </div>
 
@@ -866,6 +878,7 @@
 
       <!-- Fila 4: -->
       <div class="cards-row">
+
         <div class="card">
           <div class="card-header">
             <div class="card-title-group">
@@ -880,8 +893,6 @@
             </div>
           </div>
         </div>
-
-
 
       </div>
 

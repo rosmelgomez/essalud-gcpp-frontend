@@ -1,135 +1,253 @@
-<div class="main">
-  <div class="encuesta-header" *ngIf="selectedModuloName">
-    <h1>{{ selectedModuloName }} de {{nameCentro}} <span class="badge">Activo</span></h1>
+<div class="main rpt encuesta">
+
+  <!-- Cabecera de página -->
+  <div class="header">
+    <div class="header-content">
+      <h2 class="title">Registro de encuesta</h2>
+      <p class="subtitle">
+        <span><i class="bi bi-hospital"></i>Centro: {{ nameCentro || 'Sin centro seleccionado' }}</span>
+      </p>
+    </div>
+    <div class="header-content header-content-actions" *ngIf="selectedModuloId">
+      <button type="button" class="btn-download" (click)="resetForm()" [disabled]="guardando">
+        <i class="bi bi-grid"></i>
+        Cambiar módulo
+      </button>
+    </div>
   </div>
 
-  <div class="info-modulos" [attr.style]="selectedModuloId ? 'display: none;' : ''">
-    <div *ngIf="!selectedModuloId" class="info-encuesta" >
-      <span class="help-badge">Ayuda</span>
-      <h2>Guia rapida para completar la encuesta</h2>
-      <p>
-        Sigue estos pasos para registrar la evaluacion correctamente y evitar observaciones incompletas.
-      </p>
-      <ol>
-        <li>Selecciona un modulo de consulta.</li>
-        <li>Selecciona una categoria y luego una subcategoria.</li>
-        <li>En cada variable marca <strong>Valido</strong> o <strong>No valido</strong>.</li>
-        <li>Si marcas No valido, describe la observacion en el campo correspondiente.</li>
-        <li>Revisa el avance y finalmente presiona Guardar Encuesta.</li>
-      </ol>
-      <p class="info-tip">
-        Recomendacion: no dejes variables sin calificar; el sistema valida que todas esten completas antes de guardar.
-      </p>
+  <!-- Carga -->
+  <div class="loading" *ngIf="cargando" role="status">
+    <p>Cargando módulos de la encuesta...</p>
+  </div>
 
-      <div class="quick-stats">
-        <div class="stat-item">
-          <div class="stat-value">{{ modulosCompleto.length }}</div>
-          <div class="stat-label">Modulos disponibles</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">5</div>
-          <div class="stat-label">Pasos de llenado</div>
-        </div>
-      </div>
-    </div>
+  <!-- Error de carga -->
+  <div class="load-error" *ngIf="!cargando && errorCarga" role="alert">
+    <div class="alert alert-danger">{{ errorCarga }}</div>
+    <button class="btn-search" type="button" (click)="getInfo()">
+      <i class="bi bi-arrow-clockwise"></i>
+      Reintentar
+    </button>
+  </div>
 
-    <div *ngIf="!selectedModuloId" class="no-modulo-selected">
-      <h2>Selecciona un módulo de consulta para {{nameCentro}}</h2>
-      <div class="modulos-grid">
-        <ng-container>
-          <button *ngFor="let modulo of modulosCompleto" (click)="selectModulo(modulo)" class="btn-modulo">
-            {{ modulo.name_modulo }}
+  <ng-container *ngIf="!cargando && !errorCarga">
+
+    <!-- ===== Paso 1: elegir módulo ===== -->
+    <div class="enc-start" *ngIf="!selectedModuloId">
+      <section class="dash-panel enc-modules">
+        <header class="dash-panel__head">
+          <h3>Selecciona un módulo de consulta</h3>
+          <span class="dash-panel__meta">{{ modulosCompleto.length }} módulos</span>
+        </header>
+
+        <div class="enc-modules__list" *ngIf="modulosCompleto.length > 0; else sinModulos">
+          <button type="button" class="enc-option" *ngFor="let modulo of modulosCompleto" (click)="selectModulo(modulo)">
+            <span class="enc-option__text">
+              <span class="enc-option__name">{{ modulo.name_modulo }}</span>
+              <span class="enc-option__meta">{{ contarCategorias(modulo.id) }} categorías</span>
+            </span>
+            <i class="bi bi-chevron-right enc-option__arrow" aria-hidden="true"></i>
           </button>
+        </div>
+        <ng-template #sinModulos>
+          <p class="enc-empty">No hay módulos de encuesta configurados. Contacta al administrador del sistema.</p>
+        </ng-template>
+      </section>
+
+      <aside class="dash-panel enc-guide" aria-labelledby="enc-guide-title">
+        <header class="dash-panel__head">
+          <h3 id="enc-guide-title">Cómo completar la encuesta</h3>
+        </header>
+        <ol class="enc-guide__steps">
+          <li *ngFor="let paso of pasosGuia">{{ paso }}</li>
+        </ol>
+        <p class="enc-guide__tip">
+          No dejes variables sin calificar: el sistema solo permite guardar cuando todas están completas.
+        </p>
+      </aside>
+    </div>
+
+    <!-- ===== Pasos 2 a 4: categoría, subcategoría y evaluación ===== -->
+    <ng-container *ngIf="selectedModuloId">
+
+      <nav class="enc-trail" aria-label="Ubicación en la encuesta">
+        <button type="button" class="enc-trail__item" (click)="resetForm()" [disabled]="guardando">Módulos</button>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        <span class="enc-trail__item is-current" *ngIf="!selectedCategoriaId">{{ selectedModuloName }}</span>
+        <ng-container *ngIf="selectedCategoriaId">
+          <span class="enc-trail__item">{{ selectedModuloName }}</span>
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          <button type="button" class="enc-trail__item" *ngIf="selectedSubcategoriaId; else categoriaActual"
+            (click)="resetAlSubcategoria()" [disabled]="guardando">{{ selectedCategoriaName }}</button>
+          <ng-template #categoriaActual>
+            <span class="enc-trail__item is-current">{{ selectedCategoriaName }}</span>
+          </ng-template>
+          <ng-container *ngIf="selectedSubcategoriaId">
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            <span class="enc-trail__item is-current">{{ selectedSubcategoriaName }}</span>
+          </ng-container>
         </ng-container>
+      </nav>
+
+      <div class="enc-layout">
+
+        <!-- Categorías del módulo -->
+        <aside class="dash-panel enc-categories">
+          <header class="dash-panel__head">
+            <h3>Categorías</h3>
+            <span class="dash-panel__meta">{{ categoriasFiltradas.length }}</span>
+          </header>
+          <div class="enc-categories__list" *ngIf="categoriasFiltradas.length > 0; else sinCategorias">
+            <button type="button" class="enc-option enc-option--compact" *ngFor="let categoria of categoriasFiltradas"
+              [class.is-active]="categoria.id === selectedCategoriaId" [attr.aria-current]="categoria.id === selectedCategoriaId"
+              [disabled]="guardando" (click)="selectCategoria(categoria)">
+              <span class="enc-option__text">
+                <span class="enc-option__name">{{ categoria.name_categoria }}</span>
+                <span class="enc-option__meta">{{ contarSubcategorias(categoria.id) }} subcategorías</span>
+              </span>
+            </button>
+          </div>
+          <ng-template #sinCategorias>
+            <p class="enc-empty">Este módulo no tiene categorías configuradas.</p>
+          </ng-template>
+        </aside>
+
+        <div class="enc-main">
+
+          <!-- Sin categoría elegida -->
+          <div class="select-periodo" *ngIf="!selectedCategoriaId">
+            <p>Selecciona una categoría para ver sus subcategorías.</p>
+          </div>
+
+          <ng-container *ngIf="selectedCategoriaId">
+
+            <!-- Confirmación del último guardado -->
+            <div class="enc-success" *ngIf="ultimaGuardada" role="status">
+              <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+              <span>Evaluación de <strong>{{ ultimaGuardada }}</strong> guardada. Continúa con otra subcategoría.</span>
+            </div>
+
+            <!-- Subcategorías -->
+            <section class="dash-panel enc-subcats" *ngIf="!selectedSubcategoriaId">
+              <header class="dash-panel__head">
+                <h3>Subcategorías de {{ selectedCategoriaName }}</h3>
+                <span class="dash-panel__meta">
+                  {{ subcategoriasGuardadasEnCategoria }} de {{ subcategoriasFiltradas.length }} guardadas
+                </span>
+              </header>
+
+              <div class="enc-subcats__grid" *ngIf="subcategoriasFiltradas.length > 0; else sinSubcategorias">
+                <button type="button" class="enc-option" *ngFor="let subcategoria of subcategoriasFiltradas"
+                  [class.is-saved]="subcategoriasGuardadas.has(subcategoria.id)"
+                  [disabled]="subcategoriasGuardadas.has(subcategoria.id)"
+                  (click)="selectSubcategoria(subcategoria)">
+                  <span class="enc-option__text">
+                    <span class="enc-option__name">{{ subcategoria.name_categoria }}</span>
+                    <span class="enc-option__meta" *ngIf="!subcategoriasGuardadas.has(subcategoria.id)">
+                      {{ contarVariables(subcategoria.id) }} variables por evaluar
+                    </span>
+                    <span class="enc-option__meta is-ok" *ngIf="subcategoriasGuardadas.has(subcategoria.id)">
+                      Guardada en esta sesión
+                    </span>
+                  </span>
+                  <i class="bi enc-option__arrow" aria-hidden="true"
+                    [ngClass]="subcategoriasGuardadas.has(subcategoria.id) ? 'bi-check-circle-fill' : 'bi-chevron-right'"></i>
+                </button>
+              </div>
+              <ng-template #sinSubcategorias>
+                <p class="enc-empty">Esta categoría no tiene subcategorías configuradas.</p>
+              </ng-template>
+
+              <p class="enc-done" *ngIf="subcategoriasFiltradas.length > 0 && subcategoriasGuardadasEnCategoria === subcategoriasFiltradas.length">
+                <i class="bi bi-check2-all" aria-hidden="true"></i>
+                Completaste todas las subcategorías de {{ selectedCategoriaName }}. Elige otra categoría o cambia de módulo.
+              </p>
+            </section>
+
+            <!-- Evaluación de variables -->
+            <section class="dash-panel enc-eval" *ngIf="selectedSubcategoriaId">
+              <header class="enc-eval__head">
+                <div>
+                  <h3>{{ selectedSubcategoriaName }}</h3>
+                  <p>Marca si la información es consistente (Válido) o presenta alguna observación (No válido).</p>
+                </div>
+                <div class="enc-progress" role="progressbar" aria-label="Variables calificadas"
+                  [attr.aria-valuenow]="totalCalificadas" aria-valuemin="0" [attr.aria-valuemax]="variablesConCalificacion.length">
+                  <span class="enc-progress__label">
+                    <strong>{{ totalCalificadas }}</strong> de {{ variablesConCalificacion.length }} calificadas
+                  </span>
+                  <span class="enc-progress__track"><span class="enc-progress__bar" [style.transform]="'scaleX(' + progreso / 100 + ')'"></span></span>
+                </div>
+              </header>
+
+              <p class="enc-empty" *ngIf="variablesConCalificacion.length === 0">
+                Esta subcategoría no tiene variables configuradas.
+              </p>
+
+              <ol class="enc-vars" *ngIf="variablesConCalificacion.length > 0">
+                <li class="enc-var" *ngFor="let variable of variablesConCalificacion; trackBy: trackVariable"
+                  [class.is-ok]="variable.calificacion === 'valido'"
+                  [class.is-bad]="variable.calificacion === 'no_valido'">
+                  <span class="enc-var__num">{{ variable.index }}</span>
+
+                  <div class="enc-var__body">
+                    <p class="enc-var__name" [id]="'var-' + variable.id">{{ variable.name_variable }}</p>
+
+                    <div class="enc-var__obs" *ngIf="variable.mostrarObservacion">
+                      <label class="field-label" [for]="'obs-' + variable.id">
+                        {{ variable.calificacion === 'no_valido' ? 'Describe la observación' : 'Observación (opcional)' }}
+                      </label>
+                      <textarea [id]="'obs-' + variable.id" rows="2" [(ngModel)]="variable.observacion"
+                        [disabled]="guardando"
+                        [placeholder]="variable.calificacion === 'no_valido' ? '¿Qué inconsistencia encontraste?' : 'Comentario adicional'"></textarea>
+                    </div>
+                    <button type="button" class="enc-link" *ngIf="!variable.mostrarObservacion"
+                      (click)="variable.mostrarObservacion = true" [disabled]="guardando">
+                      <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                      Agregar observación
+                    </button>
+                  </div>
+
+                  <div class="enc-seg" role="radiogroup" [attr.aria-labelledby]="'var-' + variable.id">
+                    <label class="enc-seg__opt enc-seg__opt--ok">
+                      <input type="radio" [name]="'cal-' + variable.id" value="valido" [disabled]="guardando"
+                        [checked]="variable.calificacion === 'valido'" (change)="calificar(variable, 'valido')" />
+                      <span><i class="bi bi-check-lg" aria-hidden="true"></i>Válido</span>
+                    </label>
+                    <label class="enc-seg__opt enc-seg__opt--bad">
+                      <input type="radio" [name]="'cal-' + variable.id" value="no_valido" [disabled]="guardando"
+                        [checked]="variable.calificacion === 'no_valido'" (change)="calificar(variable, 'no_valido')" />
+                      <span><i class="bi bi-x-lg" aria-hidden="true"></i>No válido</span>
+                    </label>
+                  </div>
+                </li>
+              </ol>
+
+              <footer class="enc-eval__foot" *ngIf="variablesConCalificacion.length > 0">
+                <p class="enc-eval__status" [class.is-error]="!!errorGuardado" aria-live="polite">
+                  <ng-container *ngIf="errorGuardado">{{ errorGuardado }}</ng-container>
+                  <ng-container *ngIf="!errorGuardado && faltantes > 0">
+                    Faltan {{ faltantes }} variable{{ faltantes === 1 ? '' : 's' }} por calificar.
+                  </ng-container>
+                  <ng-container *ngIf="!errorGuardado && faltantes === 0">
+                    Todas las variables están calificadas{{ totalNoValidas ? ' · ' + totalNoValidas + ' no válida' + (totalNoValidas === 1 ? '' : 's') : '' }}.
+                  </ng-container>
+                </p>
+                <div class="enc-eval__actions">
+                  <button type="button" class="btn-download" (click)="resetAlSubcategoria()" [disabled]="guardando">
+                    Cancelar
+                  </button>
+                  <button type="button" class="btn-search" (click)="guardarEncuesta()"
+                    [disabled]="guardando || faltantes > 0">
+                    <i class="bi" [ngClass]="guardando ? 'bi-hourglass-split' : 'bi-save'" aria-hidden="true"></i>
+                    {{ guardando ? 'Guardando...' : 'Guardar encuesta' }}
+                  </button>
+                </div>
+              </footer>
+            </section>
+          </ng-container>
+        </div>
       </div>
-    </div>
-  </div>
-
-
-  <div *ngIf="selectedModuloId" class="filtro-section">
-    <h3>Selecciona una Categoría</h3>
-    <div class="filtro-buttons">
-      <ng-container>
-        <button *ngFor="let categoria of categoriasFiltradas" (click)="selectCategoria(categoria)"
-          class="btn-filtro"
-          [class.active-filter]="categoria.id === selectedCategoriaId">
-          {{ categoria.name_categoria }}
-        </button>
-      </ng-container>
-    </div>
-  </div>
-
-  <div *ngIf="selectedCategoriaId" class="filtro-section">
-    <h3>{{ selectedCategoriaName }} - Selecciona una Subcategoría</h3>
-    <div class="filtro-buttons">
-      <ng-container>
-        <button *ngFor="let subcategoria of subcategoriasFiltradas"
-          (click)="!subcategoriasGuardadas.has(subcategoria.id) && selectSubcategoria(subcategoria)"
-          class="btn-filtro"
-          [class.active-filter]="subcategoria.id === selectedSubcategoriaId"
-          [class.saved-filter]="subcategoriasGuardadas.has(subcategoria.id)"
-          [disabled]="subcategoriasGuardadas.has(subcategoria.id)"
-          [title]="subcategoriasGuardadas.has(subcategoria.id) ? 'Subcategoría ya guardada' : subcategoria.name_categoria">
-          <span *ngIf="subcategoriasGuardadas.has(subcategoria.id)" class="saved-check">✓ </span>{{ subcategoria.name_categoria }}
-        </button>
-      </ng-container>
-    </div>
-  </div>
-
-  <div *ngIf="selectedSubcategoriaId && variablesConCalificacion.length > 0" class="encuesta-form">
-    <div class="variable-selector">
-      <label>Variable a evaluar</label>
-      <select class="variable-select" [(ngModel)]="currentVariableIndex">
-        <option *ngFor="let variable of variablesConCalificacion; let i = index" [ngValue]="i">
-          {{ variable.index }}. {{ variable.name_variable }}
-        </option>
-      </select>
-    </div>
-
-    <div *ngIf="getCurrentVariable()" class="variable-evaluation">
-      <h3>{{ getCurrentVariable()?.index }}. {{ getCurrentVariable()?.name_variable }}</h3>
-      <p class="instructions">
-        Marca si la información se considera consistente (Válido) o si presenta alguna observación (No válido).
-      </p>
-
-      <div class="calificacion-options">
-        <label class="radio-option">
-          <input type="radio" [name]="'calificacion_' + getCurrentVariable()?.id" value="valido"
-            [(ngModel)]="getCurrentVariable()!.calificacion">
-          <span class="radio-label">Válido</span>
-        </label>
-        <label class="radio-option">
-          <input type="radio" [name]="'calificacion_' + getCurrentVariable()?.id" value="no_valido"
-            [(ngModel)]="getCurrentVariable()!.calificacion">
-          <span class="radio-label">No válido</span>
-        </label>
-      </div>
-
-      <div class="observacion-field">
-        <label>Observaciones (opcional)</label>
-        <textarea [(ngModel)]="getCurrentVariable()!.observacion" placeholder="Ingresa tus observaciones aquí..."
-          rows="3"></textarea>
-      </div>
-    </div>
-
-    <div class="navigation-buttons">
-      <button (click)="irAnterior()" [disabled]="currentVariableIndex === 0" class="btn-secondary">
-        ← Anterior
-      </button>
-
-      <span class="current-info">
-        Variable {{ currentVariableIndex + 1 }} de {{ variablesConCalificacion.length }}
-      </span>
-
-      <button (click)="irSiguiente()" [disabled]="currentVariableIndex === variablesConCalificacion.length - 1"
-        class="btn-secondary">
-        Siguiente →
-      </button>
-    </div>
-
-    <div class="save-button-container">
-       <button (click)="resetForm()" class="btn-secondary">Volver a Modulo</button>
-      <button (click)="guardarEncuesta()" class="btn-primary">Guardar Encuesta</button>
-    </div>
-  </div>
+    </ng-container>
+  </ng-container>
 </div>

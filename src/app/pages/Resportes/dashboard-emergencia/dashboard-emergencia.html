@@ -1,4 +1,4 @@
-<div class="main">
+<div class="main rpt">
   <!-- Header con logo y título -->
   <div class="header">
     <div class="header-content">
@@ -75,14 +75,21 @@
     <div *ngIf="!loading && !selectPeriodo" class="dashboard-content">
       <!-- Fila 1: -->
       <div class="cards-row">
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a class="card-link" [href]="'/indicador/emergencia/ate-prioridad1'">
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/emergencia/ate-prioridad1" class="card-link">
                 <h5 class="card-title">Total de Atenciones Prioridad I</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(numberPrioridad1) }}</h2>
-              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio }}-{{ periodo }} | {{
+                centroNombre }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of prioridad1" class="item-data">
@@ -90,16 +97,24 @@
                 <span> {{ formatNumber(item.total) }}</span>
               </div>
             </div>
+
           </div>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a class="card-link" [href]="'/indicador/emergencia/ate-prioridad2'">
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/emergencia/ate-prioridad2" class="card-link">
                 <h5 class="card-title">Total de Atenciones Prioridad II</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(numberPrioridad2) }}</h2>
-              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio }}-{{ periodo }} | {{
+                centroNombre }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of prioridad2" class="item-data">
@@ -107,20 +122,32 @@
                 <span> {{ formatNumber(item.total) }}</span>
               </div>
             </div>
+
           </div>
         </div>
+
+
+
       </div>
 
       <!-- Fila 2: -->
       <div class="cards-row">
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a class="card-link" [href]="'/indicador/emergencia/ate-prioridad3'">
+
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/emergencia/ate-prioridad3" class="card-link">
                 <h5 class="card-title">Total de Atenciones Prioridad III</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(numberPrioridad3) }}</h2>
-              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio }}-{{ periodo }} | {{
+                centroNombre }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of prioridad3" class="item-data">
@@ -128,16 +155,24 @@
                 <span> {{ formatNumber(item.total) }}</span>
               </div>
             </div>
+
           </div>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a class="card-link" [href]="'/indicador/emergencia/ate-prioridad4'">
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/emergencia/ate-prioridad4" class="card-link">
                 <h5 class="card-title">Total de Atenciones Prioridad IV</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(numberPrioridad4) }}</h2>
-              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio }}-{{ periodo }} | {{
+                centroNombre }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of prioridad4" class="item-data">
@@ -145,20 +180,32 @@
                 <span> {{ formatNumber(item.total) }}</span>
               </div>
             </div>
+
           </div>
         </div>
+
+
+
+
       </div>
 
       <!-- Fila 3: -->
       <div class="cards-row">
-        <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a class="card-link" [href]="'/indicador/emergencia/ate-prioridad5'">
+
+        <div class="card card-interactive">
+          <div class="card-header">
+            <div class="card-title-group">
+              <a href="/indicador/emergencia/ate-prioridad5" class="card-link">
                 <h5 class="card-title">Total de Atenciones Prioridad V</h5>
               </a>
+            </div>
+            <i class="bi bi-chevron-right card-arrow"></i>
+          </div>
+          <div class="card-body">
+            <div class="contend_left">
               <h2 class="card-value">{{ formatNumber(numberPrioridad5) }}</h2>
-              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio }}-{{ periodo }} | {{
+                centroNombre }}</p>
             </div>
             <div class="contend_right">
               <div *ngFor="let item of prioridad5" class="item-data">
@@ -166,45 +213,66 @@
                 <span> {{ formatNumber(item.total) }}</span>
               </div>
             </div>
+
           </div>
         </div>
+
         <div class="card">
-          <div class="card-body">
-            <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Defunciones registradas</h5>
-              </a>
-              <h2 class="card-value">{{ formatNumber(numberDefunciones) }}</h2>
-              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Defunciones registradas</h5>
             </div>
           </div>
+          <div class="card-body">
+            <div class="contend_left">
+              <h2 class="card-value">{{ formatNumber(numberDefunciones) }}</h2>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio }}-{{ periodo }} | {{
+                centroNombre }}</p>
+            </div>
+
+          </div>
         </div>
+
+
+
       </div>
 
       <!-- Fila 4: -->
       <div class="cards-row">
+
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Egreso Pac.Sala Obs.<= 24 Horas</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Egreso Pac.Sala Obs.<= 24 Horas</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(numberEstanciasMenor24h) }}</h2>
-              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio }}-{{ periodo }} | {{
+                centroNombre }}</p>
             </div>
+
           </div>
         </div>
+
         <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h5 class="card-title">Egreso Pac.Sala Obs.> 24 Horas</h5>
+            </div>
+          </div>
           <div class="card-body">
             <div class="contend_left">
-              <a class="card-link">
-                <h5 class="card-title">Egreso Pac.Sala Obs.> 24 Horas</h5>
-              </a>
               <h2 class="card-value">{{ formatNumber(numberEstanciasMayor24h) }}</h2>
-              <p class="card-subtitle">Período {{ periodo }} | Centro: {{ centroNombre }}</p>
+              <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anio }}-{{ periodo }} | {{
+                centroNombre }}</p>
             </div>
+
           </div>
         </div>
+
       </div>
     </div>
 

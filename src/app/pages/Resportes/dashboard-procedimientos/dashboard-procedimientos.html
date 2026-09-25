@@ -1,4 +1,4 @@
-<div class="main">
+<div class="main rpt">
     <!-- Header con logo y título -->
     <div class="header">
         <div class="header-content">
@@ -79,30 +79,31 @@
         <!-- Contenido de Procedimientos -->
         <div *ngIf="!loadingP && !errorP && !selectPeriodoP" class="dashboard-content">
             <!-- Grid de Tarjetas de Procedimientos -->
-            <div class="cards-row">
-                <div *ngFor="let item of informacion" class="card">
-                    <div class="card-body">
-                        <!-- Izquierda: Nombre de Procedimiento e Indicador General -->
-                        <div class="contend_left">
+            <div class="cards-row cards-row--4">
+
+                <div class="card" *ngFor="let item of informacion">
+                    <div class="card-header">
+                        <div class="card-title-group">
                             <h5 class="card-title">{{ item.nombre }}</h5>
-                            <h2 class="card-value">{{ formatNumber(item.total) }}</h2>
-                            <p class="card-subtitle">Periodo {{ anioP }}-{{ periodoP }} | {{ centroAtencion }}</p>
                         </div>
-                        <!-- Derecha: Muestra el desglose por servicio de los primeros registros -->
-                        <div class="contend_right" style="max-height: 150px; overflow-y: auto; padding-right: 4px;">
-                            <div *ngFor="let row of item.data | slice:0:4" class="item-data"
-                                style="margin-bottom: 6px;">
-                                <span>{{ row.servicio || 'Sin Servicio' }}</span>
-                                <span>{{ formatNumber(row.total || 1) }}</span>
-                            </div>
-                            <div *ngIf="item.data.length === 0"
-                                style="color: #999; font-size: 13px; text-align: center; margin-top: 30px; font-weight: 500;">
-                                <i class="bi bi-info-circle" style="margin-right: 4px;"></i> Sin registros
+                    </div>
+                    <div class="card-body">
+                        <div class="contend_left">
+                            <h2 class="card-value">{{ formatNumber(item.total) }}</h2>
+                            <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioP }}-{{ periodoP }}
+                                |
+                                {{centroAtencion }}</p>
+                        </div>
+                        <div class="contend_right">
+                            <div *ngFor="let item of item.data" class="item-data">
+                                <span>{{ item.servicio }}</span>
+                                <span>{{ formatNumber(item.total) }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>

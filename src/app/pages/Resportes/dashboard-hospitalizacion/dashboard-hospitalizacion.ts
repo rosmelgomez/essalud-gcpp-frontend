@@ -107,6 +107,8 @@ export class DashboardHospitalizacion {
     this.loadingE = true;
     this.errorE = null;
     this.noDataE = false;
+    // Al mostrar "Cargando" se retiran del DOM los contenedores: las instancias previas ya no sirven
+    this.destroyAllCharts();
 
 
     forkJoin({
@@ -117,19 +119,18 @@ export class DashboardHospitalizacion {
         this.dataEgresos = data.egresos;
         this.dataPacientesMes = data.pacientesMes;
         this.totalEgresos = data.egresos.length;
-        this.totalDiasEstancia = (data.egresos.reduce((sum, item) => sum + Number(item.dias_hospit), 0)) / data.egresos.length;
+        this.totalDiasEstancia = data.egresos.length
+          ? data.egresos.reduce((sum, item) => sum + Number(item.dias_hospit), 0) / data.egresos.length
+          : 0;
         this.totalPacientesMes = data.pacientesMes.reduce((sum, item) => sum + Number(item.pacientes_hospitalizados), 0)
-
-
-        this.buildBarDiagnosticosChart();
-        this.buildBarFechaAtenChart();
-        this.buildBarServicioChart();
-        this.buildBarCapituloChart();
 
         this.selectPeriodoE = false;
         this.loadingE = false;
 
+        // Primero se pinta la vista: los contenedores de los gráficos están dentro de un *ngIf
+        // que depende de loadingE/selectPeriodoE y no existen hasta este detectChanges.
         this.cdr.detectChanges();
+        this.buildAllCharts();
       },
       error: (err) => {
         this.errorE = 'Error al cargar los datos: ' + err.message;
@@ -506,11 +507,27 @@ export class DashboardHospitalizacion {
       | 'Egresos Hospitalarios'
   ): void {
     this.activeTab = tab;
+    this.destroyAllCharts();
+    this.cdr.detectChanges();
+    this.buildAllCharts();
+  }
+
+  private buildAllCharts(): void {
     this.buildBarFechaAtenChart();
     this.buildBarDiagnosticosChart();
     this.buildBarServicioChart();
     this.buildBarCapituloChart();
-    this.cdr.detectChanges();
+  }
+
+  private destroyAllCharts(): void {
+    this.destroyChart(this.chartPacientesMes);
+    this.destroyChart(this.chartDiagnosticos);
+    this.destroyChart(this.chartServicio);
+    this.destroyChart(this.chartCapitulo);
+    this.chartPacientesMes = null;
+    this.chartDiagnosticos = null;
+    this.chartServicio = null;
+    this.chartCapitulo = null;
   }
 
 
