@@ -6,6 +6,22 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { EstablecimientoService } from '../../services/establecimiento-service';
 import { LocalStorageService } from '../../services/local-storage-service';
 
+type HomeView = 'main' | 'ses' | 'consulta' | 'quirurgico' | 'gestion' | 'encuesta';
+type HomeTone = 'clinical' | 'data' | 'admin';
+
+interface HomeModule {
+  label: string;
+  icon: string;
+  tone: HomeTone;
+  /** Navegación dentro del SPA */
+  route?: string;
+  /** Navegación con recarga completa (se respeta el comportamiento original) */
+  href?: string;
+  /** Abre un submenú */
+  action?: 'ses' | 'consulta' | 'quirurgico' | 'gestion' | 'encuesta';
+  roles?: string[];
+}
+
 @Component({
   selector: 'app-home-page',
   standalone: true,
@@ -57,6 +73,55 @@ export class HomePage implements OnInit {
   showSurveyReminder: boolean = false;
   surveyReminderError: string = '';
 
+  private readonly moduleCatalog: Record<HomeView, HomeModule[]> = {
+    main: [
+      { label: 'Variables SES', icon: 'pulse', tone: 'clinical', action: 'ses' },
+      { label: 'Tablas Homologadas', icon: 'table', tone: 'data', route: '/reporte/dashboard-tablas-homologadas' },
+      { label: 'Tramas', icon: 'layers', tone: 'data', route: '/reporte/dashboard-tramas' },
+      { label: 'Reportes gerenciales', icon: 'bars', tone: 'data', route: '/reporte/dashboard-gerenciales', roles: ['ADMIN', 'CONSULTA'] },
+      { label: 'Reporteador', icon: 'file-chart', tone: 'data', route: '/reporte/dashboard-reporteador', roles: ['ADMIN', 'CONSULTA'] },
+      { label: 'Patología', icon: 'microscope', tone: 'clinical', href: '/reporte/dashboard-patologia', roles: ['ADMIN'] },
+      { label: 'Seguimiento Paciente', icon: 'user-search', tone: 'clinical', href: '/reporte/dashboard-seguimiento-paciente', roles: ['ADMIN'] },
+      { label: 'Encuesta de Conformidad', icon: 'clipboard-check', tone: 'admin', action: 'encuesta' },
+      { label: 'Gestión Documentaria', icon: 'folder', tone: 'admin', action: 'gestion' },
+      { label: 'Auditoría del Sistema', icon: 'shield', tone: 'admin', route: '/logs-reports', roles: ['ADMIN'] },
+    ],
+    ses: [
+      { label: 'Consulta Externa', icon: 'hospital', tone: 'clinical', action: 'consulta' },
+      { label: 'Emergencia', icon: 'siren', tone: 'clinical', route: '/reporte/dashboard-emergencia' },
+      { label: 'Centro quirúrgico', icon: 'scissors', tone: 'clinical', action: 'quirurgico' },
+      { label: 'Procedimientos', icon: 'syringe', tone: 'clinical', route: '/reporte/dashboard-procedimientos' },
+      { label: 'Hospitalización', icon: 'bed', tone: 'clinical', route: '/reporte/dashboard-hospitalizacion' },
+      { label: 'Farmacia', icon: 'pill', tone: 'clinical', href: '/reporte/dashboard-farmacia' },
+    ],
+    consulta: [
+      { label: 'Médicas', icon: 'stethoscope', tone: 'clinical', href: '/reporte/dashboard-medicas' },
+      { label: 'No Médicas', icon: 'users', tone: 'clinical', href: '/reporte/dashboard-no-medicas' },
+      { label: 'Odontológicas', icon: 'tooth', tone: 'clinical', href: '/reporte/dashboard-odontologicas' },
+    ],
+    quirurgico: [
+      { label: 'Intervenciones quirúrgicas', icon: 'clipboard-list', tone: 'clinical', href: '/reporte/dashboard-intervenciones-quirurgicas' },
+      { label: 'Trasplante', icon: 'heart', tone: 'clinical', href: '/reporte/dashboard-transplante' },
+    ],
+    gestion: [
+      { label: 'Gestión Documentaria', icon: 'folder', tone: 'admin', route: '/documento/reports' },
+      { label: 'Auditoría de Documentos', icon: 'file-search', tone: 'admin', route: '/documento/auditoria', roles: ['ADMIN'] },
+    ],
+    encuesta: [
+      { label: 'Encuesta de Conformidad', icon: 'clipboard-check', tone: 'admin', route: '/encuesta' },
+      { label: 'Respuesta de Encuestas', icon: 'pie', tone: 'admin', route: '/dashboard-encuesta', roles: ['ADMIN'] },
+    ],
+  };
+
+  private readonly viewTitles: Record<HomeView, string> = {
+    main: 'Módulos',
+    ses: 'Variables SES',
+    consulta: 'Consulta Externa',
+    quirurgico: 'Centro quirúrgico',
+    gestion: 'Gestión Documentaria',
+    encuesta: 'Encuesta de Conformidad',
+  };
+
   constructor(
     private formBuilder: FormBuilder,
     private establecimientoService: EstablecimientoService,
@@ -64,6 +129,84 @@ export class HomePage implements OnInit {
     private cdr: ChangeDetectorRef,
     private router: Router,
   ) { }
+
+  /* ---------- Vista de módulos ---------- */
+
+  get currentView(): HomeView {
+    if (this.showModuloConsultaExterna) return 'consulta';
+    if (this.showModuloCentroQuirurgico) return 'quirurgico';
+    if (this.showVariablesSES) return 'ses';
+    if (this.showModuloGestionDocumentaria) return 'gestion';
+    if (this.showModuloEncuesta) return 'encuesta';
+    return 'main';
+  }
+
+  get breadcrumb(): Array<{ label: string; view: HomeView }> {
+    const view = this.currentView;
+    const trail: HomeView[] =
+      view === 'main' ? ['main']
+        : view === 'consulta' || view === 'quirurgico' ? ['main', 'ses', view]
+          : ['main', view];
+    return trail.map((v) => ({ label: this.viewTitles[v], view: v }));
+  }
+
+  get currentModules(): HomeModule[] {
+    return this.visibleModules(this.currentView);
+  }
+
+  get mainModuleCount(): number {
+    return this.visibleModules('main').length;
+  }
+
+  private visibleModules(view: HomeView): HomeModule[] {
+    return this.moduleCatalog[view].filter((m) => !m.roles || m.roles.some((r) => this.hasRole(r)));
+  }
+
+  hasRole(role: string): boolean {
+    const roles = this.user?.roles as unknown;
+    return Array.isArray(roles) ? roles.includes(role) : roles === role;
+  }
+
+  get firstName(): string {
+    return (this.user?.name ?? '').trim().split(/\s+/)[0] ?? '';
+  }
+
+  /** Cantidad de secciones que abre un módulo agrupador (0 si navega directo). */
+  childCount(module: HomeModule): number {
+    if (!module.action) {
+      return 0;
+    }
+    if ((module.action === 'gestion' || module.action === 'encuesta') && !this.hasRole('ADMIN')) {
+      return 0;
+    }
+    return this.visibleModules(module.action).length;
+  }
+
+  openModule(module: HomeModule): void {
+    switch (module.action) {
+      case 'ses': this.showSESVariables(); break;
+      case 'consulta': this.showMainConsultaExterna(); break;
+      case 'quirurgico': this.showMainCentroQuirurgico(); break;
+      case 'gestion': this.showMainGestionDocumentaria(); break;
+      case 'encuesta': this.showMainEncuesta(); break;
+    }
+  }
+
+  goToView(view: HomeView): void {
+    if (view === 'main') {
+      this.retornoMainModulos();
+    } else if (view === 'ses') {
+      this.retornoMainSES();
+    }
+  }
+
+  trackByModule = (_: number, m: HomeModule): string => m.label;
+
+  cancelChangeCentro(): void {
+    this.closeDropdown();
+    this.closeDropdownRed();
+    this.selectCentro = true;
+  }
 
   /* Métodos para el manejo de componentes */
   showSESVariables(): void {
@@ -90,6 +233,7 @@ export class HomePage implements OnInit {
 
   retornoMainSES(): void {
     this.showModulosPrincipales = false;
+    this.showVariablesSES = true;
     this.btnReturnModulos = true;
     this.showModuloConsultaExterna = false;
     this.showModuloCentroQuirurgico = false;

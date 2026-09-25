@@ -45,6 +45,14 @@ export class TmiIndicadoresService {
     return this.http.put(base_url + `/update-centro`, dto);
   }
 
+  /// cierre (fecha en que se generan centros y estándares del nuevo periodo)
+  getQueryCierres() {
+    return this.http.get<any[]>(base_url + `/cierre/lista`);
+  }
+  putQueryFechaCierre(periodo: string, fecha_cierre: string) {
+    return this.http.put(base_url + `/cierre/${periodo}`, { fecha_cierre });
+  }
+
   /// consultas
   /// CE_Concent
   getQueryCeConcent(periodo: string) {

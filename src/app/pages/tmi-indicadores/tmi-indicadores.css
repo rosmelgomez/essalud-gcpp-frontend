@@ -282,6 +282,56 @@ to {
     margin: 0;
 }
 
+/* spinner de carga */
+.loading::before {
+    content: '';
+    display: block;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 16px;
+    border: 4px solid rgba(0, 100, 175, 0.15);
+    border-top-color: #0064AF;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.loading .loading-sub {
+    display: block;
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.loading-excel {
+    padding: 32px 40px;
+}
+
+.btn-excel {
+    gap: 8px;
+}
+
+.btn-excel:disabled {
+    opacity: 0.75;
+    cursor: wait;
+}
+
+.spinner-btn {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .select-periodo {
     text-align: center;
     padding: 80px 40px;
@@ -378,6 +428,7 @@ to {
     width: 100%;
     height: 28px;
     box-sizing: border-box;
+    text-align: center;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -485,6 +536,8 @@ to {
     color: #334155;
     display: flex;
     align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .row-table .cell.num {
@@ -1088,4 +1141,157 @@ to {
     .btn-modal-action {
         width: 100%;
     }
+}
+
+/* Alinear encabezado y filtros con las filas: las filas pierden el ancho de la
+   barra de scroll vertical (8px), así que se reserva el mismo espacio a la derecha.
+   Se usa un borde transparente para no depender del padding de cada breakpoint. */
+.grid-table>.header-table,
+.grid-table>.filters-table {
+    border-right: 8px solid transparent;
+}
+
+/* ===== CIERRE (tabla centrada) ===== */
+.cierre-content {
+    display: flex;
+    justify-content: center;
+}
+
+.cierre-card {
+    width: 100%;
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.cierre-card>h3 {
+    text-align: center;
+}
+
+.cierre-ayuda {
+    margin: 0 auto 12px;
+    max-width: 720px;
+    text-align: center;
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.cierre-table-wrapper {
+    overflow-x: auto;
+    max-height: 60vh;
+    border-radius: 8px;
+}
+
+.cierre-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.cierre-table th,
+.cierre-table td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 8px 10px;
+}
+
+.cierre-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #0064AF;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.cierre-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+.cierre-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.cierre-table tbody tr.cierre-hoy {
+    background: #eff6ff;
+}
+
+.cierre-table .btn-icon-edit:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.cierre-periodo {
+    font-weight: 600;
+}
+
+.cierre-sub {
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+.cierre-hoy-tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #0064AF;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 700;
+}
+
+.estado-badge {
+    display: inline-block;
+    min-width: 88px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.estado-pendiente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.estado-en_proceso {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.estado-ejecutado {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.estado-error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.cierre-error {
+    margin: 4px auto 0;
+    max-width: 220px;
+    font-size: 0.68rem;
+    color: #dc2626;
+    overflow-wrap: anywhere;
+}
+
+.cierre-vacio {
+    padding: 24px;
+    color: #94a3b8;
+}
+
+.cierre-modal {
+    max-width: 420px;
+}
+
+.cierre-modal .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }

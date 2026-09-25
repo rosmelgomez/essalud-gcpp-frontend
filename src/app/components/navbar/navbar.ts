@@ -70,6 +70,26 @@ export class Navbar implements OnInit, OnDestroy {
     }
   }
 
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeProfile();
+    this.closeMenu();
+  }
+
+  getShortName(): string {
+    const first = this.user?.name?.trim().split(/\s+/)[0] ?? '';
+    const last = this.user?.lastname?.trim().split(/\s+/)[0] ?? '';
+    return `${first} ${last}`.trim() || 'Usuario';
+  }
+
+  getRoleLabel(): string {
+    const roles = this.user?.roles;
+    if (Array.isArray(roles)) {
+      return roles.join(' · ');
+    }
+    return roles ? String(roles) : '';
+  }
+
   getInitials(): string {
     if (!this.user?.name || !this.user?.lastname) {
       return 'US';

@@ -1,289 +1,285 @@
 <div class="main">
-	<section class="page-shell">
-		<header class="page-header">
-			<div>
-				<p class="eyebrow">Administración de Accesos</p>
-				<h1>Gestor de Solicitudes de Acceso</h1>
-				<p class="subtitle">Bandeja de control de solicitudes de ingreso a la plataforma.</p>
-			</div>
-			<div class="badge-count">{{ totalSolicitudes }} solicitudes registradas</div>
-		</header>
+	<header class="page-header">
+		<div>
+			<h1>Solicitudes de Acceso</h1>
+			<p class="subtitle" *ngIf="!isLoading; else subtitleLoading">
+				<ng-container *ngIf="pendientesCount > 0; else allClear">
+					<span class="num strong">{{ pendientesCount }}</span>
+					{{ pendientesCount === 1 ? 'solicitud espera' : 'solicitudes esperan' }} tu revisión
+				</ng-container>
+				<ng-template #allClear>No hay solicitudes pendientes</ng-template>
+				<span class="dot-sep" aria-hidden="true"></span>
+				<span class="num">{{ totalSolicitudes }}</span> registradas en total
+			</p>
+			<ng-template #subtitleLoading>
+				<p class="subtitle">Cargando solicitudes…</p>
+			</ng-template>
+		</div>
+	</header>
 
-		<!-- Panel de Estadísticas (KPIs) -->
-		<section class="stats-panel">
-			<div class="stat-card total">
-				<div class="stat-icon">📋</div>
-				<div class="stat-info">
-					<span class="stat-label">Total Solicitudes</span>
-					<strong class="stat-value">{{ totalSolicitudes }}</strong>
-				</div>
-			</div>
-			<div class="stat-card pending">
-				<div class="stat-icon pulse">⏳</div>
-				<div class="stat-info">
-					<span class="stat-label">Pendientes</span>
-					<strong class="stat-value">{{ pendientesCount }}</strong>
-				</div>
-			</div>
-			<div class="stat-card approved">
-				<div class="stat-icon">✔️</div>
-				<div class="stat-info">
-					<span class="stat-label">Aprobadas</span>
-					<strong class="stat-value">{{ aprobadasCount }}</strong>
-				</div>
-			</div>
-			<div class="stat-card rejected">
-				<div class="stat-icon">❌</div>
-				<div class="stat-info">
-					<span class="stat-label">Rechazadas</span>
-					<strong class="stat-value">{{ rechazadasCount }}</strong>
-				</div>
-			</div>
-		</section>
+	<!-- Barra de control: estados + filtros -->
+	<section class="toolbar" aria-label="Filtros">
+		<div class="status-tabs" role="tablist" aria-label="Estado de la solicitud">
+			<button type="button" role="tab" *ngFor="let tab of statusTabs" class="status-tab"
+				[class.selected]="statusFilter === tab.value" [attr.aria-selected]="statusFilter === tab.value"
+				[ngClass]="'tab-' + (tab.value || 'all').toLowerCase()" (click)="setStatusFilter(tab.value)">
+				<span class="tab-dot" *ngIf="tab.value" aria-hidden="true"></span>
+				{{ tab.label }}
+				<span class="tab-count num">{{ tab.count }}</span>
+			</button>
+		</div>
 
-		<!-- Filtros -->
-		<section class="filter-panel">
-			<div class="filter-grid">
-				<div class="filter-group">
-					<label for="filtro-red">Red Asistencial</label>
-					<select id="filtro-red" [(ngModel)]="selectedRedFilter" (change)="onRedFilterChange()">
-						<option value="">Todas las redes</option>
-						<option *ngFor="let red of dataRed" [value]="red.redasiscod">
-							{{ red.redasisdes }}
-						</option>
-					</select>
-				</div>
-
-				<div class="filter-group">
-					<label for="filtro-centro">Centro Asistencial</label>
-					<select id="filtro-centro" [(ngModel)]="selectedCentroFilter" (change)="onCentroFilterChange()"
-						[disabled]="!selectedRedFilter">
-						<option value="">Todos los centros</option>
-						<option *ngFor="let centro of centrosFiltrados" [value]="centro.cenasicod">
-							{{ centro.cenasides }}
-						</option>
-					</select>
-				</div>
-
-				<div class="filter-group">
-					<label for="filtro-dni">DNI del Solicitante</label>
-					<input id="filtro-dni" type="text" maxlength="8" [(ngModel)]="dniFilter"
-						(input)="onDniFilterChange()" placeholder="Buscar por DNI..." />
-				</div>
-
-				<div class="filter-actions">
-					<button class="btn-clear" type="button" (click)="limpiarFiltros()">Limpiar Filtros</button>
-				</div>
-			</div>
-		</section>
-
-		<!-- Grid de Solicitudes -->
-		<section class="cards-wrapper">
-			<div class="loading-container" *ngIf="isLoading">
-				<div class="spinner"></div>
-				<p>Cargando solicitudes...</p>
+		<div class="filters">
+			<div class="filter-group">
+				<label for="filtro-red">Red</label>
+				<select id="filtro-red" [(ngModel)]="selectedRedFilter" (change)="onRedFilterChange()">
+					<option value="">Todas las redes</option>
+					<option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes }}</option>
+				</select>
 			</div>
 
-			<div class="empty-state" *ngIf="!isLoading && filteredSolicitudes.length === 0">
-				<div class="empty-icon">📂</div>
-				<h3>Sin solicitudes</h3>
-				<p>No se encontraron solicitudes con los filtros seleccionados.</p>
+			<div class="filter-group">
+				<label for="filtro-centro">Centro</label>
+				<select id="filtro-centro" [(ngModel)]="selectedCentroFilter" (change)="onCentroFilterChange()"
+					[disabled]="!selectedRedFilter">
+					<option value="">{{ selectedRedFilter ? 'Todos los centros' : 'Elige una red primero' }}</option>
+					<option *ngFor="let centro of centrosFiltrados" [value]="centro.cenasicod">{{ centro.cenasides }}</option>
+				</select>
 			</div>
 
-			<div class="cards-viewport" *ngIf="!isLoading && virtualRows.length > 0">
-				<div class="virtual-item" *ngFor="let row of virtualRows">
-					<div class="cards-row" [style.gridTemplateColumns]="getCardsRowTemplateColumns()">
-						<article class="solicitud-card" *ngFor="let solicitud of row; trackBy: trackBySolicitud" 
-							[class.editing-active]="isEditing(solicitud)">
-							
-							<!-- Encabezado de la Tarjeta -->
-							<div class="card-top">
-								<div class="user-info">
-									<h2>{{ solicitud.name || '-' }} {{ solicitud.lastname || '' }}</h2>
-									<div class="meta-row">
-										<span class="meta-tag dni-tag">💳 {{ solicitud.dni || '-' }}</span>
-										<span class="meta-tag email-tag">✉️ {{ solicitud.email || '-' }}</span>
-									</div>
-								</div>
-								<div class="card-top-side">
-									<span class="status-badge" [ngClass]="'status-' + (solicitud.status || 'PENDIENTE').toLowerCase()">
-										{{ solicitud.status || 'PENDIENTE' }}
-									</span>
-								</div>
-							</div>
-
-							<!-- Cuerpo: Modo Lectura -->
-							<div class="card-body" *ngIf="!isEditing(solicitud)">
-								<div class="field">
-									<span>Red Asistencial</span>
-									<strong>{{ getRedName(resolveRedCode(solicitud)) }}</strong>
-								</div>
-								<div class="field">
-									<span>Centro Asistencial</span>
-									<strong>{{ getCentroName(resolveCentroCode(solicitud)) }}</strong>
-								</div>
-								<div class="field">
-									<span>Rol Solicitado</span>
-									<strong class="role-badge">{{ solicitud.rol_solicitud || '-' }}</strong>
-								</div>
-								<div class="field">
-									<span>Fecha Solicitud</span>
-									<strong>{{ formatDate(solicitud.date_creation) }}</strong>
-								</div>
-								<div class="field full">
-									<span>Justificación del Solicitante</span>
-									<p class="description-text">{{ solicitud.descripcion || '-' }}</p>
-								</div>
-								
-								<!-- Información de Auditoría si está resuelta -->
-								<div class="audit-section full" *ngIf="solicitud.status === 'APROBADO' || solicitud.status === 'RECHAZADO'">
-									<div class="audit-header">🔍 Detalles de Resolución</div>
-									<div class="audit-grid">
-										<div class="audit-field">
-											<span>Revisor</span>
-											<strong>{{ solicitud.nombre_revisor || 'Sistema' }}</strong>
-										</div>
-										<div class="audit-field">
-											<span>Fecha Decisión</span>
-											<strong>{{ formatDate(solicitud.date_resolution || solicitud.date_update) }}</strong>
-										</div>
-										<div class="audit-field full" *ngIf="solicitud.comentario_revisor">
-											<span>Comentario/Motivo</span>
-											<p class="audit-comment">{{ solicitud.comentario_revisor }}</p>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<!-- Acciones de Tarjeta (Solo para solicitudes pendientes) -->
-							<div class="card-actions" *ngIf="solicitud.status === 'PENDIENTE'">
-								<button type="button" class="btn-edit" (click)="iniciarEdicion(solicitud)">
-									Evaluación / Decisión
-								</button>
-							</div>
-						</article>
-					</div>
+			<div class="filter-group filter-dni">
+				<label for="filtro-dni">DNI</label>
+				<div class="input-icon">
+					<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+					<input id="filtro-dni" type="text" inputmode="numeric" maxlength="8" [(ngModel)]="dniFilter"
+						(input)="onDniFilterChange()" placeholder="Buscar DNI" autocomplete="off" />
 				</div>
 			</div>
 
-			<!-- Paginación -->
-			<div class="paginator" *ngIf="!isLoading && filteredSolicitudes.length > 0">
-				<div class="paginator-info">
-					<span>Mostrando {{ paginationStart }} - {{ paginationEnd }} de {{ totalResultados }} registros</span>
-				</div>
+			<button class="btn btn-ghost btn-clear" type="button" (click)="limpiarFiltros()" [disabled]="!hasActiveFilters">
+				<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+				Limpiar
+			</button>
+		</div>
+	</section>
 
+	<!-- Bandeja: lista + detalle -->
+	<section class="inbox">
+		<div class="list-card">
+			<div class="list-head" *ngIf="!isLoading && filteredSolicitudes.length > 0" aria-hidden="true">
+				<span>Solicitante</span>
+				<span class="col-role">Rol solicitado</span>
+				<span class="col-place">Red / Centro</span>
+				<span class="col-date">Recibida</span>
+			</div>
+
+			<!-- Carga -->
+			<ul class="req-list" *ngIf="isLoading" aria-busy="true">
+				<li class="req-row skeleton" *ngFor="let _ of skeletonRows">
+					<span class="req-person">
+						<span class="sk sk-avatar"></span>
+						<span class="sk-stack"><span class="sk sk-line w-160"></span><span class="sk sk-line w-110"></span></span>
+					</span>
+					<span class="col-role"><span class="sk sk-line w-70"></span></span>
+					<span class="col-place"><span class="sk-stack"><span class="sk sk-line w-140"></span><span class="sk sk-line w-90"></span></span></span>
+					<span class="col-date"><span class="sk sk-line w-70"></span></span>
+				</li>
+			</ul>
+
+			<!-- Vacío -->
+			<div class="empty" *ngIf="!isLoading && filteredSolicitudes.length === 0">
+				<svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true">
+					<path d="M22 12h-6l-2 3h-4l-2-3H2" />
+					<path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+				</svg>
+				<ng-container *ngIf="hasActiveFilters; else emptyNoFilters">
+					<p class="empty-title">Ninguna solicitud coincide con los filtros</p>
+					<p class="empty-text">Prueba con otra red, centro o DNI.</p>
+					<button type="button" class="btn btn-ghost" (click)="limpiarFiltros()">Limpiar filtros</button>
+				</ng-container>
+				<ng-template #emptyNoFilters>
+					<p class="empty-title">{{ statusFilter === 'PENDIENTE' ? 'Bandeja al día' : 'Sin solicitudes en este estado' }}</p>
+					<p class="empty-text">{{ statusFilter === 'PENDIENTE' ? 'No quedan solicitudes por revisar.' : 'Cuando haya solicitudes aparecerán aquí.' }}</p>
+				</ng-template>
+			</div>
+
+			<!-- Filas -->
+			<ul class="req-list" *ngIf="!isLoading && filteredSolicitudes.length > 0">
+				<li *ngFor="let solicitud of pageItems; trackBy: trackBySolicitud">
+					<button type="button" class="req-row" [class.selected]="isSelected(solicitud)"
+						[attr.aria-current]="isSelected(solicitud) ? 'true' : null" (click)="iniciarEdicion(solicitud)">
+						<span class="req-person">
+							<span class="avatar" aria-hidden="true">{{ getInitials(solicitud) }}</span>
+							<span class="req-text">
+								<span class="req-name">{{ solicitud.name || '—' }} {{ solicitud.lastname || '' }}</span>
+								<span class="req-meta">
+									<span class="num">{{ solicitud.dni || '—' }}</span>
+									<span class="req-email" *ngIf="solicitud.email"> · {{ solicitud.email }}</span>
+								</span>
+							</span>
+						</span>
+						<span class="col-role">
+							<span class="role-badge" [ngClass]="'role-' + (solicitud.rol_solicitud || '').toLowerCase().replace('_', '-')">
+								{{ solicitud.rol_solicitud || '—' }}
+							</span>
+						</span>
+						<span class="col-place">
+							<span class="place-red">{{ getRedName(resolveRedCode(solicitud)) }}</span>
+							<span class="place-centro" *ngIf="resolveCentroCode(solicitud)">{{ getCentroName(resolveCentroCode(solicitud)) }}</span>
+						</span>
+						<span class="col-date">
+							<span class="status" [ngClass]="'st-' + normalizeStatus(solicitud.status).toLowerCase()">
+								<span class="status-dot"></span>{{ getStatusLabel(solicitud.status) }}
+							</span>
+							<span class="date-sub" [title]="formatDate(solicitud.date_creation)">{{ timeAgo(solicitud.date_creation) || formatShortDate(solicitud.date_creation) }}</span>
+						</span>
+					</button>
+				</li>
+			</ul>
+
+			<footer class="paginator" *ngIf="!isLoading && filteredSolicitudes.length > 0">
+				<span class="paginator-info">
+					<span class="num">{{ paginationStart }}–{{ paginationEnd }}</span> de <span class="num">{{ totalResultados }}</span>
+				</span>
 				<div class="paginator-controls">
-					<label for="page-size">Por página</label>
+					<label for="page-size">Filas</label>
 					<select id="page-size" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
 						<option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
 					</select>
-
-					<button type="button" class="btn-nav" (click)="goToPreviousPage()" [disabled]="pageIndex === 0">
-						◀ Anterior
-					</button>
-					<span class="page-label">Página {{ currentPageLabel }}</span>
-					<button type="button" class="btn-nav" (click)="goToNextPage()" [disabled]="pageIndex >= totalPages - 1">
-						Siguiente ▶
-					</button>
-				</div>
-			</div>
-		</section>
-	</section>
-
-	<!-- MODAL DE EVALUACIÓN Y DECISIÓN (Panel de Aprobación/Rechazo de Acceso) -->
-	<div class="modal-overlay" *ngIf="showDecisionModal && draftSolicitud">
-		<div class="modal-card decision-card">
-			<header class="modal-header">
-				<h2>Evaluar y Resolver Solicitud de Acceso</h2>
-				<button type="button" class="close-modal-btn" (click)="cancelarEdicion()">&times;</button>
-			</header>
-
-			<div class="modal-body">
-				<!-- Resumen de Datos del Solicitante -->
-				<div class="doc-preview-summary">
-					<div class="preview-item">
-						<strong>Solicitante</strong>
-						<span>{{ draftSolicitud.name }} {{ draftSolicitud.lastname }}</span>
-					</div>
-					<div class="preview-item">
-						<strong>DNI</strong>
-						<span>{{ draftSolicitud.dni }}</span>
-					</div>
-					<div class="preview-item">
-						<strong>Correo Electrónico</strong>
-						<span>{{ draftSolicitud.email }}</span>
-					</div>
-					<div class="preview-item">
-						<strong>Rol Solicitado</strong>
-						<span class="role-badge">{{ draftSolicitud.rol_solicitud }}</span>
-					</div>
-					<div class="preview-item">
-						<strong>Fecha de Creación</strong>
-						<span>{{ formatDate(draftSolicitud.date_creation) }}</span>
-					</div>
-					<div class="preview-item full-width">
-						<strong>Justificación del Solicitante</strong>
-						<p class="description-text">{{ draftSolicitud.descripcion || 'Sin justificación ingresada.' }}</p>
+					<div class="pager">
+						<button type="button" class="icon-btn" (click)="goToPreviousPage()" [disabled]="pageIndex === 0" aria-label="Página anterior">
+							<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+						</button>
+						<span class="page-label"><span class="num">{{ currentPageLabel }}</span></span>
+						<button type="button" class="icon-btn" (click)="goToNextPage()" [disabled]="pageIndex >= totalPages - 1" aria-label="Página siguiente">
+							<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+						</button>
 					</div>
 				</div>
-
-				<!-- Formulario de Configuración de Acceso -->
-				<div class="decision-form-grid">
-					<div class="field-input">
-						<label for="modal-rol">Rol a Asignar</label>
-						<select id="modal-rol" [(ngModel)]="draftSolicitud.rol_solicitud" (change)="onRoleEditChange()">
-							<option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
-						</select>
-					</div>
-
-					<div class="field readonly-display">
-						<span>Tipo de Trabajador</span>
-						<strong>{{ getRoleDescription(draftSolicitud.rol_solicitud) }}</strong>
-					</div>
-
-					<div class="field-input">
-						<label for="modal-red">Red Asistencial</label>
-						<select id="modal-red" [(ngModel)]="draftSolicitud.code_red_solicitud" (change)="onRedEditChange()">
-							<option value="">Seleccione red...</option>
-							<option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes }}</option>
-						</select>
-					</div>
-
-					<div class="field-input">
-						<label for="modal-centro">Centro Asistencial</label>
-						<select id="modal-centro" [(ngModel)]="draftSolicitud.codcas_solicitud" [disabled]="!canEditCentro()">
-							<option value="">{{ canEditCentro() ? 'Seleccione centro...' : 'No aplica (ADMIN_RED)' }}</option>
-							<option *ngFor="let centro of getCentrosByRedCode(draftSolicitud.code_red_solicitud)" [value]="centro.cenasicod">
-								{{ centro.cenasides }}
-							</option>
-						</select>
-					</div>
-
-					<div class="field-input full-width">
-						<label for="modal-comentario">Justificación / Comentario del Administrador</label>
-						<textarea id="modal-comentario" [(ngModel)]="draftSolicitud.comentario_revisor" rows="3" maxlength="500" 
-							placeholder="Escribe el motivo de la aprobación o rechazo (obligatorio en rechazos)..."></textarea>
-					</div>
-				</div>
-
-				<!-- Mensaje de Validación -->
-				<div class="validation-message-banner" *ngIf="validationMessage">
-					<span>⚠️ {{ validationMessage }}</span>
-				</div>
-			</div>
-
-			<!-- Acciones de Decisión -->
-			<footer class="modal-footer">
-				<button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicion()" [disabled]="savingState">
-					Cancelar
-				</button>
-				<button type="button" class="btn-modal-action btn-reject" (click)="resolverConEstado('RECHAZADO')" [disabled]="savingState">
-					❌ Rechazar Acceso
-				</button>
-				<button type="button" class="btn-modal-action btn-approve" (click)="resolverConEstado('APROBADO')" [disabled]="savingState">
-					✔️ Aprobar Acceso
-				</button>
 			</footer>
 		</div>
-	</div>
+
+		<!-- Panel de detalle / decisión -->
+		<div class="detail-backdrop" *ngIf="showDecisionModal" (click)="cancelarEdicion()" aria-hidden="true"></div>
+		<aside class="detail" [class.is-open]="showDecisionModal" [attr.aria-label]="selectedSolicitud ? 'Detalle de la solicitud' : null">
+			<div class="detail-placeholder" *ngIf="!selectedSolicitud">
+				<svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true">
+					<rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8" /><path d="M8 12h8" /><path d="M8 16h5" />
+				</svg>
+				<p class="empty-title">Selecciona una solicitud</p>
+				<p class="empty-text">Aquí verás los datos del solicitante y podrás aprobar o rechazar el acceso.</p>
+			</div>
+
+			<ng-container *ngIf="selectedSolicitud as sol">
+				<header class="detail-header">
+					<span class="avatar avatar-lg" aria-hidden="true">{{ getInitials(sol) }}</span>
+					<div class="detail-heading">
+						<h2>{{ sol.name }} {{ sol.lastname }}</h2>
+						<p>
+							<span class="status" [ngClass]="'st-' + normalizeStatus(sol.status).toLowerCase()">
+								<span class="status-dot"></span>{{ getStatusLabel(sol.status) }}
+							</span>
+							<span class="dot-sep" aria-hidden="true"></span>
+							<span [title]="formatDate(sol.date_creation)">Recibida {{ timeAgo(sol.date_creation) || formatShortDate(sol.date_creation) }}</span>
+						</p>
+					</div>
+					<button type="button" class="icon-btn detail-close" (click)="cancelarEdicion()" aria-label="Cerrar detalle"
+						[disabled]="savingState">
+						<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+					</button>
+				</header>
+
+				<div class="detail-body">
+					<dl class="facts">
+						<div><dt>DNI</dt><dd class="num">{{ sol.dni || '—' }}</dd></div>
+						<div><dt>Correo</dt><dd>{{ sol.email || '—' }}</dd></div>
+						<div><dt>Rol solicitado</dt><dd>{{ sol.rol_solicitud || '—' }} <span class="muted">· {{ getRoleDescription(sol.rol_solicitud) }}</span></dd></div>
+						<div><dt>Red solicitada</dt><dd>{{ getRedName(resolveRedCode(sol)) }}</dd></div>
+						<div class="span-2" *ngIf="resolveCentroCode(sol)"><dt>Centro solicitado</dt><dd>{{ getCentroName(resolveCentroCode(sol)) }}</dd></div>
+						<div class="span-2"><dt>Fecha de solicitud</dt><dd class="num">{{ formatDate(sol.date_creation) }}</dd></div>
+					</dl>
+
+					<section class="justification">
+						<h3>Justificación del solicitante</h3>
+						<blockquote [class.is-empty]="!sol.descripcion">{{ sol.descripcion || 'El solicitante no ingresó una justificación.' }}</blockquote>
+					</section>
+
+					<!-- Decisión (solo pendientes) -->
+					<section class="decision" *ngIf="isPendingSelected && draftSolicitud as draft">
+						<h3>Configurar acceso</h3>
+
+						<div class="role-switch" role="radiogroup" aria-label="Rol a asignar">
+							<label class="role-choice" *ngFor="let role of roleOptions" [class.selected]="draft.rol_solicitud === role">
+								<input type="radio" name="rol-asignar" [value]="role" [(ngModel)]="draft.rol_solicitud"
+									(ngModelChange)="onRoleEditChange()" />
+								<span class="role-choice-title">{{ role }}</span>
+								<span class="role-choice-hint">{{ getRoleDescription(role) }}</span>
+							</label>
+						</div>
+
+						<div class="form-grid">
+							<div class="field-input">
+								<label for="modal-red">Red asistencial</label>
+								<select id="modal-red" [(ngModel)]="draft.code_red_solicitud" (change)="onRedEditChange()">
+									<option value="">Seleccionar red…</option>
+									<option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes }}</option>
+								</select>
+							</div>
+
+							<div class="field-input">
+								<label for="modal-centro">Centro asistencial</label>
+								<select id="modal-centro" [(ngModel)]="draft.codcas_solicitud" [disabled]="!canEditCentro()">
+									<option value="">{{ canEditCentro() ? 'Seleccionar centro…' : (draft.rol_solicitud === ROLE_ADMIN_RED ? 'No aplica para ADMIN_RED' : 'Elige una red primero') }}</option>
+									<option *ngFor="let centro of getCentrosByRedCode(draft.code_red_solicitud)" [value]="centro.cenasicod">
+										{{ centro.cenasides }}
+									</option>
+								</select>
+							</div>
+
+							<div class="field-input span-2">
+								<label for="modal-comentario">
+									Comentario del revisor
+									<span class="label-note">obligatorio si rechazas</span>
+								</label>
+								<textarea id="modal-comentario" [(ngModel)]="draft.comentario_revisor" rows="3"
+									[maxlength]="commentMaxLength" placeholder="Motivo de la aprobación o del rechazo"></textarea>
+								<span class="char-count num">{{ (draft.comentario_revisor || '').length }} / {{ commentMaxLength }}</span>
+							</div>
+						</div>
+
+						<div class="validation-message-banner" *ngIf="validationMessage" role="alert">
+							<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+								<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+								<path d="M12 9v4" /><path d="M12 17h.01" />
+							</svg>
+							<span>{{ validationMessage }}</span>
+						</div>
+					</section>
+
+					<!-- Resolución (aprobadas / rechazadas) -->
+					<section class="resolution" *ngIf="!isPendingSelected" [ngClass]="'res-' + normalizeStatus(sol.status).toLowerCase()">
+						<h3>Resolución</h3>
+						<dl class="facts">
+							<div><dt>Decisión</dt><dd><span class="status" [ngClass]="'st-' + normalizeStatus(sol.status).toLowerCase()"><span class="status-dot"></span>{{ getStatusLabel(sol.status) }}</span></dd></div>
+							<div><dt>Revisor</dt><dd>{{ sol.nombre_revisor || 'Sistema' }}</dd></div>
+							<div class="span-2"><dt>Fecha de decisión</dt><dd class="num">{{ formatDate(sol.date_resolution || sol.date_update) }}</dd></div>
+						</dl>
+						<blockquote *ngIf="sol.comentario_revisor">{{ sol.comentario_revisor }}</blockquote>
+					</section>
+				</div>
+
+				<footer class="detail-footer" *ngIf="isPendingSelected && draftSolicitud">
+					<button type="button" class="btn btn-reject" (click)="resolverConEstado('RECHAZADO')" [disabled]="savingState">
+						<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m15 9-6 6" /><path d="m9 9 6 6" /></svg>
+						Rechazar
+					</button>
+					<button type="button" class="btn btn-approve" (click)="resolverConEstado('APROBADO')" [disabled]="savingState">
+						<span class="spinner" *ngIf="savingState" aria-hidden="true"></span>
+						<svg *ngIf="!savingState" class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+						{{ savingState ? 'Guardando…' : 'Aprobar acceso' }}
+					</button>
+				</footer>
+			</ng-container>
+		</aside>
+	</section>
 </div>

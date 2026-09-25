@@ -1,7 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Documento, VersionDocumento } from '../../../model/documento';
 import { DocumentoService } from '../../../services/documentos/documento-service';
 import { VersionDocumentoService } from '../../../services/documentos/version-documento-service';
@@ -13,11 +13,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { EstablecimientoService } from '../../../services/establecimiento-service';
 import { UsersService } from '../../../services/usuario/users-service';
+import { DocumentoFormDialog, DocumentoFormMode } from '../documento-form-dialog/documento-form-dialog';
 
 @Component({
   selector: 'app-reports-documento',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatButtonModule],
+  imports: [CommonModule, FormsModule, RouterModule, MatIconModule, MatButtonModule, DocumentoFormDialog],
   templateUrl: './reports-documento.html',
   styleUrl: './reports-documento.css',
 })
@@ -723,6 +724,64 @@ export class ReportsDocumento implements OnInit {
 
   get totalPages(): number {
     return Math.ceil(this.filteredDocumentos.length / this.pageSize) || 1;
+  }
+
+  // ---- Registro flotante (reemplaza /documento/creacion) ----
+  showCreateDialog: boolean = false;
+  createMode: DocumentoFormMode = 'documento';
+  createDocumentoId: number | null = null;
+  toastMessage: string = '';
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  openCreate(mode: DocumentoFormMode, documentoId: number | null = null): void {
+    this.createMode = mode;
+    this.createDocumentoId = documentoId;
+    this.showCreateDialog = true;
+    this.cdr.detectChanges();
+  }
+
+  closeCreate(): void {
+    this.showCreateDialog = false;
+    this.cdr.detectChanges();
+  }
+
+  onCreateSaved(event: { kind: DocumentoFormMode; message: string }): void {
+    this.showCreateDialog = false;
+    this.showToast(event.message);
+    if (event.kind === 'tipo') {
+      this.loadTiposDocumentos();
+    }
+    this.getDocumentos();
+    this.cdr.detectChanges();
+  }
+
+  private showToast(message: string): void {
+    this.toastMessage = message;
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      this.toastMessage = '';
+      this.cdr.detectChanges();
+    }, 4500);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.showDecisionModal || this.showTimelineModal || this.showEditDocumentModal) {
+      this.cerrarModales();
+    }
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.filterSearch.trim() || this.filterTipo || this.filterStatus || this.filterCodred || this.filterPrivacy);
+  }
+
+  limpiarFiltros(): void {
+    this.filterSearch = '';
+    this.filterTipo = '';
+    this.filterStatus = '';
+    this.filterCodred = '';
+    this.filterPrivacy = '';
+    this.applyFilters();
   }
 
   cerrarModales() {

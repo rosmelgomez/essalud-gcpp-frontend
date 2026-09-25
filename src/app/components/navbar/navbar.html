@@ -1,18 +1,17 @@
 <header class="navbar" [class.menu-open]="isMenuOpen">
   <!-- Logo y Titulo -->
-  <div class="brand-block" routerLink="/home" (click)="closeMenu(); closeProfile()">
-    <div class="logo-wrap">
-      <img src="/images/Logoes.png" alt="EsSalud" class="logo" />
-      <div class="brand-copy">
-        <span class="brand-title">SIEST</span>
-        <span class="sub">Gestión Integral</span>
-      </div>
-    </div>
-  </div>
+  <a class="brand-block" routerLink="/home" (click)="closeMenu(); closeProfile()" aria-label="SIEST, ir a inicio">
+    <span class="logo" role="img" aria-label="EsSalud"></span>
+    <span class="brand-divider" aria-hidden="true"></span>
+    <span class="brand-copy">
+      <span class="brand-title">SIEST</span>
+      <span class="sub">Gestión Integral</span>
+    </span>
+  </a>
 
   <!-- Mobile Menu Toggle -->
-  <button class="menu-toggle" type="button" (click)="toggleMenu()" aria-label="Abrir menú"
-    [attr.aria-expanded]="isMenuOpen">
+  <button class="menu-toggle" type="button" (click)="toggleMenu()"
+    [attr.aria-label]="isMenuOpen ? 'Cerrar menú' : 'Abrir menú'" [attr.aria-expanded]="isMenuOpen">
     <span class="line"></span>
     <span class="line"></span>
     <span class="line"></span>
@@ -22,58 +21,96 @@
   <div class="nav-content" [class.open]="isMenuOpen">
 
     <!-- Navigation Links -->
-    <div class="nav-links">
+    <nav class="nav-links" aria-label="Principal">
       <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link"
         (click)="closeMenu(); closeProfile()">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 10.5 12 3l9 7.5" />
+          <path d="M5 9.5V21h14V9.5" />
+          <path d="M10 21v-6h4v6" />
+        </svg>
         <span class="nav-link-label">Inicio</span>
       </a>
 
-      <a routerLink="/usuario/manage-users" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active"
-        class="nav-link" (click)="closeMenu(); closeProfile()">
-        <span class="nav-link-label">Gestionar Usuarios</span>
-      </a>
+      <ng-container *ngIf="user?.roles?.includes('ADMIN')">
+        <span class="nav-sep" aria-hidden="true"></span>
 
-      <a routerLink="/solicitud-acceso/reports" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active"
-        class="nav-link" (click)="closeMenu(); closeProfile()">
-        <span class="nav-link-label">Solicitudes de Acceso</span>
-      </a>
+        <a routerLink="/usuario/manage-users" routerLinkActive="active" class="nav-link"
+          (click)="closeMenu(); closeProfile()">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span class="nav-link-label">Gestionar Usuarios</span>
+        </a>
 
-      <a routerLink="/usuario/register" *ngIf="user?.roles?.includes('ADMIN')" routerLinkActive="active"
-        class="nav-link" (click)="closeMenu(); closeProfile()">
-        <span class="nav-link-label">Registrar Usuario</span>
-      </a>
-    </div>
+        <a routerLink="/solicitud-acceso/reports" routerLinkActive="active" class="nav-link"
+          (click)="closeMenu(); closeProfile()">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+            <path
+              d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+          </svg>
+          <span class="nav-link-label">Solicitudes de Acceso</span>
+        </a>
 
-    <!-- Search Capsule (Faux Command Palette - Stripe style) -->
-    <div class="search-capsule" style="display: none;">
-      <span class="search-icon">🔍</span>
-      <span class="search-placeholder">Buscar en SIEST...</span>
-      <span class="search-shortcut">Ctrl+K</span>
-    </div>
+
+      </ng-container>
+    </nav>
+
 
     <!-- Desktop User Profile Dropdown -->
     <div class="profile-dropdown-container">
       <div class="profile-dropdown" [class.open]="isProfileOpen">
-        <button class="profile-trigger" type="button" (click)="toggleProfile($event)" aria-label="Menú de perfil">
-          <div class="avatar-badge small">
+        <button class="profile-trigger" type="button" (click)="toggleProfile($event)" aria-haspopup="menu"
+          [attr.aria-expanded]="isProfileOpen" aria-label="Menú de perfil">
+          <span class="avatar-badge small">
             <span class="avatar-initials">{{ getInitials() }}</span>
-          </div>
-          <span class="chevron">▼</span>
+          </span>
+          <span class="profile-meta">
+            <span class="profile-name">{{ getShortName() }}</span>
+            <span class="profile-role">{{ getRoleLabel() }}</span>
+          </span>
+          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
         </button>
 
-        <div class="dropdown-menu" *ngIf="isProfileOpen">
+        <div class="dropdown-menu" role="menu" *ngIf="isProfileOpen">
           <div class="dropdown-header">
-            <span class="user-fullname">{{ user?.name }} {{ user?.lastname }}</span>
-            <span class="user-code">💳 DNI: {{ user?.dni || '—' }}</span>
-            <span class="role-badge">{{ user?.roles }}</span>
+            <span class="avatar-badge">
+              <span class="avatar-initials">{{ getInitials() }}</span>
+            </span>
+            <span class="dropdown-identity">
+              <span class="user-fullname">{{ user?.name }} {{ user?.lastname }}</span>
+              <span class="user-code">DNI {{ user?.dni || '—' }}</span>
+            </span>
           </div>
+          <span class="role-badge">{{ getRoleLabel() }}</span>
+
           <div class="dropdown-divider"></div>
-          <a routerLink="/usuario/perfil" class="dropdown-item" (click)="closeProfile()">
-            👤 Mi Perfil
+
+          <a routerLink="/usuario/perfil" class="dropdown-item" role="menuitem" (click)="closeProfile()">
+            <svg class="item-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Mi Perfil
           </a>
 
-          <button class="dropdown-item logout-btn" type="button" (click)="logout()">
-            ⇦ Cerrar Sesión
+
+
+          <div class="dropdown-divider"></div>
+
+          <button class="dropdown-item logout-btn" type="button" role="menuitem" (click)="logout()">
+            <svg class="item-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="m16 17 5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
+            Cerrar Sesión
           </button>
         </div>
       </div>
@@ -83,27 +120,35 @@
     <div class="mobile-user-section">
       <div class="user-card">
         <div class="user-avatar">
-          <div class="avatar-badge">
+          <span class="avatar-badge">
             <span class="avatar-initials">{{ getInitials() }}</span>
-          </div>
+          </span>
           <div class="user-info">
-            <div class="user-code">{{ user?.dni || '—' }}</div>
             <div class="user-fullname">{{ user?.name }} {{ user?.lastname }}</div>
+            <div class="user-code">DNI {{ user?.dni || '—' }}</div>
           </div>
         </div>
-        <div class="role-badge">{{ user?.roles }}</div>
+        <div class="role-badge">{{ getRoleLabel() }}</div>
       </div>
 
       <div class="mobile-actions">
-        <a routerLink="/usuario/perfil" class="button ghost" (click)="closeMenu()">
-          <span class="button-label">Mi Perfil</span>
+
+        <a routerLink="/usuario/perfil" class="nav-link" (click)="closeMenu()">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <span class="nav-link-label">Mi Perfil</span>
         </a>
-        <a routerLink="/usuario/change-password" class="button ghost" (click)="closeMenu()">
-          <span class="button-label">Cambiar Contraseña</span>
-        </a>
-        <button class="button ghost logout-btn" type="button" (click)="logout()">
-          <span class="icon">⇦</span>
-          <span class="button-label">Cerrar Sesión</span>
+
+
+        <button class="nav-link logout-btn" type="button" (click)="logout()">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <path d="m16 17 5-5-5-5" />
+            <path d="M21 12H9" />
+          </svg>
+          <span class="nav-link-label">Cerrar Sesión</span>
         </button>
       </div>
     </div>

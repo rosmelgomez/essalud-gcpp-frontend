@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { FechaActualizacionService } from '../../services/fecha-actualizacion-service';
 import { forkJoin } from 'rxjs';
 
-export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI';
+export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Fecha Cierre';
 
 @Component({
   selector: 'app-tmi-indicadores',
@@ -249,6 +249,11 @@ export class TmiIndicadores implements OnInit {
     this.anioCentrosTMI = this.anioEstandarTipo;
     this.mesCentrosTMI = currentMonthStr;
     this.periodoCentrosTMI = `${this.anioCentrosTMI}${this.mesCentrosTMI}`;
+
+    // Excel TMI: por defecto el mes anterior (último periodo cerrado)
+    const mesAnterior = new Date(fechaActual.getFullYear(), fechaActual.getMonth() - 1, 1);
+    this.anioExcelTMI = String(mesAnterior.getFullYear());
+    this.mesExcelTMI = String(mesAnterior.getMonth() + 1).padStart(2, '0');
 
     this.reactiveForm();
   }
@@ -804,16 +809,20 @@ export class TmiIndicadores implements OnInit {
 
   public descargandoExcelTMI: boolean = false;
   public errorExcelTMI: string = '';
+  anioExcelTMI: string = '';
+  mesExcelTMI: string = '';
 
   descargarExcelTMI(): void {
-    if (!this.periodoCentrosTMI) {
+    if (!this.anioExcelTMI || !this.mesExcelTMI) {
       this.errorExcelTMI = 'Por favor seleccione un año y periodo válidos.';
       return;
     }
+    const periodo = `${this.anioExcelTMI}${this.mesExcelTMI}`;
     this.descargandoExcelTMI = true;
     this.errorExcelTMI = '';
+    this.cdr.detectChanges();
 
-    this.tmiIndicadoresService.getExcelTMI(this.periodoCentrosTMI).subscribe({
+    this.tmiIndicadoresService.getExcelTMI(periodo).subscribe({
       next: (response: any) => {
         const blob = response.body;
         if (blob) {
@@ -823,7 +832,7 @@ export class TmiIndicadores implements OnInit {
           const url = window.URL.createObjectURL(fileBlob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `TMI_Prelim_${this.periodoCentrosTMI}.xlsx`;
+          link.download = `TMI_Prelim_${periodo}.xlsx`;
           link.click();
           window.URL.revokeObjectURL(url);
         }
@@ -864,9 +873,119 @@ export class TmiIndicadores implements OnInit {
   }
 
 
+  // cierre
+  public dataCierre: any[] = [];
+  public loadingCierre: boolean = false;
+  public errorCierre: string = '';
+  public cierreSeleccionado: any = null;
+  public fechaCierreEdit: string = '';
+  public savingCierre: boolean = false;
+  public errorCierreForm: string = '';
+  public readonly hoyISO: string = this.toISODate(new Date());
+
+  private readonly estadosCierre: Record<string, string> = {
+    PENDIENTE: 'Pendiente',
+    EN_PROCESO: 'En proceso',
+    EJECUTADO: 'Ejecutado',
+    ERROR: 'Error'
+  };
+
+  getQueryCierres(): void {
+    this.loadingCierre = true;
+    this.errorCierre = '';
+    this.tmiIndicadoresService.getQueryCierres().subscribe({
+      next: (res: any) => {
+        this.dataCierre = res || [];
+        this.loadingCierre = false;
+        this.cdr.detectChanges();
+      },
+      error: (error: any) => {
+        console.error(error);
+        this.errorCierre = 'Error al cargar las fechas de cierre';
+        this.loadingCierre = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  iniciarEdicionCierre(row: any): void {
+    this.cierreSeleccionado = row;
+    this.fechaCierreEdit = String(row.fecha_cierre ?? '').substring(0, 10);
+    this.errorCierreForm = '';
+    this.cdr.detectChanges();
+  }
+
+  cancelarEdicionCierre(): void {
+    this.cierreSeleccionado = null;
+    this.errorCierreForm = '';
+    this.savingCierre = false;
+    this.cdr.detectChanges();
+  }
+
+  updateQueryFechaCierre(): void {
+    if (!this.fechaCierreEdit) {
+      this.errorCierreForm = 'Seleccione una fecha de cierre.';
+      return;
+    }
+    // el cierre se ejecuta cuando la fecha de cierre es igual a la fecha actual
+    if (this.fechaCierreEdit < this.hoyISO) {
+      this.errorCierreForm = 'La fecha de cierre no puede ser anterior a hoy.';
+      return;
+    }
+    this.savingCierre = true;
+    this.errorCierreForm = '';
+    this.tmiIndicadoresService.putQueryFechaCierre(this.cierreSeleccionado.periodo, this.fechaCierreEdit).subscribe({
+      next: () => {
+        this.savingCierre = false;
+        this.cierreSeleccionado = null;
+        this.getQueryCierres();
+      },
+      error: (error: any) => {
+        console.error(error);
+        this.savingCierre = false;
+        this.errorCierreForm = error?.error?.detail || 'Error al actualizar la fecha de cierre';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  esCierreEditable(row: any): boolean {
+    return row.estado === 'PENDIENTE' || row.estado === 'ERROR';
+  }
+
+  esCierreHoy(row: any): boolean {
+    return String(row.fecha_cierre ?? '').substring(0, 10) === this.hoyISO;
+  }
+
+  etiquetaEstadoCierre(estado: string): string {
+    return this.estadosCierre[estado] ?? estado;
+  }
+
+  // 202608 -> Agosto 2026
+  nombrePeriodo(periodo: string): string {
+    const p = String(periodo ?? '').trim();
+    const mes = this.mesesDisponibles.find(m => m.value === p.substring(4, 6));
+    return mes ? `${mes.label} ${p.substring(0, 4)}` : p;
+  }
+
+  // 2026-09-10 -> 10/09/2026 (sin conversión de zona horaria)
+  formatoFecha(valor: string): string {
+    if (!valor) return '—';
+    const [fecha, hora] = String(valor).split('T');
+    const [a, m, d] = fecha.split('-');
+    return hora ? `${d}/${m}/${a} ${hora.substring(0, 5)}` : `${d}/${m}/${a}`;
+  }
+
+  private toISODate(fecha: Date): string {
+    const m = String(fecha.getMonth() + 1).padStart(2, '0');
+    const d = String(fecha.getDate()).padStart(2, '0');
+    return `${fecha.getFullYear()}-${m}-${d}`;
+  }
+
   // tabs
   setActiveTab(tab: TabType): void {
     this.activeTab = tab;
+    if (tab === 'Fecha Cierre') this.getQueryCierres();
     this.cdr.detectChanges();
   }
 }

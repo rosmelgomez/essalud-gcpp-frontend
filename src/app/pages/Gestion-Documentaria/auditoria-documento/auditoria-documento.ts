@@ -41,6 +41,13 @@ export class AuditoriaDocumento implements OnInit {
   user: User | null = null;
   isLoading: boolean = true;
 
+  // Actividad diaria (últimos 30 días)
+  readonly activityDaysCount = 30;
+  activityDays: Array<{ key: string; date: Date; vis: number; desc: number; total: number }> = [];
+  activityMax: number = 0;
+  activityTotal: number = 0;
+  hoveredDay: { key: string; date: Date; vis: number; desc: number; total: number } | null = null;
+
   constructor(
     private lsService: LocalStorageService,
     private auditoriaService: AuditoriaDocumentoService,
@@ -92,6 +99,7 @@ export class AuditoriaDocumento implements OnInit {
       }
     });
     this.usuariosUnicos = usernames.size;
+    this.buildActivity();
     this.cdr.detectChanges();
   }
 
@@ -153,6 +161,106 @@ export class AuditoriaDocumento implements OnInit {
     return Math.ceil(this.filteredAuditorias.length / this.pageSize) || 1;
   }
   
+  private toDayKey(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  private buildActivity(): void {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const days: Array<{ key: string; date: Date; vis: number; desc: number; total: number }> = [];
+    const index: Record<string, number> = {};
+    for (let i = this.activityDaysCount - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      index[this.toDayKey(d)] = days.length;
+      days.push({ key: this.toDayKey(d), date: d, vis: 0, desc: 0, total: 0 });
+    }
+    this.auditorias.forEach((a) => {
+      if (!a.fecha_accion) return;
+      const t = new Date(a.fecha_accion);
+      if (isNaN(t.getTime())) return;
+      const i = index[this.toDayKey(t)];
+      if (i === undefined) return;
+      if (a.accion === 'DESCARGAR') days[i].desc++;
+      else if (a.accion === 'VISUALIZAR') days[i].vis++;
+      days[i].total = days[i].vis + days[i].desc;
+    });
+    this.activityDays = days;
+    this.activityMax = Math.max(0, ...days.map((d) => d.total));
+    this.activityTotal = days.reduce((sum, d) => sum + d.total, 0);
+  }
+
+  /** Fecha legible en español sin depender de los datos de locale de Angular. */
+  dayLabel(date: Date | undefined, style: 'short' | 'long'): string {
+    if (!date) return '';
+    return style === 'short'
+      ? date.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })
+      : date.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  /** Altura en % de un segmento respecto al día con más actividad. */
+  barPct(value: number): number {
+    return this.activityMax > 0 ? (value / this.activityMax) * 100 : 0;
+  }
+
+  isDaySelected(key: string): boolean {
+    return !!this.startDate && this.startDate === key && this.endDate === key;
+  }
+
+  /** Clic en una barra: filtra la tabla por ese día (otro clic lo quita). */
+  toggleDayFilter(key: string): void {
+    if (this.isDaySelected(key)) {
+      this.startDate = '';
+      this.endDate = '';
+    } else {
+      this.startDate = key;
+      this.endDate = key;
+    }
+    this.applyFilters();
+  }
+
+  setActionFilter(value: string): void {
+    this.actionFilter = value;
+    this.applyFilters();
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.searchTerm.trim() || this.actionFilter || this.startDate || this.endDate);
+  }
+
+  /** Resume el user agent en "Navegador · Sistema". */
+  describeUserAgent(ua?: string): string {
+    if (!ua) return 'Desconocido';
+    const browser =
+      /Edg\//.test(ua) ? 'Edge' :
+      /OPR\/|Opera/.test(ua) ? 'Opera' :
+      /Firefox\//.test(ua) ? 'Firefox' :
+      /Chrome\//.test(ua) ? 'Chrome' :
+      /Safari\//.test(ua) ? 'Safari' :
+      /PostmanRuntime/.test(ua) ? 'Postman' : '';
+    const os =
+      /Windows/.test(ua) ? 'Windows' :
+      /Android/.test(ua) ? 'Android' :
+      /iPhone|iPad|iOS/.test(ua) ? 'iOS' :
+      /Mac OS X|Macintosh/.test(ua) ? 'macOS' :
+      /Linux/.test(ua) ? 'Linux' : '';
+    const parts = [browser, os].filter(Boolean);
+    return parts.length ? parts.join(' · ') : ua;
+  }
+
+  isMobileAgent(ua?: string): boolean {
+    return !!ua && /Android|iPhone|iPad|Mobile/.test(ua);
+  }
+
+  getInitials(name?: string): string {
+    const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
+    return ((parts[0]?.charAt(0) ?? '') + (parts[1]?.charAt(0) ?? '')).toUpperCase() || '?';
+  }
+
   clearFilters(): void {
     this.searchTerm = '';
     this.actionFilter = '';

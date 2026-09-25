@@ -12,8 +12,7 @@
   position: relative;
   padding: 40px 20px;
   box-sizing: border-box;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
 
 }
 

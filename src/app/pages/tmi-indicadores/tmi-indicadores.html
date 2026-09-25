@@ -17,6 +17,9 @@
         <button class="tab-button" [class.active]="activeTab === 'Centros TMI'" (click)="setActiveTab('Centros TMI')">
             Centros TMI
         </button>
+        <button class="tab-button" [class.active]="activeTab === 'Fecha Cierre'" (click)="setActiveTab('Fecha Cierre')">
+            Fecha de Cierre
+        </button>
     </div>
 
     <!-- tap 1: tmi_estandar_tipo -->
@@ -620,11 +623,6 @@
                         <option *ngFor="let m of mesesDisponibles" [value]="m.value">{{ m.label }}</option>
                     </select>
                     <button (click)="onBuscarCentrosTMI()" class="btn-search">Buscar</button>
-                    <button (click)="descargarExcelTMI()" class="btn-search"
-                        [disabled]="descargandoExcelTMI || !periodoCentrosTMI || selectPeriodoCentrosTMI">
-                        <mat-icon>download</mat-icon>
-                        {{ descargandoExcelTMI ? 'Generando Excel...' : 'Descargar Excel TMI' }}
-                    </button>
                 </div>
             </div>
         </div>
@@ -640,10 +638,6 @@
 
         <div *ngIf="errorCentrosTMI" class="alert alert-danger">
             {{ errorCentrosTMI }}
-        </div>
-
-        <div *ngIf="errorExcelTMI" class="alert alert-danger">
-            {{ errorExcelTMI }}
         </div>
 
         <div *ngIf="!loadingCentrosTMI && !errorCentrosTMI && !selectPeriodoCentrosTMI" class="dashboard-content">
@@ -832,6 +826,154 @@
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingCentrosTMI">
                             <span *ngIf="!savingCentrosTMI">💾 Guardar Cambios</span>
                             <span *ngIf="savingCentrosTMI">⏳ Guardando...</span>
+                        </button>
+                    </footer>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- tap 5: cierre -->
+    <div class="tab-content" *ngIf="activeTab === 'Fecha Cierre'">
+        <div class="header">
+            <p>Calendario de Cierre Mensual TMI</p>
+            <div class="header-actions">
+                <div class="buscar-group">
+                    <button (click)="getQueryCierres()" class="btn-search" [disabled]="loadingCierre">
+                        <mat-icon>refresh</mat-icon> Actualizar
+                    </button>
+                    <select [(ngModel)]="anioExcelTMI" class="anio-select" [disabled]="descargandoExcelTMI">
+                        <option value="">Seleccione un Año</option>
+                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
+                    </select>
+                    <select [(ngModel)]="mesExcelTMI" class="periodo-select" [disabled]="descargandoExcelTMI">
+                        <option value="">Seleccione un periodo</option>
+                        <option *ngFor="let m of mesesDisponibles" [value]="m.value">{{ m.label }}</option>
+                    </select>
+                    <button (click)="descargarExcelTMI()" class="btn-search btn-excel"
+                        [disabled]="descargandoExcelTMI || !anioExcelTMI || !mesExcelTMI">
+                        <span *ngIf="descargandoExcelTMI" class="spinner-btn"></span>
+                        <mat-icon *ngIf="!descargandoExcelTMI">download</mat-icon>
+                        {{ descargandoExcelTMI ? 'Generando Excel...' : 'Descargar Excel TMI' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="descargandoExcelTMI" class="loading loading-excel">
+            <p>Generando Excel TMI {{ nombrePeriodo(anioExcelTMI + mesExcelTMI) }}...</p>
+            <span class="loading-sub">Esto puede tardar unos segundos</span>
+        </div>
+
+        <div *ngIf="errorExcelTMI" class="alert alert-danger">
+            {{ errorExcelTMI }}
+        </div>
+
+        <div *ngIf="loadingCierre" class="loading">
+            <p>Cargando fechas de cierre...</p>
+        </div>
+
+        <div *ngIf="errorCierre" class="alert alert-danger">
+            {{ errorCierre }}
+        </div>
+
+        <div *ngIf="!loadingCierre && !errorCierre" class="dashboard-content cierre-content">
+            <mat-card class="table cierre-card">
+                <h3>Fechas de Cierre</h3>
+                <p class="cierre-ayuda">
+                    En la fecha de cierre se copian los centros y estándares del periodo anterior al periodo indicado.
+                    Solo se pueden editar los cierres pendientes o con error.
+                </p>
+
+                <div class="cierre-table-wrapper">
+                    <table class="cierre-table">
+                        <thead>
+                            <tr>
+                                <th>Periodo</th>
+                                <th>Fecha de cierre</th>
+                                <th>Estado</th>
+                                <th>Ejecución</th>
+                                <th>Filas</th>
+                                <th>Modificado por</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let row of dataCierre" [class.cierre-hoy]="esCierreHoy(row)">
+                                <td>
+                                    <div class="cierre-periodo">{{ nombrePeriodo(row.periodo) }}</div>
+                                    <div class="cierre-sub">{{ row.periodo }}</div>
+                                </td>
+                                <td>
+                                    {{ formatoFecha(row.fecha_cierre) }}
+                                    <span *ngIf="esCierreHoy(row)" class="cierre-hoy-tag">Hoy</span>
+                                </td>
+                                <td>
+                                    <span class="estado-badge" [ngClass]="'estado-' + (row.estado | lowercase)"
+                                        [title]="row.mensaje || ''">
+                                        {{ etiquetaEstadoCierre(row.estado) }}
+                                    </span>
+                                    <div *ngIf="row.estado === 'ERROR' && row.mensaje" class="cierre-error">
+                                        {{ row.mensaje }}
+                                    </div>
+                                </td>
+                                <td>{{ formatoFecha(row.fecha_ejecucion) }}</td>
+                                <td>{{ row.filas_insertadas ?? '—' }}</td>
+                                <td>{{ row.usuario_modifica || '—' }}</td>
+                                <td>
+                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionCierre(row)"
+                                        [disabled]="!esCierreEditable(row)"
+                                        [title]="esCierreEditable(row) ? 'Editar fecha de cierre' : 'El cierre ya no se puede editar'">
+                                        <mat-icon>edit</mat-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="dataCierre.length === 0">
+                                <td colspan="7" class="cierre-vacio">No hay fechas de cierre registradas.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="footer-table">
+                    <div class="footer-left"><strong>Total de cierres:</strong></div>
+                    <div class="footer-right num"><strong>{{ dataCierre.length }}</strong></div>
+                </div>
+            </mat-card>
+        </div>
+
+        <!-- MODAL EDITAR FECHA DE CIERRE -->
+        <div class="modal-overlay" *ngIf="cierreSeleccionado" (click)="cancelarEdicionCierre()">
+            <div class="modal-card cierre-modal" (click)="$event.stopPropagation()">
+                <header class="modal-header">
+                    <div class="modal-header-info">
+                        <h2>Fecha de Cierre</h2>
+                        <p class="modal-subtitle">
+                            Periodo {{ nombrePeriodo(cierreSeleccionado.periodo) }} ({{ cierreSeleccionado.periodo }})
+                        </p>
+                    </div>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionCierre()">&times;</button>
+                </header>
+
+                <form (ngSubmit)="updateQueryFechaCierre()" class="modal-form-container">
+                    <div class="modal-body">
+                        <div class="field-input">
+                            <label for="cierre_fecha">Fecha de cierre <span class="required">*</span></label>
+                            <input type="date" id="cierre_fecha" name="fecha_cierre" [(ngModel)]="fechaCierreEdit"
+                                [min]="hoyISO" required />
+                        </div>
+
+                        <div class="validation-message-banner" *ngIf="errorCierreForm">
+                            <span>⚠️ {{ errorCierreForm }}</span>
+                        </div>
+                    </div>
+
+                    <footer class="modal-footer">
+                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionCierre()"
+                            [disabled]="savingCierre">Cancelar</button>
+                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingCierre">
+                            <span *ngIf="!savingCierre">💾 Guardar Cambios</span>
+                            <span *ngIf="savingCierre">⏳ Guardando...</span>
                         </button>
                     </footer>
                 </form>

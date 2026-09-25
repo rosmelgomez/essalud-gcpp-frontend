@@ -1,0 +1,272 @@
+<div class="overlay" (click)="onOverlayClick($event)">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="docform-title">
+    <header class="dialog-header">
+      <span class="plate" aria-hidden="true">
+        <mat-icon>{{ mode === 'tipo' ? 'category' : mode === 'version' ? 'upload_file' : 'note_add' }}</mat-icon>
+      </span>
+      <div class="heading">
+        <h2 id="docform-title">Nuevo registro</h2>
+        <p>Registrado por <strong>{{ creadorLabel }}</strong> · <span class="num">{{ fechaOperacionLabel }}</span></p>
+      </div>
+      <button type="button" class="icon-btn" (click)="close()" [disabled]="isSaving" aria-label="Cerrar">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <!-- Paso / tipo de registro -->
+    <nav class="modes" role="tablist" aria-label="Qué deseas registrar">
+      <button type="button" role="tab" class="mode" *ngIf="isAdmin" [class.is-active]="mode === 'tipo'"
+        [attr.aria-selected]="mode === 'tipo'" (click)="setMode('tipo')">
+        <span class="mode-title"><mat-icon>category</mat-icon>Tipo de documento</span>
+        <span class="mode-hint">Reglas: tamaño, formatos y aprobación</span>
+      </button>
+      <button type="button" role="tab" class="mode" [class.is-active]="mode === 'documento'"
+        [attr.aria-selected]="mode === 'documento'" (click)="setMode('documento')">
+        <span class="mode-title"><mat-icon>folder</mat-icon>Documento</span>
+        <span class="mode-hint">La carpeta lógica que agrupa versiones</span>
+      </button>
+      <button type="button" role="tab" class="mode" [class.is-active]="mode === 'version'"
+        [attr.aria-selected]="mode === 'version'" (click)="setMode('version')">
+        <span class="mode-title"><mat-icon>upload_file</mat-icon>Versión</span>
+        <span class="mode-hint">El archivo físico de un documento</span>
+      </button>
+    </nav>
+
+    <div class="dialog-body">
+      <!-- ============ TIPO DE DOCUMENTO ============ -->
+      <form id="form-tipo" *ngIf="mode === 'tipo' && isAdmin" [formGroup]="registerTipoDocumentoForm" autocomplete="off"
+        (ngSubmit)="submit()" novalidate>
+        <div class="grid">
+          <div class="field" [class.has-error]="invalid(registerTipoDocumentoForm, 'nombre')">
+            <label for="nombre_tipo">Nombre del tipo</label>
+            <input id="nombre_tipo" type="text" formControlName="nombre" placeholder="Ej. Informe médico" />
+            <small class="error" *ngIf="invalid(registerTipoDocumentoForm, 'nombre')">Ingresa el nombre del tipo de documento.</small>
+          </div>
+          <div class="field" [class.has-error]="invalid(registerTipoDocumentoForm, 'max_size_mb')">
+            <label for="max_size_mb">Tamaño máximo por archivo</label>
+            <div class="input-suffix">
+              <input id="max_size_mb" type="number" min="1" formControlName="max_size_mb" placeholder="10" />
+              <span>MB</span>
+            </div>
+            <small class="error" *ngIf="invalid(registerTipoDocumentoForm, 'max_size_mb')">Indica un tamaño de al menos 1 MB.</small>
+          </div>
+          <div class="field span-2" [class.has-error]="invalid(registerTipoDocumentoForm, 'descripcion')">
+            <label for="descripcion_tipo">Descripción</label>
+            <input id="descripcion_tipo" type="text" formControlName="descripcion" placeholder="Ej. Documentos médicos en general" />
+            <small class="error" *ngIf="invalid(registerTipoDocumentoForm, 'descripcion')">Describe el tipo de documento.</small>
+          </div>
+
+          <div class="field">
+            <span class="label">¿Requiere aprobación?</span>
+            <div class="segmented" role="radiogroup">
+              <button type="button" role="radio" [class.is-active]="registerTipoDocumentoForm.get('requiere_aprobacion')?.value === false"
+                (click)="registerTipoDocumentoForm.get('requiere_aprobacion')?.setValue(false)">No</button>
+              <button type="button" role="radio" [class.is-active]="registerTipoDocumentoForm.get('requiere_aprobacion')?.value === true"
+                (click)="registerTipoDocumentoForm.get('requiere_aprobacion')?.setValue(true)">Sí, con flujo formal</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="label">Estado</span>
+            <div class="segmented" role="radiogroup">
+              <button type="button" role="radio" [class.is-active]="registerTipoDocumentoForm.get('flag')?.value === true"
+                (click)="registerTipoDocumentoForm.get('flag')?.setValue(true)">Activo</button>
+              <button type="button" role="radio" [class.is-active]="registerTipoDocumentoForm.get('flag')?.value === false"
+                (click)="registerTipoDocumentoForm.get('flag')?.setValue(false)">Inactivo</button>
+            </div>
+          </div>
+
+          <div class="field span-2" [class.has-error]="tipoSubmitted && idExtensionesSeleccionadas.length === 0">
+            <span class="label">Extensiones permitidas <span class="count num">{{ idExtensionesSeleccionadas.length }} seleccionadas</span></span>
+            <div class="chips">
+              <button type="button" class="chip" *ngFor="let ext of extensionesCatalogo" [class.is-selected]="isExtensionSelected(ext.id)"
+                [attr.aria-pressed]="isExtensionSelected(ext.id)" (click)="toggleExtension(ext.id)">
+                <mat-icon *ngIf="isExtensionSelected(ext.id)">check</mat-icon>{{ ext.nombre }}
+              </button>
+              <span class="muted" *ngIf="extensionesCatalogo.length === 0">Cargando catálogo…</span>
+            </div>
+            <small class="error" *ngIf="tipoSubmitted && idExtensionesSeleccionadas.length === 0">Selecciona al menos una extensión permitida.</small>
+          </div>
+        </div>
+      </form>
+
+      <!-- ============ DOCUMENTO ============ -->
+      <form id="form-documento" *ngIf="mode === 'documento'" [formGroup]="registerDocumentoForm" autocomplete="off"
+        (ngSubmit)="submit()" novalidate>
+        <div class="grid">
+          <div class="field" [class.has-error]="invalid(registerDocumentoForm, 'codigo')">
+            <label for="codigo">Código</label>
+            <input id="codigo" type="text" formControlName="codigo" placeholder="Ej. 2026001" class="mono" />
+            <small class="error" *ngIf="invalid(registerDocumentoForm, 'codigo')">Ingresa el código del documento.</small>
+          </div>
+          <div class="field" [class.has-error]="invalid(registerDocumentoForm, 'id_tipo_documento')">
+            <label for="id_tipo_documento">Tipo de documento</label>
+            <select id="id_tipo_documento" formControlName="id_tipo_documento">
+              <option [ngValue]="''" disabled>Selecciona un tipo</option>
+              <option *ngFor="let t of tipo_documento" [ngValue]="t.id">{{ t.nombre }}{{ t.requiere_aprobacion ? ' · requiere aprobación' : '' }}</option>
+            </select>
+            <small class="error" *ngIf="invalid(registerDocumentoForm, 'id_tipo_documento')">Selecciona el tipo de documento.</small>
+          </div>
+          <div class="field span-2" [class.has-error]="invalid(registerDocumentoForm, 'titulo')">
+            <label for="titulo">Título</label>
+            <input id="titulo" type="text" formControlName="titulo" placeholder="Ej. Boletín estadístico de atenciones – agosto 2026" />
+            <small class="error" *ngIf="invalid(registerDocumentoForm, 'titulo')">Ingresa el título del documento.</small>
+          </div>
+          <div class="field span-2" [class.has-error]="invalid(registerDocumentoForm, 'descripcion')">
+            <label for="descripcion_doc">Descripción</label>
+            <textarea id="descripcion_doc" formControlName="descripcion" rows="2" placeholder="De qué trata el documento y para quién es útil"></textarea>
+            <small class="error" *ngIf="invalid(registerDocumentoForm, 'descripcion')">Describe brevemente el documento.</small>
+          </div>
+
+          <div class="field">
+            <span class="label">Acceso</span>
+            <div class="segmented" role="radiogroup" [class.is-disabled]="registerDocumentoForm.get('publico')?.disabled">
+              <button type="button" role="radio" [class.is-active]="registerDocumentoForm.get('publico')?.value === false"
+                [disabled]="registerDocumentoForm.get('publico')?.disabled" (click)="setPublico(false)">
+                <mat-icon>lock</mat-icon>Privado
+              </button>
+              <button type="button" role="radio" [class.is-active]="registerDocumentoForm.get('publico')?.value === true"
+                [disabled]="registerDocumentoForm.get('publico')?.disabled" (click)="setPublico(true)">
+                <mat-icon>public</mat-icon>Público
+              </button>
+            </div>
+            <small class="hint" *ngIf="!docTypeRequiresApproval">
+              <mat-icon>info</mat-icon>Los tipos sin aprobación obligatoria son privados por seguridad.
+            </small>
+          </div>
+
+          <div class="field" *ngIf="registerDocumentoForm.get('publico')?.value === true">
+            <span class="label">Visibilidad</span>
+            <div class="segmented" role="radiogroup">
+              <button type="button" role="radio" [class.is-active]="registerDocumentoForm.get('solo_mi_red')?.value === false"
+                (click)="setSoloMiRed(false)"><mat-icon>language</mat-icon>Público en general</button>
+              <button type="button" role="radio" [class.is-active]="registerDocumentoForm.get('solo_mi_red')?.value === true"
+                (click)="setSoloMiRed(true)"><mat-icon>lan</mat-icon>Solo mi red</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="label">Estado</span>
+            <div class="segmented" role="radiogroup">
+              <button type="button" role="radio" [class.is-active]="registerDocumentoForm.get('flag')?.value === true"
+                (click)="registerDocumentoForm.get('flag')?.setValue(true)">Activo</button>
+              <button type="button" role="radio" [class.is-active]="registerDocumentoForm.get('flag')?.value === false"
+                (click)="registerDocumentoForm.get('flag')?.setValue(false)">Inactivo</button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- ============ VERSIÓN ============ -->
+      <form id="form-version" *ngIf="mode === 'version'" [formGroup]="registerVersionDocumentoForm" autocomplete="off"
+        (ngSubmit)="submit()" novalidate>
+        <div class="grid">
+          <div class="field span-2" [class.has-error]="invalid(registerVersionDocumentoForm, 'id_documento')">
+            <label for="id_documento">Documento base</label>
+            <select id="id_documento" formControlName="id_documento">
+              <option [ngValue]="''" disabled>Selecciona uno de tus documentos</option>
+              <option *ngFor="let d of documentosByUser" [ngValue]="d.id">{{ d.codigo ? d.codigo + ' · ' : '' }}{{ d.titulo || ('Documento ' + d.id) }}</option>
+            </select>
+            <small class="error" *ngIf="invalid(registerVersionDocumentoForm, 'id_documento')">Selecciona el documento al que pertenece la versión.</small>
+            <small class="hint" *ngIf="versionTipo">
+              <mat-icon>rule</mat-icon>
+              {{ versionTipo.nombre }} · hasta {{ versionTipo.max_size_mb }} MB · {{ versionTipo.extensiones_permitidas || 'cualquier formato' }}{{ versionRequiresApproval ? ' · requiere aprobación' : '' }}
+            </small>
+          </div>
+
+          <!-- Archivo -->
+          <div class="field span-2" [class.has-error]="fileError || invalid(registerVersionDocumentoForm, 'archivo')">
+            <span class="label">Archivo</span>
+            <label class="dropzone" for="archivo" [class.is-dragging]="isDragging" [class.has-file]="selectedFile"
+              (dragover)="onDragOver($event)" (dragleave)="onDragLeave()" (drop)="onDrop($event)">
+              <input id="archivo" type="file" (change)="onFileSelected($event)" [accept]="acceptAttr" class="sr-only" />
+              <ng-container *ngIf="!selectedFile; else fileChosen">
+                <mat-icon class="dz-icon">cloud_upload</mat-icon>
+                <span class="dz-title">Arrastra el archivo aquí o <u>elígelo</u></span>
+                <span class="dz-sub">{{ versionTipo ? 'Máximo ' + versionTipo.max_size_mb + ' MB' : 'Selecciona primero el documento base' }}</span>
+              </ng-container>
+              <ng-template #fileChosen>
+                <mat-icon class="dz-icon">description</mat-icon>
+                <span class="dz-file">
+                  <span class="dz-title">{{ selectedFile?.name }}</span>
+                  <span class="dz-sub num">{{ formatSize(selectedFile?.size || 0) }} · haz clic para cambiarlo</span>
+                </span>
+                <button type="button" class="icon-btn" (click)="$event.preventDefault(); clearFile()" aria-label="Quitar archivo">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </ng-template>
+            </label>
+            <small class="error" *ngIf="fileError">{{ fileError }}</small>
+            <small class="error" *ngIf="!fileError && invalid(registerVersionDocumentoForm, 'archivo')">Selecciona un archivo para continuar.</small>
+          </div>
+
+          <div class="field" [class.has-error]="invalid(registerVersionDocumentoForm, 'nombre')">
+            <label for="nombre">Nombre del archivo</label>
+            <input id="nombre" type="text" formControlName="nombre" placeholder="Ej. boletin_agosto" />
+            <small class="error" *ngIf="invalid(registerVersionDocumentoForm, 'nombre')">Ingresa el nombre del archivo.</small>
+          </div>
+          <div class="field" [class.has-error]="invalid(registerVersionDocumentoForm, 'version')">
+            <label for="version">Número de versión</label>
+            <input id="version" type="number" min="1" formControlName="version" placeholder="1" class="num" />
+            <small class="error" *ngIf="invalid(registerVersionDocumentoForm, 'version')">Indica el número de versión.</small>
+          </div>
+          <div class="field span-2" [class.has-error]="invalid(registerVersionDocumentoForm, 'descripcion')">
+            <label for="descripcion_version">Descripción / notas</label>
+            <input id="descripcion_version" type="text" formControlName="descripcion" placeholder="Qué cambió en esta versión" />
+            <small class="error" *ngIf="invalid(registerVersionDocumentoForm, 'descripcion')">Describe brevemente la versión.</small>
+          </div>
+
+          <div class="field" *ngIf="isDocumentoPublico">
+            <span class="label">Visibilidad de la versión</span>
+            <div class="segmented" role="radiogroup">
+              <button type="button" role="radio" [class.is-active]="registerVersionDocumentoForm.get('visible')?.value === true"
+                (click)="registerVersionDocumentoForm.get('visible')?.setValue(true)"><mat-icon>visibility</mat-icon>Pública</button>
+              <button type="button" role="radio" [class.is-active]="registerVersionDocumentoForm.get('visible')?.value === false"
+                (click)="registerVersionDocumentoForm.get('visible')?.setValue(false)"><mat-icon>visibility_off</mat-icon>Borrador</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flujo de aprobación -->
+        <fieldset class="approval" *ngIf="versionRequiresApproval">
+          <legend><mat-icon>gavel</mat-icon>Solicitud de aprobación</legend>
+          <div class="grid">
+            <div class="field">
+              <label for="id_user_aprobador_ver">Aprobador</label>
+              <select id="id_user_aprobador_ver" formControlName="id_user_aprobador">
+                <option [ngValue]="null" disabled>Selecciona un aprobador</option>
+                <option *ngFor="let u of users_aprobadores" [ngValue]="u.id">{{ u.name }} {{ u.lastname }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="label">Prioridad</span>
+              <div class="segmented" role="radiogroup">
+                <button type="button" role="radio" *ngFor="let p of ['BAJA', 'MEDIA', 'ALTA']"
+                  [class.is-active]="registerVersionDocumentoForm.get('prioridad')?.value === p" [ngClass]="'prio-' + p.toLowerCase()"
+                  (click)="registerVersionDocumentoForm.get('prioridad')?.setValue(p)">{{ p === 'BAJA' ? 'Baja' : p === 'MEDIA' ? 'Media' : 'Alta' }}</button>
+              </div>
+            </div>
+            <div class="field span-2">
+              <label for="comentario_solicitud_ver">Motivo de la solicitud</label>
+              <textarea id="comentario_solicitud_ver" formControlName="comentarioSolicitud" rows="2"
+                placeholder="Explica brevemente por qué debe aprobarse"></textarea>
+            </div>
+          </div>
+          <p class="approval-note">La versión quedará en estado <strong>Pendiente</strong> hasta que el aprobador la evalúe.</p>
+        </fieldset>
+      </form>
+
+      <div class="banner-error" *ngIf="saveError" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ saveError }}</span>
+      </div>
+    </div>
+
+    <footer class="dialog-footer">
+      <button type="button" class="btn btn-ghost" (click)="close()" [disabled]="isSaving">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [attr.form]="activeFormId" [disabled]="isSaving">
+        <span class="spinner" *ngIf="isSaving" aria-hidden="true"></span>
+        {{ submitLabel }}
+      </button>
+    </footer>
+  </div>
+</div>

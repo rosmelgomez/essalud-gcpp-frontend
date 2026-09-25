@@ -20,7 +20,7 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
   readonly statusOptions: string[] = ['PENDIENTE', 'APROBADO', 'RECHAZADO'];
   dataSolicitudAcceso: SolicitudAcceso[] = [];
   filteredSolicitudes: SolicitudAcceso[] = [];
-  virtualRows: SolicitudAcceso[][] = [];
+  statusFilter: string = 'PENDIENTE';
 
   dataRed: any[] = [];
   dataCentroCompleto: any[] = [];
@@ -57,13 +57,15 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
     return this.dataSolicitudAcceso.filter(s => String(s.status).toUpperCase() === 'RECHAZADO').length;
   }
 
+  private pendingSelectionIndex: number = 0;
   private dniFilterDebounceHandle: ReturnType<typeof setTimeout> | null = null;
   private readonly dniFilterDebounceMs = 120;
   private cardKeyCounter: number = 0;
   private cardKeyByRef = new WeakMap<SolicitudAcceso, string>();
-  private cardsPerRow: number = 3;
-  pageSize: number = 8;
-  readonly pageSizeOptions: number[] = [8, 24, 96];
+  pageSize: number = 25;
+  readonly pageSizeOptions: number[] = [10, 25, 50, 100];
+  readonly skeletonRows = Array.from({ length: 6 });
+  readonly commentMaxLength = 500;
   pageIndex: number = 0;
 
 
@@ -74,7 +76,6 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.cardsPerRow = this.calculateCardsPerRow();
     this.getDataRedCentro();
     this.getDataSolicitudAcceso();
   }
@@ -119,16 +120,109 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
     return `${this.pageIndex + 1} / ${this.totalPages}`;
   }
 
-  @HostListener('window:resize')
-  onWindowResize(): void {
-    const nextCardsPerRow = this.calculateCardsPerRow();
-    if (nextCardsPerRow !== this.cardsPerRow) {
-      this.cardsPerRow = nextCardsPerRow;
-      this.rebuildVirtualRows();
+  get pageItems(): SolicitudAcceso[] {
+    const start = this.pageIndex * this.pageSize;
+    return this.filteredSolicitudes.slice(start, start + this.pageSize);
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.selectedRedFilter || this.selectedCentroFilter || this.dniFilter.trim());
+  }
+
+  get statusTabs(): Array<{ value: string; label: string; count: number }> {
+    return [
+      { value: 'PENDIENTE', label: 'Pendientes', count: this.pendientesCount },
+      { value: 'APROBADO', label: 'Aprobadas', count: this.aprobadasCount },
+      { value: 'RECHAZADO', label: 'Rechazadas', count: this.rechazadasCount },
+      { value: '', label: 'Todas', count: this.totalSolicitudes },
+    ];
+  }
+
+  get isPendingSelected(): boolean {
+    return this.normalizeStatus(this.selectedSolicitud?.status) === 'PENDIENTE';
+  }
+
+  private get isWideLayout(): boolean {
+    return typeof window !== 'undefined' && window.matchMedia('(min-width: 1100px)').matches;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.showDecisionModal && !this.savingState) {
+      this.cancelarEdicion();
       this.cdr.markForCheck();
     }
   }
 
+  setStatusFilter(value: string): void {
+    this.statusFilter = value;
+    this.applyFilters(true);
+    this.syncSelectionWithList();
+  }
+
+  normalizeStatus(status?: string): string {
+    return String(status || 'PENDIENTE').toUpperCase();
+  }
+
+  getStatusLabel(status?: string): string {
+    const map: Record<string, string> = { PENDIENTE: 'Pendiente', APROBADO: 'Aprobada', RECHAZADO: 'Rechazada' };
+    return map[this.normalizeStatus(status)] ?? this.normalizeStatus(status);
+  }
+
+  getInitials(solicitud: SolicitudAcceso | null): string {
+    const first = (solicitud?.name ?? '').trim().charAt(0);
+    const last = (solicitud?.lastname ?? '').trim().charAt(0);
+    return `${first}${last}`.toUpperCase() || '?';
+  }
+
+  formatShortDate(date?: string): string {
+    if (!date) {
+      return '—';
+    }
+    const d = new Date(date);
+    if (isNaN(d.getTime())) {
+      return String(date);
+    }
+    return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  timeAgo(date?: string): string {
+    if (!date) {
+      return '';
+    }
+    const d = new Date(date);
+    if (isNaN(d.getTime())) {
+      return '';
+    }
+    const minutes = Math.floor((Date.now() - d.getTime()) / 60000);
+    if (minutes < 1) return 'hace un momento';
+    if (minutes < 60) return `hace ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `hace ${hours} h`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'ayer';
+    if (days < 30) return `hace ${days} días`;
+    const months = Math.floor(days / 30);
+    return months === 1 ? 'hace 1 mes' : `hace ${months} meses`;
+  }
+
+  isSelected(solicitud: SolicitudAcceso): boolean {
+    return !!this.selectedSolicitud && this.getCardKey(this.selectedSolicitud) === this.getCardKey(solicitud);
+  }
+
+  /** En pantallas anchas mantiene siempre una solicitud visible en el panel de detalle. */
+  private syncSelectionWithList(preferredIndex: number = 0): void {
+    const items = this.pageItems;
+    const stillVisible = this.selectedSolicitud && items.some((i) => i.id === this.selectedSolicitud?.id);
+    if (stillVisible) {
+      return;
+    }
+    if (this.isWideLayout && items.length > 0) {
+      this.iniciarEdicion(items[Math.min(preferredIndex, items.length - 1)]);
+    } else {
+      this.cancelarEdicion();
+    }
+  }
 
   getDataSolicitudAcceso(): void {
     this.isLoadingSolicitudes = true;
@@ -139,6 +233,8 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
         this.initializeCardKeys(data);
         this.applyFilters();
         this.isLoadingSolicitudes = false;
+        this.syncSelectionWithList(this.pendingSelectionIndex);
+        this.pendingSelectionIndex = 0;
         this.cdr.markForCheck();
       },
       error: (err) => {
@@ -181,16 +277,19 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
   onRedFilterChange(): void {
     this.selectedCentroFilter = '';
     this.applyFilters(true);
+    this.syncSelectionWithList();
   }
 
   onCentroFilterChange(): void {
     this.applyFilters(true);
+    this.syncSelectionWithList();
   }
 
   onDniFilterChange(): void {
     this.clearDniDebounce();
     this.dniFilterDebounceHandle = setTimeout(() => {
       this.applyFilters(true);
+      this.syncSelectionWithList();
       this.cdr.markForCheck();
     }, this.dniFilterDebounceMs);
   }
@@ -201,6 +300,7 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
     this.selectedCentroFilter = '';
     this.dniFilter = '';
     this.applyFilters(true);
+    this.syncSelectionWithList();
   }
 
   applyFilters(resetPage: boolean = false): void {
@@ -213,20 +313,24 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
       const matchesCentro =
         !this.selectedCentroFilter || String(codcas ?? '') === this.selectedCentroFilter;
       const matchesDni = !dniNormalized || String(item.dni ?? '').toLowerCase().includes(dniNormalized);
+      const matchesStatus = !this.statusFilter || this.normalizeStatus(item.status) === this.statusFilter;
 
-      return matchesRed && matchesCentro && matchesDni;
+      return matchesRed && matchesCentro && matchesDni && matchesStatus;
     });
 
     if (resetPage) {
       this.pageIndex = 0;
     }
 
-    this.rebuildVirtualRows();
+    const lastPageIndex = Math.max(0, this.totalPages - 1);
+    if (this.pageIndex > lastPageIndex) {
+      this.pageIndex = lastPageIndex;
+    }
   }
 
   onPageSizeChange(): void {
     this.pageIndex = 0;
-    this.rebuildVirtualRows();
+    this.syncSelectionWithList();
     this.cdr.markForCheck();
   }
 
@@ -235,7 +339,7 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
       return;
     }
     this.pageIndex -= 1;
-    this.rebuildVirtualRows();
+    this.syncSelectionWithList();
     this.cdr.markForCheck();
   }
 
@@ -244,13 +348,10 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
       return;
     }
     this.pageIndex += 1;
-    this.rebuildVirtualRows();
+    this.syncSelectionWithList();
     this.cdr.markForCheck();
   }
 
-  getCardsRowTemplateColumns(): string {
-    return `repeat(${this.cardsPerRow}, minmax(0, 1fr))`;
-  }
 
   getRedName(code?: string): string {
     if (!code) {
@@ -318,7 +419,9 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
 
   iniciarEdicion(solicitud: SolicitudAcceso): void {
     this.selectedSolicitud = solicitud;
-    this.draftSolicitud = this.normalizeDraftByRoleRules({ ...solicitud });
+    this.draftSolicitud = this.normalizeStatus(solicitud.status) === 'PENDIENTE'
+      ? this.normalizeDraftByRoleRules({ ...solicitud })
+      : null;
     this.validationMessage = '';
     this.showDecisionModal = true;
   }
@@ -354,6 +457,8 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
     this.savingState = true;
     this.solicitudAccesoService.updateSolicitud(this.draftSolicitud).subscribe({
       next: () => {
+        const index = this.pageItems.findIndex((i) => i.id === this.selectedSolicitud?.id);
+        this.pendingSelectionIndex = Math.max(0, index);
         this.cancelarEdicion();
         this.getDataSolicitudAcceso();
         this.cdr.markForCheck();
@@ -361,6 +466,7 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
       error: (err) => {
         console.error(err);
         this.savingState = false;
+        this.validationMessage = 'No se pudo guardar la decisión. Inténtalo de nuevo.';
         this.cdr.markForCheck();
       },
     });
@@ -498,38 +604,6 @@ export class SolicitudAccesoReports implements OnInit, OnDestroy {
     }
   }
 
-  private calculateCardsPerRow(): number {
-    if (typeof window === 'undefined') {
-      return 4;
-    }
-    if (window.innerWidth < 768) {
-      return 1;
-    }
-    if (window.innerWidth < 1200) {
-      return 2;
-    }
-    if (window.innerWidth < 1700) {
-      return 3;
-    }
-    return 4;
-  }
 
-  private rebuildVirtualRows(): void {
-    const totalItems = this.filteredSolicitudes.length;
-    const lastPageIndex = Math.max(0, Math.ceil(totalItems / this.pageSize) - 1);
-    if (this.pageIndex > lastPageIndex) {
-      this.pageIndex = lastPageIndex;
-    }
-
-    const start = this.pageIndex * this.pageSize;
-    const end = start + this.pageSize;
-    const pagedSolicitudes = this.filteredSolicitudes.slice(start, end);
-
-    const rows: SolicitudAcceso[][] = [];
-    for (let index = 0; index < pagedSolicitudes.length; index += this.cardsPerRow) {
-      rows.push(pagedSolicitudes.slice(index, index + this.cardsPerRow));
-    }
-    this.virtualRows = rows;
-  }
 
 }

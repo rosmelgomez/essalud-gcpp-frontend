@@ -1,7 +1,9 @@
 import { Component, inject, ChangeDetectionStrategy, HostListener, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { ChangeDetectorRef } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,6 +26,7 @@ import { UsersService } from '../../../services/usuario/users-service';
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     MatButtonModule,
     MatIconModule,
   ],
@@ -32,13 +35,15 @@ import { UsersService } from '../../../services/usuario/users-service';
 })
 export class ManageUsers implements OnInit {
   readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
   readonly roleOptions: string[] = ['ADMIN', 'ADMIN_RED', 'USER', 'CONSULTA'];
   readonly flagOptions: Array<{ label: string; value: string }> = [
     { label: 'Todos', value: '' },
     { label: 'Activo', value: '1' },
     { label: 'Inactivo', value: '0' },
   ];
-  readonly pageSizeOptions: number[] = [8, 24, 96];
+  readonly pageSizeOptions: number[] = [10, 25, 50, 100];
+  readonly skeletonRows = Array.from({ length: 6 });
 
   isLoadingUsers: boolean = true;
   isLoadingCatalogos: boolean = true;
@@ -46,10 +51,11 @@ export class ManageUsers implements OnInit {
 
   allUserOriginal: User[] = [];
   filteredUsers: User[] = [];
-  virtualRows: any[][] = [];
   editingRowKey: string | number | null = null;
   editableRow: any | null = null;
   isEditModalOpen: boolean = false;
+  showAdvancedFilters: boolean = false;
+  showEditPassword: boolean = false;
 
   dataRed: any[] = [];
   dataCentroCompleto: any[] = [];
@@ -60,13 +66,31 @@ export class ManageUsers implements OnInit {
   private redNameByCode: Record<string, string> = {};
   private centroNameByCode: Record<string, string> = {};
 
-  private cardsPerRow: number = 3;
-
   // Helper para obtener el rol principal del usuario
   private getPrimaryRole(roles?: String[]): string {
     return roles && roles.length > 0 ? String(roles[0]) : '';
   }
-  pageSize: number = 8;
+  // ---- Registro de usuario (modal) ----
+  readonly createRoleOptions: Array<{ value: string; label: string; hint: string }> = [
+    { value: 'ADMIN', label: 'Administrador', hint: 'Acceso total. No requiere red ni centro.' },
+    { value: 'ADMIN_RED', label: 'Administrador de Red', hint: 'Gestiona una red asistencial. Asígnale una red.' },
+    { value: 'USER', label: 'Usuario', hint: 'Trabaja en un centro. Al elegir el centro, la red se completa sola.' },
+  ];
+  private readonly comboLimit = 60;
+
+  isCreateModalOpen: boolean = false;
+  isSavingCreate: boolean = false;
+  createSubmitted: boolean = false;
+  createError: string = '';
+  showCreatePassword: boolean = false;
+  private isUsernameManuallyEdited: boolean = false;
+  newUser = this.emptyNewUser();
+  combo: Record<string, { open: boolean; query: string; active: number }> = {
+    red: { open: false, query: '', active: -1 },
+    centro: { open: false, query: '', active: -1 },
+  };
+
+  pageSize: number = 25;
   pageIndex: number = 0;
 
   filters = {
@@ -89,7 +113,6 @@ export class ManageUsers implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.cardsPerRow = this.calculateCardsPerRow();
     this.loadData();
     this.getDataRedCentro();
   }
@@ -121,16 +144,72 @@ export class ManageUsers implements OnInit {
     return `${this.pageIndex + 1} / ${this.totalPages}`;
   }
 
-  @HostListener('window:resize')
-  onWindowResize(): void {
-    const nextCardsPerRow = this.calculateCardsPerRow();
-    if (nextCardsPerRow !== this.cardsPerRow) {
-      this.cardsPerRow = nextCardsPerRow;
-      this.rebuildVirtualRows();
-      this.cdr.markForCheck();
+  get pageUsers(): any[] {
+    const start = this.pageIndex * this.pageSize;
+    return this.filteredUsers.slice(start, start + this.pageSize);
+  }
+
+  get activeCount(): number {
+    return this.allUserOriginal.filter((u) => this.isActive(u.flag)).length;
+  }
+
+  get inactiveCount(): number {
+    return this.allUserOriginal.length - this.activeCount;
+  }
+
+  get activeFilterCount(): number {
+    return Object.values(this.filters).filter((v) => String(v ?? '').trim() !== '').length;
+  }
+
+  get advancedFilterCount(): number {
+    const { codcas, code_red, date_creation, date_update } = this.filters;
+    return [codcas, code_red, date_creation, date_update].filter((v) => String(v ?? '').trim() !== '').length;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isCreateModalOpen) {
+      this.closeCreate();
+      return;
+    }
+    if (this.isEditModalOpen && !this.isSavingEdit) {
+      this.cancelEdit();
     }
   }
 
+  isActive(flag: string | number | boolean | null | undefined): boolean {
+    return flag === 1 || flag === '1' || flag === true;
+  }
+
+  getPrimaryRoleLabel(user: User): string {
+    return this.getPrimaryRole(user.roles) || '—';
+  }
+
+  getRoleClass(user: User): string {
+    const role = this.getPrimaryRole(user.roles).toLowerCase().replace(/_/g, '-');
+    return role ? `role-${role}` : 'role-none';
+  }
+
+  getUserInitials(user: User): string {
+    const first = (user.name ?? '').trim().charAt(0);
+    const last = (user.lastname ?? '').trim().charAt(0);
+    return `${first}${last}`.toUpperCase() || (user.username ?? '?').charAt(0).toUpperCase();
+  }
+
+  setFlagFilter(value: string): void {
+    this.filters.flag = value;
+    this.onFilterValueChange();
+  }
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  onOverlayClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget && !this.isSavingEdit) {
+      this.cancelEdit();
+    }
+  }
 
   formatDate(date: any): string {
     if (!date) return '';
@@ -214,6 +293,7 @@ export class ManageUsers implements OnInit {
       this.editableRow.roles = [...this.editableRow.roles];
     }
     this.isEditModalOpen = true;
+    this.showEditPassword = false;
     this.initializeEditingDropdowns();
   }
 
@@ -421,11 +501,274 @@ export class ManageUsers implements OnInit {
     this.editableRow = null;
     this.isSavingEdit = false;
     this.isEditModalOpen = false;
+    this.showEditPassword = false;
     this.editingRedEnabled = false;
     this.editingCentroEnabled = false;
     this.editingAllCentroForSelectedRed = [];
     this.cdr.markForCheck();
   }
+  // ================= Registro de usuario =================
+
+  private emptyNewUser() {
+    return { name: '', lastname: '', dni: '', email: '', username: '', password: '', rol: '', code_red: '', codcas: '' };
+  }
+
+  openCreate(): void {
+    this.newUser = this.emptyNewUser();
+    this.isUsernameManuallyEdited = false;
+    this.createSubmitted = false;
+    this.createError = '';
+    this.showCreatePassword = false;
+    this.isSavingCreate = false;
+    this.resetCombo('red');
+    this.resetCombo('centro');
+    this.isCreateModalOpen = true;
+    setTimeout(() => document.getElementById('new-name')?.focus());
+  }
+
+  closeCreate(): void {
+    if (this.isSavingCreate) {
+      return;
+    }
+    this.isCreateModalOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  onCreateOverlayClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.closeCreate();
+    }
+  }
+
+  get createRoleHint(): string {
+    return this.createRoleOptions.find((r) => r.value === this.newUser.rol)?.hint
+      ?? 'Define qué puede ver y hacer la cuenta.';
+  }
+
+  get isCreateRedEnabled(): boolean {
+    return this.newUser.rol === 'ADMIN_RED' || this.newUser.rol === 'USER';
+  }
+
+  get isCreateCentroEnabled(): boolean {
+    return this.newUser.rol === 'USER';
+  }
+
+  onCreateNameChange(): void {
+    if (this.isUsernameManuallyEdited) {
+      return;
+    }
+    this.newUser.username = this.generateUsername(this.newUser.name, this.newUser.lastname);
+  }
+
+  onCreateUsernameInput(): void {
+    this.isUsernameManuallyEdited = this.newUser.username.trim() !== '';
+  }
+
+  private generateUsername(name: string, lastname: string): string {
+    const first = (name ?? '').trim().split(/\s+/)[0];
+    const last = (lastname ?? '').trim().split(/\s+/)[0];
+    if (!first || !last) {
+      return '';
+    }
+    return `${first}.${last}`
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9.]/g, '');
+  }
+
+  onCreateRoleChange(): void {
+    if (!this.isCreateRedEnabled) {
+      this.newUser.code_red = '';
+    }
+    if (!this.isCreateCentroEnabled) {
+      this.newUser.codcas = '';
+    }
+    this.resetCombo('red');
+    this.resetCombo('centro');
+  }
+
+  get createErrors(): Record<string, string> {
+    const u = this.newUser;
+    const errors: Record<string, string> = {};
+    if (!u.name.trim()) errors['name'] = 'Ingresa el nombre.';
+    if (!u.lastname.trim()) errors['lastname'] = 'Ingresa el apellido.';
+    if (!u.dni.trim()) errors['dni'] = 'Ingresa el DNI.';
+    if (u.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email.trim())) {
+      errors['email'] = 'El correo no tiene un formato válido.';
+    }
+    if (!u.rol) errors['rol'] = 'Selecciona un rol.';
+    if (this.isCreateRedEnabled && !u.code_red) errors['code_red'] = 'Selecciona una red.';
+    if (this.isCreateCentroEnabled && !u.codcas) errors['codcas'] = 'Selecciona un centro.';
+    if (!u.username.trim()) errors['username'] = 'Ingresa un username.';
+    if (!u.password) {
+      errors['password'] = 'Ingresa una contraseña.';
+    } else if (u.password.length < 8) {
+      errors['password'] = 'Usa al menos 8 caracteres.';
+    }
+    return errors;
+  }
+
+  createFieldError(field: string): string {
+    return this.createSubmitted ? this.createErrors[field] ?? '' : '';
+  }
+
+  get createErrorCount(): number {
+    return Object.keys(this.createErrors).length;
+  }
+
+  submitCreate(): void {
+    this.createSubmitted = true;
+    this.createError = '';
+    if (this.createErrorCount > 0) {
+      return;
+    }
+
+    const u = this.newUser;
+    const payload: any = {
+      id: 0,
+      name: u.name.trim(),
+      lastname: u.lastname.trim(),
+      dni: u.dni.trim(),
+      codcas: u.rol === 'USER' ? u.codcas : '',
+      email: u.email.trim(),
+      username: u.username.trim(),
+      password: u.password,
+      roles: u.rol,
+      codred: u.rol === 'ADMIN_RED' ? u.code_red : '',
+      date_creation: '',
+      date_update: '',
+      flag: true,
+    };
+
+    this.isSavingCreate = true;
+    this.userservice.registerUser(payload).subscribe({
+      next: () => {
+        this.isSavingCreate = false;
+        this.isCreateModalOpen = false;
+        this.snackBar.open(`Usuario ${payload.username} registrado`, 'Cerrar', { duration: 3500 });
+        this.loadData();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Error en el registro', err);
+        this.isSavingCreate = false;
+        const detail = typeof err?.error === 'string' && err.error.length < 200 ? ` ${err.error}` : '';
+        this.createError = `No se pudo registrar el usuario.${detail || ' Revisa los datos e inténtalo de nuevo.'}`;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  // ---- Combobox con búsqueda (Red / Centro) ----
+
+  private resetCombo(kind: 'red' | 'centro'): void {
+    this.combo[kind] = { open: false, query: '', active: -1 };
+  }
+
+  private comboSource(kind: 'red' | 'centro'): any[] {
+    if (kind === 'red') {
+      return this.dataRed;
+    }
+    const red = this.normalizeCode(this.newUser.code_red);
+    return red
+      ? this.dataCentroCompleto.filter((c: any) => this.normalizeCode(c.redasiscod) === red)
+      : this.dataCentroCompleto;
+  }
+
+  comboLabelOf(kind: 'red' | 'centro', option: any): string {
+    return kind === 'red' ? option?.redasisdes ?? '' : option?.cenasides ?? '';
+  }
+
+  private comboCodeOf(kind: 'red' | 'centro', option: any): string {
+    return String(kind === 'red' ? option?.redasiscod ?? '' : option?.cenasicod ?? '');
+  }
+
+  private comboMatches(kind: 'red' | 'centro'): any[] {
+    const q = this.combo[kind].query.trim().toLowerCase();
+    const source = this.comboSource(kind);
+    return q ? source.filter((o) => this.comboLabelOf(kind, o).toLowerCase().includes(q)) : source;
+  }
+
+  comboOptions(kind: 'red' | 'centro'): any[] {
+    return this.comboMatches(kind).slice(0, this.comboLimit);
+  }
+
+  comboHiddenCount(kind: 'red' | 'centro'): number {
+    return Math.max(0, this.comboMatches(kind).length - this.comboLimit);
+  }
+
+  comboSelectedLabel(kind: 'red' | 'centro'): string {
+    const code = kind === 'red' ? this.newUser.code_red : this.newUser.codcas;
+    if (!code) {
+      return '';
+    }
+    return kind === 'red' ? this.getRedName(code) : this.getCentroName(code);
+  }
+
+  comboInputValue(kind: 'red' | 'centro'): string {
+    return this.combo[kind].open ? this.combo[kind].query : this.comboSelectedLabel(kind);
+  }
+
+  openCombo(kind: 'red' | 'centro'): void {
+    this.combo[kind] = { open: true, query: '', active: 0 };
+  }
+
+  closeCombo(kind: 'red' | 'centro'): void {
+    this.combo[kind] = { open: false, query: '', active: -1 };
+  }
+
+  onComboInput(kind: 'red' | 'centro', event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.combo[kind] = { open: true, query: value, active: 0 };
+  }
+
+  onComboKeydown(kind: 'red' | 'centro', event: KeyboardEvent): void {
+    const state = this.combo[kind];
+    const options = this.comboOptions(kind);
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!state.open) {
+        this.openCombo(kind);
+        return;
+      }
+      const delta = event.key === 'ArrowDown' ? 1 : -1;
+      state.active = Math.min(Math.max(state.active + delta, 0), options.length - 1);
+      setTimeout(() => document.getElementById(`combo-${kind}-opt-${state.active}`)?.scrollIntoView({ block: 'nearest' }));
+    } else if (event.key === 'Enter') {
+      if (state.open && options[state.active]) {
+        event.preventDefault();
+        this.selectCombo(kind, options[state.active]);
+      }
+    } else if (event.key === 'Escape' && state.open) {
+      event.stopPropagation();
+      this.closeCombo(kind);
+    }
+  }
+
+  selectCombo(kind: 'red' | 'centro', option: any): void {
+    const code = this.comboCodeOf(kind, option);
+    if (kind === 'red') {
+      if (this.normalizeCode(this.newUser.code_red) !== this.normalizeCode(code)) {
+        this.newUser.codcas = '';
+      }
+      this.newUser.code_red = code;
+    } else {
+      this.newUser.codcas = code;
+      // Al elegir el centro, la red se sincroniza automáticamente.
+      this.newUser.code_red = String(option?.redasiscod ?? this.newUser.code_red);
+    }
+    this.closeCombo(kind);
+  }
+
+  clearCombo(kind: 'red' | 'centro'): void {
+    if (kind === 'red') {
+      this.newUser.code_red = '';
+    }
+    this.newUser.codcas = '';
+    this.resetCombo(kind);
+  }
+
   // Lookup helpers to display labels instead of codes.
   getRedName(code: string | number | null | undefined): string {
     const key = String(code ?? '');
@@ -469,7 +812,6 @@ export class ManageUsers implements OnInit {
 
   onPageSizeChange(): void {
     this.pageIndex = 0;
-    this.rebuildVirtualRows();
     this.cdr.markForCheck();
   }
 
@@ -479,7 +821,6 @@ export class ManageUsers implements OnInit {
     }
 
     this.pageIndex -= 1;
-    this.rebuildVirtualRows();
     this.cdr.markForCheck();
   }
 
@@ -489,13 +830,9 @@ export class ManageUsers implements OnInit {
     }
 
     this.pageIndex += 1;
-    this.rebuildVirtualRows();
     this.cdr.markForCheck();
   }
 
-  getCardsRowTemplateColumns(): string {
-    return `repeat(${this.cardsPerRow}, minmax(0, 1fr))`;
-  }
 
   updateUser(): void {
     // USER debe tener red y centro seleccionados para permitir actualizar.
@@ -649,7 +986,7 @@ export class ManageUsers implements OnInit {
     // Filtro role - busca en el array de roles
     if (this.filters.role) {
       const rolesList = (row.roles ?? []).map((r: String) => String(r).toLowerCase());
-      const hasMatchingRole = rolesList.some((role: string) => role.includes(this.filters.role.toLowerCase()));
+      const hasMatchingRole = rolesList.some((role: string) => role === this.filters.role.toLowerCase());
       if (!hasMatchingRole) {
         return false;
       }
@@ -711,113 +1048,93 @@ export class ManageUsers implements OnInit {
       this.pageIndex = Math.max(0, this.totalPages - 1);
     }
 
-    this.rebuildVirtualRows();
   }
 
-  private rebuildVirtualRows(): void {
-    const start = this.pageIndex * this.pageSize;
-    const end = start + this.pageSize;
-    const pageItems = this.filteredUsers.slice(start, end);
-    this.virtualRows = this.chunkArray(pageItems, this.cardsPerRow);
-  }
 
-  private chunkArray<T>(items: T[], size: number): T[][] {
-    if (size <= 0) {
-      return [items];
-    }
 
-    const chunks: T[][] = [];
-    for (let index = 0; index < items.length; index += size) {
-      chunks.push(items.slice(index, index + size));
-    }
-    return chunks;
-  }
-
-  private calculateCardsPerRow(): number {
-    if (typeof window === 'undefined') {
-      return 3;
-    }
-
-    const width = window.innerWidth;
-    if (width >= 1400) {
-      return 4;
-    }
-    if (width >= 1024) {
-      return 3;
-    }
-    if (width >= 640) {
-      return 2;
-    }
-    return 1;
-  }
 
 }
 
 @Component({
   selector: 'confirm-dialog',
   template: `
-    <div class="dialog-container">
-      <div class="dialog-header" [ngClass]="getHeaderClass()">
-        <mat-icon class="dialog-icon">{{ getIcon() }}</mat-icon>
+    <div class="dialog-container" [ngClass]="getHeaderClass()">
+      <div class="dialog-header">
+        <span class="dialog-icon-wrap"><mat-icon class="dialog-icon">{{ getIcon() }}</mat-icon></span>
         <h2 mat-dialog-title class="dialog-title">{{ data.title }}</h2>
       </div>
       <mat-dialog-content class="dialog-message">
         <p>{{ data.message }}</p>
       </mat-dialog-content>
       <mat-dialog-actions class="dialog-actions">
-        <button mat-stroked-button class="btn-cancel" (click)="onCancel()">
-          <mat-icon>close</mat-icon>
-          Cancelar
-        </button>
-        <button mat-raised-button [color]="getButtonColor()" class="btn-confirm" (click)="onConfirm()">
+        <button type="button" class="dlg-btn dlg-cancel" (click)="onCancel()">Cancelar</button>
+        <button type="button" class="dlg-btn dlg-confirm" (click)="onConfirm()" cdkFocusInitial>
           <mat-icon>{{ getConfirmIcon() }}</mat-icon>
-          Confirmar
+          {{ getConfirmLabel() }}
         </button>
       </mat-dialog-actions>
     </div>
   `,
   styles: [`
     .dialog-container {
+      --dlg-accent: #0064AF;
+      --dlg-accent-hover: #00528f;
+      --dlg-tint: #e8f1fa;
       width: 100%;
+      padding: 24px 24px 20px;
+      font-family: var(--font-family-global);
+      color: #16283b;
+    }
+
+    .dialog-container.warning {
+      --dlg-accent: #c8102e;
+      --dlg-accent-hover: #a50d26;
+      --dlg-tint: #fdecef;
     }
 
     .dialog-header {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 20px 24px;
-      border-radius: 8px 8px 0 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      gap: 14px;
     }
 
-    .dialog-header.warning {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-
-    .dialog-header.success {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    .dialog-icon-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      color: var(--dlg-accent);
+      background: var(--dlg-tint);
+      border-radius: 50%;
     }
 
     .dialog-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
     }
 
     .dialog-title {
       margin: 0;
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
+      padding: 0 !important;
+      font-family: var(--font-family-headings);
+      font-size: 18px !important;
+      font-weight: 700 !important;
+      line-height: 1.3 !important;
+      color: #16283b !important;
+    }
+
+    .dialog-title::before {
+      display: none !important;
     }
 
     .dialog-message {
-      padding: 24px 24px;
-      font-size: 15px;
-      line-height: 1.6;
-      color: rgba(0, 0, 0, 0.87);
-      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 12px 0 0 58px !important;
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: #56697d !important;
     }
 
     .dialog-message p {
@@ -827,54 +1144,60 @@ export class ManageUsers implements OnInit {
     .dialog-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 12px;
-      padding: 16px 24px;
-      background-color: #fafafa;
-      border-radius: 0 0 8px 8px;
+      gap: 10px;
+      min-height: 0 !important;
+      padding: 24px 0 0 !important;
     }
 
-    .btn-cancel {
-      min-width: 100px;
+    .dlg-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       height: 40px;
+      padding: 0 16px;
+      font: inherit;
       font-size: 14px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      transition: all 0.3s ease;
+      font-weight: 700;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.18s ease, border-color 0.18s ease;
     }
 
-    .btn-cancel:hover {
-      background-color: #e0e0e0;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    .dlg-btn:focus-visible {
+      outline: 2px solid var(--dlg-accent);
+      outline-offset: 2px;
     }
 
-    .btn-confirm {
-      min-width: 100px;
-      height: 40px;
-      font-size: 14px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    .dlg-cancel {
+      color: #16283b;
+      background: #ffffff;
+      border-color: #dfe6ee;
     }
 
-    .btn-confirm:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    .dlg-cancel:hover {
+      background: #f5f8fb;
+      border-color: #c9d6e3;
     }
 
-    button mat-icon {
-      margin-right: 8px;
+    .dlg-confirm {
+      color: #ffffff;
+      background: var(--dlg-accent);
+    }
+
+    .dlg-confirm:hover {
+      background: var(--dlg-accent-hover);
+    }
+
+    .dlg-confirm mat-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;
     }
 
-    ::ng-deep .mat-mdc-dialog-container {
-      border-radius: 8px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    ::ng-deep .mat-mdc-dialog-container .mat-mdc-dialog-surface {
+      border-radius: 16px;
+      box-shadow: 0 24px 60px -12px rgba(10, 30, 55, 0.35), 0 6px 16px -6px rgba(10, 30, 55, 0.18);
     }
   `],
   imports: [
@@ -911,6 +1234,13 @@ export class ConfirmDialogComponent {
       return 'delete';
     }
     return 'check';
+  }
+
+  getConfirmLabel(): string {
+    if (this.data.title.toLowerCase().includes('eliminación')) {
+      return 'Eliminar';
+    }
+    return 'Confirmar';
   }
 
   getButtonColor(): string {

@@ -10,6 +10,7 @@ import { indicadoresRoutes } from './pages/Indicadores/indicadores.router';
 import { solicitudAccesoRoutes } from './pages/Solicitud-Acceso/solucitud-acceso.router';
 import { usuarioRoutes } from './pages/Usuarios/usuario.router';
 import { TmiIndicadores } from './pages/tmi-indicadores/tmi-indicadores';
+import { LogsReports } from './pages/logs-reports/logs-reports';
 
 
 export const routes: Routes = [
@@ -17,6 +18,7 @@ export const routes: Routes = [
 
     // core del sistema 
     { path: 'login', component: Login },
+
 
     // home page
     { path: 'home', component: HomePage, canActivate: [authenticateGuard] },
@@ -26,6 +28,9 @@ export const routes: Routes = [
 
     //solicitud de acceso
     { path: 'solicitud-acceso', children: solicitudAccesoRoutes },
+
+    //logs
+    { path: 'logs-reports', component: LogsReports, canActivate: [authenticateGuard] },
 
     //reports
     { path: 'reporte', children: reportesRoutes, canActivate: [authenticateGuard] },

@@ -1,204 +1,228 @@
 <div class="dashboard-wrapper">
   <header class="dashboard-header">
     <div class="header-content">
-      <span class="eyebrow">MÓDULO DE GESTIÓN DOCUMENTAL</span>
-      <h1>Panel de Auditoría de Documentos</h1>
-      <p>Monitoreo en tiempo real de accesos, descargas y consultas de documentos estadísticos.</p>
-    </div>
-    <div style="display: flex; gap: 12px; align-items: center;">
-      <button class="btn-refresh" (click)="loadAuditorias()" title="Actualizar datos" [disabled]="isLoading">
-        <mat-icon [class.spin]="isLoading">refresh</mat-icon>
-        Actualizar
-      </button>
-      <a routerLink="/documentos/reports-documento" class="btn-back">
+      <a routerLink="/documento/reports" class="back-link">
         <mat-icon>arrow_back</mat-icon>
-        Volver a Repositorio
+        Repositorio documental
       </a>
+      <h1>Auditoría de Documentos</h1>
+      <p>Monitoreo de accesos, descargas y consultas de documentos estadísticos.</p>
     </div>
+    <button type="button" class="btn btn-ghost" (click)="loadAuditorias()" [disabled]="isLoading">
+      <mat-icon [class.spin]="isLoading">refresh</mat-icon>
+      {{ isLoading ? 'Actualizando…' : 'Actualizar' }}
+    </button>
   </header>
 
-  <!-- Tarjetas de Métricas -->
-  <section class="metrics-grid">
-    <div class="metric-card glass-card">
-      <div class="metric-header">
-        <span class="metric-title">Total Acciones</span>
-        <mat-icon class="metric-icon-mat">analytics</mat-icon>
+  <!-- Resumen + actividad -->
+  <section class="overview">
+    <dl class="kpis">
+      <div class="kpi">
+        <dt>Acciones registradas</dt>
+        <dd class="num">{{ totalAcciones | number }}</dd>
       </div>
-      <div class="metric-value">{{ totalAcciones }}</div>
-      <div class="metric-footer">Registros históricos de auditoría</div>
-    </div>
+      <div class="kpi">
+        <dt><span class="swatch sw-vis" aria-hidden="true"></span>Visualizaciones</dt>
+        <dd class="num">{{ totalVisualizaciones | number }}</dd>
+      </div>
+      <div class="kpi">
+        <dt><span class="swatch sw-desc" aria-hidden="true"></span>Descargas</dt>
+        <dd class="num">{{ totalDescargas | number }}</dd>
+      </div>
+      <div class="kpi">
+        <dt>Usuarios activos</dt>
+        <dd class="num">{{ usuariosUnicos | number }}</dd>
+      </div>
+    </dl>
 
-    <div class="metric-card glass-card approved-card">
-      <div class="metric-header">
-        <span class="metric-title">Visualizaciones</span>
-        <mat-icon class="metric-icon-mat">visibility</mat-icon>
-      </div>
-      <div class="metric-value">{{ totalVisualizaciones }}</div>
-      <div class="metric-footer">Documentos previsualizados</div>
-    </div>
+    <figure class="activity" aria-labelledby="activity-title">
+      <figcaption class="activity-head">
+        <div>
+          <h2 id="activity-title">Actividad de los últimos 30 días</h2>
+          <p><span class="num">{{ activityTotal | number }}</span> acciones · haz clic en un día para filtrar la tabla</p>
+        </div>
+        <ul class="legend" aria-label="Leyenda">
+          <li><span class="swatch sw-vis"></span>Visualizar</li>
+          <li><span class="swatch sw-desc"></span>Descargar</li>
+        </ul>
+      </figcaption>
 
-    <div class="metric-card glass-card pending-card">
-      <div class="metric-header">
-        <span class="metric-title">Descargas</span>
-        <mat-icon class="metric-icon-mat">download</mat-icon>
-      </div>
-      <div class="metric-value">{{ totalDescargas }}</div>
-      <div class="metric-footer">Archivos descargados físicamente</div>
-    </div>
+      <div class="chart" *ngIf="!isLoading; else chartLoading">
+        <span class="chart-max num" *ngIf="activityMax > 0">{{ activityMax }}</span>
+        <div class="chart-plot" (mouseleave)="hoveredDay = null">
+          <button type="button" class="day" *ngFor="let d of activityDays; let last = last"
+            [class.is-selected]="isDaySelected(d.key)" [class.is-dim]="startDate && !isDaySelected(d.key)"
+            [class.is-today]="last"
+            (click)="toggleDayFilter(d.key)" (mouseenter)="hoveredDay = d" (focus)="hoveredDay = d" (blur)="hoveredDay = null"
+            [attr.aria-label]="dayLabel(d.date, 'long') + ': ' + d.vis + ' visualizaciones, ' + d.desc + ' descargas'"
+            [attr.aria-pressed]="isDaySelected(d.key)">
+            <span class="stack">
+              <span class="seg seg-desc" *ngIf="d.desc" [style.height.%]="barPct(d.desc)"></span>
+              <span class="seg seg-vis" *ngIf="d.vis" [style.height.%]="barPct(d.vis)"></span>
+            </span>
+          </button>
+        </div>
+        <div class="chart-axis" aria-hidden="true">
+          <span>{{ dayLabel(activityDays[0]?.date, 'short') }}</span>
+          <span>{{ dayLabel(activityDays[14]?.date, 'short') }}</span>
+          <span>Hoy</span>
+        </div>
 
-    <div class="metric-card glass-card no-approval-card">
-      <div class="metric-header">
-        <span class="metric-title">Usuarios Activos</span>
-        <mat-icon class="metric-icon-mat">people</mat-icon>
+        <div class="chart-tip" *ngIf="hoveredDay" role="status">
+          <strong>{{ dayLabel(hoveredDay.date, 'long') }}</strong>
+          <span><span class="swatch sw-vis"></span>Visualizar <b class="num">{{ hoveredDay.vis }}</b></span>
+          <span><span class="swatch sw-desc"></span>Descargar <b class="num">{{ hoveredDay.desc }}</b></span>
+        </div>
+
+        <p class="chart-empty" *ngIf="activityTotal === 0">Sin actividad en los últimos 30 días.</p>
       </div>
-      <div class="metric-value">{{ usuariosUnicos }}</div>
-      <div class="metric-footer">Personal que interactuó</div>
-    </div>
+      <ng-template #chartLoading>
+        <div class="chart chart-skeleton" aria-hidden="true"></div>
+      </ng-template>
+    </figure>
   </section>
 
-  <!-- Panel de Filtros -->
-  <section class="control-panel">
-    <div class="search-box">
-      <mat-icon class="search-icon">search</mat-icon>
-      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()"
-        placeholder="Buscar por usuario, código, título, IP..." />
-    </div>
-
-    <div class="filters-group">
-      <div class="filter-select-wrapper">
-        <label for="actionFilter">Acción</label>
-        <select id="actionFilter" [(ngModel)]="actionFilter" (change)="applyFilters()">
-          <option value="">Todas las acciones</option>
-          <option value="VISUALIZAR">Visualizar</option>
-          <option value="DESCARGAR">Descargar</option>
-        </select>
+  <!-- Registros -->
+  <section class="log-panel">
+    <div class="toolbar">
+      <div class="search-box">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input type="search" aria-label="Buscar registros" [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()"
+          placeholder="Buscar por usuario, código, título o IP" />
       </div>
 
-      <div class="filter-select-wrapper date-filter">
-        <label for="startDate">Fecha Desde</label>
-        <input type="date" id="startDate" [(ngModel)]="startDate" (change)="applyFilters()" />
-      </div>
-
-      <div class="filter-select-wrapper date-filter">
-        <label for="endDate">Fecha Hasta</label>
-        <input type="date" id="endDate" [(ngModel)]="endDate" (change)="applyFilters()" />
-      </div>
-
-      <button type="button" class="btn-clear" (click)='clearFilters()' title="Limpiar Filtros">
-        <mat-icon>filter_alt_off</mat-icon>
-      </button>
-    </div>
-  </section>
-
-  <!-- Tabla de Auditoría -->
-  <section class="table-container">
-    <div class="loading-overlay" *ngIf="isLoading">
-      <div class="loader">Cargando registros...</div>
-    </div>
-
-    <table class="premium-table">
-      <thead>
-        <tr>
-          <th>Usuario</th>
-          <th>Acción</th>
-          <th>Documento</th>
-          <th>Versión</th>
-          <th>Dirección IP</th>
-          <th>User Agent / Dispositivo</th>
-          <th>Fecha y Hora</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let audit of pagedAuditorias" class="table-row">
-          <td class="col-user">
-            <div class="user-display">
-              <strong class="user-name">{{ audit.usuario_nombre || 'Desconocido' }}</strong>
-              <span class="user-username">@{{ audit.usuario_username || 'system' }}</span>
-            </div>
-          </td>
-          <td>
-            <span class="action-badge" [ngClass]="'badge-' + (audit.accion?.toLowerCase() || '')">
-              <mat-icon *ngIf="audit.accion === 'DESCARGAR'">download</mat-icon>
-              <mat-icon *ngIf="audit.accion === 'VISUALIZAR'">visibility</mat-icon>
-              {{ audit.accion }}
-            </span>
-          </td>
-          <td class="col-doc">
-            <div class="doc-display">
-              <span class="code-badge">{{ audit.documento_codigo || 'N/A' }}</span>
-              <span class="doc-title" [title]="audit.documento_titulo">{{ audit.documento_titulo || 'Sin título' }}</span>
-            </div>
-          </td>
-          <td>
-            <span class="version-badge" *ngIf="audit.version_numero">v{{ audit.version_numero }}</span>
-            <div class="version-name" *ngIf="audit.version_nombre" [title]="audit.version_nombre">{{ audit.version_nombre }}</div>
-          </td>
-          <td>
-            <span class="ip-address"><mat-icon>lan</mat-icon> {{ audit.ip_address }}</span>
-          </td>
-          <td class="col-ua">
-            <span class="ua-text" [title]="audit.user_agent">
-              <mat-icon>devices</mat-icon>
-              {{ audit.user_agent || 'Desconocido' }}
-            </span>
-          </td>
-          <td class="col-date">
-            <div class="date-display">
-              <strong>{{ audit.fecha_accion | date:'dd/MM/yyyy' }}</strong>
-              <span>{{ audit.fecha_accion | date:'HH:mm:ss' }}</span>
-            </div>
-          </td>
-        </tr>
-
-        <!-- Mensaje de no hay resultados -->
-        <tr *ngIf="filteredAuditorias.length === 0 && !isLoading">
-          <td colspan="7" class="empty-table-state">
-            <div class="empty-content">
-              <mat-icon class="empty-icon">gavel</mat-icon>
-              <h3>No se encontraron registros de auditoría</h3>
-              <p>Intente modificar los filtros o rango de fechas seleccionado.</p>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Paginador -->
-    <div class="paginator-container" *ngIf="filteredAuditorias.length > 0 && !isLoading">
-      <div class="paginator-left">
-        <span class="paginator-info">
-          Mostrando {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize,
-          filteredAuditorias.length) }} de {{ filteredAuditorias.length }}
-        </span>
-        <div class="paginator-page-size">
-          <label for="pageSizeSelect">Filas por página:</label>
-          <select id="pageSizeSelect" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
-            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
-          </select>
+      <div class="field">
+        <span class="field-label" id="action-label">Acción</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="action-label">
+          <button type="button" role="radio" [class.is-active]="actionFilter === ''" [attr.aria-checked]="actionFilter === ''"
+            (click)="setActionFilter('')">Todas</button>
+          <button type="button" role="radio" [class.is-active]="actionFilter === 'VISUALIZAR'"
+            [attr.aria-checked]="actionFilter === 'VISUALIZAR'" (click)="setActionFilter('VISUALIZAR')">
+            <mat-icon>visibility</mat-icon>Visualizar
+          </button>
+          <button type="button" role="radio" [class.is-active]="actionFilter === 'DESCARGAR'"
+            [attr.aria-checked]="actionFilter === 'DESCARGAR'" (click)="setActionFilter('DESCARGAR')">
+            <mat-icon>download</mat-icon>Descargar
+          </button>
         </div>
       </div>
 
-      <div class="paginator-right">
-        <button type="button" class="paginator-btn" [disabled]="currentPage === 1" (click)="onPageChange(1)"
-          title="Primera página">
-          <mat-icon>first_page</mat-icon>
-        </button>
-        <button type="button" class="paginator-btn" [disabled]="currentPage === 1"
-          (click)="onPageChange(currentPage - 1)" title="Página anterior">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
+      <div class="field date-field">
+        <label for="startDate">Desde</label>
+        <input type="date" id="startDate" [(ngModel)]="startDate" (change)="applyFilters()" />
+      </div>
 
-        <span class="paginator-info">Página {{ currentPage }} de {{ totalPages }}</span>
+      <div class="field date-field">
+        <label for="endDate">Hasta</label>
+        <input type="date" id="endDate" [(ngModel)]="endDate" (change)="applyFilters()" />
+      </div>
 
-        <button type="button" class="paginator-btn" [disabled]="currentPage === totalPages"
-          (click)="onPageChange(currentPage + 1)" title="Página siguiente">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
-        <button type="button" class="paginator-btn" [disabled]="currentPage === totalPages"
-          (click)="onPageChange(totalPages)" title="Última página">
-          <mat-icon>last_page</mat-icon>
-        </button>
+      <button type="button" class="btn btn-ghost btn-clear" (click)="clearFilters()" [disabled]="!hasActiveFilters">
+        <mat-icon>filter_alt_off</mat-icon>
+        Limpiar
+      </button>
+    </div>
+
+    <div class="table-scroll" [attr.aria-busy]="isLoading">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th scope="col">Fecha y hora</th>
+            <th scope="col">Usuario</th>
+            <th scope="col">Acción</th>
+            <th scope="col">Documento</th>
+            <th scope="col">Versión</th>
+            <th scope="col">Origen</th>
+          </tr>
+        </thead>
+
+        <tbody *ngIf="isLoading">
+          <tr class="skeleton-row" *ngFor="let _ of [1, 2, 3, 4, 5, 6]">
+            <td><span class="sk w-80"></span><span class="sk w-50"></span></td>
+            <td><span class="sk w-140"></span></td>
+            <td><span class="sk w-80"></span></td>
+            <td><span class="sk w-200"></span></td>
+            <td><span class="sk w-40"></span></td>
+            <td><span class="sk w-110"></span></td>
+          </tr>
+        </tbody>
+
+        <tbody *ngIf="!isLoading">
+          <tr *ngFor="let audit of pagedAuditorias">
+            <td class="col-date">
+              <span class="cell-main num">{{ audit.fecha_accion | date:'dd/MM/yyyy' }}</span>
+              <span class="cell-sub num">{{ audit.fecha_accion | date:'HH:mm:ss' }}</span>
+            </td>
+            <td class="col-user">
+              <div class="user-cell">
+                <span class="avatar" aria-hidden="true">{{ getInitials(audit.usuario_nombre) }}</span>
+                <span>
+                  <span class="cell-main">{{ audit.usuario_nombre || 'Desconocido' }}</span>
+                  <span class="cell-sub">&#64;{{ audit.usuario_username || 'system' }}</span>
+                </span>
+              </div>
+            </td>
+            <td>
+              <span class="action-badge" [ngClass]="'badge-' + (audit.accion?.toLowerCase() || '')">
+                <mat-icon *ngIf="audit.accion === 'DESCARGAR'">download</mat-icon>
+                <mat-icon *ngIf="audit.accion === 'VISUALIZAR'">visibility</mat-icon>
+                {{ audit.accion === 'DESCARGAR' ? 'Descarga' : audit.accion === 'VISUALIZAR' ? 'Visualización' : audit.accion }}
+              </span>
+            </td>
+            <td class="col-doc">
+              <span class="code-badge">{{ audit.documento_codigo || 'N/A' }}</span>
+              <span class="doc-title" [title]="audit.documento_titulo || ''">{{ audit.documento_titulo || 'Sin título' }}</span>
+            </td>
+            <td class="col-version">
+              <span class="version-badge" *ngIf="audit.version_numero">v{{ audit.version_numero }}</span>
+              <span class="cell-sub version-name" *ngIf="audit.version_nombre" [title]="audit.version_nombre">{{ audit.version_nombre }}</span>
+            </td>
+            <td class="col-origin">
+              <span class="cell-main ip num">{{ audit.ip_address || '—' }}</span>
+              <span class="cell-sub ua" [title]="audit.user_agent || ''">
+                <mat-icon>{{ isMobileAgent(audit.user_agent) ? 'smartphone' : 'computer' }}</mat-icon>
+                {{ describeUserAgent(audit.user_agent) }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="empty" *ngIf="filteredAuditorias.length === 0 && !isLoading">
+        <mat-icon class="empty-icon">manage_search</mat-icon>
+        <p class="empty-title">No se encontraron registros de auditoría</p>
+        <p class="empty-text" *ngIf="hasActiveFilters">Intente modificar los filtros o el rango de fechas seleccionado.</p>
+        <p class="empty-text" *ngIf="!hasActiveFilters">Aún no hay accesos registrados a documentos.</p>
+        <button type="button" class="btn btn-ghost" *ngIf="hasActiveFilters" (click)="clearFilters()">Limpiar filtros</button>
       </div>
     </div>
+
+    <footer class="paginator" *ngIf="filteredAuditorias.length > 0 && !isLoading">
+      <span class="paginator-info">
+        <strong class="num">{{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, filteredAuditorias.length) }}</strong>
+        de <strong class="num">{{ filteredAuditorias.length | number }}</strong>
+      </span>
+      <div class="paginator-controls">
+        <label for="pageSizeSelect">Filas por página</label>
+        <select id="pageSizeSelect" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+          <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+        </select>
+        <div class="pager">
+          <button type="button" class="icon-btn" [disabled]="currentPage === 1" (click)="onPageChange(1)" aria-label="Primera página">
+            <mat-icon>first_page</mat-icon>
+          </button>
+          <button type="button" class="icon-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)" aria-label="Página anterior">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <span class="page-label">Página <strong class="num">{{ currentPage }}</strong> de <strong class="num">{{ totalPages }}</strong></span>
+          <button type="button" class="icon-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)" aria-label="Página siguiente">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+          <button type="button" class="icon-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)" aria-label="Última página">
+            <mat-icon>last_page</mat-icon>
+          </button>
+        </div>
+      </div>
+    </footer>
   </section>
 </div>

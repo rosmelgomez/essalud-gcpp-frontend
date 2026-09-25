@@ -1,44 +1,54 @@
 <div class="main">
   <section class="page-shell">
     <header class="page-header">
-      <div>
-        <p class="eyebrow">Administración</p>
+      <div class="page-title">
         <h1>Gestor de Usuarios</h1>
-        <p class="subtitle">Vista en cards con filtros completos y edición por usuario.</p>
+        <p class="subtitle" *ngIf="!isLoading; else subtitleLoading">
+          <span class="num">{{ allUserOriginal.length }}</span> cuentas
+          <span class="dot-sep" aria-hidden="true"></span>
+          <span class="status-inline is-active"><span class="status-dot"></span><span class="num">{{ activeCount }}</span> activas</span>
+          <span class="dot-sep" aria-hidden="true"></span>
+          <span class="status-inline"><span class="status-dot"></span><span class="num">{{ inactiveCount }}</span> inactivas</span>
+        </p>
+        <ng-template #subtitleLoading>
+          <p class="subtitle">Cargando cuentas…</p>
+        </ng-template>
       </div>
-      <div class="badge-count">{{ totalResultados }} usuarios</div>
+
+      <button type="button" class="btn btn-primary" (click)="openCreate()" aria-haspopup="dialog">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+          <path d="M19 8v6" /><path d="M22 11h-6" />
+        </svg>
+        Registrar usuario
+      </button>
     </header>
 
-    <section class="filter-panel">
+    <!-- Filtros -->
+    <section class="filter-panel" aria-label="Filtros">
       <div class="filter-grid">
         <div class="filter-group">
           <label for="filtro-name">Nombre</label>
           <input id="filtro-name" type="text" [(ngModel)]="filters.name" (ngModelChange)="onFilterValueChange()"
-            placeholder="Buscar nombre" />
+            placeholder="Ej. María" autocomplete="off" />
         </div>
 
         <div class="filter-group">
           <label for="filtro-lastname">Apellido</label>
           <input id="filtro-lastname" type="text" [(ngModel)]="filters.lastname" (ngModelChange)="onFilterValueChange()"
-            placeholder="Buscar apellido" />
+            placeholder="Ej. Quispe" autocomplete="off" />
         </div>
 
         <div class="filter-group">
           <label for="filtro-dni">DNI</label>
-          <input id="filtro-dni" type="text" [(ngModel)]="filters.dni" (ngModelChange)="onFilterValueChange()"
-            placeholder="Buscar DNI" />
+          <input id="filtro-dni" type="text" inputmode="numeric" [(ngModel)]="filters.dni"
+            (ngModelChange)="onFilterValueChange()" placeholder="8 dígitos" autocomplete="off" />
         </div>
 
         <div class="filter-group">
-          <label for="filtro-centro">Centro</label>
-          <input id="filtro-centro" type="text" [(ngModel)]="filters.codcas" (ngModelChange)="onFilterValueChange()"
-            placeholder="Buscar centro" />
-        </div>
-
-        <div class="filter-group">
-          <label for="filtro-red">Red</label>
-          <input id="filtro-red" type="text" [(ngModel)]="filters.code_red" (ngModelChange)="onFilterValueChange()"
-            placeholder="Buscar red" />
+          <label for="filtro-username">Username</label>
+          <input id="filtro-username" type="text" [(ngModel)]="filters.username" (ngModelChange)="onFilterValueChange()"
+            placeholder="Usuario de acceso" autocomplete="off" />
         </div>
 
         <div class="filter-group">
@@ -50,191 +60,487 @@
         </div>
 
         <div class="filter-group">
-          <label for="filtro-username">Username</label>
-          <input id="filtro-username" type="text" [(ngModel)]="filters.username" (ngModelChange)="onFilterValueChange()"
-            placeholder="Buscar username" />
+          <span class="filter-label" id="filtro-flag-label">Estado</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="filtro-flag-label">
+            <button type="button" *ngFor="let option of flagOptions" role="radio"
+              [attr.aria-checked]="filters.flag === option.value" [class.selected]="filters.flag === option.value"
+              (click)="setFlagFilter(option.value)">
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-advanced" *ngIf="showAdvancedFilters">
+        <div class="filter-group">
+          <label for="filtro-red">Red</label>
+          <input id="filtro-red" type="text" [(ngModel)]="filters.code_red" (ngModelChange)="onFilterValueChange()"
+            placeholder="Nombre de la red" autocomplete="off" />
         </div>
 
+        <div class="filter-group">
+          <label for="filtro-centro">Centro</label>
+          <input id="filtro-centro" type="text" [(ngModel)]="filters.codcas" (ngModelChange)="onFilterValueChange()"
+            placeholder="Nombre del centro" autocomplete="off" />
+        </div>
 
         <div class="filter-group">
-          <label for="filtro-date-creation">Fecha Creación</label>
+          <label for="filtro-date-creation">Fecha de creación</label>
           <input id="filtro-date-creation" type="date" [(ngModel)]="filters.date_creation"
             (ngModelChange)="onFilterValueChange()" />
         </div>
 
         <div class="filter-group">
-          <label for="filtro-date-update">Fecha Actualización</label>
+          <label for="filtro-date-update">Fecha de actualización</label>
           <input id="filtro-date-update" type="date" [(ngModel)]="filters.date_update"
             (ngModelChange)="onFilterValueChange()" />
         </div>
+      </div>
 
-        <div class="filter-group">
-          <label for="filtro-flag">Estado</label>
-          <select id="filtro-flag" [(ngModel)]="filters.flag" (ngModelChange)="onFilterValueChange()">
-            <option *ngFor="let option of flagOptions" [value]="option.value">{{ option.label }}</option>
-          </select>
-        </div>
+      <div class="filter-footer">
+        <button type="button" class="btn-link" (click)="toggleAdvancedFilters()"
+          [attr.aria-expanded]="showAdvancedFilters">
+          <svg class="icon chevron" [class.open]="showAdvancedFilters" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+          {{ showAdvancedFilters ? 'Menos filtros' : 'Más filtros' }}
+          <span class="count-chip" *ngIf="!showAdvancedFilters && advancedFilterCount > 0">{{ advancedFilterCount }}</span>
+        </button>
 
-        <div class="filter-actions">
-          <button class="btn-muted" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+        <div class="filter-footer-end">
+          <span class="result-count" *ngIf="!isLoading" aria-live="polite">
+            <span class="num">{{ totalResultados }}</span> {{ totalResultados === 1 ? 'resultado' : 'resultados' }}
+          </span>
+          <button type="button" class="btn btn-ghost" (click)="limpiarFiltros()" [disabled]="activeFilterCount === 0">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+            Limpiar filtros
+          </button>
         </div>
       </div>
     </section>
 
-    <section class="cards-wrapper">
-      <div class="loading" *ngIf="isLoading">Cargando usuarios...</div>
+    <!-- Tabla -->
+    <section class="table-card">
+      <div class="table-scroll">
+        <table class="users-table" [attr.aria-busy]="isLoading">
+          <thead>
+            <tr>
+              <th scope="col">Usuario</th>
+              <th scope="col">DNI</th>
+              <th scope="col">Rol</th>
+              <th scope="col">Red / Centro</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Actualizado</th>
+              <th scope="col" class="col-actions"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
 
-      <div class="empty" *ngIf="!isLoading && filteredUsers.length === 0">
-        No se encontraron usuarios con los filtros seleccionados.
-      </div>
-
-      <div class="cards-viewport" *ngIf="!isLoading && virtualRows.length > 0">
-        <div class="virtual-item" *ngFor="let row of virtualRows">
-          <div class="cards-row" [style.gridTemplateColumns]="getCardsRowTemplateColumns()">
-            <article class="user-card" *ngFor="let user of row; trackBy: trackByUser">
-              <div class="card-top">
-                <div>
-                  <h2>{{ user.name || '-' }} {{ user.lastname || '' }}</h2>
-                  <p class="meta-inline">
-                    <span>ID: {{ user.id || '-' }}</span>
-                    <span>DNI: {{ user.dni || '-' }}</span>
-                    <span>Username: {{ user.username || '-' }}</span>
-                  </p>
+          <tbody *ngIf="isLoading">
+            <tr class="skeleton-row" *ngFor="let _ of skeletonRows">
+              <td>
+                <div class="user-cell">
+                  <span class="sk sk-avatar"></span>
+                  <span class="sk-stack"><span class="sk sk-line w-160"></span><span class="sk sk-line w-90"></span></span>
                 </div>
-                <span class="status-pill">{{ getFlagLabel(user.flag) }}</span>
-              </div>
+              </td>
+              <td><span class="sk sk-line w-70"></span></td>
+              <td><span class="sk sk-line w-60"></span></td>
+              <td><span class="sk-stack"><span class="sk sk-line w-140"></span><span class="sk sk-line w-110"></span></span></td>
+              <td><span class="sk sk-line w-60"></span></td>
+              <td><span class="sk sk-line w-90"></span></td>
+              <td></td>
+            </tr>
+          </tbody>
 
-              <div class="card-body">
-                <div class="field"><span>Rol</span><strong>{{ (user.roles && user.roles.length > 0 ? user.roles[0] : '-') || '-' }}</strong></div>
-                <div class="field"><span>Red</span><strong>{{ getRedName(user.code_red) || '-' }}</strong></div>
-                <div class="field"><span>Centro</span><strong>{{ getCentroName(user.codcas) || '-' }}</strong></div>
-                <div class="field"><span>Estado</span><strong>{{ getFlagLabel(user.flag) }}</strong></div>
-                <div class="field"><span>Password</span><strong>{{ user.password || '-' }}</strong></div>
-                <div class="field"><span>Creación</span><strong>{{ formatDate(user.date_creation) || '-' }}</strong>
+          <tbody *ngIf="!isLoading">
+            <tr *ngFor="let user of pageUsers; trackBy: trackByUser" [class.is-inactive]="!isActive(user.flag)">
+              <td class="cell-user">
+                <div class="user-cell">
+                  <span class="avatar" aria-hidden="true">{{ getUserInitials(user) }}</span>
+                  <span class="user-text">
+                    <span class="user-name">{{ user.name || '—' }} {{ user.lastname || '' }}</span>
+                    <span class="user-handle">{{ user.username || '—' }}<span class="user-id"> · ID {{ user.id || '—' }}</span></span>
+                  </span>
                 </div>
-                <div class="field"><span>Actualización</span><strong>{{ formatDate(user.date_update) || '-' }}</strong>
+              </td>
+              <td class="cell-dni" data-label="DNI"><span class="num">{{ user.dni || '—' }}</span></td>
+              <td class="cell-role" data-label="Rol">
+                <span class="role-badge" [ngClass]="getRoleClass(user)">{{ getPrimaryRoleLabel(user) }}</span>
+              </td>
+              <td class="cell-place" data-label="Red / Centro">
+                <span class="place-red">{{ getRedName(user.code_red) || '—' }}</span>
+                <span class="place-centro" *ngIf="user.codcas">{{ getCentroName(user.codcas) }}</span>
+              </td>
+              <td class="cell-status" data-label="Estado">
+                <span class="status" [class.is-active]="isActive(user.flag)">
+                  <span class="status-dot"></span>{{ getFlagLabel(user.flag) }}
+                </span>
+              </td>
+              <td class="cell-date" data-label="Actualizado">
+                <span class="num">{{ formatDate(user.date_update) || '—' }}</span>
+                <span class="date-sub">Creado <span class="num">{{ formatDate(user.date_creation) || '—' }}</span></span>
+              </td>
+              <td class="cell-actions">
+                <div class="row-actions">
+                  <button type="button" class="icon-btn" (click)="startEdit(user)"
+                    [attr.aria-label]="'Editar a ' + (user.username || user.name)" title="Editar usuario">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                  </button>
+                  <button type="button" class="icon-btn danger" (click)="deleteUser(user.username, user.id)"
+                    [attr.aria-label]="'Eliminar a ' + (user.username || user.name)" title="Eliminar usuario">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6" /><path d="M14 11v6" />
+                    </svg>
+                  </button>
                 </div>
-              </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-              <div class="card-actions">
-                <button type="button" class="btn-primary" (click)="startEdit(user)">Editar usuario</button>
-                <button type="button" class="btn-danger" (click)="deleteUser(user.username, user.id)">Eliminar</button>
-              </div>
-            </article>
-          </div>
+        <div class="empty" *ngIf="!isLoading && filteredUsers.length === 0">
+          <svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /><path d="M8.5 11h5" />
+          </svg>
+          <p class="empty-title">Ningún usuario coincide con los filtros</p>
+          <p class="empty-text" *ngIf="activeFilterCount > 0">Prueba con menos criterios o quita los filtros activos.</p>
+          <p class="empty-text" *ngIf="activeFilterCount === 0">Todavía no hay cuentas registradas.</p>
+          <button type="button" class="btn btn-ghost" *ngIf="activeFilterCount > 0" (click)="limpiarFiltros()">
+            Limpiar filtros
+          </button>
         </div>
       </div>
 
-      <div class="paginator" *ngIf="!isLoading && filteredUsers.length > 0">
-        <div class="paginator-info">
-          <span>Mostrando {{ paginationStart }} - {{ paginationEnd }} de {{ totalResultados }}</span>
-        </div>
+      <footer class="paginator" *ngIf="!isLoading && filteredUsers.length > 0">
+        <span class="paginator-info">
+          <span class="num">{{ paginationStart }}–{{ paginationEnd }}</span> de <span class="num">{{ totalResultados }}</span>
+        </span>
 
         <div class="paginator-controls">
-          <label for="page-size">Por página</label>
+          <label for="page-size">Filas por página</label>
           <select id="page-size" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
             <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
           </select>
 
-          <button type="button" class="btn-muted" (click)="goToPreviousPage()" [disabled]="pageIndex === 0">
-            Anterior
-          </button>
-          <span class="page-label">Página {{ currentPageLabel }}</span>
-          <button type="button" class="btn-primary" (click)="goToNextPage()" [disabled]="pageIndex >= totalPages - 1">
-            Siguiente
-          </button>
+          <div class="pager">
+            <button type="button" class="icon-btn" (click)="goToPreviousPage()" [disabled]="pageIndex === 0"
+              aria-label="Página anterior">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+            <span class="page-label">Página <span class="num">{{ currentPageLabel }}</span></span>
+            <button type="button" class="icon-btn" (click)="goToNextPage()" [disabled]="pageIndex >= totalPages - 1"
+              aria-label="Página siguiente">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
+          </div>
         </div>
-      </div>
+      </footer>
     </section>
   </section>
 
-  <!-- MODAL DE EDICIÓN (Igual que el form de solicitud de accesos) -->
-  <div class="modal-overlay" *ngIf="isEditModalOpen && editableRow as editUser">
-    <div class="modal-card decision-card">
+  <!-- MODAL DE REGISTRO -->
+  <div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="onCreateOverlayClick($event)">
+    <form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-user-title" autocomplete="off"
+      novalidate (ngSubmit)="submitCreate()">
       <header class="modal-header">
-        <h2>Editar Usuario</h2>
-        <button type="button" class="close-modal-btn" (click)="cancelEdit()">&times;</button>
+        <span class="avatar avatar-lg avatar-new" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+            <path d="M19 8v6" /><path d="M22 11h-6" />
+          </svg>
+        </span>
+        <div class="modal-heading">
+          <h2 id="create-user-title">Registrar usuario</h2>
+          <p>Crea una cuenta de acceso a SIEST.</p>
+        </div>
+        <button type="button" class="icon-btn close-modal-btn" (click)="closeCreate()" aria-label="Cerrar"
+          [disabled]="isSavingCreate">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+        </button>
       </header>
 
       <div class="modal-body">
-        <div class="decision-form-grid">
-          <div class="field-input">
-            <label>Nombre</label>
-            <input type="text" [(ngModel)]="editUser.name" />
+        <fieldset class="form-section">
+          <legend>Datos personales</legend>
+          <div class="form-grid">
+            <div class="field-input" [class.has-error]="createFieldError('name')">
+              <label for="new-name">Nombre</label>
+              <input id="new-name" name="name" type="text" [(ngModel)]="newUser.name" (ngModelChange)="onCreateNameChange()"
+                placeholder="Ej. Ana" [attr.aria-invalid]="!!createFieldError('name')"
+                aria-describedby="new-name-err" />
+              <span class="field-error" id="new-name-err">{{ createFieldError('name') }}</span>
+            </div>
+            <div class="field-input" [class.has-error]="createFieldError('lastname')">
+              <label for="new-lastname">Apellido</label>
+              <input id="new-lastname" name="lastname" type="text" [(ngModel)]="newUser.lastname"
+                (ngModelChange)="onCreateNameChange()" placeholder="Ej. Torres"
+                [attr.aria-invalid]="!!createFieldError('lastname')" aria-describedby="new-lastname-err" />
+              <span class="field-error" id="new-lastname-err">{{ createFieldError('lastname') }}</span>
+            </div>
+            <div class="field-input" [class.has-error]="createFieldError('dni')">
+              <label for="new-dni">DNI</label>
+              <input id="new-dni" name="dni" type="text" inputmode="numeric" [(ngModel)]="newUser.dni"
+                placeholder="Ej. 12345678" [attr.aria-invalid]="!!createFieldError('dni')" aria-describedby="new-dni-err" />
+              <span class="field-error" id="new-dni-err">{{ createFieldError('dni') }}</span>
+            </div>
+            <div class="field-input span-2" [class.has-error]="createFieldError('email')">
+              <label for="new-email">Correo electrónico <span class="optional">opcional</span></label>
+              <input id="new-email" name="email" type="email" [(ngModel)]="newUser.email"
+                placeholder="ana.torres@essalud.gob.pe" [attr.aria-invalid]="!!createFieldError('email')"
+                aria-describedby="new-email-err" />
+              <span class="field-error" id="new-email-err">{{ createFieldError('email') }}</span>
+            </div>
           </div>
+        </fieldset>
 
-          <div class="field-input">
-            <label>Apellido</label>
-            <input type="text" [(ngModel)]="editUser.lastname" />
+        <fieldset class="form-section">
+          <legend>Rol y ámbito</legend>
+          <div class="role-picker" role="radiogroup" aria-label="Rol">
+            <label class="role-option" *ngFor="let role of createRoleOptions" [class.selected]="newUser.rol === role.value">
+              <input type="radio" name="rol" [value]="role.value" [(ngModel)]="newUser.rol"
+                (ngModelChange)="onCreateRoleChange()" />
+              <span class="role-option-title">{{ role.label }}</span>
+              <span class="role-option-hint">{{ role.hint }}</span>
+            </label>
           </div>
+          <span class="field-error role-error">{{ createFieldError('rol') }}</span>
 
-          <div class="field-input">
-            <label>DNI</label>
-            <input type="text" [(ngModel)]="editUser.dni" />
+          <div class="form-grid scope-grid">
+            <div class="field-input" [class.has-error]="createFieldError('code_red')" [class.is-disabled]="!isCreateRedEnabled">
+              <label for="new-red">Red</label>
+              <ng-container
+                *ngTemplateOutlet="comboTpl; context: { kind: 'red', enabled: isCreateRedEnabled, placeholder: isCreateRedEnabled ? 'Buscar red…' : (newUser.rol ? 'No aplica para este rol' : 'Primero elige un rol') }">
+              </ng-container>
+              <span class="field-error">{{ createFieldError('code_red') }}</span>
+            </div>
+            <div class="field-input" [class.has-error]="createFieldError('codcas')" [class.is-disabled]="!isCreateCentroEnabled">
+              <label for="new-centro">Centro</label>
+              <ng-container
+                *ngTemplateOutlet="comboTpl; context: { kind: 'centro', enabled: isCreateCentroEnabled, placeholder: isCreateCentroEnabled ? (newUser.code_red ? 'Buscar centro de la red…' : 'Buscar centro…') : (newUser.rol ? 'No aplica para este rol' : 'Primero elige un rol') }">
+              </ng-container>
+              <span class="field-error">{{ createFieldError('codcas') }}</span>
+            </div>
           </div>
+        </fieldset>
 
-          <div class="field-input">
-            <label>Username</label>
-            <input type="text" [(ngModel)]="editUser.username" />
+        <fieldset class="form-section">
+          <legend>Credenciales</legend>
+          <div class="form-grid cred-grid">
+            <div class="field-input" [class.has-error]="createFieldError('username')">
+              <label for="new-username">Username</label>
+              <input id="new-username" name="username" type="text" [(ngModel)]="newUser.username"
+                (input)="onCreateUsernameInput()" placeholder="ana.torres" autocomplete="off"
+                [attr.aria-invalid]="!!createFieldError('username')" aria-describedby="new-username-err" />
+              <span class="field-error" id="new-username-err">{{ createFieldError('username') || '' }}</span>
+              <span class="field-hint" *ngIf="!createFieldError('username')">Se genera con nombre.apellido; puedes cambiarlo.</span>
+            </div>
+            <div class="field-input" [class.has-error]="createFieldError('password')">
+              <label for="new-password">Contraseña</label>
+              <div class="input-affix">
+                <input id="new-password" name="password" [type]="showCreatePassword ? 'text' : 'password'"
+                  [(ngModel)]="newUser.password" placeholder="Mínimo 8 caracteres" autocomplete="new-password"
+                  [attr.aria-invalid]="!!createFieldError('password')" aria-describedby="new-password-err" />
+                <button type="button" class="affix-btn" (click)="showCreatePassword = !showCreatePassword"
+                  [attr.aria-label]="showCreatePassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  [attr.aria-pressed]="showCreatePassword">
+                  <svg *ngIf="!showCreatePassword" class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg *ngIf="showCreatePassword" class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9.9 4.24A9 9 0 0 1 12 4c6.5 0 10 7 10 7a17 17 0 0 1-2.16 3.19" />
+                    <path d="M6.61 6.61A17 17 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.39-1.61" />
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" /><path d="m2 2 20 20" />
+                  </svg>
+                </button>
+              </div>
+              <span class="field-error" id="new-password-err">{{ createFieldError('password') }}</span>
+              <div class="strength" *ngIf="newUser.password && !createFieldError('password')" aria-hidden="true">
+                <span class="strength-bar" [class.ok]="newUser.password.length >= 8"></span>
+                <span class="strength-bar" [class.ok]="newUser.password.length >= 12"></span>
+                <span class="strength-bar" [class.ok]="newUser.password.length >= 16"></span>
+                <span class="strength-label">{{ newUser.password.length < 8 ? 'Muy corta' : newUser.password.length < 12 ? 'Aceptable' : 'Robusta' }}</span>
+              </div>
+            </div>
           </div>
+        </fieldset>
 
-          <div class="field-input full-width">
-            <label>Password</label>
-            <input type="text" [(ngModel)]="editUser.password" placeholder="Nueva contraseña" />
-          </div>
-
-          <div class="field-input">
-            <label>Rol</label>
-            <select [(ngModel)]="editUser.roles[0]" (change)="onEditingRoleChange()">
-              <option value="">Seleccionar rol</option>
-              <option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
-            </select>
-          </div>
-
-          <div class="field-input">
-            <label>Estado</label>
-            <select [(ngModel)]="editUser.flag">
-              <option [ngValue]="true">Activo</option>
-              <option [ngValue]="false">Inactivo</option>
-            </select>
-          </div>
-
-          <div class="field-input">
-            <label>Red</label>
-            <select [(ngModel)]="editUser.code_red" [disabled]="!editingRedEnabled"
-              (change)="onEditingRedChange()">
-              <option value="">{{ getEditingRedPlaceholder() }}</option>
-              <option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes }}</option>
-            </select>
-          </div>
-
-          <div class="field-input">
-            <label>Centro</label>
-            <select [(ngModel)]="editUser.codcas" [disabled]="!editingCentroEnabled"
-              (change)="onEditingCentroChange()">
-              <option value="">{{ getEditingCentroPlaceholder() }}</option>
-              <option *ngFor="let centro of editingAllCentroForSelectedRed" [value]="centro.cenasicod">
-                {{ centro.cenasides }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div class="validation-message-banner" *ngIf="isUpdateDisabled()">
-          <span>⚠️ Para rol USER debes seleccionar Red y Centro válidos.</span>
+        <div class="validation-message-banner is-error" *ngIf="createError" role="alert">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" /><path d="M12 8v4" /><path d="M12 16h.01" />
+          </svg>
+          <span>{{ createError }}</span>
         </div>
       </div>
 
       <footer class="modal-footer">
-        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelEdit()" [disabled]="isSavingEdit">
+        <span class="footer-note" *ngIf="createSubmitted && createErrorCount > 0" role="status">
+          {{ createErrorCount === 1 ? 'Falta 1 dato por completar' : 'Faltan ' + createErrorCount + ' datos por completar' }}
+        </span>
+        <button type="button" class="btn btn-ghost" (click)="closeCreate()" [disabled]="isSavingCreate">
           Cancelar
         </button>
-        <button type="button" class="btn-modal-action btn-approve" (click)="updateUser()"
+        <button type="submit" class="btn btn-primary" [disabled]="isSavingCreate">
+          <span class="spinner" *ngIf="isSavingCreate" aria-hidden="true"></span>
+          {{ isSavingCreate ? 'Creando…' : 'Crear cuenta' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+
+  <!-- Combobox con búsqueda reutilizable (Red / Centro) -->
+  <ng-template #comboTpl let-kind="kind" let-enabled="enabled" let-placeholder="placeholder">
+    <div class="combo" [class.open]="combo[kind].open">
+      <input [id]="'new-' + kind" type="text" role="combobox" autocomplete="off" [disabled]="!enabled"
+        [placeholder]="placeholder" [value]="comboInputValue(kind)" [attr.aria-expanded]="combo[kind].open"
+        [attr.aria-controls]="'combo-' + kind + '-list'"
+        [attr.aria-activedescendant]="combo[kind].open && combo[kind].active >= 0 ? 'combo-' + kind + '-opt-' + combo[kind].active : null"
+        (focus)="openCombo(kind)" (click)="combo[kind].open || openCombo(kind)" (blur)="closeCombo(kind)"
+        (input)="onComboInput(kind, $event)" (keydown)="onComboKeydown(kind, $event)" />
+      <button type="button" class="combo-clear" *ngIf="enabled && comboSelectedLabel(kind) && !combo[kind].open"
+        (click)="clearCombo(kind)" [attr.aria-label]="'Quitar ' + kind">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+      </button>
+      <svg class="icon combo-caret" viewBox="0 0 24 24" aria-hidden="true"
+        *ngIf="!(enabled && comboSelectedLabel(kind) && !combo[kind].open)"><path d="m6 9 6 6 6-6" /></svg>
+
+      <ul class="combo-list" role="listbox" [id]="'combo-' + kind + '-list'" *ngIf="combo[kind].open">
+        <li *ngFor="let option of comboOptions(kind); let i = index" role="option" [id]="'combo-' + kind + '-opt-' + i"
+          class="combo-option" [class.active]="i === combo[kind].active"
+          [attr.aria-selected]="comboLabelOf(kind, option) === comboSelectedLabel(kind)"
+          (mousedown)="$event.preventDefault(); selectCombo(kind, option)" (mouseenter)="combo[kind].active = i">
+          {{ comboLabelOf(kind, option) }}
+        </li>
+        <li class="combo-empty" *ngIf="comboOptions(kind).length === 0">Sin resultados</li>
+        <li class="combo-more" *ngIf="comboHiddenCount(kind) > 0">
+          +{{ comboHiddenCount(kind) }} más · escribe para acotar
+        </li>
+      </ul>
+    </div>
+  </ng-template>
+
+  <!-- MODAL DE EDICIÓN -->
+  <div class="modal-overlay" *ngIf="isEditModalOpen && editableRow as editUser" (click)="onOverlayClick($event)">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
+      <header class="modal-header">
+        <span class="avatar avatar-lg" aria-hidden="true">{{ getUserInitials(editUser) }}</span>
+        <div class="modal-heading">
+          <h2 id="edit-user-title">Editar usuario</h2>
+          <p>{{ editUser.username || '—' }} · ID <span class="num">{{ editUser.id || '—' }}</span></p>
+        </div>
+        <button type="button" class="icon-btn close-modal-btn" (click)="cancelEdit()" aria-label="Cerrar"
+          [disabled]="isSavingEdit">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <fieldset class="form-section">
+          <legend>Datos personales</legend>
+          <div class="form-grid">
+            <div class="field-input">
+              <label for="edit-name">Nombre</label>
+              <input id="edit-name" type="text" [(ngModel)]="editUser.name" />
+            </div>
+            <div class="field-input">
+              <label for="edit-lastname">Apellido</label>
+              <input id="edit-lastname" type="text" [(ngModel)]="editUser.lastname" />
+            </div>
+            <div class="field-input">
+              <label for="edit-dni">DNI</label>
+              <input id="edit-dni" type="text" inputmode="numeric" [(ngModel)]="editUser.dni" />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Acceso</legend>
+          <div class="form-grid">
+            <div class="field-input">
+              <label for="edit-username">Username</label>
+              <input id="edit-username" type="text" [(ngModel)]="editUser.username" autocomplete="off" />
+            </div>
+            <div class="field-input">
+              <label for="edit-password">Contraseña</label>
+              <div class="input-affix">
+                <input id="edit-password" [type]="showEditPassword ? 'text' : 'password'"
+                  [(ngModel)]="editUser.password" placeholder="Nueva contraseña" autocomplete="new-password" />
+                <button type="button" class="affix-btn" (click)="showEditPassword = !showEditPassword"
+                  [attr.aria-label]="showEditPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  [attr.aria-pressed]="showEditPassword">
+                  <svg *ngIf="!showEditPassword" class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg *ngIf="showEditPassword" class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9.9 4.24A9 9 0 0 1 12 4c6.5 0 10 7 10 7a17 17 0 0 1-2.16 3.19" />
+                    <path d="M6.61 6.61A17 17 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.39-1.61" />
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" /><path d="m2 2 20 20" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="field-input">
+              <label for="edit-flag">Estado</label>
+              <select id="edit-flag" [(ngModel)]="editUser.flag">
+                <option [ngValue]="true">Activo</option>
+                <option [ngValue]="false">Inactivo</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Rol y ámbito</legend>
+          <div class="form-grid">
+            <div class="field-input">
+              <label for="edit-role">Rol</label>
+              <select id="edit-role" [(ngModel)]="editUser.roles[0]" (change)="onEditingRoleChange()">
+                <option value="">Seleccionar rol</option>
+                <option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
+              </select>
+            </div>
+            <div class="field-input">
+              <label for="edit-red">Red</label>
+              <select id="edit-red" [(ngModel)]="editUser.code_red" [disabled]="!editingRedEnabled"
+                (change)="onEditingRedChange()">
+                <option value="">{{ getEditingRedPlaceholder() }}</option>
+                <option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes }}</option>
+              </select>
+            </div>
+            <div class="field-input">
+              <label for="edit-centro">Centro</label>
+              <select id="edit-centro" [(ngModel)]="editUser.codcas" [disabled]="!editingCentroEnabled"
+                (change)="onEditingCentroChange()">
+                <option value="">{{ getEditingCentroPlaceholder() }}</option>
+                <option *ngFor="let centro of editingAllCentroForSelectedRed" [value]="centro.cenasicod">
+                  {{ centro.cenasides }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="validation-message-banner" *ngIf="isUpdateDisabled()" role="alert">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+              <path d="M12 9v4" /><path d="M12 17h.01" />
+            </svg>
+            <span>Para el rol USER selecciona una Red y un Centro que pertenezca a esa red.</span>
+          </div>
+        </fieldset>
+      </div>
+
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-ghost" (click)="cancelEdit()" [disabled]="isSavingEdit">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="updateUser()"
           [disabled]="isUpdateDisabled() || isSavingEdit">
-          {{ isSavingEdit ? 'Actualizando...' : 'Actualizar' }}
+          <span class="spinner" *ngIf="isSavingEdit" aria-hidden="true"></span>
+          {{ isSavingEdit ? 'Guardando…' : 'Guardar cambios' }}
         </button>
       </footer>
     </div>
   </div>
 </div>
-
