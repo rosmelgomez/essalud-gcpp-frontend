@@ -1,1 +1,35 @@
 /* Cabecera, pestañas, filtros, tarjetas y estados: src/styles/reportes.css */
+
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-export {
+  padding: 10px 16px;
+  background: #0064AF;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-export:hover {
+  background: #004080;
+  box-shadow: 0 4px 12px rgba(0, 100, 175, 0.3);
+}
+
+@media (max-width: 768px) {
+  .actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn-export {
+    width: 100%;
+    justify-content: center;
+  }
+}

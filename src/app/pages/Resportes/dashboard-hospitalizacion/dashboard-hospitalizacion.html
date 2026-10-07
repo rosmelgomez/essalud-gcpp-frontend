@@ -155,10 +155,10 @@
                     <cdk-virtual-scroll-viewport class="resumen-viewport" [itemSize]="48"
                         [style.height.px]="getTableHeight(dataEgresos.length)">
                         <div *cdkVirtualFor="let row of dataEgresos" class="resumen-row">
-                            <div class="cell servicio">{{row.servicio}}</div>
-                            <div class="cell estenfdes">{{ row.estenfdes }}</div>
-                            <div class="cell cama">{{ row.cama }}</div>
-                            <div class="cell egresos">{{row.dias_hospit}}</div>
+                            <div class="cell servicio">{{ row.servicio || 'Sin datos' }}</div>
+                            <div class="cell estenfdes">{{ row.estenfdes ||'Sin datos' }}</div>
+                            <div class="cell cama">{{ row.cama || 'Sin datos' }}</div>
+                            <div class="cell egresos">{{row.dias_hospit || 'Sin datos'}}</div>
                         </div>
                     </cdk-virtual-scroll-viewport>
                 </div>

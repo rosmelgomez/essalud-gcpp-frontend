@@ -8,7 +8,7 @@
       </p>
     </div>
     <div class="header-content header-content-actions">
-      <button class="btn-download btn-ficha-tecnica" (click)="downloadFichaTecnica()">
+      <button class="btn-download btn-ficha-tecnica" (click)="downloadFichaTecnica('f_consulta_externa_nm.pdf')">
         <i class="bi bi-file-earmark-pdf"></i>
         Ficha Técnica
       </button>
@@ -107,6 +107,11 @@
                 <h5 class="card-title">Total de atenciones Obstétricas</h5>
               </a>
             </div>
+              <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('CEOB1.01_FT_Obtencion del Dato_At.amb.Obstetricia_V2.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
             <i class="bi bi-chevron-right card-arrow"></i>
           </div>
           <div class="card-body">
@@ -302,6 +307,11 @@
                 <h5 class="card-title">Total de atenciones preventivo promocional</h5>
               </a>
             </div>
+            <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('CEP04.01_FT_Preventivo Promocional.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
             <i class="bi bi-chevron-right card-arrow"></i>
           </div>
           <div class="card-body">
@@ -482,6 +492,11 @@
                 <h5 class="card-title">Total de atenciones nutricion</h5>
               </a>
             </div>
+             <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('CEN01.01_FT_Obtencion del Dato_At.amb.Nutricion_v2.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
             <i class="bi bi-chevron-right card-arrow"></i>
           </div>
           <div class="card-body">
@@ -573,6 +588,11 @@
                 <h5 class="card-title">Total de atenciones de enfermeria</h5>
               </a>
             </div>
+            <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('CEE01.01_FT_Obtencion del Dato_At.amb. Enfermeria.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
             <i class="bi bi-chevron-right card-arrow"></i>
           </div>
           <div class="card-body">
@@ -811,6 +831,11 @@
             <div class="card-title-group">
               <h5 class="card-title">Total de horas efectivas</h5>
             </div>
+             <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('CEP01.01_FT_Atenciones_psicologia.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
           </div>
           <div class="card-body">
             <div class="contend_left">
@@ -967,6 +992,11 @@
                 <h5 class="card-title">Total de consultas de Trabajo Social</h5>
               </a>
             </div>
+            <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('CETS1.01_FT_Obtencion del Dato_At.amb.Trabajo Social.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
             <i class="bi bi-chevron-right card-arrow"></i>
           </div>
           <div class="card-body">
@@ -1268,8 +1298,7 @@
     <div *ngIf="errorCRED" class="alert alert-danger">
       {{ errorCRED }}
     </div>
-    <!-- Dashboard no medicas Content -->
-    <div *ngIf="!loadingCRED && !errorCRED && !selectPeriodoCRED && !noDataCRED" class="dashboard-content"></div>
+
     <!-- Contenido de CRED -->
     <div *ngIf="!loadingCRED && !errorCRED && !selectPeriodoCRED && !noDataCRED" class="dashboard-content">
       <!-- Fila 1: -->
@@ -1280,6 +1309,11 @@
             <div class="card-title-group">
               <h5 class="card-title">Total de atenciones de CRED</h5>
             </div>
+            <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('CEC01.01_FT_Obtencion del Dato_At.amb. Enfermeria_CRED.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
           </div>
           <div class="card-body">
             <div class="contend_left">

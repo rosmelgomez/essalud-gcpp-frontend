@@ -104,16 +104,16 @@
                         <!-- ROWS -->
                         <cdk-virtual-scroll-viewport #viewportTipo class="viewport-table" [itemSize]="44">
                             <div *cdkVirtualFor="let row of dataEstandarTipo" class="row-table">
-                                <div class="cell id">{{ row.id }}</div>
-                                <div class="cell tipo">{{ row.tipo }}</div>
-                                <div class="cell indicador">{{ row.indicador }}</div>
-                                <div class="cell tipo_centro">{{ row.tipo_centro }}</div>
-                                <div class="cell anio">{{ row.anio }}</div>
-                                <div class="cell mes">{{ row.mes }}</div>
-                                <div class="cell periodo">{{ row.periodo }}</div>
-                                <div class="cell estandar">{{ row.estandar }}</div>
-                                <div class="cell acept">{{ row.acept }}</div>
-                                <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
+                                <div class="cell id">{{ row.id || 'SIN DATOS' }}</div>
+                                <div class="cell tipo">{{ row.tipo || 'SIN DATOS' }}</div>
+                                <div class="cell indicador">{{ row.indicador || 'SIN DATOS' }}</div>
+                                <div class="cell tipo_centro">{{ row.tipo_centro || 'SIN DATOS'  }}</div>
+                                <div class="cell anio">{{ row.anio || 'SIN DATOS'  }}</div>
+                                <div class="cell mes">{{ row.mes || 'SIN DATOS' }}</div>
+                                <div class="cell periodo">{{ row.periodo || 'SIN DATOS' }}</div>
+                                <div class="cell estandar">{{ row.estandar || 'SIN DATOS'  }}</div>
+                                <div class="cell acept">{{ row.acept || 'SIN DATOS' }}</div>
+                                <div class="cell aceptmenos">{{ row.aceptmenos || 'SIN DATOS' }}</div>
                                 <div class="cell acciones">
                                     <button type="button" class="btn-icon-edit"
                                         (click)="iniciarEdicionEstandarTipo(row)" title="Editar registro">
@@ -298,16 +298,16 @@
 
                         <cdk-virtual-scroll-viewport #viewportNivel class="viewport-table" [itemSize]="44">
                             <div *cdkVirtualFor="let row of dataEstandarNivel" class="row-table">
-                                <div class="cell id">{{ row.id }}</div>
-                                <div class="cell tipo">{{ row.tipo }}</div>
-                                <div class="cell indicador">{{ row.indicador }}</div>
-                                <div class="cell nivel_centro">{{ row.nivel_centro }}</div>
-                                <div class="cell anio">{{ row.anio }}</div>
-                                <div class="cell mes">{{ row.mes }}</div>
-                                <div class="cell periodo">{{ row.periodo }}</div>
-                                <div class="cell estandar">{{ row.estandar }}</div>
-                                <div class="cell acept">{{ row.acept }}</div>
-                                <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
+                                <div class="cell id">{{ row.id || 'SIN DATOS' }}</div>
+                                <div class="cell tipo">{{ row.tipo || 'SIN DATOS' }}</div>
+                                <div class="cell indicador">{{ row.indicador || 'SIN DATOS' }}</div>
+                                <div class="cell nivel_centro">{{ row.nivel_centro || 'SIN DATOS' }}</div>
+                                <div class="cell anio">{{ row.anio || 'SIN DATOS' }}</div>
+                                <div class="cell mes">{{ row.mes || 'SIN DATOS' }}</div>
+                                <div class="cell periodo">{{ row.periodo || 'SIN DATOS' }}</div>
+                                <div class="cell estandar">{{ row.estandar || 'SIN DATOS' }}</div>
+                                <div class="cell acept">{{ row.acept || 'SIN DATOS' }}</div>
+                                <div class="cell aceptmenos">{{ row.aceptmenos || 'SIN DATOS' }}</div>
                                 <div class="cell acciones">
                                     <button type="button" class="btn-icon-edit"
                                         (click)="iniciarEdicionEstandarNivel(row)" title="Editar registro">
@@ -492,16 +492,16 @@
 
                         <cdk-virtual-scroll-viewport #viewportCategoria class="viewport-table" [itemSize]="44">
                             <div *cdkVirtualFor="let row of dataEstandarCategoria" class="row-table">
-                                <div class="cell id">{{ row.id }}</div>
-                                <div class="cell tipo">{{ row.tipo }}</div>
-                                <div class="cell indicador">{{ row.indicador }}</div>
-                                <div class="cell categoria_centro">{{ row.categoria_centro }}</div>
-                                <div class="cell anio">{{ row.anio }}</div>
-                                <div class="cell mes">{{ row.mes }}</div>
-                                <div class="cell periodo">{{ row.periodo }}</div>
-                                <div class="cell estandar">{{ row.estandar }}</div>
-                                <div class="cell acept">{{ row.acept }}</div>
-                                <div class="cell aceptmenos">{{ row.aceptmenos }}</div>
+                                <div class="cell id">{{ row.id || 'SIN DATOS' }}</div>
+                                <div class="cell tipo">{{ row.tipo || 'SIN DATOS' }}</div>
+                                <div class="cell indicador">{{ row.indicador || 'SIN DATOS' }}</div>
+                                <div class="cell categoria_centro">{{ row.categoria_centro || 'SIN DATOS' }}</div>
+                                <div class="cell anio">{{ row.anio || 'SIN DATOS' }}</div>
+                                <div class="cell mes">{{ row.mes || 'SIN DATOS' }}</div>
+                                <div class="cell periodo">{{ row.periodo || 'SIN DATOS' }}</div>
+                                <div class="cell estandar">{{ row.estandar || 'SIN DATOS' }}</div>
+                                <div class="cell acept">{{ row.acept || 'SIN DATOS' }}</div>
+                                <div class="cell aceptmenos">{{ row.aceptmenos || 'SIN DATOS' }}</div>
                                 <div class="cell acciones">
                                     <button type="button" class="btn-icon-edit"
                                         (click)="iniciarEdicionEstandarCategoria(row)" title="Editar registro">
@@ -698,20 +698,20 @@
 
                         <cdk-virtual-scroll-viewport #viewportCentros class="viewport-table" [itemSize]="44">
                             <div *cdkVirtualFor="let row of dataCentrosTMI" class="row-table">
-                                <div class="cell id">{{ row.id }}</div>
-                                <div class="cell red">{{ row.red }}</div>
-                                <div class="cell codred">{{ row.codred }}</div>
-                                <div class="cell orden">{{ row.orden }}</div>
-                                <div class="cell orden_tipo">{{ row.orden_tipo }}</div>
-                                <div class="cell codcentro">{{ row.codcentro }}</div>
-                                <div class="cell categoria">{{ row.categoria }}</div>
-                                <div class="cell tipo">{{ row.tipo }}</div>
-                                <div class="cell nivel">{{ row.nivel }}</div>
-                                <div class="cell centro">{{ row.centro }}</div>
-                                <div class="cell estado">{{ row.estado }}</div>
-                                <div class="cell anio">{{ row.anio }}</div>
-                                <div class="cell mes">{{ row.mes }}</div>
-                                <div class="cell periodo">{{ row.periodo }}</div>
+                                <div class="cell id">{{ row.id || 'SIN DATOS' }}</div>
+                                <div class="cell red">{{ row.red || 'SIN DATOS' }}</div>
+                                <div class="cell codred">{{ row.codred || 'SIN DATOS' }}</div>
+                                <div class="cell orden">{{ row.orden || 'SIN DATOS' }}</div>
+                                <div class="cell orden_tipo">{{ row.orden_tipo || 'SIN DATOS' }}</div>
+                                <div class="cell codcentro">{{ row.codcentro || 'SIN DATOS' }}</div>
+                                <div class="cell categoria">{{ row.categoria || 'SIN DATOS' }}</div>
+                                <div class="cell tipo">{{ row.tipo || 'SIN DATOS' }}</div>
+                                <div class="cell nivel">{{ row.nivel || 'SIN DATOS' }}</div>
+                                <div class="cell centro">{{ row.centro || 'SIN DATOS' }}</div>
+                                <div class="cell estado">{{ row.estado || 'SIN DATOS' }}</div>
+                                <div class="cell anio">{{ row.anio || 'SIN DATOS' }}</div>
+                                <div class="cell mes">{{ row.mes || 'SIN DATOS' }}</div>
+                                <div class="cell periodo">{{ row.periodo || 'SIN DATOS' }}</div>
                                 <div class="cell acciones">
                                     <button type="button" class="btn-icon-edit" (click)="iniciarEdicionCentro(row)"
                                         title="Editar centro">
@@ -901,11 +901,11 @@
                         <tbody>
                             <tr *ngFor="let row of dataCierre" [class.cierre-hoy]="esCierreHoy(row)">
                                 <td>
-                                    <div class="cierre-periodo">{{ nombrePeriodo(row.periodo) }}</div>
+                                    <div class="cierre-periodo">{{ nombrePeriodo(row.periodo) || 'SIN DATOS' }}</div>
                                     <div class="cierre-sub">{{ row.periodo }}</div>
                                 </td>
                                 <td>
-                                    {{ formatoFecha(row.fecha_cierre) }}
+                                    {{ formatoFecha(row.fecha_cierre) || 'SIN DATOS' }}
                                     <span *ngIf="esCierreHoy(row)" class="cierre-hoy-tag">Hoy</span>
                                 </td>
                                 <td>

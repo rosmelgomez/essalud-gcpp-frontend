@@ -97,6 +97,8 @@ export class DashboardFarmacia {
         this.ayudaDiagnosticoRA = data.recetasAtendidas.find((item: { area: string; recetas: number }) => item.area === 'AYUDA AL DIAGNOSTICO')?.recetas || 0;
 
         this.dataDFCSV = data.csv;
+        console.log('Recetas Atendidas:', data.recetasAtendidas);
+        console.log('Datos CSV:', data.csv);
 
         this.loadingRA = false;
         this.selectPeriodoRA = true;

@@ -8,11 +8,8 @@
             </p>
         </div>
 
-        <div class="header-content header-content-actions">
-            <button class="btn-download btn-ficha-tecnica" (click)="downloadCSV()">
-                <i class="bi bi-file-earmark-pdf"></i>
-                Exportar CSV
-            </button>
+        <div class="actions">
+            <button class="btn-export" (click)="downloadCSV()"> Exportar CSV</button>
         </div>
     </div>
     <!-- TABS -->
@@ -84,91 +81,108 @@
         <div *ngIf="!loadingRA && !errorRA && selectPeriodoRA" class="dashboard-content">
 
             <div class="cards-row">
+
                 <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <h5 class="card-title">RECETAS ATENDIDAS (TOTAL)</h5>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <div class="contend_left">
-                            <a class="card-link">
-                                <h5 class="card-title">RECETAS ATENDIDAS (TOTAL)</h5>
-                            </a>
                             <h2 class="card-value">{{ formatNumber(totalRecetasAtendidasRA) }}</h2>
-                            <p class="card-subtitle">Periodo {{ anioRA }}-{{ periodoRA }} | {{ centroAtencion
-                                }}</p>
+                            <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioRA }}-{{ periodoRA}}
+                                | {{centroAtencion }}</p>
                         </div>
                     </div>
                 </div>
+
+
                 <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <h5 class="card-title">CONSULTA EXTERNA</h5>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <div class="contend_left">
-                            <a class="card-link">
-                                <h5 class="card-title">CONSULTA EXTERNA</h5>
-                            </a>
                             <h2 class="card-value">{{ formatNumber(consultaExternaRA) }}</h2>
-                            <p class="card-subtitle">Periodo {{ anioRA }}-{{ periodoRA }} | {{ centroAtencion
-                                }}</p>
+                            <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioRA }}-{{ periodoRA}}
+                            | {{centroAtencion }}</p>
                         </div>
-
                     </div>
                 </div>
+
+
             </div>
 
             <div class="cards-row">
+
                 <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <h5 class="card-title">URGENCIAS / EMERGENCIA</h5>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <div class="contend_left">
-                            <a class="card-link">
-                                <h5 class="card-title">URGENCIAS / EMERGENCIA</h5>
-                            </a>
                             <h2 class="card-value">{{ formatNumber(urgenciaEmergenciaRA) }}</h2>
-                            <p class="card-subtitle">Periodo {{ anioRA }}-{{ periodoRA }} | {{ centroAtencion
-                                }}</p>
+                            <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioRA }}-{{ periodoRA}}
+                                | {{centroAtencion }}</p>
                         </div>
                     </div>
                 </div>
+
                 <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <h5 class="card-title">HOSPITALIZACION</h5>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <div class="contend_left">
-                            <a class="card-link">
-                                <h5 class="card-title">HOSPITALIZACION</h5>
-                            </a>
                             <h2 class="card-value">{{ formatNumber(hospitalizacionRA) }}</h2>
-                            <p class="card-subtitle">Periodo {{ anioRA }}-{{ periodoRA }} | {{ centroAtencion
-                                }}</p>
+                            <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioRA }}-{{ periodoRA}}
+                                | {{centroAtencion }}</p>
                         </div>
-
                     </div>
                 </div>
+
             </div>
 
             <div class="cards-row">
+
                 <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <h5 class="card-title">CENTRO QUIRURGICO</h5>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <div class="contend_left">
-                            <a class="card-link">
-                                <h5 class="card-title">CENTRO QUIRURGICO</h5>
-                            </a>
                             <h2 class="card-value">{{ formatNumber(centroQuirurgicosRA) }}</h2>
-                            <p class="card-subtitle">Periodo {{ anioRA }}-{{ periodoRA }} | {{ centroAtencion
-                                }}</p>
+                            <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioRA }}-{{ periodoRA}}
+                                | {{centroAtencion }}</p>
                         </div>
                     </div>
                 </div>
-                <div class="card">
+                
+                <div class="card" style="display: none;">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <h5 class="card-title">AYUDA AL DIAGNOSTICO</h5>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <div class="contend_left">
-                            <a class="card-link">
-                                <h5 class="card-title">AYUDA AL DIAGNOSTICO</h5>
-                            </a>
                             <h2 class="card-value">{{ formatNumber(ayudaDiagnosticoRA) }}</h2>
-                            <p class="card-subtitle">Periodo {{ anioRA }}-{{ periodoRA }} | {{ centroAtencion
-                                }}</p>
+                            <p class="card-subtitle"><i class="bi bi-calendar3"></i> Periodo {{ anioRA }}-{{ periodoRA}}
+                                | {{centroAtencion }}</p>
                         </div>
-
                     </div>
                 </div>
+                
             </div>
-
-
-
 
         </div>
     </div>

@@ -13,7 +13,7 @@
       </p>
     </div>
     <div class="header-content header-content-actions">
-      <button type="button" class="btn-download btn-ficha-tecnica" (click)="downloadFichaTecnica()">
+      <button type="button" class="btn-download btn-ficha-tecnica" (click)="downloadFichaTecnica('f_consulta_externa_odo.pdf')">
         <i class="bi bi-file-earmark-pdf"></i>
         Ficha Técnica
       </button>
@@ -120,6 +120,11 @@
             <div class="card-title-group">
               <h5 class="card-title">Total de consultantes al servicio</h5>
             </div>
+            <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('SOD01.01 - Consultantes al Servicio de Odontología.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
           </div>
           <div class="card-body">
             <div class="contend_left">
@@ -147,6 +152,11 @@
             <div class="card-title-group">
               <h5 class="card-title">Total de Consultas</h5>
             </div>
+            <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('SOD02.01 - Total consultas sesión Odontológica.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
           </div>
           <div class="card-body">
             <div class="contend_left">
@@ -168,7 +178,11 @@
           <div class="card-header">
             <div class="card-title-group">
               <h5 class="card-title">Número de Médicos</h5>
-            </div>
+             <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('SOD04.01 - Número de Profesionales Odontología.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
           </div>
           <div class="card-body">
             <div class="contend_left">
@@ -196,6 +210,11 @@
             <div class="card-title-group">
               <h5 class="card-title">Total horas programadas</h5>
             </div>
+            <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('SOD05.01 - Horas Odontológicas Programadas Odontología.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
           </div>
           <div class="card-body">
             <div class="contend_left">
@@ -218,6 +237,11 @@
             <div class="card-title-group">
               <h5 class="card-title">Total de horas Efectivas (Ejecutada)</h5>
             </div>
+            <button class="btn-download btn-ficha-tecnica"
+              (click)="downloadFichaTecnica('SOD06.01 - Horas Efectivas (Ejecutadas) Odontología.pdf')">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Ficha Técnica
+            </button>
           </div>
           <div class="card-body">
             <div class="contend_left">
