@@ -1,348 +1,155 @@
 <div class="main">
-  <div class="survey-alert" *ngIf="showSurveyReminder">
-    <div class="survey-alert__content">
-      <span class="survey-alert__badge">Aviso</span>
+  <div class="page">
+    <!-- Recordatorio de encuesta -->
+    <div class="survey-alert" *ngIf="showSurveyReminder" role="status">
+      <span class="survey-alert__icon" aria-hidden="true"><mat-icon>campaign</mat-icon></span>
       <div class="survey-alert__text">
         <strong>Recuerda completar la encuesta de conformidad.</strong>
         <p>Tu participación ayuda a mantener actualizada la evaluación del servicio.</p>
         <p class="survey-alert__error" *ngIf="surveyReminderError">{{ surveyReminderError }}</p>
       </div>
-    </div>
-    <div class="survey-alert__actions">
-      <button type="button" class="survey-alert__primary" [disabled]="!canGoToEncuesta()" (click)="goToEncuesta()">Ir a
-        encuesta</button>
-      <button type="button" class="survey-alert__secondary" (click)="closeSurveyReminder()">Cerrar</button>
-    </div>
-  </div>
-
-  <div class="centro-shell" *ngIf="!selectCentro">
-    <div class="centro-info">
-      <span class="badge">Bienvenido</span>
-      <h2>Selecciona tu centro asistencial</h2>
-      <p>
-        Para acceder a los módulos del sistema, primero debes seleccionar el centro asistencial con
-        el que trabajarás.
-      </p>
-      <ul class="tips">
-        <li>Usa el buscador para encontrar rápidamente tu centro.</li>
-        <li>El centro seleccionado se aplicará a todos los módulos.</li>
-        <li>Podrás cambiar de centro en cualquier momento.</li>
-      </ul>
-      <div class="quick-stats">
-        <div class="stat-item">
-          <div class="stat-icon">📊</div>
-          <div class="stat-text">
-            <span class="stat-value">{{ dataCentro.length }}</span>
-            <span class="stat-label">Centros disponibles</span>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon">🏥</div>
-          <div class="stat-text">
-            <span class="stat-value"
-              *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">10</span>
-            <span class="stat-value" *ngIf="user?.roles?.includes('ADMIN_RED')">5</span>
-            <span class="stat-label">Módulos activos</span>
-          </div>
-        </div>
+      <div class="survey-alert__actions">
+        <button type="button" class="btn btn-light btn-sm" [disabled]="!canGoToEncuesta()" (click)="goToEncuesta()">
+          Ir a encuesta
+        </button>
+        <button type="button" class="icon-btn" (click)="closeSurveyReminder()" aria-label="Cerrar aviso">
+          <mat-icon>close</mat-icon>
+        </button>
       </div>
     </div>
 
-    <div class="centro-container">
-      <div class="card-header">
-        <div>
-          <div class="eyebrow">Formulario</div>
-          <div class="title" *ngIf="user?.roles?.includes('ADMIN_RED')">{{nameRed}}</div>
-          <div class="title">Centros Asistenciales</div>
-        </div>
-        <div class="status-dot"></div>
+    <!-- ===================== Selección de centro ===================== -->
+    <section class="centro-shell" *ngIf="!selectCentro">
+      <div class="intro">
+        <p class="greeting" *ngIf="firstName">Hola, {{ firstName }}</p>
+        <h1>Selecciona tu centro asistencial</h1>
+        <p class="lead">
+          Para acceder a los módulos del sistema, primero debes seleccionar el centro asistencial con el que trabajarás.
+        </p>
+        <ul class="tips">
+          <li><mat-icon>search</mat-icon>Usa el buscador para encontrar rápidamente tu centro.</li>
+          <li><mat-icon>done_all</mat-icon>El centro seleccionado se aplicará a todos los módulos.</li>
+          <li><mat-icon>swap_horiz</mat-icon>Podrás cambiar de centro en cualquier momento.</li>
+        </ul>
+        <p class="facts">
+          <span><strong class="num">{{ dataCentro.length }}</strong> centros disponibles</span>
+          <span class="dot-sep" aria-hidden="true"></span>
+          <span><strong class="num">{{ mainModuleCount }}</strong> módulos</span>
+        </p>
       </div>
 
-      <form [formGroup]="centroForm" autocomplete="off" class="register-form">
+      <form class="centro-card" [formGroup]="centroForm" autocomplete="off" (ngSubmit)="saveCentro()">
+        <header class="centro-card__head">
+          <span class="plate" aria-hidden="true"><mat-icon>location_on</mat-icon></span>
+          <div>
+            <h2>Centro de trabajo</h2>
+            <p>{{ hasRole('ADMIN_RED') && nameRed ? nameRed : 'Busca por el nombre del centro' }}</p>
+          </div>
+        </header>
+
         <!-- Admin puede usar ambos filtros en paralelo: red (opcional) y centro -->
-        <div class="form-grid" *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
-          <div class="centro-form-group">
-            <label>Red Asistencial</label>
-            <div class="custom-dropdown" (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
-              <input type="text" placeholder="Buscar y seleccionar red..." (input)="filterRed($event)"
-                (keydown)="handleRedKeydown($event)" [value]="selectedRedName" class="dropdown-input" />
-              <div class="dropdown-list" *ngIf="isDropdownRedOpen">
-                <div *ngFor="let red of filteredRed; let i = index" #redOption class="dropdown-item"
-                  [class.active]="i === activeRedIndex" (click)="selectOptionRed(red)">
-                  {{ red.redasisdes }}
-                </div>
-                <div *ngIf="filteredRed.length === 0" class="dropdown-item disabled">
-                  No hay resultados
-                </div>
-              </div>
-            </div>
-            <input type="hidden" formControlName="code_red" />
+        <div class="field" *ngIf="hasRole('ADMIN') || hasRole('CONSULTA')">
+          <label for="home-red">Red asistencial <span class="optional">opcional</span></label>
+          <div class="combo">
+            <mat-icon class="combo__lead">lan</mat-icon>
+            <input id="home-red" type="text" role="combobox" placeholder="Todas las redes" autocomplete="off"
+              [attr.aria-expanded]="isDropdownRedOpen" aria-controls="home-red-list"
+              (focus)="openDropdownRed()" (blur)="closeDropdownRed()" (input)="filterRed($event)"
+              (keydown)="handleRedKeydown($event)" [value]="selectedRedName" />
+            <ul class="combo__list" id="home-red-list" role="listbox" *ngIf="isDropdownRedOpen">
+              <li *ngFor="let red of filteredRed; let i = index" #redOption role="option" class="combo__option"
+                [class.active]="i === activeRedIndex" [attr.aria-selected]="red.redasisdes === selectedRedName"
+                (mousedown)="$event.preventDefault(); selectOptionRed(red)" (mouseenter)="activeRedIndex = i">
+                {{ red.redasisdes }}
+              </li>
+              <li *ngIf="filteredRed.length === 0" class="combo__empty">Sin resultados</li>
+            </ul>
           </div>
         </div>
 
-        <div class="form-grid">
-          <div class="centro-form-group">
-            <label
-              *ngIf="(user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA') || user?.roles?.includes('ADMIN_RED') )&& !user?.roles?.includes('USER')">Centro
-              Asistencial</label>
-            <div class="custom-dropdown" (mouseleave)="closeDropdown()" (mouseenter)="openDropdown()">
-              <input type="text" title="Selecciona un centro" placeholder="Buscar y seleccionar centro..."
-                (input)="filterCentro($event)" (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName"
-                class="dropdown-input" />
-              <div class="dropdown-list" *ngIf="isDropdownOpen">
-                <div *ngFor="let centro of searchCentro ? filteredCentro : dataCentro; let i = index" #centroOption
-                  class="dropdown-item" [class.active]="i === activeCentroIndex" (click)="selectDropdownOption(centro)">
-                  {{ centro.cenasides }}
-                </div>
-                <div *ngIf="(searchCentro ? filteredCentro : dataCentro).length === 0" class="dropdown-item disabled">
-                  No hay resultados
-                </div>
-              </div>
-            </div>
-            <input type="hidden" formControlName="centro" />
+        <div class="field">
+          <label for="home-centro">Centro asistencial</label>
+          <div class="combo">
+            <mat-icon class="combo__lead">search</mat-icon>
+            <input id="home-centro" type="text" role="combobox" placeholder="Escribe para buscar tu centro"
+              autocomplete="off" [attr.aria-expanded]="isDropdownOpen" aria-controls="home-centro-list"
+              (focus)="openDropdown()" (blur)="closeDropdown()" (input)="filterCentro($event)"
+              (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName" />
+            <ul class="combo__list" id="home-centro-list" role="listbox" *ngIf="isDropdownOpen">
+              <li *ngFor="let centro of searchCentro ? filteredCentro : dataCentro; let i = index" #centroOption
+                role="option" class="combo__option" [class.active]="i === activeCentroIndex"
+                [attr.aria-selected]="centro.cenasides === selectedCentroName"
+                (mousedown)="$event.preventDefault(); selectDropdownOption(centro)" (mouseenter)="activeCentroIndex = i">
+                {{ centro.cenasides }}
+              </li>
+              <li *ngIf="(searchCentro ? filteredCentro : dataCentro).length === 0" class="combo__empty">Sin resultados</li>
+            </ul>
           </div>
         </div>
 
-        <div class="register-submit">
-          <button type="button" (click)="saveCentro()">Seleccionar</button>
+        <div class="centro-card__actions">
+          <button type="button" class="btn btn-ghost" *ngIf="nameCentro" (click)="cancelChangeCentro()">
+            Volver a {{ nameCentro }}
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!centroForm.valid">
+            Continuar
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
         </div>
       </form>
-    </div>
-  </div>
+    </section>
 
-  <div class="modules-container" *ngIf="selectCentro">
+    <!-- ===================== Módulos ===================== -->
+    <section class="modules" *ngIf="selectCentro">
+      <header class="hero">
+        <div class="hero__text">
+          <p class="hero__label"><mat-icon>location_on</mat-icon>Centro asistencial</p>
+          <h1>{{ nameCentro || 'Sin centro asignado' }}</h1>
+        </div>
+        <button type="button" class="btn btn-outline-light" (click)="changeCentro()" *ngIf="!hasRole('USER')">
+          <mat-icon>swap_horiz</mat-icon>
+          Cambiar centro
+        </button>
+      </header>
 
-    <div class="modules-header">
+      <nav class="crumbs" aria-label="Ubicación">
+        <ol>
+          <li *ngFor="let crumb of breadcrumb; let last = last">
+            <button type="button" *ngIf="!last" (click)="goToView(crumb.view)">{{ crumb.label }}</button>
+            <span *ngIf="last" aria-current="page">{{ crumb.label }}</span>
+            <mat-icon class="crumb-sep" *ngIf="!last" aria-hidden="true">chevron_right</mat-icon>
+          </li>
+        </ol>
+      </nav>
 
-      <!-- header con la información del centro seleccionado-->
-      <div class="header-content">
-        <h1>El centro seleccionado es {{ nameCentro }}</h1>
-        <h1 class="modules-title">Módulos disponibles</h1>
-        <p class="modules-subtitle">Accede a los diferentes servicios de la plataforma</p>
+      <div class="module-grid">
+        <ng-container *ngFor="let module of currentModules; let i = index; trackBy: trackByModule">
+          <button type="button" class="module" *ngIf="module.action; else linkTile" [style.--i]="i" (click)="openModule(module)">
+            <ng-container *ngTemplateOutlet="tileBody; context: { $implicit: module, count: childCount(module) }"></ng-container>
+          </button>
+
+          <ng-template #linkTile>
+            <a class="module" *ngIf="module.route" [routerLink]="module.route" [style.--i]="i">
+              <ng-container *ngTemplateOutlet="tileBody; context: { $implicit: module, count: 0 }"></ng-container>
+            </a>
+            <a class="module" *ngIf="module.href" [href]="module.href" [style.--i]="i">
+              <ng-container *ngTemplateOutlet="tileBody; context: { $implicit: module, count: 0 }"></ng-container>
+            </a>
+          </ng-template>
+        </ng-container>
       </div>
 
-      <!-- btn para retornar al form de centros-->
-      <button class="btn-change-centro" (click)="changeCentro()" title="Cambiar centro"
-        *ngIf="!user?.roles?.includes('USER') && showModulosPrincipales">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="12 5 19 12 12 19"></polyline>
-          <polyline points="19 12 5 12"></polyline>
-        </svg>
-        Cambiar Centro
-      </button>
-
-      <!-- btn para retornar principales modulos-->
-      <button class="btn-change-centro" (click)="retornoMainModulos()" title="Retornar a modulos principales"
-        *ngIf="btnReturnModulos">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="12 5 19 12 12 19"></polyline>
-          <polyline points="19 12 5 12"></polyline>
-        </svg>
-        Retornar a modulos principales
-      </button>
-
-      <!-- btn para retornar a modulos de ses -->
-      <button class="btn-change-centro" (click)="retornoMainSES()" title="Retornar a SES"
-        *ngIf="showModuloConsultaExterna || showModuloCentroQuirurgico">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="12 5 19 12 12 19"></polyline>
-          <polyline points="19 12 5 12"></polyline>
-        </svg>
-        Retornar a SES
-      </button>
-
-
-    </div>
-
-    <!--  menú con los principales módulos disponibles -->
-    <div class="modules-menu" *ngIf="showModulosPrincipales">
-
-      <!--  Variables SES -->
-      <a class="module" (click)="showSESVariables()">
-        <img src="/images/RCS2.png" alt="Variables SES" />
-        <span>Variables SES</span>
-      </a>
-
-      <!--  Tablas Homologadas -->
-      <a class="module" routerLink="/reporte/dashboard-tablas-homologadas">
-        <img src="/images/tablas-homologadas.png" alt="Reportes gerenciales" />
-        <span>Tablas Homologadas</span>
-      </a>
-
-      <!--  Tramas -->
-      <a class="module" routerLink="/reporte/dashboard-tramas">
-        <img src="/images/tramas.png" alt="Tramas" />
-        <span>Tramas</span>
-      </a>
-
-      <!-- Reportes gerenciales (admin) -->
-      <a routerLink="/reporte/dashboard-gerenciales" class="module"
-        *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
-        <img src="/images/analytics.png" alt="Reportes gerenciales" />
-        <span>Reportes gerenciales</span>
-      </a>
-
-      <!-- Reporteador -->
-      <a routerLink="/reporte/dashboard-reporteador" class="module"
-        *ngIf="user?.roles?.includes('ADMIN') || user?.roles?.includes('CONSULTA')">
-        <img src="/images/reporteador.png" alt="Reporteador" />
-        <span>Reporteador</span>
-      </a>
-
-      <!-- patologia -->
-      <a href="/reporte/dashboard-patologia" class="module" *ngIf="user?.roles?.includes('ADMIN')">
-        <img src="/images/patologia.png" alt="Patología" />
-        <span>Patología</span>
-      </a>
-
-      <!-- seguimiento paciente -->
-      <a href="/reporte/dashboard-seguimiento-paciente" class="module" *ngIf="user?.roles?.includes('ADMIN')">
-        <img src="/images/seguimiento_paciente.png" alt="Seguimiento Paciente" />
-        <span>Seguimiento Paciente</span>
-      </a>
-
-      <!-- Encuesta -->
-      <a class="module" (click)="showMainEncuesta()">
-        <img src="/images/survey.png" alt="Encuesta" />
-        <span>Encuesta de Conformidad</span>
-      </a>
-
-      <!-- Gestion Documentaria -->
-      <a class="module" (click)="showMainGestionDocumentaria()">
-        <img src="/images/gestion_documentaria.png" alt="Gestion Documentaria" />
-        <span>Gestión Documentaria</span>
-      </a>
-
-      <!-- Auditoría del Sistema (admin) -->
-      <a routerLink="/logs-reports" class="module" *ngIf="user?.roles?.includes('ADMIN')">
-        <img src="/images/logs.png" alt="Auditoría del Sistema" />
-        <span>Auditoría del Sistema</span>
-      </a>
-
-
-
-    </div>
-
-    <!-- Subcomponentes de Varibles SES -->
-    <div class="modules-menu" *ngIf="showVariablesSES">
-
-      <!-- Consulta externa -->
-      <a class="module" (click)="showMainConsultaExterna()">
-        <img src="/images/RCS2.png" alt="Consulta Externa" />
-        <span>Consulta Externa</span>
-      </a>
-
-      <!-- Emergencia -->
-      <a routerLink="/reporte/dashboard-emergencia" class="module">
-        <img src="/images/RSC1.png" alt="Emergencia" />
-        <span>Emergencia</span>
-      </a>
-
-      <!-- Centro quirúrgico  -->
-      <a class="module" (click)="showMainCentroQuirurgico()">
-        <img src="/images/cirugia.png" alt="Centro quirúrgico" />
-        <span>Centro quirúrgico</span>
-      </a>
-
-      <!--  Procedimientos -->
-      <a class="module" routerLink="/reporte/dashboard-procedimientos">
-        <img src="/images/procedimientos.png" alt="Procedimientos" />
-        <span>Procedimientos</span>
-      </a>
-
-      <!-- Hospitalizacion-->
-      <a routerLink="/reporte/dashboard-hospitalizacion" class="module">
-        <img src="/images/hospitalizacion.png" alt="Hospitalizacion" />
-        <span>Hospitalizacion</span>
-      </a>
-
-      <!-- Farmacia-->
-      <a href="/reporte/dashboard-farmacia" class="module">
-        <img src="/images/farmacia.png" alt="Farmacia" />
-        <span>Farmacia</span>
-      </a>
-
-    </div>
-
-    <!-- Subcomponentes del modulo consulta externa -->
-    <div class="modules-menu" *ngIf="showModuloConsultaExterna">
-
-      <!-- medicas-->
-      <a href="/reporte/dashboard-medicas" class="module">
-        <img src="/images/medicas.png" alt="Médicas" />
-        <span>Médicas</span>
-      </a>
-
-      <!-- no medicas-->
-      <a href="/reporte/dashboard-no-medicas" class="module">
-        <img src="/images/no-medicas.png" alt="No Médicas" />
-        <span>No Médicas</span>
-      </a>
-
-      <!-- odontologicas-->
-      <a href="/reporte/dashboard-odontologicas" class="module">
-        <img src="/images/odontologicas.png" alt="Odontológicas" />
-        <span>Odontológicas</span>
-      </a>
-
-    </div>
-
-    <!-- Subcomponentes del modulo centro quirurgico -->
-    <div class="modules-menu" *ngIf="showModuloCentroQuirurgico">
-
-      <!-- intervenciones quirurgicas-->
-      <a href="/reporte/dashboard-intervenciones-quirurgicas" class="module">
-        <img src="/images/intervenciones-quirurgicas.png" alt="Intervenciones quirúrgicas" />
-        <span>Intervenciones quirúrgicas</span>
-      </a>
-
-      <!-- transplante-->
-      <a href="/reporte/dashboard-transplante" class="module">
-        <img src="/images/transplante.png" alt="Transplante" />
-        <span>Transplante</span>
-      </a>
-
-
-    </div>
-
-    <!-- Subcomponentes de Gestion Documentaria-->
-    <div class="modules-menu" *ngIf="showModuloGestionDocumentaria">
-
-      <a class="module" routerLink="/documento/reports">
-        <img src="/images/gestion_documentaria.png" alt="Gestion Documentaria" />
-        <span>Gestión Documentaria</span>
-      </a>
-
-      <!-- Auditoría de Documentos (admin) -->
-      <a routerLink="/documento/auditoria" class="module" *ngIf="user?.roles?.includes('ADMIN')">
-        <img src="/images/gestion_documentaria.png" alt="Auditoría de Documentos" style="filter: hue-rotate(45deg);" />
-        <span>Auditoría de Documentos</span>
-      </a>
-
-    </div>
-
-    <!-- Subcomponentes de encuesta-->
-    <div class="modules-menu" *ngIf="showModuloEncuesta">
-
-      <!-- Encuesta -->
-      <a routerLink="/encuesta/register" class="module">
-        <div class=""></div>
-        <img src="/images/survey.png" alt="Encuesta" />
-        <span>Encuesta de Conformidad</span>
-      </a>
-
-      <!-- Dashboard Encuesta (admin) -->
-      <a routerLink="/encuesta/dashboard" class="module" *ngIf="user?.roles?.includes('ADMIN')">
-        <img src="/images/respuesta-encuesta.png" alt="Encuesta" />
-        <span>Respuesta de Encuestas</span>
-      </a>
-
-
-    </div>
-
-
+      <ng-template #tileBody let-module let-count="count">
+        <span class="module__art" aria-hidden="true">
+          <img [src]="module.img" alt="" loading="lazy" [class.hue]="module.label === 'Auditoría de Documentos'" />
+        </span>
+        <span class="module__label">{{ module.label }}</span>
+        <span class="module__meta">
+          <ng-container *ngIf="count > 0">{{ count }} {{ count === 1 ? 'sección' : 'secciones' }}</ng-container>
+          <ng-container *ngIf="count === 0">Abrir</ng-container>
+          <mat-icon>{{ count > 0 ? 'chevron_right' : 'arrow_forward' }}</mat-icon>
+        </span>
+      </ng-template>
+    </section>
   </div>
 </div>

@@ -8,11 +8,12 @@ import { AuthService } from '../../services/usuario/auth-service';
 import { RouteLogger } from '../../services/route-logger';
 import { UsersService } from '../../services/usuario/users-service';
 import { Auth } from '../../model/user';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, MatIconModule],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
@@ -25,6 +26,12 @@ export class Login implements OnInit {
   showChangePassword = false;
   isUpdatingPassword = false;
   tempUserDto: any = null;
+
+  isLoggingIn = false;
+  loginError = '';
+  loginSubmitted = false;
+  changePasswordError = '';
+  changePasswordSubmitted = false;
 
   sessionExpiredMessage = '';
 
@@ -50,13 +57,8 @@ export class Login implements OnInit {
     // Capturar el mensaje de sesión expirada desde los parámetros de URL
     this.route.queryParams.subscribe((params) => {
       if (params['message']) {
+        // Se mantiene visible hasta que el usuario vuelva a intentar ingresar o lo cierre.
         this.sessionExpiredMessage = params['message'];
-        console.log('Mensaje de sesión expirada recibido:', params['message']);
-
-        // Ocultar el mensaje después de 8 segundos
-        setTimeout(() => {
-          this.sessionExpiredMessage = '';
-        }, 8000);
       }
     });
 
@@ -75,6 +77,46 @@ export class Login implements OnInit {
     });
   }
 
+  /** Muestra el error de un campo del login solo tras intentar enviar o tocarlo. */
+  loginFieldInvalid(name: string): boolean {
+    const c = this.loginForm.get(name);
+    return !!c && c.invalid && (c.touched || this.loginSubmitted);
+  }
+
+  dismissSessionMessage(): void {
+    this.sessionExpiredMessage = '';
+  }
+
+  // ---- Cambio de contraseña (primer ingreso) ----
+  get newPasswordValue(): string {
+    return this.changePasswordForm?.get('newPassword')?.value ?? '';
+  }
+
+  get passwordStrength(): number {
+    const v = this.newPasswordValue;
+    if (!v) return 0;
+    if (v.length < 8) return 1;
+    let score = 1;
+    if (/[a-z]/.test(v) && /[A-Z]/.test(v)) score++;
+    if (/\d/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    return Math.min(score, 4);
+  }
+
+  get passwordStrengthLabel(): string {
+    return ['', 'Muy débil', 'Débil', 'Aceptable', 'Robusta'][this.passwordStrength];
+  }
+
+  get passwordsMismatch(): boolean {
+    const confirm = this.changePasswordForm?.get('confirmPassword')?.value ?? '';
+    return !!confirm && confirm !== this.newPasswordValue;
+  }
+
+  get passwordsMatch(): boolean {
+    const confirm = this.changePasswordForm?.get('confirmPassword')?.value ?? '';
+    return !!confirm && confirm === this.newPasswordValue;
+  }
+
   togglePassword(): void {
     this.showPassword = !this.showPassword;
   }
@@ -89,8 +131,11 @@ export class Login implements OnInit {
 
   login() {
     this.sessionExpiredMessage = '';
+    this.loginError = '';
+    this.loginSubmitted = true;
 
     if (this.loginForm.valid) {
+      this.isLoggingIn = true;
       const user: Auth = {
         username: this.loginForm.value.username,
         password: this.loginForm.value.password,
@@ -100,6 +145,7 @@ export class Login implements OnInit {
           this.routeLogger.logLogin();
           this.usersService.getUser(user.username).subscribe({
             next: (data) => {
+              this.isLoggingIn = false;
               if (data && data.firstLogin) {
                 this.tempUserDto = data;
                 this.showChangePassword = true;
@@ -112,6 +158,7 @@ export class Login implements OnInit {
               }
             },
             error: () => {
+              this.isLoggingIn = false;
               this.loginForm.reset();
               this.router.navigate(['/home'], {
                 state: { surveyReminder: '1' },
@@ -121,21 +168,25 @@ export class Login implements OnInit {
         },
         error: (error) => {
           console.error('Error de autenticación:', error);
-          alert('Credenciales incorrectas. Por favor, inténtelo de nuevo.');
+          this.isLoggingIn = false;
+          this.loginError = error?.status === 0
+            ? 'No pudimos conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
+            : 'Usuario o contraseña incorrectos. Revisa tus datos e inténtalo de nuevo.';
         },
       });
     } else {
-      alert('Ingrese todos los datos');
+      this.loginForm.markAllAsTouched();
     }
   }
 
   changePasswordFirstTime() {
+    this.changePasswordError = '';
+    this.changePasswordSubmitted = true;
     if (this.changePasswordForm.valid && this.tempUserDto) {
       const newPassword = this.changePasswordForm.value.newPassword;
       const confirmPassword = this.changePasswordForm.value.confirmPassword;
 
       if (newPassword !== confirmPassword) {
-        alert('Las contraseñas no coinciden');
         return;
       }
 
@@ -163,11 +214,11 @@ export class Login implements OnInit {
         error: (err) => {
           this.isUpdatingPassword = false;
           console.error('Error al cambiar contraseña:', err);
-          alert('Error al cambiar la contraseña. Por favor, intente de nuevo.');
+          this.changePasswordError = 'No se pudo cambiar la contraseña. Inténtalo de nuevo.';
         },
       });
     } else {
-      alert('Ingrese una contraseña válida (mínimo 8 caracteres).');
+      this.changePasswordForm.markAllAsTouched();
     }
   }
 
@@ -176,6 +227,8 @@ export class Login implements OnInit {
     this.authloginService.logout().subscribe({
       next: () => {
         this.showChangePassword = false;
+        this.changePasswordSubmitted = false;
+        this.changePasswordError = '';
         this.tempUserDto = null;
         this.loginForm.reset();
         this.changePasswordForm.reset();

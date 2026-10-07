@@ -9,11 +9,12 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LocalStorageService } from '../../../services/local-storage-service';
 import { UsersService } from '../../../services/usuario/users-service';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, MatIconModule],
   templateUrl: './perfil.html',
   styleUrl: './perfil.css',
 })
@@ -31,6 +32,10 @@ export class Perfil implements OnInit, OnDestroy {
   showCurrentPassword = false;
   showNewPassword = false;
   showConfirmPassword = false;
+  isSavingUser = false;
+  isSavingPassword = false;
+  passwordSubmitted = false;
+  currentPasswordError = '';
 
 
   constructor(
@@ -125,6 +130,69 @@ export class Perfil implements OnInit, OnDestroy {
     return `${firstInitial}${lastInitial}`;
   }
 
+  get roleLabel(): string {
+    const roles = this.user?.roles as unknown;
+    return Array.isArray(roles) ? roles.join(' · ') : String(roles ?? '');
+  }
+
+  /** Mensaje de error de un campo, solo cuando el usuario ya interactuó con él. */
+  fieldError(form: FormGroup, name: string): string {
+    const c = form.get(name);
+    if (!c || !c.invalid || !(c.touched || c.dirty)) return '';
+    if (c.hasError('required')) return 'Este campo es obligatorio.';
+    if (c.hasError('pattern')) return 'El DNI debe tener 8 dígitos.';
+    if (c.hasError('email')) return 'Ingresa un correo válido.';
+    if (c.hasError('minlength')) return 'Usa al menos 8 caracteres.';
+    return 'Revisa este campo.';
+  }
+
+  discardUserChanges(): void {
+    if (!this.user) return;
+    this.changeUserForm.reset({
+      name: this.user.name,
+      lastname: this.user.lastname,
+      dni: this.user.dni,
+      email: this.user.email,
+    });
+  }
+
+  // ---- Contraseña: guía en vivo ----
+  get newPasswordValue(): string {
+    return this.changePasswordForm?.get('newPassword')?.value ?? '';
+  }
+
+  get passwordChecks(): Array<{ label: string; ok: boolean; required: boolean }> {
+    const v = this.newPasswordValue;
+    return [
+      { label: 'Al menos 8 caracteres', ok: v.length >= 8, required: true },
+      { label: 'Mayúsculas y minúsculas', ok: /[a-z]/.test(v) && /[A-Z]/.test(v), required: false },
+      { label: 'Al menos un número', ok: /\d/.test(v), required: false },
+      { label: 'Al menos un símbolo', ok: /[^A-Za-z0-9]/.test(v), required: false },
+    ];
+  }
+
+  /** 0 a 4 según los criterios cumplidos (la longitud mínima es obligatoria). */
+  get passwordStrength(): number {
+    const v = this.newPasswordValue;
+    if (!v) return 0;
+    if (v.length < 8) return 1;
+    return this.passwordChecks.filter((c) => c.ok).length;
+  }
+
+  get passwordStrengthLabel(): string {
+    return ['', 'Muy débil', 'Débil', 'Aceptable', 'Robusta'][this.passwordStrength];
+  }
+
+  get passwordsMismatch(): boolean {
+    const confirm = this.changePasswordForm?.get('confirmPassword')?.value ?? '';
+    return !!confirm && confirm !== this.newPasswordValue;
+  }
+
+  get passwordsMatch(): boolean {
+    const confirm = this.changePasswordForm?.get('confirmPassword')?.value ?? '';
+    return !!confirm && confirm === this.newPasswordValue;
+  }
+
   changeUser(): void {
     if (!this.changeUserForm.valid) {
       this._snackBar.open('Por favor completa todos los campos requeridos', 'Cerrar', {
@@ -146,17 +214,30 @@ export class Perfil implements OnInit, OnDestroy {
       password: "",
       date_creation: this.user!.date_creation,
       date_update: new Date().toISOString(),
+      // Conservar los roles: sin ellos la sesión guardada pierde permisos (menú y guards).
+      roles: this.user!.roles,
     };
+    this.isSavingUser = true;
     this.usersService.updateUser(updatedUser).subscribe({
       next: () => {
+        this.isSavingUser = false;
+        this.user = { ...this.user!, ...updatedUser };
         this._snackBar.open('Información actualizada correctamente', 'Cerrar', {
           duration: 3000,
         });
         this.authService.setCurrentUser(updatedUser);
-        this.changeUserForm.patchValue(updatedUser, { emitEvent: false });
+        this.changeUserForm.reset({
+          name: updatedUser.name,
+          lastname: updatedUser.lastname,
+          dni: updatedUser.dni,
+          email: updatedUser.email,
+        });
+        this.cdr.detectChanges();
       }
       ,
       error: () => {
+        this.isSavingUser = false;
+        this.cdr.detectChanges();
         this._snackBar.open('Error al actualizar la información', 'Cerrar', {
           duration: 3000,
         });
@@ -178,7 +259,10 @@ export class Perfil implements OnInit, OnDestroy {
   }
 
   changePassword(): void {
+    this.passwordSubmitted = true;
+    this.currentPasswordError = '';
     if (!this.changePasswordForm.valid) {
+      this.changePasswordForm.markAllAsTouched();
       this._snackBar.open('Por favor completa todos los campos requeridos', 'Cerrar', {
         duration: 3000,
       });
@@ -186,9 +270,6 @@ export class Perfil implements OnInit, OnDestroy {
     }
     const { currentPassword, newPassword, confirmPassword } = this.changePasswordForm.value;
     if (newPassword !== confirmPassword) {
-      this._snackBar.open('Las contraseñas nuevas no coinciden', 'Cerrar', {
-        duration: 3000,
-      });
       return;
     }
 
@@ -200,6 +281,7 @@ export class Perfil implements OnInit, OnDestroy {
       password: currentPassword,
     };
 
+    this.isSavingPassword = true;
     this.usersService.verifyPassword(user).subscribe({
       next: (resp: any) => {
         const updateUser: Auth = {
@@ -209,12 +291,17 @@ export class Perfil implements OnInit, OnDestroy {
 
         this.usersService.changePassword(updateUser).subscribe({
           next: () => {
+            this.isSavingPassword = false;
+            this.passwordSubmitted = false;
             this._snackBar.open('Contraseña actualizada correctamente', 'Cerrar', {
               duration: 3000,
             });
             this.changePasswordForm.reset();
+            this.cdr.detectChanges();
           },
           error: () => {
+            this.isSavingPassword = false;
+            this.cdr.detectChanges();
             this._snackBar.open('Error al actualizar la contraseña', 'Cerrar', {
               duration: 3000,
             });
@@ -222,9 +309,9 @@ export class Perfil implements OnInit, OnDestroy {
         });
       },
       error: () => {
-        this._snackBar.open('Error al verificar la contraseña', 'Cerrar', {
-          duration: 3000,
-        });
+        this.isSavingPassword = false;
+        this.currentPasswordError = 'La contraseña actual no es correcta.';
+        this.cdr.detectChanges();
       },
     });
   }

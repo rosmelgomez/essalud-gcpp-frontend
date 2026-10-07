@@ -1,99 +1,71 @@
 <div class="main">
-  <div class="modules-container" [class.viewer-active]="showViewer">
+  <div class="page">
+    <!-- ============ Lanzador de reportes ============ -->
+    <ng-container *ngIf="!showViewer">
+      <header class="hero">
+        <nav class="crumbs" aria-label="Ubicación">
+          <ol>
+            <li>
+              <button type="button" *ngIf="showHistorico" (click)="desactivarHistorico()">Reportes gerenciales</button>
+              <span *ngIf="!showHistorico" aria-current="page">Reportes gerenciales</span>
+              <mat-icon class="crumb-sep" *ngIf="showHistorico" aria-hidden="true">chevron_right</mat-icon>
+            </li>
+            <li *ngIf="showHistorico"><span aria-current="page">Resumen CE</span></li>
+          </ol>
+        </nav>
+        <p class="hero__sub">
+          {{ showHistorico ? 'Resúmenes históricos de consulta externa por año.' : 'Tableros de Power BI con los indicadores de gestión.' }}
+          <span class="dot-sep" aria-hidden="true"></span>
+          <span><strong class="num">{{ availableCount }}</strong> disponibles</span>
+        </p>
+      </header>
 
-    <!--  modulos pincipales --->
-    <div class="modules-menu" id="reportes_gerenciales" *ngIf="showReporte">
-      <div class="module" (click)="openReport('atenciones_ce', $event)">
-        <img src="/images/order_1420037.png" alt="Atenciones" />
-        <span>Atenciones CE</span>
+      <div class="report-grid">
+        <button type="button" class="report" *ngFor="let tile of visibleTiles; let i = index; trackBy: trackByLabel"
+          [class.is-soon]="!tile.available" [disabled]="!tile.available" [style.--i]="i" (click)="onTileClick(tile)"
+          [attr.aria-label]="tile.available ? tile.label : tile.label + ' (próximamente)'">
+          <span class="report__art" aria-hidden="true"><img [src]="tile.img" alt="" loading="lazy" /></span>
+          <span class="report__label">{{ tile.label }}</span>
+          <span class="report__meta">
+            <ng-container *ngIf="!tile.available"><mat-icon>schedule</mat-icon>Próximamente</ng-container>
+            <ng-container *ngIf="tile.available && tile.opensHistorico">3 años<mat-icon>chevron_right</mat-icon></ng-container>
+            <ng-container *ngIf="tile.available && !tile.opensHistorico">Ver tablero<mat-icon>arrow_forward</mat-icon></ng-container>
+          </span>
+        </button>
       </div>
+    </ng-container>
 
-      <div class="module" (click)="openReport('atendidos_ce', $event)">
-        <img src="/images/shortlist_8915786.png" alt="Atendidos" />
-        <span>Atendidos CE</span>
-      </div>
+    <!-- ============ Visor del reporte (Power BI) ============ -->
+    <section class="viewer" *ngIf="showViewer" aria-labelledby="viewer-title">
+      <header class="viewer__bar">
+        <button type="button" class="btn btn-outline-light" (click)="closeViewer()">
+          <mat-icon>arrow_back</mat-icon>
+          {{ showHistorico ? 'Resumen CE' : 'Reportes' }}
+        </button>
 
-      <div href="" class="module" (click)="openReport('atendidos_topico_eme', $event)">
-        <img src="/images/ambulance.png" alt="Atención por topicós - EME" />
-        <span>Atención por topicós - EME</span>
-      </div>
-
-      <div href="" class="module" (click)="activarHistorico()">
-        <img src="/images/reporte-gerencial/historico.png" alt="Resumen CE 2025" />
-        <span>Resumen CE</span>
-      </div>
-
-      <div href="" class="module" (click)="openReport('intervenciones_quirurgicas', $event)">
-        <img src="/images/reporte-gerencial/inverciones-quirurgicas.png" alt="Intervenciones Quirurgicas" />
-        <span>Intervenciones Quirurgicas</span>
-      </div>
-
-      <div href="" class="module" (click)="openReport('cambios_ses', $event)">
-        <img src="/images/cambios-ses.png" alt="Cambios SES" />
-        <span>Cambios SES</span>
-      </div>
-
-      <div href="" class="module" (click)="openReport('lista_quirurgica', $event)">
-        <img src="/images/lista_quirurgica.png" alt="Espera quirurgica" />
-        <span>Espera de lista quirurgica</span>
-      </div>
-
-      <!--  modulos en proceso de desarrollo-->
-      <div class="module inactive" title="Módulo no disponible">
-        <img src="/images/accidente.png" alt="Accidentes" />
-        <span>Accidentes</span>
-      </div>
-
-      <div class="module inactive" title="Módulo no disponible">
-        <img src="/images/diferimiento.png" alt="Diferimiento de citas CE" />
-        <span>Diferimiento de citas CE</span>
-      </div>
-
-      <div class="module inactive" title="Módulo no disponible">
-        <img src="/images/analytics.png" alt="Reportes" />
-        <span>Reportes Gerenciales</span>
-      </div>
-    </div>
-
-    <!-- btn volver modulos pincipales -->
-    <button class="btn-change-reportes" title="volver reportes" id="btn_historico" *ngIf="showHistorico"
-      (click)="desactivarHistorico()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="12 5 19 12 12 19"></polyline>
-        <polyline points="19 12 5 12"></polyline>
-      </svg>
-      Volver a reportes
-    </button>
-
-    <!--  modulos hijo de historico-->
-    <div class="modules-menu" id="historico_ce" *ngIf="showHistorico">
-      <div class="module" (click)="openReport('resumen_ce_2023', $event)">
-        <img src="/images/reporte-gerencial/historico-ce.png" alt="Resumen - CE - 2023" />
-        <span>Resumen - CE - 2023</span>
-      </div>
-
-      <div class="module" (click)="openReport('resumen_ce_2024', $event)">
-        <img src="/images/reporte-gerencial/historico-ce.png" alt="Resumen - CE - 2024" />
-        <span>Resumen - CE - 2024</span>
-      </div>
-
-      <div href="" class="module" (click)="openReport('resumen_ce_2025', $event)">
-        <img src="/images/reporte-gerencial/historico-ce.png" alt="Resumen - CE - 2025" />
-        <span>Resumen - CE - 2025</span>
-      </div>
-
-    </div>
-
-    <!-- Visor embebido para abrir el reporte de powerbi-->
-    <div id="rg-viewer" class="viewer-slot" *ngIf="showViewer">
-      <div class="viewer-card">
-        <div class="viewer-header">
-          <span class="viewer-title">Reporte</span>
-          <button class="btn-close-viewer" (click)="closeViewer()">✕</button>
+        <div class="viewer__title">
+          <h1 id="viewer-title">{{ selectedTitle }}</h1>
         </div>
-        <iframe id="rg-iframe" title="Reporte" [src]="selectedUrl"></iframe>
+
+        <div class="viewer__switch" role="tablist" aria-label="Cambiar de reporte" *ngIf="viewerSiblings.length > 1">
+          <button type="button" role="tab" *ngFor="let t of viewerSiblings" class="chip"
+            [class.is-active]="t.key === selectedKey" [attr.aria-selected]="t.key === selectedKey"
+            (click)="openReport(t.key)">{{ t.label }}</button>
+        </div>
+
+        <a class="btn btn-light" [href]="selectedRawUrl" target="_blank" rel="noopener" *ngIf="selectedRawUrl">
+          <mat-icon>open_in_new</mat-icon>
+          <span class="hide-sm">Abrir en pestaña nueva</span>
+        </a>
+      </header>
+
+      <div class="viewer__frame">
+        <div class="viewer__loading" *ngIf="isViewerLoading" aria-live="polite">
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Cargando tablero…</span>
+        </div>
+        <iframe id="rg-iframe" [title]="selectedTitle" [src]="selectedUrl" (load)="onIframeLoad()" allowfullscreen></iframe>
       </div>
-    </div>
+    </section>
   </div>
 </div>

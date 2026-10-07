@@ -5,6 +5,7 @@ import { User } from '../../model/user';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EstablecimientoService } from '../../services/establecimiento-service';
 import { LocalStorageService } from '../../services/local-storage-service';
+import { MatIconModule } from '@angular/material/icon';
 
 type HomeView = 'main' | 'ses' | 'consulta' | 'quirurgico' | 'gestion' | 'encuesta';
 type HomeTone = 'clinical' | 'data' | 'admin';
@@ -12,6 +13,8 @@ type HomeTone = 'clinical' | 'data' | 'admin';
 interface HomeModule {
   label: string;
   icon: string;
+  /** Ilustración del módulo (public/images) */
+  img: string;
   tone: HomeTone;
   /** Navegación dentro del SPA */
   route?: string;
@@ -25,7 +28,7 @@ interface HomeModule {
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, MatIconModule],
   templateUrl: './home-page.html',
   styleUrl: './home-page.css',
 })
@@ -75,41 +78,41 @@ export class HomePage implements OnInit {
 
   private readonly moduleCatalog: Record<HomeView, HomeModule[]> = {
     main: [
-      { label: 'Variables SES', icon: 'pulse', tone: 'clinical', action: 'ses' },
-      { label: 'Tablas Homologadas', icon: 'table', tone: 'data', route: '/reporte/dashboard-tablas-homologadas' },
-      { label: 'Tramas', icon: 'layers', tone: 'data', route: '/reporte/dashboard-tramas' },
-      { label: 'Reportes gerenciales', icon: 'bars', tone: 'data', route: '/reporte/dashboard-gerenciales', roles: ['ADMIN', 'CONSULTA'] },
-      { label: 'Reporteador', icon: 'file-chart', tone: 'data', route: '/reporte/dashboard-reporteador', roles: ['ADMIN', 'CONSULTA'] },
-      { label: 'Patología', icon: 'microscope', tone: 'clinical', href: '/reporte/dashboard-patologia', roles: ['ADMIN'] },
-      { label: 'Seguimiento Paciente', icon: 'user-search', tone: 'clinical', href: '/reporte/dashboard-seguimiento-paciente', roles: ['ADMIN'] },
-      { label: 'Encuesta de Conformidad', icon: 'clipboard-check', tone: 'admin', action: 'encuesta' },
-      { label: 'Gestión Documentaria', icon: 'folder', tone: 'admin', action: 'gestion' },
-      { label: 'Auditoría del Sistema', icon: 'shield', tone: 'admin', route: '/logs-reports', roles: ['ADMIN'] },
+      { label: 'Variables SES', img: '/images/RCS2.png', icon: 'pulse', tone: 'clinical', action: 'ses' },
+      { label: 'Tablas Homologadas', img: '/images/tablas-homologadas.png', icon: 'table', tone: 'data', route: '/reporte/dashboard-tablas-homologadas' },
+      { label: 'Tramas', img: '/images/tramas.png', icon: 'layers', tone: 'data', route: '/reporte/dashboard-tramas' },
+      { label: 'Reportes gerenciales', img: '/images/analytics.png', icon: 'bars', tone: 'data', route: '/reporte/dashboard-gerenciales', roles: ['ADMIN', 'CONSULTA'] },
+      { label: 'Reporteador', img: '/images/reporteador.png', icon: 'file-chart', tone: 'data', route: '/reporte/dashboard-reporteador', roles: ['ADMIN', 'CONSULTA'] },
+      { label: 'Patología', img: '/images/patologia.png', icon: 'microscope', tone: 'clinical', href: '/reporte/dashboard-patologia', roles: ['ADMIN'] },
+      { label: 'Seguimiento Paciente', img: '/images/seguimiento_paciente.png', icon: 'user-search', tone: 'clinical', href: '/reporte/dashboard-seguimiento-paciente', roles: ['ADMIN'] },
+      { label: 'Encuesta de Conformidad', img: '/images/survey.png', icon: 'clipboard-check', tone: 'admin', action: 'encuesta' },
+      { label: 'Gestión Documentaria', img: '/images/gestion_documentaria.png', icon: 'folder', tone: 'admin', action: 'gestion' },
+      { label: 'Auditoría del Sistema', img: '/images/logs.png', icon: 'shield', tone: 'admin', route: '/logs-reports', roles: ['ADMIN'] },
     ],
     ses: [
-      { label: 'Consulta Externa', icon: 'hospital', tone: 'clinical', action: 'consulta' },
-      { label: 'Emergencia', icon: 'siren', tone: 'clinical', route: '/reporte/dashboard-emergencia' },
-      { label: 'Centro quirúrgico', icon: 'scissors', tone: 'clinical', action: 'quirurgico' },
-      { label: 'Procedimientos', icon: 'syringe', tone: 'clinical', route: '/reporte/dashboard-procedimientos' },
-      { label: 'Hospitalización', icon: 'bed', tone: 'clinical', route: '/reporte/dashboard-hospitalizacion' },
-      { label: 'Farmacia', icon: 'pill', tone: 'clinical', href: '/reporte/dashboard-farmacia' },
+      { label: 'Consulta Externa', img: '/images/RCS2.png', icon: 'hospital', tone: 'clinical', action: 'consulta' },
+      { label: 'Emergencia', img: '/images/RSC1.png', icon: 'siren', tone: 'clinical', route: '/reporte/dashboard-emergencia' },
+      { label: 'Centro quirúrgico', img: '/images/cirugia.png', icon: 'scissors', tone: 'clinical', action: 'quirurgico' },
+      { label: 'Procedimientos', img: '/images/procedimientos.png', icon: 'syringe', tone: 'clinical', route: '/reporte/dashboard-procedimientos' },
+      { label: 'Hospitalización', img: '/images/hospitalizacion.png', icon: 'bed', tone: 'clinical', route: '/reporte/dashboard-hospitalizacion' },
+      { label: 'Farmacia', img: '/images/farmacia.png', icon: 'pill', tone: 'clinical', href: '/reporte/dashboard-farmacia' },
     ],
     consulta: [
-      { label: 'Médicas', icon: 'stethoscope', tone: 'clinical', href: '/reporte/dashboard-medicas' },
-      { label: 'No Médicas', icon: 'users', tone: 'clinical', href: '/reporte/dashboard-no-medicas' },
-      { label: 'Odontológicas', icon: 'tooth', tone: 'clinical', href: '/reporte/dashboard-odontologicas' },
+      { label: 'Médicas', img: '/images/medicas.png', icon: 'stethoscope', tone: 'clinical', href: '/reporte/dashboard-medicas' },
+      { label: 'No Médicas', img: '/images/no-medicas.png', icon: 'users', tone: 'clinical', href: '/reporte/dashboard-no-medicas' },
+      { label: 'Odontológicas', img: '/images/odontologicas.png', icon: 'tooth', tone: 'clinical', href: '/reporte/dashboard-odontologicas' },
     ],
     quirurgico: [
-      { label: 'Intervenciones quirúrgicas', icon: 'clipboard-list', tone: 'clinical', href: '/reporte/dashboard-intervenciones-quirurgicas' },
-      { label: 'Trasplante', icon: 'heart', tone: 'clinical', href: '/reporte/dashboard-transplante' },
+      { label: 'Intervenciones quirúrgicas', img: '/images/lista_quirurgica.png', icon: 'clipboard-list', tone: 'clinical', href: '/reporte/dashboard-intervenciones-quirurgicas' },
+      { label: 'Trasplante', img: '/images/cirugia.png', icon: 'heart', tone: 'clinical', href: '/reporte/dashboard-transplante' },
     ],
     gestion: [
-      { label: 'Gestión Documentaria', icon: 'folder', tone: 'admin', route: '/documento/reports' },
-      { label: 'Auditoría de Documentos', icon: 'file-search', tone: 'admin', route: '/documento/auditoria', roles: ['ADMIN'] },
+      { label: 'Gestión Documentaria', img: '/images/gestion_documentaria.png', icon: 'folder', tone: 'admin', route: '/documento/reports' },
+      { label: 'Auditoría de Documentos', img: '/images/gestion_documentaria.png', icon: 'file-search', tone: 'admin', route: '/documento/auditoria', roles: ['ADMIN'] },
     ],
     encuesta: [
-      { label: 'Encuesta de Conformidad', icon: 'clipboard-check', tone: 'admin', route: '/encuesta' },
-      { label: 'Respuesta de Encuestas', icon: 'pie', tone: 'admin', route: '/dashboard-encuesta', roles: ['ADMIN'] },
+      { label: 'Encuesta de Conformidad', img: '/images/survey.png', icon: 'clipboard-check', tone: 'admin', route: '/encuesta' },
+      { label: 'Respuesta de Encuestas', img: '/images/respuesta-encuesta.png', icon: 'pie', tone: 'admin', route: '/dashboard-encuesta', roles: ['ADMIN'] },
     ],
   };
 

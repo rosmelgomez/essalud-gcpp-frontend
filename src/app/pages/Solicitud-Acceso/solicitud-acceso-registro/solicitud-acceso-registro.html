@@ -1,161 +1,224 @@
 <div class="main">
-  <div class="solicitud-shell">
-    <div class="solicitud-info">
-      <span class="help-badge">Guia rapida</span>
-      <h2>Solicitud de acceso</h2>
-      <p>Completa estos pasos para registrar tu solicitud sin observaciones.</p>
-      <ol class="tips">
-        <li>Selecciona el tipo de trabajador.</li>
-        <li>Busca por DNI para autocompletar tus datos.</li>
-        <li>En caso que no se autocomple tus datos, agregalo manualmente.</li>
-        <li>Para cabeza de red: selecciona solo Red.</li>
-        <li>Para usuario de centro: selecciona Red y Centro.</li>
-        <li>Ingresa correo institucional y descripcion.</li>
-      </ol>
-    </div>
+  <div class="shell">
+    <!-- Marca y guía -->
+    <section class="intro">
+      <span class="brand-mark" role="img" aria-label="EsSalud"></span>
+      <h1>Solicita tu acceso a SIEST</h1>
+      <p class="lead">Completa dos pasos cortos y un administrador revisará tu solicitud.</p>
 
-    <div class="solicitud-container">
-      <div class="card-header">
-        <div>
-          <div class="eyebrow">Formulario</div>
-          <div class="title">Solicitud de acceso</div>
+      <ol class="guide">
+        <li [class.is-current]="!submitted && currentBlock === 1" [class.is-done]="submitted || currentBlock === 2">
+          <span class="guide-num" aria-hidden="true">
+            <mat-icon *ngIf="submitted || currentBlock === 2">check</mat-icon>
+            <ng-container *ngIf="!(submitted || currentBlock === 2)">1</ng-container>
+          </span>
+          <div class="guide-text">
+            <strong>Tus datos</strong>
+            <span>Elige tu tipo de trabajador y busca tu DNI para autocompletar. Si no aparece, escríbelos a mano.</span>
+          </div>
+        </li>
+        <li [class.is-current]="!submitted && currentBlock === 2" [class.is-done]="submitted">
+          <span class="guide-num" aria-hidden="true">
+            <mat-icon *ngIf="submitted">check</mat-icon>
+            <ng-container *ngIf="!(submitted)">2</ng-container>
+          </span>
+          <div class="guide-text">
+            <strong>Acceso solicitado</strong>
+            <span>Cabeza de red: elige solo la red. Usuario de centro: elige red y centro. Luego tu correo institucional y el motivo.</span>
+          </div>
+        </li>
+      </ol>
+
+      <p class="intro-foot">¿Ya tienes acceso? <a routerLink="/login">Inicia sesión</a></p>
+    </section>
+
+    <!-- Tarjeta del formulario -->
+    <section class="card" aria-live="polite">
+      <!-- Confirmación -->
+      <div class="success" *ngIf="submitted; else formTpl">
+        <span class="success-icon" aria-hidden="true"><mat-icon>mark_email_read</mat-icon></span>
+        <h2>Solicitud enviada</h2>
+        <p>
+          Registramos tu solicitud de acceso<ng-container *ngIf="submittedEmail"> con el correo <strong>{{ submittedEmail }}</strong></ng-container>.
+          Un administrador la revisará y, al aprobarla, podrás iniciar sesión.
+        </p>
+        <div class="success-actions">
+          <a routerLink="/login" class="btn btn-primary">Ir al inicio de sesión</a>
+          <button type="button" class="btn btn-ghost" (click)="nuevaSolicitud()">Registrar otra solicitud</button>
         </div>
-        <div class="status-dot"></div>
       </div>
 
-      <form [formGroup]="registerForm" autocomplete="off" class="solicitud-form" (ngSubmit)="enviarSolicitud()">
-        <div class="form-block" *ngIf="currentBlock === 1">
-          <div class="form-block-header">
-            <span class="form-block-step">Bloque 1</span>
-            <h3>Datos del trabajador</h3>
-          </div>
+      <ng-template #formTpl>
+        <header class="card-head">
+          <h2>Solicitud de acceso</h2>
+          <nav class="stepper" aria-label="Pasos">
+            <button type="button" class="step" [class.is-active]="currentBlock === 1" [class.is-done]="currentBlock === 2"
+              (click)="irBloqueAnterior()" [attr.aria-current]="currentBlock === 1 ? 'step' : null">
+              <span class="step-dot"><mat-icon *ngIf="currentBlock === 2">check</mat-icon><span *ngIf="currentBlock === 1">1</span></span>
+              Tus datos
+            </button>
+            <span class="step-line" [class.is-done]="currentBlock === 2" aria-hidden="true"></span>
+            <button type="button" class="step" [class.is-active]="currentBlock === 2" (click)="irBloqueSiguiente()"
+              [attr.aria-current]="currentBlock === 2 ? 'step' : null">
+              <span class="step-dot">2</span>
+              Acceso solicitado
+            </button>
+          </nav>
+        </header>
 
-          <div class="dni-search-row">
-            <div class="solicitud-form-group">
-              <label>DNI</label>
-              <input type="text" formControlName="dni" name="dni" maxlength="8" placeholder="Ej: 12345678" />
-            </div>
-            <div class="solicitud-form-group dni-search-action">
-              <label class="dni-search-spacer">Accion</label>
-              <button type="button" class="btn-search" (click)="getUserByDni(registerForm.get('dni')?.value)">
-                Buscar DNI
-              </button>
-            </div>
-          </div>
-
-          <div class="form-grid">
-            <div class="solicitud-form-group">
-              <label>Nombre</label>
-              <input type="text" formControlName="name" name="name" placeholder="Ej: Juan" />
-            </div>
-
-            <div class="solicitud-form-group">
-              <label>Apellido paterno</label>
-              <input type="text" formControlName="apellidoPaterno" name="apellidoPaterno" placeholder="Ej: Perez" />
-            </div>
-
-            <div class="solicitud-form-group">
-              <label>Apellido materno</label>
-              <input type="text" formControlName="apellidoMaterno" name="apellidoMaterno" placeholder="Ej: Gomez" />
-            </div>
-
-            <div class="solicitud-form-group">
-              <label>Tipo de trabajador</label>
-              <select formControlName="tipoTrabajador" name="tipoTrabajador">
-                <option value="">Seleccionar tipo...</option>
-                <option [value]="TIPO_CABEZA_RED">Cabeza de red</option>
-                <option [value]="TIPO_USUARIO_CENTRO">Usuario de un centro</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-block" *ngIf="currentBlock === 2">
-          <div class="form-block-header">
-            <span class="form-block-step">Bloque 2</span>
-            <h3>Datos de acceso</h3>
-          </div>
-
-          <div class="form-grid">
-            <div class="solicitud-form-group">
-              <label>Red</label>
-              <div class="custom-dropdown" [class.disabled]="!registerForm.get('tipoTrabajador')?.value"
-                (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
-                <input type="text" title="Seleccionar red" placeholder="Buscar y seleccionar red..."
-                  (input)="filterRed($event)" (keydown)="handleRedKeydown($event)" [value]="selectedRedName"
-                  [disabled]="!registerForm.get('tipoTrabajador')?.value" class="dropdown-input" />
-                <div class="dropdown-list" *ngIf="isDropdownRedOpen">
-                  <div *ngFor="let red of filteredRed; let i = index" #redOption class="dropdown-item"
-                    [class.active]="i === activeRedIndex" (click)="selectOptionRed(red)">
-                    {{ red.redasisdes }}
-                  </div>
-                  <div *ngIf="filteredRed.length === 0" class="dropdown-item disabled">
-                    No hay resultados
-                  </div>
-                </div>
+        <form [formGroup]="registerForm" autocomplete="off" class="form" (ngSubmit)="enviarSolicitud()" novalidate>
+          <!-- ============ PASO 1 ============ -->
+          <div class="step-body" *ngIf="currentBlock === 1">
+            <div class="field">
+              <span class="label" id="tipo-label">Tipo de trabajador</span>
+              <div class="type-cards" role="radiogroup" aria-labelledby="tipo-label">
+                <button type="button" role="radio" class="type-card"
+                  [class.is-selected]="registerForm.get('tipoTrabajador')?.value === TIPO_CABEZA_RED"
+                  [attr.aria-checked]="registerForm.get('tipoTrabajador')?.value === TIPO_CABEZA_RED"
+                  (click)="setTipoTrabajador(TIPO_CABEZA_RED)">
+                  <mat-icon>lan</mat-icon>
+                  <span class="type-title">Cabeza de red</span>
+                  <span class="type-hint">Gestionas una red asistencial</span>
+                </button>
+                <button type="button" role="radio" class="type-card"
+                  [class.is-selected]="registerForm.get('tipoTrabajador')?.value === TIPO_USUARIO_CENTRO"
+                  [attr.aria-checked]="registerForm.get('tipoTrabajador')?.value === TIPO_USUARIO_CENTRO"
+                  (click)="setTipoTrabajador(TIPO_USUARIO_CENTRO)">
+                  <mat-icon>local_hospital</mat-icon>
+                  <span class="type-title">Usuario de un centro</span>
+                  <span class="type-hint">Trabajas en un centro asistencial</span>
+                </button>
               </div>
-              <input type="hidden" formControlName="code_red" />
+              <small class="error" *ngIf="fieldError('tipoTrabajador') as e">{{ e }}</small>
             </div>
 
-            <div class="solicitud-form-group" *ngIf="isCenterUser">
-              <label>Centro</label>
-              <div class="custom-dropdown" [class.disabled]="!isCenterUser" (mouseleave)="closeDropdownCentro()"
-                (mouseenter)="openDropdownCentro()">
-                <input type="text" title="Seleccionar centro" placeholder="Buscar y seleccionar centro..."
-                  (input)="filterCentro($event)" (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName"
-                  [disabled]="!isCenterUser" class="dropdown-input" />
-                <div class="dropdown-list" *ngIf="isDropdownCentroOpen">
-                  <div *ngFor="let centro of searchCentro ? filteredCentro : dataCentro; let i = index" #centroOption
-                    class="dropdown-item" [class.active]="i === activeCentroIndex" (click)="selectOptionCentro(centro)">
-                    {{ centro.cenasides }}
-                  </div>
-                  <div *ngIf="(searchCentro ? filteredCentro : dataCentro).length === 0" class="dropdown-item disabled">
-                    No hay resultados
-                  </div>
-                </div>
+            <div class="field" [class.has-error]="fieldError('dni')">
+              <label for="sa-dni">DNI</label>
+              <div class="dni-row">
+                <input id="sa-dni" type="text" inputmode="numeric" formControlName="dni" maxlength="8" placeholder="8 dígitos"
+                  class="num" (input)="onDniInput()" (keydown.enter)="$event.preventDefault(); getUserByDni(registerForm.get('dni')?.value)" />
+                <button type="button" class="btn btn-soft" (click)="getUserByDni(registerForm.get('dni')?.value)"
+                  [disabled]="dniLookup === 'loading'">
+                  <span class="spinner spinner-dark" *ngIf="dniLookup === 'loading'" aria-hidden="true"></span>
+                  <mat-icon *ngIf="dniLookup !== 'loading'">person_search</mat-icon>
+                  Buscar
+                </button>
               </div>
-              <input type="hidden" formControlName="codcas" />
+              <small class="error" *ngIf="fieldError('dni') as e">{{ e }}</small>
+              <small class="lookup found" *ngIf="dniLookup === 'found'"><mat-icon>check_circle</mat-icon>Encontramos tus datos y los completamos por ti.</small>
+              <small class="lookup notfound" *ngIf="dniLookup === 'notfound'"><mat-icon>info</mat-icon>No encontramos ese DNI. Completa tus datos manualmente.</small>
+            </div>
+
+            <div class="grid-3">
+              <div class="field" [class.has-error]="fieldError('name')">
+                <label for="sa-name">Nombres</label>
+                <input id="sa-name" type="text" formControlName="name" placeholder="Ej. Juan" autocomplete="given-name" />
+                <small class="error" *ngIf="fieldError('name') as e">{{ e }}</small>
+              </div>
+              <div class="field" [class.has-error]="fieldError('apellidoPaterno')">
+                <label for="sa-ap">Apellido paterno</label>
+                <input id="sa-ap" type="text" formControlName="apellidoPaterno" placeholder="Ej. Pérez" />
+                <small class="error" *ngIf="fieldError('apellidoPaterno') as e">{{ e }}</small>
+              </div>
+              <div class="field" [class.has-error]="fieldError('apellidoMaterno')">
+                <label for="sa-am">Apellido materno</label>
+                <input id="sa-am" type="text" formControlName="apellidoMaterno" placeholder="Ej. Gómez" />
+                <small class="error" *ngIf="fieldError('apellidoMaterno') as e">{{ e }}</small>
+              </div>
             </div>
           </div>
 
-          <div class="form-grid single-column">
-            <div class="solicitud-form-group">
-              <label>Correo institucional</label>
-              <input type="email" formControlName="email" name="email" placeholder="usuario@essalud.gob.pe" />
+          <!-- ============ PASO 2 ============ -->
+          <div class="step-body" *ngIf="currentBlock === 2">
+            <p class="step-context">
+              <mat-icon>{{ isHeadNetwork ? 'lan' : 'local_hospital' }}</mat-icon>
+              Solicitas acceso como <strong>{{ isHeadNetwork ? 'cabeza de red' : 'usuario de un centro' }}</strong>
+              <button type="button" class="link" (click)="irBloqueAnterior()">Cambiar</button>
+            </p>
+
+            <div class="grid-2">
+              <div class="field" [class.has-error]="fieldError('code_red')" [class.span-2]="!isCenterUser">
+                <label for="sa-red">Red asistencial</label>
+                <div class="combo" [class.open]="isDropdownRedOpen">
+                  <mat-icon class="combo-lead">search</mat-icon>
+                  <input id="sa-red" type="text" role="combobox" placeholder="Busca tu red" autocomplete="off"
+                    [attr.aria-expanded]="isDropdownRedOpen" aria-controls="sa-red-list"
+                    (focus)="openDropdownRed()" (blur)="closeDropdownRed(); registerForm.get('code_red')?.markAsTouched()"
+                    (input)="filterRed($event)" (keydown)="handleRedKeydown($event)" [value]="selectedRedName" />
+                  <ul class="combo-list" id="sa-red-list" role="listbox" *ngIf="isDropdownRedOpen">
+                    <li *ngFor="let red of filteredRed; let i = index" #redOption role="option" class="combo-option"
+                      [class.active]="i === activeRedIndex" [attr.aria-selected]="red.redasisdes === selectedRedName"
+                      (mousedown)="$event.preventDefault(); selectOptionRed(red)" (mouseenter)="activeRedIndex = i">
+                      {{ red.redasisdes }}
+                    </li>
+                    <li *ngIf="filteredRed.length === 0" class="combo-empty">Sin resultados</li>
+                  </ul>
+                </div>
+                <small class="error" *ngIf="fieldError('code_red') as e">{{ e }}</small>
+              </div>
+
+              <div class="field" *ngIf="isCenterUser" [class.has-error]="fieldError('codcas')">
+                <label for="sa-centro">Centro asistencial</label>
+                <div class="combo" [class.open]="isDropdownCentroOpen">
+                  <mat-icon class="combo-lead">search</mat-icon>
+                  <input id="sa-centro" type="text" role="combobox" autocomplete="off"
+                    [placeholder]="selectedRedName ? 'Busca tu centro' : 'Busca tu centro (elige la red para acotar)'"
+                    [attr.aria-expanded]="isDropdownCentroOpen" aria-controls="sa-centro-list"
+                    (focus)="openDropdownCentro()" (blur)="closeDropdownCentro(); registerForm.get('codcas')?.markAsTouched()"
+                    (input)="filterCentro($event)" (keydown)="handleCentroKeydown($event)" [value]="selectedCentroName" />
+                  <ul class="combo-list" id="sa-centro-list" role="listbox" *ngIf="isDropdownCentroOpen">
+                    <li *ngFor="let centro of searchCentro ? filteredCentro : dataCentro; let i = index" #centroOption
+                      role="option" class="combo-option" [class.active]="i === activeCentroIndex"
+                      [attr.aria-selected]="centro.cenasides === selectedCentroName"
+                      (mousedown)="$event.preventDefault(); selectOptionCentro(centro)" (mouseenter)="activeCentroIndex = i">
+                      {{ centro.cenasides }}
+                    </li>
+                    <li *ngIf="(searchCentro ? filteredCentro : dataCentro).length === 0" class="combo-empty">Sin resultados</li>
+                  </ul>
+                </div>
+                <small class="error" *ngIf="fieldError('codcas') as e">{{ e }}</small>
+              </div>
+            </div>
+
+            <div class="field" [class.has-error]="fieldError('email')">
+              <label for="sa-email">Correo institucional</label>
+              <input id="sa-email" type="email" formControlName="email" placeholder="usuario@essalud.gob.pe" autocomplete="email" />
+              <small class="error" *ngIf="fieldError('email') as e">{{ e }}</small>
+            </div>
+
+            <div class="field" [class.has-error]="fieldError('descripcion')">
+              <label for="sa-desc">Motivo de la solicitud</label>
+              <textarea id="sa-desc" formControlName="descripcion" rows="4" [maxlength]="descripcionMax"
+                placeholder="Indica para qué necesitas el acceso y qué información consultarás."></textarea>
+              <div class="field-foot">
+                <small class="error" *ngIf="fieldError('descripcion') as e">{{ e }}</small>
+                <small class="counter num">{{ descripcionLength }} / {{ descripcionMax }}</small>
+              </div>
+            </div>
+
+            <div class="banner-error" *ngIf="submitError" role="alert">
+              <mat-icon>error_outline</mat-icon>
+              <span>{{ submitError }}</span>
             </div>
           </div>
 
-          <div class="form-grid single-column">
-            <div class="solicitud-form-group">
-              <label>Descripción</label>
-              <textarea formControlName="descripcion" name="descripcion" rows="4" maxlength="500"
-                placeholder="Indica el motivo de la solicitud y el tipo de acceso que necesitas."></textarea>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-block-nav">
-          <button type="button" class="btn-secondary" (click)="irBloqueAnterior()" [disabled]="currentBlock === 1">
-            ← Anterior
-          </button>
-          <span class="current-info">Bloque {{ currentBlock }} de 2</span>
-          <button type="button" class="btn-secondary" (click)="irBloqueSiguiente()"
-            [disabled]="currentBlock === 2 || !canOpenSecondBlock">
-            Siguiente →
-          </button>
-        </div>
-
-        <div class="solicitud-submit" *ngIf="currentBlock === 2">
-          <button type="submit">Enviar solicitud</button>
-        </div>
-
-        <div class="login-like-footer">
-          <span>¿Ya tienes acceso?</span>
-          <a routerLink="/login">Iniciar sesión</a>
-        </div>
-      </form>
-
-
-    </div>
+          <footer class="form-foot">
+            <button type="button" class="btn btn-ghost" *ngIf="currentBlock === 2" (click)="irBloqueAnterior()" [disabled]="isSubmitting">
+              <mat-icon>arrow_back</mat-icon>
+              Atrás
+            </button>
+            <span class="foot-spacer"></span>
+            <button type="button" class="btn btn-primary" *ngIf="currentBlock === 1" (click)="irBloqueSiguiente()">
+              Continuar
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+            <button type="submit" class="btn btn-primary" *ngIf="currentBlock === 2" [disabled]="isSubmitting">
+              <span class="spinner" *ngIf="isSubmitting" aria-hidden="true"></span>
+              {{ isSubmitting ? 'Enviando…' : 'Enviar solicitud' }}
+            </button>
+          </footer>
+        </form>
+      </ng-template>
+    </section>
   </div>
 </div>

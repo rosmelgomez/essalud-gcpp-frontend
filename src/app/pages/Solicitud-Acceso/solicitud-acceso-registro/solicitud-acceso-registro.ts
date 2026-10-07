@@ -8,12 +8,13 @@ import { User } from '../../../model/user';
 import { SolicitudAcceso as SolicitudAccesoPayload } from '../../../model/SolicitudAcceso';
 import { RouterModule } from '@angular/router';
 import { UsersService } from '../../../services/usuario/users-service';
+import { MatIconModule } from '@angular/material/icon';
 
 
 @Component({
   selector: 'app-solicitud-acceso',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, MatIconModule],
   templateUrl: './solicitud-acceso-registro.html',
   styleUrl: './solicitud-acceso-registro.css',
 })
@@ -21,6 +22,16 @@ export class SolicitudAccesoRegistro implements OnInit {
   readonly TIPO_CABEZA_RED = 'HEAD_NETWORK';
   readonly TIPO_USUARIO_CENTRO = 'CENTER_USER';
   currentBlock: 1 | 2 = 1;
+  readonly descripcionMax = 500;
+  private readonly step1Controls = ['tipoTrabajador', 'dni', 'name', 'apellidoPaterno', 'apellidoMaterno'];
+
+  /** Estado de la búsqueda por DNI (se muestra junto al campo, sin avisos emergentes). */
+  dniLookup: 'idle' | 'loading' | 'found' | 'notfound' = 'idle';
+  isSubmitting = false;
+  submitError = '';
+  /** Pantalla de confirmación tras enviar. */
+  submitted = false;
+  submittedEmail = '';
 
 
   private _snackBar = inject(MatSnackBar);
@@ -93,11 +104,62 @@ export class SolicitudAccesoRegistro implements OnInit {
     return !!this.registerForm?.get('tipoTrabajador')?.value;
   }
 
+  get isStep1Valid(): boolean {
+    return this.step1Controls.every((name) => this.registerForm.get(name)?.valid);
+  }
+
   irBloqueSiguiente() {
-    if (!this.canOpenSecondBlock) {
+    if (!this.isStep1Valid) {
+      this.step1Controls.forEach((name) => this.registerForm.get(name)?.markAsTouched());
       return;
     }
     this.currentBlock = 2;
+  }
+
+  setTipoTrabajador(tipo: string): void {
+    const ctrl = this.registerForm.get('tipoTrabajador');
+    ctrl?.setValue(tipo);
+    ctrl?.markAsTouched();
+  }
+
+  /** Mensaje de error de un campo, visible solo tras interactuar con él. */
+  fieldError(name: string): string {
+    const c = this.registerForm.get(name);
+    if (!c || !c.invalid || !c.touched) return '';
+    if (c.hasError('required')) {
+      const map: Record<string, string> = {
+        tipoTrabajador: 'Elige el tipo de trabajador.',
+        dni: 'Ingresa tu DNI.',
+        name: 'Ingresa tu nombre.',
+        apellidoPaterno: 'Ingresa tu apellido paterno.',
+        apellidoMaterno: 'Ingresa tu apellido materno.',
+        code_red: 'Selecciona tu red asistencial.',
+        codcas: 'Selecciona tu centro asistencial.',
+        email: 'Ingresa tu correo institucional.',
+        descripcion: 'Cuéntanos el motivo de tu solicitud.',
+      };
+      return map[name] ?? 'Este campo es obligatorio.';
+    }
+    if (c.hasError('pattern')) return 'El DNI debe tener 8 dígitos.';
+    if (c.hasError('email')) return 'Ingresa un correo válido.';
+    if (c.hasError('maxlength')) return `Máximo ${this.descripcionMax} caracteres.`;
+    return 'Revisa este campo.';
+  }
+
+  get descripcionLength(): number {
+    return String(this.registerForm.get('descripcion')?.value ?? '').length;
+  }
+
+  onDniInput(): void {
+    if (this.dniLookup !== 'idle' && this.dniLookup !== 'loading') {
+      this.dniLookup = 'idle';
+    }
+  }
+
+  nuevaSolicitud(): void {
+    this.submitted = false;
+    this.submittedEmail = '';
+    this.resetForm();
   }
 
   irBloqueAnterior() {
@@ -435,12 +497,11 @@ export class SolicitudAccesoRegistro implements OnInit {
   getUserByDni(dni: string) {
     const dniNormalizado = (dni || '').trim();
     if (!/^\d{8}$/.test(dniNormalizado)) {
-      this._snackBar.open('Ingrese un DNI válido de 8 dígitos', 'Cerrar', {
-        duration: 3000,
-      });
+      this.registerForm.get('dni')?.markAsTouched();
       return;
     }
 
+    this.dniLookup = 'loading';
     this.usersService.getUserByDni(dniNormalizado).subscribe({
       next: (resp) => {
         if (resp) {
@@ -453,32 +514,28 @@ export class SolicitudAccesoRegistro implements OnInit {
             apellidoMaterno,
           });
 
-          this._snackBar.open('Usuario encontrado. Se autocompletaron nombre y apellidos.', 'Cerrar', {
-            duration: 3000,
-          });
+          this.dniLookup = 'found';
         } else {
           this.user = null;
-          this._snackBar.open('No se encontró usuario con ese DNI', 'Cerrar', {
-            duration: 3000,
-          });
+          this.dniLookup = 'notfound';
         }
       },
       error: (err) => {
         console.log('Error al verificar el DNI', err);
         this.user = null;
-        this._snackBar.open('No se encontró usuario con ese DNI', 'Cerrar', {
-          duration: 3000,
-        });
+        this.dniLookup = 'notfound';
       }
     });
   }
 
   enviarSolicitud() {
+    this.submitError = '';
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
-      this._snackBar.open('Completa todos los campos obligatorios', 'Cerrar', {
-        duration: 3000,
-      });
+      // Si el error está en el primer paso, volver a él para que sea visible.
+      if (!this.isStep1Valid) {
+        this.currentBlock = 1;
+      }
       return;
     }
 
@@ -501,20 +558,18 @@ export class SolicitudAccesoRegistro implements OnInit {
       status: "",
     };
 
-    console.log('Payload a enviar:', payload);
-
+    this.isSubmitting = true;
     this.solicitudAccesoService.enviarSolicitud(payload).subscribe({
       next: () => {
-        this._snackBar.open('Solicitud enviada correctamente', 'Cerrar', {
-          duration: 3000,
-        });
-        this.resetForm();
+        this.isSubmitting = false;
+        this.submittedEmail = String(payload.email ?? '');
+        this.submitted = true;
       },
       error: (err) => {
         console.log('Error al enviar solicitud', err);
-        this._snackBar.open('No se pudo enviar la solicitud', 'Cerrar', {
-          duration: 3000,
-        });
+        this.isSubmitting = false;
+        const detail = typeof err?.error === 'string' && err.error.length < 200 ? ` ${err.error}` : '';
+        this.submitError = `No se pudo enviar la solicitud.${detail || ' Inténtalo de nuevo en unos minutos.'}`;
       },
     });
   }
@@ -574,7 +629,9 @@ export class SolicitudAccesoRegistro implements OnInit {
   }
 
   resetForm() {
-    this.registerForm.reset();
+    this.registerForm.reset({ tipoTrabajador: '', dni: '', name: '', apellidoPaterno: '', apellidoMaterno: '', code_red: '', codcas: '', email: '', descripcion: '' });
+    this.dniLookup = 'idle';
+    this.submitError = '';
     this.currentBlock = 1;
     this.user = null;
     this.clearRedSelection();
