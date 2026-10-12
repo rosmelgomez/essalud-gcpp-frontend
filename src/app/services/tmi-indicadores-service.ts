@@ -18,6 +18,12 @@ export class TmiIndicadoresService {
   putQueryEstandarTipo(dto: any) {
     return this.http.put(base_url + `/update-estandar-tipo`, dto);
   }
+  postQueryEstandarTipo(dto: any) {
+    return this.http.post(base_url + `/create-estandar-tipo`, dto);
+  }
+  deleteQueryEstandarTipo(id: number) {
+    return this.http.delete(base_url + `/delete-estandar-tipo/${id}`);
+  }
 
   /// estandares nivel
   getQueryEstandarNivel(periodo: string) {
@@ -26,6 +32,12 @@ export class TmiIndicadoresService {
   putQueryEstandarNivel(dto: any) {
     return this.http.put(base_url + `/update-estandar-nivel`, dto);
   }
+  postQueryEstandarNivel(dto: any) {
+    return this.http.post(base_url + `/create-estandar-nivel`, dto);
+  }
+  deleteQueryEstandarNivel(id: number) {
+    return this.http.delete(base_url + `/delete-estandar-nivel/${id}`);
+  }
 
   /// estandares categoria
   getQueryEstandarCategoria(periodo: string) {
@@ -33,6 +45,12 @@ export class TmiIndicadoresService {
   }
   putQueryEstandarCategoria(dto: any) {
     return this.http.put(base_url + `/update-estandar-categoria`, dto);
+  }
+  postQueryEstandarCategoria(dto: any) {
+    return this.http.post(base_url + `/create-estandar-categoria`, dto);
+  }
+  deleteQueryEstandarCategoria(id: number) {
+    return this.http.delete(base_url + `/delete-estandar-categoria/${id}`);
   }
 
   /// centros TMI
@@ -43,6 +61,12 @@ export class TmiIndicadoresService {
   /// update centro TMI
   putQueryCentrosTMI(dto: any) {
     return this.http.put(base_url + `/update-centro`, dto);
+  }
+  postQueryCentrosTMI(dto: any) {
+    return this.http.post(base_url + `/create-centro`, dto);
+  }
+  deleteQueryCentrosTMI(id: number) {
+    return this.http.delete(base_url + `/delete-centro/${id}`);
   }
 
   /// cierre (fecha en que se generan centros y estándares del nuevo periodo)

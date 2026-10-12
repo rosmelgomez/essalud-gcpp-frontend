@@ -51,7 +51,8 @@ export class Login implements OnInit {
       next: () => {
         this.router.navigate(['/home']);
       },
-      error: () => { },
+      // sin sesión válida: borrar cualquier dato que haya quedado de una sesión anterior
+      error: () => this.authService.clearSession(),
     });
 
     // Capturar el mensaje de sesión expirada desde los parámetros de URL

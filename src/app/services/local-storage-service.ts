@@ -6,12 +6,23 @@ import { User } from '../model/user';
 })
 export class LocalStorageService {
 
+  /**
+   * Guarda solo el perfil mínimo que la interfaz necesita para pintarse y decidir rutas.
+   * No se guardan datos personales (DNI, correo) ni credenciales: el perfil completo
+   * vive en memoria (AuthService) y se vuelve a pedir al backend con /user/me.
+   * Los roles guardados solo sirven para mostrar u ocultar opciones; quien autoriza es el backend.
+   */
   saveUser(user: User): void {
-    user.password = '';
-    user.firstLogin = false;
-    user.date_creation = '';
-    user.date_update = '';
-    localStorage.setItem('user', JSON.stringify(user));
+    const perfil: Partial<User> = {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      lastname: user.lastname,
+      codcas: user.codcas,
+      codred: user.codred,
+      roles: user.roles,
+    };
+    localStorage.setItem('user', JSON.stringify(perfil));
   }
 
   getUser(): User | null {

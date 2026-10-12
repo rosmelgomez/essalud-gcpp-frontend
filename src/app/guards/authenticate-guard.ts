@@ -2,6 +2,8 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthLogin } from '../services/usuario/auth-login';
 import { inject } from '@angular/core';
 import { LocalStorageService } from '../services/local-storage-service';
+import { AuthService, MENSAJE_SESION_EXPIRADA, MENSAJE_SIN_SERVIDOR } from '../services/usuario/auth-service';
+import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, of } from 'rxjs';
 
 
@@ -10,6 +12,7 @@ export const authenticateGuard: CanActivateFn = (route) => {
   const authService = inject(AuthLogin);
   const dataImport = inject(LocalStorageService);
   const router = inject(Router);
+  const sesion = inject(AuthService);
 
   const validateRoles = () => {
     const requiredRoles = (route.data['role'] || route.data['rol']) as Array<string> | undefined;
@@ -39,8 +42,13 @@ export const authenticateGuard: CanActivateFn = (route) => {
 
   return authService.apiToken().pipe(
     map(() => validateRoles()),
-    catchError(() => {
-      return of(router.createUrlTree(['/login']));
+    catchError((err: HttpErrorResponse) => {
+      // api_token vencido o backend sin respuesta: se borra todo lo guardado de la sesión
+      const huboSesion = !!dataImport.getUser();
+      sesion.clearSession();
+      sesion.borrarCookiesSesion();
+      const message = err?.status === 0 ? MENSAJE_SIN_SERVIDOR : MENSAJE_SESION_EXPIRADA;
+      return of(router.createUrlTree(['/login'], huboSesion ? { queryParams: { message } } : {}));
     }),
   );
 

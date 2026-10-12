@@ -10,7 +10,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { FechaActualizacionService } from '../../services/fecha-actualizacion-service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 
 export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Fecha Cierre';
 
@@ -38,6 +38,11 @@ export class TmiIndicadores implements OnInit {
   @ViewChild('viewportCentros') viewportCentros?: CdkVirtualScrollViewport;
 
   currentDate: string = '';
+
+  // solo se agregan o modifican filas desde el mes anterior al actual (ej. en octubre: desde septiembre)
+  periodoMinimoEditable: string = '';
+  eliminandoId: number | null = null;
+  errorEliminarFila: string = '';
 
   // Tabs
   activeTab: TabType = 'Estandares Tipo';
@@ -230,30 +235,32 @@ export class TmiIndicadores implements OnInit {
 
   ngOnInit(): void {
     this.aniosDisponibles = this.generarAniosDinamicos(6);
+    // por defecto el mes anterior al actual (en enero: diciembre del año anterior)
     const fechaActual = new Date();
-    const currentYearStr = String(fechaActual.getFullYear());
-    const currentMonthStr = String(fechaActual.getMonth() + 1).padStart(2, '0');
-
-    this.anioEstandarTipo = this.aniosDisponibles.includes(currentYearStr) ? currentYearStr : (this.aniosDisponibles[0] || currentYearStr);
-    this.mesEstandarTipo = currentMonthStr;
-    this.periodoEstandarTipo = `${this.anioEstandarTipo}${this.mesEstandarTipo}`;
-
-    this.anioEstandarNivel = this.anioEstandarTipo;
-    this.mesEstandarNivel = currentMonthStr;
-    this.periodoEstandarNivel = `${this.anioEstandarNivel}${this.mesEstandarNivel}`;
-
-    this.anioEstandarCategoria = this.anioEstandarTipo;
-    this.mesEstandarCategoria = currentMonthStr;
-    this.periodoEstandarCategoria = `${this.anioEstandarCategoria}${this.mesEstandarCategoria}`;
-
-    this.anioCentrosTMI = this.anioEstandarTipo;
-    this.mesCentrosTMI = currentMonthStr;
-    this.periodoCentrosTMI = `${this.anioCentrosTMI}${this.mesCentrosTMI}`;
-
-    // Excel TMI: por defecto el mes anterior (último periodo cerrado)
     const mesAnterior = new Date(fechaActual.getFullYear(), fechaActual.getMonth() - 1, 1);
-    this.anioExcelTMI = String(mesAnterior.getFullYear());
-    this.mesExcelTMI = String(mesAnterior.getMonth() + 1).padStart(2, '0');
+    const anioDefecto = String(mesAnterior.getFullYear());
+    const mesDefecto = String(mesAnterior.getMonth() + 1).padStart(2, '0');
+
+    this.anioEstandarTipo = anioDefecto;
+    this.mesEstandarTipo = mesDefecto;
+    this.periodoEstandarTipo = `${anioDefecto}${mesDefecto}`;
+
+    this.anioEstandarNivel = anioDefecto;
+    this.mesEstandarNivel = mesDefecto;
+    this.periodoEstandarNivel = `${anioDefecto}${mesDefecto}`;
+
+    this.anioEstandarCategoria = anioDefecto;
+    this.mesEstandarCategoria = mesDefecto;
+    this.periodoEstandarCategoria = `${anioDefecto}${mesDefecto}`;
+
+    this.anioCentrosTMI = anioDefecto;
+    this.mesCentrosTMI = mesDefecto;
+    this.periodoCentrosTMI = `${anioDefecto}${mesDefecto}`;
+
+    // Excel TMI: último periodo cerrado
+    this.anioExcelTMI = anioDefecto;
+    this.mesExcelTMI = mesDefecto;
+    this.periodoMinimoEditable = `${anioDefecto}${mesDefecto}`;
 
     this.reactiveForm();
   }
@@ -341,10 +348,10 @@ export class TmiIndicadores implements OnInit {
         this.dataEstandarTipo = res || [];
         this.dataEstandarTipoFilter = res || [];
         this.loadingEstandarTipo = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
         setTimeout(() => {
           this.viewportTipo?.checkViewportSize();
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         }, 0);
       },
       error: (error: any) => {
@@ -353,12 +360,30 @@ export class TmiIndicadores implements OnInit {
 
         this.errorEstandarTipo = 'Error al cargar los estándares por tipo';
         this.loadingEstandarTipo = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       }
     });
   }
 
+  // nueva fila en el periodo consultado
+  iniciarAltaEstandarTipo(): void {
+    if (!this.puedeAgregarFilas(this.periodoEstandarTipo, this.dataEstandarTipoFilter)) return;
+    if (!this.estandarTipoForm) this.reactiveForm();
+    this.estandarTipoForm.reset();
+    this.estandarTipoForm.patchValue({ id: '', ...this.camposPeriodo(this.periodoEstandarTipo) });
+    this.errorEstandarTipoForm = '';
+    this.mostrarFormularioEstandarTipo = true;
+    this.cdr.markForCheck();
+  }
+
+  eliminarEstandarTipo(row: any): void {
+    if (!this.puedeEliminarFila(row, this.dataEstandarTipoFilter)) return;
+    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.indicador}) del periodo ${this.nombrePeriodo(row.periodo)}? Esta acción no se puede deshacer.`)) return;
+    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandarTipo(row.id), () => this.getQueryEstandarTipo());
+  }
+
   iniciarEdicionEstandarTipo(row: any): void {
+    if (!this.esPeriodoEditable(row.periodo)) return;
     if (!this.estandarTipoForm) this.reactiveForm();
     this.estandarTipoForm.reset();
     this.estandarTipoForm.patchValue({
@@ -375,14 +400,14 @@ export class TmiIndicadores implements OnInit {
     });
     this.errorEstandarTipoForm = '';
     this.mostrarFormularioEstandarTipo = true;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   cancelarEdicionEstandarTipo(): void {
     this.mostrarFormularioEstandarTipo = false;
     this.errorEstandarTipoForm = '';
     this.savingEstandarTipo = false;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   updateQueryEstandarTipo(): void {
@@ -394,7 +419,9 @@ export class TmiIndicadores implements OnInit {
     this.savingEstandarTipo = true;
     this.errorEstandarTipoForm = '';
 
-    this.tmiIndicadoresService.putQueryEstandarTipo(this.estandarTipoForm.value).subscribe({
+    const dto = this.payloadFormulario(this.estandarTipoForm);
+    const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandarTipo(dto) : this.tmiIndicadoresService.postQueryEstandarTipo(dto);
+    peticion.subscribe({
       next: () => {
         this.savingEstandarTipo = false;
         this.mostrarFormularioEstandarTipo = false;
@@ -403,8 +430,8 @@ export class TmiIndicadores implements OnInit {
       error: (error: any) => {
         console.error(error);
         this.savingEstandarTipo = false;
-        this.errorEstandarTipoForm = typeof error === 'string' ? error : (error?.error?.detail || 'Error al actualizar estándar tipo');
-        this.cdr.detectChanges();
+        this.errorEstandarTipoForm = typeof error === 'string' ? error : (error?.error?.detail || (dto.id ? 'Error al actualizar ' : 'Error al agregar ') + 'estándar tipo');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -437,22 +464,40 @@ export class TmiIndicadores implements OnInit {
         this.dataEstandarNivel = res || [];
         this.dataEstandarNivelFilter = res || [];
         this.loadingEstandarNivel = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
         setTimeout(() => {
           this.viewportNivel?.checkViewportSize();
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         }, 0);
       },
       error: (error: any) => {
         console.error(error);
         this.errorEstandarNivel = 'Error al cargar los estándares por nivel';
         this.loadingEstandarNivel = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       }
     });
   }
 
+  // nueva fila en el periodo consultado
+  iniciarAltaEstandarNivel(): void {
+    if (!this.puedeAgregarFilas(this.periodoEstandarNivel, this.dataEstandarNivelFilter)) return;
+    if (!this.estandarNivelForm) this.reactiveForm();
+    this.estandarNivelForm.reset();
+    this.estandarNivelForm.patchValue({ id: '', ...this.camposPeriodo(this.periodoEstandarNivel) });
+    this.errorEstandarNivelForm = '';
+    this.mostrarFormularioEstandarNivel = true;
+    this.cdr.markForCheck();
+  }
+
+  eliminarEstandarNivel(row: any): void {
+    if (!this.puedeEliminarFila(row, this.dataEstandarNivelFilter)) return;
+    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.indicador}) del periodo ${this.nombrePeriodo(row.periodo)}? Esta acción no se puede deshacer.`)) return;
+    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandarNivel(row.id), () => this.getQueryEstandarNivel());
+  }
+
   iniciarEdicionEstandarNivel(row: any): void {
+    if (!this.esPeriodoEditable(row.periodo)) return;
     if (!this.estandarNivelForm) this.reactiveForm();
     this.estandarNivelForm.reset();
     this.estandarNivelForm.patchValue({
@@ -469,14 +514,14 @@ export class TmiIndicadores implements OnInit {
     });
     this.errorEstandarNivelForm = '';
     this.mostrarFormularioEstandarNivel = true;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   cancelarEdicionEstandarNivel(): void {
     this.mostrarFormularioEstandarNivel = false;
     this.errorEstandarNivelForm = '';
     this.savingEstandarNivel = false;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   updateQueryEstandarNivel(): void {
@@ -488,7 +533,9 @@ export class TmiIndicadores implements OnInit {
     this.savingEstandarNivel = true;
     this.errorEstandarNivelForm = '';
 
-    this.tmiIndicadoresService.putQueryEstandarNivel(this.estandarNivelForm.value).subscribe({
+    const dto = this.payloadFormulario(this.estandarNivelForm);
+    const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandarNivel(dto) : this.tmiIndicadoresService.postQueryEstandarNivel(dto);
+    peticion.subscribe({
       next: () => {
         this.savingEstandarNivel = false;
         this.mostrarFormularioEstandarNivel = false;
@@ -497,8 +544,8 @@ export class TmiIndicadores implements OnInit {
       error: (error: any) => {
         console.error(error);
         this.savingEstandarNivel = false;
-        this.errorEstandarNivelForm = typeof error === 'string' ? error : (error?.error?.detail || 'Error al actualizar estándar nivel');
-        this.cdr.detectChanges();
+        this.errorEstandarNivelForm = typeof error === 'string' ? error : (error?.error?.detail || (dto.id ? 'Error al actualizar ' : 'Error al agregar ') + 'estándar nivel');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -531,22 +578,40 @@ export class TmiIndicadores implements OnInit {
         this.dataEstandarCategoria = res || [];
         this.dataEstandarCategoriaFilter = res || [];
         this.loadingEstandarCategoria = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
         setTimeout(() => {
           this.viewportCategoria?.checkViewportSize();
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         }, 0);
       },
       error: (error: any) => {
         console.error(error);
         this.errorEstandarCategoria = 'Error al cargar los estándares por categoría';
         this.loadingEstandarCategoria = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       }
     });
   }
 
+  // nueva fila en el periodo consultado
+  iniciarAltaEstandarCategoria(): void {
+    if (!this.puedeAgregarFilas(this.periodoEstandarCategoria, this.dataEstandarCategoriaFilter)) return;
+    if (!this.estandarCategoriaForm) this.reactiveForm();
+    this.estandarCategoriaForm.reset();
+    this.estandarCategoriaForm.patchValue({ id: '', ...this.camposPeriodo(this.periodoEstandarCategoria) });
+    this.errorEstandarCategoriaForm = '';
+    this.mostrarFormularioEstandarCategoria = true;
+    this.cdr.markForCheck();
+  }
+
+  eliminarEstandarCategoria(row: any): void {
+    if (!this.puedeEliminarFila(row, this.dataEstandarCategoriaFilter)) return;
+    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.indicador}) del periodo ${this.nombrePeriodo(row.periodo)}? Esta acción no se puede deshacer.`)) return;
+    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandarCategoria(row.id), () => this.getQueryEstandarCategoria());
+  }
+
   iniciarEdicionEstandarCategoria(row: any): void {
+    if (!this.esPeriodoEditable(row.periodo)) return;
     if (!this.estandarCategoriaForm) this.reactiveForm();
     this.estandarCategoriaForm.reset();
     this.estandarCategoriaForm.patchValue({
@@ -563,14 +628,14 @@ export class TmiIndicadores implements OnInit {
     });
     this.errorEstandarCategoriaForm = '';
     this.mostrarFormularioEstandarCategoria = true;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   cancelarEdicionEstandarCategoria(): void {
     this.mostrarFormularioEstandarCategoria = false;
     this.errorEstandarCategoriaForm = '';
     this.savingEstandarCategoria = false;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   updateQueryEstandarCategoria(): void {
@@ -582,7 +647,9 @@ export class TmiIndicadores implements OnInit {
     this.savingEstandarCategoria = true;
     this.errorEstandarCategoriaForm = '';
 
-    this.tmiIndicadoresService.putQueryEstandarCategoria(this.estandarCategoriaForm.value).subscribe({
+    const dto = this.payloadFormulario(this.estandarCategoriaForm);
+    const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandarCategoria(dto) : this.tmiIndicadoresService.postQueryEstandarCategoria(dto);
+    peticion.subscribe({
       next: () => {
         this.savingEstandarCategoria = false;
         this.mostrarFormularioEstandarCategoria = false;
@@ -591,8 +658,8 @@ export class TmiIndicadores implements OnInit {
       error: (error: any) => {
         console.error(error);
         this.savingEstandarCategoria = false;
-        this.errorEstandarCategoriaForm = typeof error === 'string' ? error : (error?.error?.detail || 'Error al actualizar estándar categoría');
-        this.cdr.detectChanges();
+        this.errorEstandarCategoriaForm = typeof error === 'string' ? error : (error?.error?.detail || (dto.id ? 'Error al actualizar ' : 'Error al agregar ') + 'estándar categoría');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -625,23 +692,41 @@ export class TmiIndicadores implements OnInit {
         this.dataCentrosTMI = res || [];
         this.dataCentrosTMIFilter = res || [];
         this.loadingCentrosTMI = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
         this.getQuerysTmiConsultas();
         setTimeout(() => {
           this.viewportCentros?.checkViewportSize();
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         }, 0);
       },
       error: (error: any) => {
         console.error(error);
         this.errorCentrosTMI = 'Error al cargar los centros TMI';
         this.loadingCentrosTMI = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       }
     });
   }
 
+  // nueva fila en el periodo consultado
+  iniciarAltaCentro(): void {
+    if (!this.puedeAgregarFilas(this.periodoCentrosTMI, this.dataCentrosTMIFilter)) return;
+    if (!this.centrosForm) this.reactiveForm();
+    this.centrosForm.reset();
+    this.centrosForm.patchValue({ id: '', ...this.camposPeriodo(this.periodoCentrosTMI) });
+    this.errorCentroForm = '';
+    this.mostrarFormularioCentrosTMI = true;
+    this.cdr.markForCheck();
+  }
+
+  eliminarCentro(row: any): void {
+    if (!this.puedeEliminarFila(row, this.dataCentrosTMIFilter)) return;
+    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.codcentro + ' - ' + row.centro}) del periodo ${this.nombrePeriodo(row.periodo)}? Esta acción no se puede deshacer.`)) return;
+    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryCentrosTMI(row.id), () => this.getQueryCentrosTMI());
+  }
+
   iniciarEdicionCentro(row: any): void {
+    if (!this.esPeriodoEditable(row.periodo)) return;
     if (!this.centrosForm) this.reactiveForm();
     this.centrosForm.reset();
     this.centrosForm.patchValue({
@@ -662,14 +747,14 @@ export class TmiIndicadores implements OnInit {
     });
     this.errorCentroForm = '';
     this.mostrarFormularioCentrosTMI = true;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   cancelarEdicionCentro(): void {
     this.mostrarFormularioCentrosTMI = false;
     this.errorCentroForm = '';
     this.savingCentrosTMI = false;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   updateQueryCentrosTMI(): void {
@@ -681,7 +766,9 @@ export class TmiIndicadores implements OnInit {
     this.savingCentrosTMI = true;
     this.errorCentroForm = '';
 
-    this.tmiIndicadoresService.putQueryCentrosTMI(this.centrosForm.value).subscribe({
+    const dto = this.payloadFormulario(this.centrosForm);
+    const peticion = dto.id ? this.tmiIndicadoresService.putQueryCentrosTMI(dto) : this.tmiIndicadoresService.postQueryCentrosTMI(dto);
+    peticion.subscribe({
       next: () => {
         this.savingCentrosTMI = false;
         this.mostrarFormularioCentrosTMI = false;
@@ -690,8 +777,8 @@ export class TmiIndicadores implements OnInit {
       error: (error: any) => {
         console.error(error);
         this.savingCentrosTMI = false;
-        this.errorCentroForm = typeof error === 'string' ? error : (error?.error?.detail || 'Error al actualizar centro TMI');
-        this.cdr.detectChanges();
+        this.errorCentroForm = typeof error === 'string' ? error : (error?.error?.detail || (dto.id ? 'Error al actualizar ' : 'Error al agregar ') + 'centro TMI');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -820,7 +907,7 @@ export class TmiIndicadores implements OnInit {
     const periodo = `${this.anioExcelTMI}${this.mesExcelTMI}`;
     this.descargandoExcelTMI = true;
     this.errorExcelTMI = '';
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
 
     this.tmiIndicadoresService.getExcelTMI(periodo).subscribe({
       next: (response: any) => {
@@ -837,13 +924,13 @@ export class TmiIndicadores implements OnInit {
           window.URL.revokeObjectURL(url);
         }
         this.descargandoExcelTMI = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: (error: any) => {
         console.error('Error al descargar el Excel TMI', error);
         this.errorExcelTMI = 'Error al generar/descargar el Excel del TMI.';
         this.descargandoExcelTMI = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
     });
   }
@@ -897,13 +984,13 @@ export class TmiIndicadores implements OnInit {
       next: (res: any) => {
         this.dataCierre = res || [];
         this.loadingCierre = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: (error: any) => {
         console.error(error);
         this.errorCierre = 'Error al cargar las fechas de cierre';
         this.loadingCierre = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       }
     });
   }
@@ -912,14 +999,14 @@ export class TmiIndicadores implements OnInit {
     this.cierreSeleccionado = row;
     this.fechaCierreEdit = String(row.fecha_cierre ?? '').substring(0, 10);
     this.errorCierreForm = '';
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   cancelarEdicionCierre(): void {
     this.cierreSeleccionado = null;
     this.errorCierreForm = '';
     this.savingCierre = false;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   updateQueryFechaCierre(): void {
@@ -927,7 +1014,7 @@ export class TmiIndicadores implements OnInit {
       this.errorCierreForm = 'Seleccione una fecha de cierre.';
       return;
     }
-    // el cierre se ejecuta cuando la fecha de cierre es igual a la fecha actual
+    // el cierre se ejecuta cuando llega la fecha de cierre (o en la siguiente revisión si ya pasó)
     if (this.fechaCierreEdit < this.hoyISO) {
       this.errorCierreForm = 'La fecha de cierre no puede ser anterior a hoy.';
       return;
@@ -944,7 +1031,7 @@ export class TmiIndicadores implements OnInit {
         console.error(error);
         this.savingCierre = false;
         this.errorCierreForm = error?.error?.detail || 'Error al actualizar la fecha de cierre';
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       }
     });
   }
@@ -959,6 +1046,25 @@ export class TmiIndicadores implements OnInit {
 
   etiquetaEstadoCierre(estado: string): string {
     return this.estadosCierre[estado] ?? estado;
+  }
+
+  get cierresConError(): number {
+    return this.dataCierre.filter(row => row.estado === 'ERROR').length;
+  }
+
+  get cierresAtrasados(): number {
+    return this.dataCierre.filter(row => this.esCierreAtrasado(row)).length;
+  }
+
+  // pendiente cuya fecha de cierre ya pasó
+  esCierreAtrasado(row: any): boolean {
+    const fecha = String(row.fecha_cierre ?? '').substring(0, 10);
+    return row.estado === 'PENDIENTE' && !!fecha && fecha < this.hoyISO;
+  }
+
+  // un cierre en ERROR solo se reintenta automáticamente el mismo día en que falló
+  errorSeReintentaHoy(row: any): boolean {
+    return row.estado === 'ERROR' && String(row.fecha_ejecucion ?? '').substring(0, 10) === this.hoyISO;
   }
 
   // 202608 -> Agosto 2026
@@ -982,10 +1088,67 @@ export class TmiIndicadores implements OnInit {
     return `${fecha.getFullYear()}-${m}-${d}`;
   }
 
+  // periodos anteriores al mínimo ya no se agregan ni modifican
+  esPeriodoEditable(periodo: string): boolean {
+    return String(periodo ?? '').trim() >= this.periodoMinimoEditable;
+  }
+
+  // un periodo sin filas se genera en su cierre copiando el anterior, por eso no se le agregan filas antes
+  puedeAgregarFilas(periodo: string, filas: any[]): boolean {
+    return this.esPeriodoEditable(periodo) && filas.length > 0;
+  }
+
+  motivoNoAgregar(periodo: string, filas: any[]): string {
+    if (!this.esPeriodoEditable(periodo)) {
+      return `El periodo ${this.nombrePeriodo(periodo)} ya no se puede modificar; el mínimo es ${this.nombrePeriodo(this.periodoMinimoEditable)}`;
+    }
+    if (!filas.length) return 'El periodo aún no tiene filas; se genera en su fecha de cierre';
+    return `Agregar fila en ${this.nombrePeriodo(periodo)}`;
+  }
+
+  // la última fila de un periodo no se elimina: el cierre volvería a generar el periodo completo
+  puedeEliminarFila(row: any, filas: any[]): boolean {
+    return this.esPeriodoEditable(row.periodo) && filas.length > 1 && this.eliminandoId === null;
+  }
+
+  tituloEliminar(row: any, filas: any[]): string {
+    if (!this.esPeriodoEditable(row.periodo)) return 'Periodo de solo lectura';
+    if (filas.length <= 1) return 'No se puede eliminar la última fila del periodo';
+    return 'Eliminar fila';
+  }
+
+  private eliminarFila(row: any, peticion: Observable<any>, recargar: () => void): void {
+    this.eliminandoId = row.id;
+    this.errorEliminarFila = '';
+    this.cdr.markForCheck();
+    peticion.subscribe({
+      next: () => {
+        this.eliminandoId = null;
+        recargar();
+      },
+      error: (error: any) => {
+        console.error(error);
+        this.eliminandoId = null;
+        this.errorEliminarFila = error?.error?.detail || 'Error al eliminar la fila';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private camposPeriodo(periodo: string) {
+    return { periodo, anio: Number(periodo.substring(0, 4)), mes: Number(periodo.substring(4, 6)) };
+  }
+
+  private payloadFormulario(form: FormGroup): any {
+    const valor = form.getRawValue();
+    return { ...valor, id: valor.id || null };
+  }
+
   // tabs
   setActiveTab(tab: TabType): void {
     this.activeTab = tab;
+    this.errorEliminarFila = '';
     if (tab === 'Fecha Cierre') this.getQueryCierres();
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 }
