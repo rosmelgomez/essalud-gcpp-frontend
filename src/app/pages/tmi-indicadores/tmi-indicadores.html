@@ -7,7 +7,7 @@
         </div>
     </header>
 
-    <!-- TABS DE NAVEGACIÓN -->
+    <!-- TABS -->
     <div class="tabs">
         <button class="tab-button" [class.active]="activeTab === 'Estandares Tipo'"
             (click)="setActiveTab('Estandares Tipo')">
@@ -64,7 +64,7 @@
 
         <div *ngIf="!loadingEstandarTipo && !errorEstandarTipo && !selectPeriodoEstandarTipo" class="dashboard-content">
             <mat-card class="table"
-                style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(110px, 1.2fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(90px, 0.8fr);">
+                style="--cols-table: minmax(45px, 0.5fr) minmax(80px, 0.8fr) minmax(220px, 2.5fr) minmax(110px, 1.2fr) minmax(55px, 0.6fr) minmax(45px, 0.5fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(75px, 0.8fr) minmax(80px, 0.8fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr)minmax(90px, 0.8fr) minmax(90px, 0.8fr)minmax(90px, 0.8fr)minmax(90px, 0.8fr);">
                 <div class="table-title-row">
                     <h3>Detalle de Estándares por Tipo</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaEstandarTipo()"
@@ -74,31 +74,37 @@
                     </button>
                 </div>
                 <p class="periodo-bloqueado" *ngIf="!esPeriodoEditable(periodoEstandarTipo)">
-                    <mat-icon>lock_outline</mat-icon><span>El periodo {{ nombrePeriodo(periodoEstandarTipo) }} es de solo lectura: solo se agregan o modifican filas
-                    desde {{ nombrePeriodo(periodoMinimoEditable) }}.</span>
+                    <mat-icon>lock_outline</mat-icon><span>El periodo {{ nombrePeriodo(periodoEstandarTipo) }} es de
+                        solo lectura: solo se agregan o modifican filas
+                        desde {{ nombrePeriodo(periodoMinimoEditable) }}.</span>
                 </p>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
                 <div class="wrapper-table">
                     <div class="grid-table">
                         <!-- HEADER -->
                         <div class="header-table">
-                            <div class="cell id">ID</div>
                             <div class="cell tipo">TIPO</div>
                             <div class="cell indicador">INDICADOR</div>
                             <div class="cell tipo_centro">TIPO_CENTRO</div>
                             <div class="cell anio">AÑO</div>
-                            <div class="cell mes">MES</div>
-                            <div class="cell periodo">PERIODO</div>
-                            <div class="cell estandar">ESTÁNDAR</div>
-                            <div class="cell acept">ACEPT</div>
-                            <div class="cell aceptmenos">ACEPTMENOS</div>
+                            <div class="cell estandar_01">ESTÁNDAR_01</div>
+                            <div class="cell estandar_02">ESTÁNDAR_02</div>
+                            <div class="cell estandar_03">ESTÁNDAR_03</div>
+                            <div class="cell estandar_04">ESTÁNDAR_04</div>
+                            <div class="cell estandar_05">ESTÁNDAR_05</div>
+                            <div class="cell estandar_06">ESTÁNDAR_06</div>
+                            <div class="cell estandar_07">ESTÁNDAR_07</div>
+                            <div class="cell estandar_08">ESTÁNDAR_08</div>
+                            <div class="cell estandar_09">ESTÁNDAR_09</div>
+                            <div class="cell estandar_10">ESTÁNDAR_10</div>
+                            <div class="cell estandar_11">ESTÁNDAR_11</div>
+                            <div class="cell estandar_12">ESTÁNDAR_12</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
                         <!-- FILTERS -->
                         <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
-                                (keyup)="filterDataEstandarTipo('id', $event)" />
+
                             <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
                                 (keyup)="filterDataEstandarTipo('tipo', $event)" />
                             <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
@@ -107,34 +113,55 @@
                                 (keyup)="filterDataEstandarTipo('tipo_centro', $event)" />
                             <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
                                 (keyup)="filterDataEstandarTipo('anio', $event)" />
-                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..."
-                                (keyup)="filterDataEstandarTipo('mes', $event)" />
-                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..."
-                                (keyup)="filterDataEstandarTipo('periodo', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
-                                (keyup)="filterDataEstandarTipo('estandar', $event)" />
-                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..."
-                                (keyup)="filterDataEstandarTipo('acept', $event)" />
-                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..."
-                                (keyup)="filterDataEstandarTipo('aceptmenos', $event)" />
+                            <input type="text" class="filter-input cell estandar_01" placeholder="Buscar estándar 01..."
+                                (keyup)="filterDataEstandarTipo('estandar_01', $event)" />
+                            <input type="text" class="filter-input cell estandar_02" placeholder="Buscar estándar 02..."
+                                (keyup)="filterDataEstandarTipo('estandar_02', $event)" />
+                            <input type="text" class="filter-input cell estandar_03" placeholder="Buscar estándar 03..."
+                                (keyup)="filterDataEstandarTipo('estandar_03', $event)" />
+                            <input type="text" class="filter-input cell estandar_04" placeholder="Buscar estándar 04..."
+                                (keyup)="filterDataEstandarTipo('estandar_04', $event)" />
+                            <input type="text" class="filter-input cell estandar_05" placeholder="Buscar estándar 05..."
+                                (keyup)="filterDataEstandarTipo('estandar_05', $event)" />
+                            <input type="text" class="filter-input cell estandar_06" placeholder="Buscar estándar 06..."
+                                (keyup)="filterDataEstandarTipo('estandar_06', $event)" />
+                            <input type="text" class="filter-input cell estandar_07" placeholder="Buscar estándar 07..."
+                                (keyup)="filterDataEstandarTipo('estandar_07', $event)" />
+                            <input type="text" class="filter-input cell estandar_08" placeholder="Buscar estándar 08..."
+                                (keyup)="filterDataEstandarTipo('estandar_08', $event)" />
+                            <input type="text" class="filter-input cell estandar_09" placeholder="Buscar estándar 09..."
+                                (keyup)="filterDataEstandarTipo('estandar_09', $event)" />
+                            <input type="text" class="filter-input cell estandar_10" placeholder="Buscar estándar 10..."
+                                (keyup)="filterDataEstandarTipo('estandar_10', $event)" />
+                            <input type="text" class="filter-input cell estandar_11" placeholder="Buscar estándар 11..."
+                                (keyup)="filterDataEstandarTipo('estandar_11', $event)" />
+                            <input type="text" class="filter-input cell estandar_12" placeholder="Buscar estándar 12..."
+                                (keyup)="filterDataEstandarTipo('estandar_12', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
                         <!-- ROWS -->
                         <cdk-virtual-scroll-viewport #viewportTipo class="viewport-table" [itemSize]="44">
                             <div *cdkVirtualFor="let row of dataEstandarTipo" class="row-table">
-                                <div class="cell id">{{ row.id ?? '—' }}</div>
                                 <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
                                 <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
                                 <div class="cell tipo_centro">{{ row.tipo_centro ?? '—' }}</div>
                                 <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell mes">{{ row.mes ?? '—' }}</div>
-                                <div class="cell periodo">{{ row.periodo ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar ?? '—' }}</div>
-                                <div class="cell acept">{{ row.acept ?? '—' }}</div>
-                                <div class="cell aceptmenos">{{ row.aceptmenos ?? '—' }}</div>
+                                <div class="cell estandar_01">{{ row.estandar_01 ?? '—' }}</div>
+                                <div class="cell estandar_02">{{ row.estandar_02 ?? '—' }}</div>
+                                <div class="cell estandar_03">{{ row.estandar_03 ?? '—' }}</div>
+                                <div class="cell estandar_04">{{ row.estandar_04 ?? '—' }}</div>
+                                <div class="cell estandar_05">{{ row.estandar_05 ?? '—' }}</div>
+                                <div class="cell estandar_06">{{ row.estandar_06 ?? '—' }}</div>
+                                <div class="cell estandar_07">{{ row.estandar_07 ?? '—' }}</div>
+                                <div class="cell estandar_08">{{ row.estandar_08 ?? '—' }}</div>
+                                <div class="cell estandar_09">{{ row.estandar_09 ?? '—' }}</div>
+                                <div class="cell estandar_10">{{ row.estandar_10 ?? '—' }}</div>
+                                <div class="cell estandar_11">{{ row.estandar_11 ?? '—' }}</div>
+                                <div class="cell estandar_12">{{ row.estandar_12 ?? '—' }}</div>
                                 <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionEstandarTipo(row)"
+                                    <button type="button" class="btn-icon-edit"
+                                        (click)="iniciarEdicionEstandarTipo(row)"
                                         [disabled]="!esPeriodoEditable(row.periodo)"
                                         [title]="esPeriodoEditable(row.periodo) ? 'Editar registro' : 'Periodo de solo lectura'">
                                         <mat-icon>edit</mat-icon>
@@ -142,7 +169,8 @@
                                     <button type="button" class="btn-icon-delete" (click)="eliminarEstandarTipo(row)"
                                         [disabled]="!puedeEliminarFila(row, dataEstandarTipoFilter)"
                                         [title]="tituloEliminar(row, dataEstandarTipoFilter)">
-                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete'
+                                            }}</mat-icon>
                                     </button>
                                 </div>
                             </div>
@@ -170,7 +198,8 @@
                             Nueva fila en el periodo {{ nombrePeriodo(estandarTipoForm.get('periodo')?.value) }}
                         </p>
                     </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarTipo()" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarTipo()"
+                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
                 </header>
 
                 <form [formGroup]="estandarTipoForm" (ngSubmit)="updateQueryEstandarTipo()"
@@ -235,8 +264,10 @@
                         <button type="button" class="btn-modal-action btn-cancel"
                             (click)="cancelarEdicionEstandarTipo()" [disabled]="savingEstandarTipo">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarTipo">
-                            <mat-icon *ngIf="!savingEstandarTipo">save</mat-icon><span *ngIf="!savingEstandarTipo">{{ estandarTipoForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
-                            <span *ngIf="savingEstandarTipo" class="spinner-btn"></span><span *ngIf="savingEstandarTipo">Guardando…</span>
+                            <mat-icon *ngIf="!savingEstandarTipo">save</mat-icon><span *ngIf="!savingEstandarTipo">{{
+                                estandarTipoForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
+                            <span *ngIf="savingEstandarTipo" class="spinner-btn"></span><span
+                                *ngIf="savingEstandarTipo">Guardando…</span>
                         </button>
                     </footer>
                 </form>
@@ -290,29 +321,35 @@
                     </button>
                 </div>
                 <p class="periodo-bloqueado" *ngIf="!esPeriodoEditable(periodoEstandarNivel)">
-                    <mat-icon>lock_outline</mat-icon><span>El periodo {{ nombrePeriodo(periodoEstandarNivel) }} es de solo lectura: solo se agregan o modifican filas
-                    desde {{ nombrePeriodo(periodoMinimoEditable) }}.</span>
+                    <mat-icon>lock_outline</mat-icon><span>El periodo {{ nombrePeriodo(periodoEstandarNivel) }} es de
+                        solo lectura: solo se agregan o modifican filas
+                        desde {{ nombrePeriodo(periodoMinimoEditable) }}.</span>
                 </p>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
                 <div class="wrapper-table">
                     <div class="grid-table">
                         <div class="header-table">
-                            <div class="cell id">ID</div>
                             <div class="cell tipo">TIPO</div>
                             <div class="cell indicador">INDICADOR</div>
                             <div class="cell nivel_centro">NIVEL_CENTRO</div>
                             <div class="cell anio">AÑO</div>
-                            <div class="cell mes">MES</div>
-                            <div class="cell periodo">PERIODO</div>
-                            <div class="cell estandar">ESTÁNDAR</div>
-                            <div class="cell acept">ACEPT</div>
-                            <div class="cell aceptmenos">ACEPTMENOS</div>
+                            <div class="cell estandar_01">ESTÁNDAR 01</div>
+                            <div class="cell estandar_02">ESTÁNDAR 02</div>
+                            <div class="cell estandar_03">ESTÁNDAR 03</div>
+                            <div class="cell estandar_04">ESTÁNDAR 04</div>
+                            <div class="cell estandar_05">ESTÁNDAR 05</div>
+                            <div class="cell estandar_06">ESTÁNDAR 06</div>
+                            <div class="cell estandar_07">ESTÁNDAR 07</div>
+                            <div class="cell estandar_08">ESTÁNDAR 08</div>
+                            <div class="cell estandar_09">ESTÁNDAR 09</div>
+                            <div class="cell estandar_10">ESTÁNDAR 10</div>
+                            <div class="cell estandar_11">ESTÁNDAR 11</div>
+                            <div class="cell estandar_12">ESTÁNDAR 12</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
                         <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
-                                (keyup)="filterDataEstandarNivel('id', $event)" />
+
                             <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
                                 (keyup)="filterDataEstandarNivel('tipo', $event)" />
                             <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
@@ -322,33 +359,59 @@
                                 (keyup)="filterDataEstandarNivel('nivel_centro', $event)" />
                             <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
                                 (keyup)="filterDataEstandarNivel('anio', $event)" />
-                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..."
-                                (keyup)="filterDataEstandarNivel('mes', $event)" />
-                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..."
-                                (keyup)="filterDataEstandarNivel('periodo', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
-                                (keyup)="filterDataEstandarNivel('estandar', $event)" />
+                            <input type="text" class="filter-input cell estandar_01" placeholder="Buscar estándar 01..."
+                                (keyup)="filterDataEstandarNivel('estandar_01', $event)" />
+                            <input type="text" class="filter-input cell estandar_02" placeholder="Buscar estándar 02..."
+                                (keyup)="filterDataEstandarNivel('estandar_02', $event)" />
+                            <input type="text" class="filter-input cell estandar_03" placeholder="Buscar estándar 03..."
+                                (keyup)="filterDataEstandarNivel('estandar_03', $event)" />
+                            <input type="text" class="filter-input cell estandar_04" placeholder="Buscar estándar 04..."
+                                (keyup)="filterDataEstandarNivel('estandar_04', $event)" />
+                            <input type="text" class="filter-input cell estandar_05" placeholder="Buscar estándar 05..."
+                                (keyup)="filterDataEstandarNivel('estandar_05', $event)" />
+                            <input type="text" class="filter-input cell estandar_06" placeholder="Buscar estándar 06..."
+                                (keyup)="filterDataEstandarNivel('estandar_06', $event)" />
+                            <input type="text" class="filter-input cell estandar_07" placeholder="Buscar estándar 07..."
+                                (keyup)="filterDataEstandarNivel('estandar_07', $event)" />
+                            <input type="text" class="filter-input cell estandar_08" placeholder="Buscar estándar 08..."
+                                (keyup)="filterDataEstandarNivel('estandar_08', $event)" />
+                            <input type="text" class="filter-input cell estandar_09" placeholder="Buscar estándar 09..."
+                                (keyup)="filterDataEstandarNivel('estandar_09', $event)" />
+                            <input type="text" class="filter-input cell estandar_10" placeholder="Buscar estándar 10..."
+                                (keyup)="filterDataEstandarNivel('estandar_10', $event)" />
+                            <input type="text" class="filter-input cell estandar_11" placeholder="Buscar estándar 11..."
+                                (keyup)="filterDataEstandarNivel('estandar_11', $event)" />
+                            <input type="text" class="filter-input cell estandar_12" placeholder="Buscar estándar 12..."
+                                (keyup)="filterDataEstandarNivel('estandar_12', $event)" />
                             <input type="text" class="filter-input cell acept" placeholder="Buscar acept..."
                                 (keyup)="filterDataEstandarNivel('acept', $event)" />
                             <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..."
                                 (keyup)="filterDataEstandarNivel('aceptmenos', $event)" />
+
                             <div class="cell acciones"></div>
                         </div>
 
                         <cdk-virtual-scroll-viewport #viewportNivel class="viewport-table" [itemSize]="44">
                             <div *cdkVirtualFor="let row of dataEstandarNivel" class="row-table">
-                                <div class="cell id">{{ row.id ?? '—' }}</div>
                                 <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
                                 <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
                                 <div class="cell nivel_centro">{{ row.nivel_centro ?? '—' }}</div>
                                 <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell mes">{{ row.mes ?? '—' }}</div>
-                                <div class="cell periodo">{{ row.periodo ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar ?? '—' }}</div>
-                                <div class="cell acept">{{ row.acept ?? '—' }}</div>
-                                <div class="cell aceptmenos">{{ row.aceptmenos ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_01 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_02 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_03 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_04 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_05 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_06 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_07 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_08 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_09 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_10 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_11 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_12 ?? '—' }}</div>
                                 <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionEstandarNivel(row)"
+                                    <button type="button" class="btn-icon-edit"
+                                        (click)="iniciarEdicionEstandarNivel(row)"
                                         [disabled]="!esPeriodoEditable(row.periodo)"
                                         [title]="esPeriodoEditable(row.periodo) ? 'Editar registro' : 'Periodo de solo lectura'">
                                         <mat-icon>edit</mat-icon>
@@ -356,7 +419,8 @@
                                     <button type="button" class="btn-icon-delete" (click)="eliminarEstandarNivel(row)"
                                         [disabled]="!puedeEliminarFila(row, dataEstandarNivelFilter)"
                                         [title]="tituloEliminar(row, dataEstandarNivelFilter)">
-                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete'
+                                            }}</mat-icon>
                                     </button>
                                 </div>
                             </div>
@@ -384,7 +448,8 @@
                             Nueva fila en el periodo {{ nombrePeriodo(estandarNivelForm.get('periodo')?.value) }}
                         </p>
                     </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarNivel()" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarNivel()"
+                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
                 </header>
 
                 <form [formGroup]="estandarNivelForm" (ngSubmit)="updateQueryEstandarNivel()"
@@ -449,8 +514,10 @@
                         <button type="button" class="btn-modal-action btn-cancel"
                             (click)="cancelarEdicionEstandarNivel()" [disabled]="savingEstandarNivel">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarNivel">
-                            <mat-icon *ngIf="!savingEstandarNivel">save</mat-icon><span *ngIf="!savingEstandarNivel">{{ estandarNivelForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
-                            <span *ngIf="savingEstandarNivel" class="spinner-btn"></span><span *ngIf="savingEstandarNivel">Guardando…</span>
+                            <mat-icon *ngIf="!savingEstandarNivel">save</mat-icon><span *ngIf="!savingEstandarNivel">{{
+                                estandarNivelForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
+                            <span *ngIf="savingEstandarNivel" class="spinner-btn"></span><span
+                                *ngIf="savingEstandarNivel">Guardando…</span>
                         </button>
                     </footer>
                 </form>
@@ -504,29 +571,34 @@
                     </button>
                 </div>
                 <p class="periodo-bloqueado" *ngIf="!esPeriodoEditable(periodoEstandarCategoria)">
-                    <mat-icon>lock_outline</mat-icon><span>El periodo {{ nombrePeriodo(periodoEstandarCategoria) }} es de solo lectura: solo se agregan o modifican filas
-                    desde {{ nombrePeriodo(periodoMinimoEditable) }}.</span>
+                    <mat-icon>lock_outline</mat-icon><span>El periodo {{ nombrePeriodo(periodoEstandarCategoria) }} es
+                        de solo lectura: solo se agregan o modifican filas
+                        desde {{ nombrePeriodo(periodoMinimoEditable) }}.</span>
                 </p>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
                 <div class="wrapper-table">
                     <div class="grid-table">
                         <div class="header-table">
-                            <div class="cell id">ID</div>
                             <div class="cell tipo">TIPO</div>
                             <div class="cell indicador">INDICADOR</div>
                             <div class="cell categoria_centro">CATEGORIA_CENTRO</div>
                             <div class="cell anio">AÑO</div>
-                            <div class="cell mes">MES</div>
-                            <div class="cell periodo">PERIODO</div>
-                            <div class="cell estandar">ESTÁNDAR</div>
-                            <div class="cell acept">ACEPT</div>
-                            <div class="cell aceptmenos">ACEPTMENOS</div>
+                            <div class="cell estandar_01">ESTÁNDAR 01</div>
+                            <div class="cell estandar_02">ESTÁNDAR 02</div>
+                            <div class="cell estandar_03">ESTÁNDAR 03</div>
+                            <div class="cell estandar_04">ESTÁNDAR 04</div>
+                            <div class="cell estandar_05">ESTÁNDAR 05</div>
+                            <div class="cell estandar_06">ESTÁNDAR 06</div>
+                            <div class="cell estandar_07">ESTÁNDAR 07</div>
+                            <div class="cell estandar_08">ESTÁNDAR 08</div>
+                            <div class="cell estandar_09">ESTÁNDAR 09</div>
+                            <div class="cell estandar_10">ESTÁNDAR 10</div>
+                            <div class="cell estandar_11">ESTÁNDAR 11</div>
+                            <div class="cell estandar_12">ESTÁNDAR 12</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
                         <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
-                                (keyup)="filterDataEstandarCategoria('id', $event)" />
                             <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
                                 (keyup)="filterDataEstandarCategoria('tipo', $event)" />
                             <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
@@ -536,41 +608,65 @@
                                 (keyup)="filterDataEstandarCategoria('categoria_centro', $event)" />
                             <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
                                 (keyup)="filterDataEstandarCategoria('anio', $event)" />
-                            <input type="text" class="filter-input cell mes" placeholder="Buscar mes..."
-                                (keyup)="filterDataEstandarCategoria('mes', $event)" />
-                            <input type="text" class="filter-input cell periodo" placeholder="Buscar periodo..."
-                                (keyup)="filterDataEstandarCategoria('periodo', $event)" />
                             <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
-                                (keyup)="filterDataEstandarCategoria('estandar', $event)" />
-                            <input type="text" class="filter-input cell acept" placeholder="Buscar acept..."
-                                (keyup)="filterDataEstandarCategoria('acept', $event)" />
-                            <input type="text" class="filter-input cell aceptmenos" placeholder="Buscar aceptmenos..."
-                                (keyup)="filterDataEstandarCategoria('aceptmenos', $event)" />
+                                (keyup)="filterDataEstandarCategoria('estandar_01', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_02', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_03', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_04', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_05', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_06', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_07', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_08', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_09', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_10', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_11', $event)" />
+                            <input type="text" class="filter-input cell estandar" placeholder="Buscar estándar..."
+                                (keyup)="filterDataEstandarCategoria('estandar_12', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
+
                         <cdk-virtual-scroll-viewport #viewportCategoria class="viewport-table" [itemSize]="44">
                             <div *cdkVirtualFor="let row of dataEstandarCategoria" class="row-table">
-                                <div class="cell id">{{ row.id ?? '—' }}</div>
                                 <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
                                 <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
                                 <div class="cell categoria_centro">{{ row.categoria_centro ?? '—' }}</div>
                                 <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell mes">{{ row.mes ?? '—' }}</div>
-                                <div class="cell periodo">{{ row.periodo ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar ?? '—' }}</div>
-                                <div class="cell acept">{{ row.acept ?? '—' }}</div>
-                                <div class="cell aceptmenos">{{ row.aceptmenos ?? '—' }}</div>
+                                <div class="cell estandar_01">{{ row.estandar_01 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_02 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_03 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_04 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_05 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_06 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_07 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_08 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_09 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_10 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_11 ?? '—' }}</div>
+                                <div class="cell estandar">{{ row.estandar_12 ?? '—' }}</div>
                                 <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionEstandarCategoria(row)"
+                                    <button type="button" class="btn-icon-edit"
+                                        (click)="iniciarEdicionEstandarCategoria(row)"
                                         [disabled]="!esPeriodoEditable(row.periodo)"
                                         [title]="esPeriodoEditable(row.periodo) ? 'Editar registro' : 'Periodo de solo lectura'">
                                         <mat-icon>edit</mat-icon>
                                     </button>
-                                    <button type="button" class="btn-icon-delete" (click)="eliminarEstandarCategoria(row)"
+                                    <button type="button" class="btn-icon-delete"
+                                        (click)="eliminarEstandarCategoria(row)"
                                         [disabled]="!puedeEliminarFila(row, dataEstandarCategoriaFilter)"
                                         [title]="tituloEliminar(row, dataEstandarCategoriaFilter)">
-                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete'
+                                            }}</mat-icon>
                                     </button>
                                 </div>
                             </div>
@@ -599,7 +695,8 @@
                             Nueva fila en el periodo {{ nombrePeriodo(estandarCategoriaForm.get('periodo')?.value) }}
                         </p>
                     </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarCategoria()" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarCategoria()"
+                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
                 </header>
 
                 <form [formGroup]="estandarCategoriaForm" (ngSubmit)="updateQueryEstandarCategoria()"
@@ -666,8 +763,11 @@
                             (click)="cancelarEdicionEstandarCategoria()"
                             [disabled]="savingEstandarCategoria">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarCategoria">
-                            <mat-icon *ngIf="!savingEstandarCategoria">save</mat-icon><span *ngIf="!savingEstandarCategoria">{{ estandarCategoriaForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
-                            <span *ngIf="savingEstandarCategoria" class="spinner-btn"></span><span *ngIf="savingEstandarCategoria">Guardando…</span>
+                            <mat-icon *ngIf="!savingEstandarCategoria">save</mat-icon><span
+                                *ngIf="!savingEstandarCategoria">{{ estandarCategoriaForm.get('id')?.value ? 'Guardar
+                                Cambios' : 'Agregar Fila' }}</span>
+                            <span *ngIf="savingEstandarCategoria" class="spinner-btn"></span><span
+                                *ngIf="savingEstandarCategoria">Guardando…</span>
                         </button>
                     </footer>
                 </form>
@@ -719,8 +819,9 @@
                     </button>
                 </div>
                 <p class="periodo-bloqueado" *ngIf="!esPeriodoEditable(periodoCentrosTMI)">
-                    <mat-icon>lock_outline</mat-icon><span>El periodo {{ nombrePeriodo(periodoCentrosTMI) }} es de solo lectura: solo se agregan o modifican filas
-                    desde {{ nombrePeriodo(periodoMinimoEditable) }}.</span>
+                    <mat-icon>lock_outline</mat-icon><span>El periodo {{ nombrePeriodo(periodoCentrosTMI) }} es de solo
+                        lectura: solo se agregan o modifican filas
+                        desde {{ nombrePeriodo(periodoMinimoEditable) }}.</span>
                 </p>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
                 <div class="wrapper-table">
@@ -800,7 +901,8 @@
                                     <button type="button" class="btn-icon-delete" (click)="eliminarCentro(row)"
                                         [disabled]="!puedeEliminarFila(row, dataCentrosTMIFilter)"
                                         [title]="tituloEliminar(row, dataCentrosTMIFilter)">
-                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete'
+                                            }}</mat-icon>
                                     </button>
                                 </div>
                             </div>
@@ -828,7 +930,8 @@
                             Nueva fila en el periodo {{ nombrePeriodo(centrosForm.get('periodo')?.value) }}
                         </p>
                     </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionCentro()" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionCentro()"
+                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
                 </header>
 
                 <form [formGroup]="centrosForm" (ngSubmit)="updateQueryCentrosTMI()" class="modal-form-container">
@@ -894,12 +997,14 @@
 
                             <div class="field-input">
                                 <label for="centro_anio">Año</label>
-                                <input type="number" id="centro_anio" formControlName="anio" readonly placeholder="Ej. 2026" />
+                                <input type="number" id="centro_anio" formControlName="anio" readonly
+                                    placeholder="Ej. 2026" />
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_mes">Mes</label>
-                                <input type="number" id="centro_mes" formControlName="mes" readonly placeholder="Ej. 8" />
+                                <input type="number" id="centro_mes" formControlName="mes" readonly
+                                    placeholder="Ej. 8" />
                             </div>
                         </div>
 
@@ -912,8 +1017,10 @@
                         <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionCentro()"
                             [disabled]="savingCentrosTMI">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingCentrosTMI">
-                            <mat-icon *ngIf="!savingCentrosTMI">save</mat-icon><span *ngIf="!savingCentrosTMI">{{ centrosForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
-                            <span *ngIf="savingCentrosTMI" class="spinner-btn"></span><span *ngIf="savingCentrosTMI">Guardando…</span>
+                            <mat-icon *ngIf="!savingCentrosTMI">save</mat-icon><span *ngIf="!savingCentrosTMI">{{
+                                centrosForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
+                            <span *ngIf="savingCentrosTMI" class="spinner-btn"></span><span
+                                *ngIf="savingCentrosTMI">Guardando…</span>
                         </button>
                     </footer>
                 </form>
@@ -977,16 +1084,19 @@
 
                 <div *ngIf="cierresConError > 0" class="cierre-alerta cierre-alerta-error">
                     <mat-icon>error_outline</mat-icon>
-                    <span>{{ cierresConError === 1 ? 'Hay 1 cierre con error' : 'Hay ' + cierresConError + ' cierres con error' }}.
-                    Un cierre con error se reintenta automáticamente el mismo día en que falló, o cuando se
-                    carguen los datos que le faltan; también puede editar la fecha de cierre para volver a programarlo.</span>
+                    <span>{{ cierresConError === 1 ? 'Hay 1 cierre con error' : 'Hay ' + cierresConError + ' cierres con
+                        error' }}.
+                        Un cierre con error se reintenta automáticamente el mismo día en que falló, o cuando se
+                        carguen los datos que le faltan; también puede editar la fecha de cierre para volver a
+                        programarlo.</span>
                 </div>
 
                 <div *ngIf="cierresAtrasados > 0" class="cierre-alerta cierre-alerta-atrasado">
                     <mat-icon>schedule</mat-icon>
-                    <span>{{ cierresAtrasados === 1 ? 'Hay 1 cierre pendiente atrasado' : 'Hay ' + cierresAtrasados + ' cierres pendientes atrasados' }}
-                    (su fecha de cierre ya pasó). Se ejecutarán en la próxima revisión automática,
-                    del periodo más antiguo al más reciente.</span>
+                    <span>{{ cierresAtrasados === 1 ? 'Hay 1 cierre pendiente atrasado' : 'Hay ' + cierresAtrasados + '
+                        cierres pendientes atrasados' }}
+                        (su fecha de cierre ya pasó). Se ejecutarán en la próxima revisión automática,
+                        del periodo más antiguo al más reciente.</span>
                 </div>
 
                 <div class="cierre-table-wrapper">
@@ -1025,10 +1135,11 @@
                                     </div>
                                     <div *ngIf="row.estado === 'ERROR'" class="cierre-reintento">
                                         {{ errorSeReintentaHoy(row)
-                                            ? 'Se reintentará automáticamente hoy'
-                                            : 'Se reintentará al cargar los datos que faltan o al editar la fecha' }}
+                                        ? 'Se reintentará automáticamente hoy'
+                                        : 'Se reintentará al cargar los datos que faltan o al editar la fecha' }}
                                     </div>
-                                    <div *ngIf="esCierreAtrasado(row)" class="cierre-reintento cierre-reintento-atrasado">
+                                    <div *ngIf="esCierreAtrasado(row)"
+                                        class="cierre-reintento cierre-reintento-atrasado">
                                         Se ejecutará en la próxima revisión automática
                                     </div>
                                 </td>
@@ -1067,7 +1178,8 @@
                             Periodo {{ nombrePeriodo(cierreSeleccionado.periodo) }} ({{ cierreSeleccionado.periodo }})
                         </p>
                     </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionCierre()" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionCierre()"
+                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
                 </header>
 
                 <form (ngSubmit)="updateQueryFechaCierre()" class="modal-form-container">
@@ -1087,8 +1199,10 @@
                         <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionCierre()"
                             [disabled]="savingCierre">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingCierre">
-                            <mat-icon *ngIf="!savingCierre">save</mat-icon><span *ngIf="!savingCierre">Guardar Cambios</span>
-                            <span *ngIf="savingCierre" class="spinner-btn"></span><span *ngIf="savingCierre">Guardando…</span>
+                            <mat-icon *ngIf="!savingCierre">save</mat-icon><span *ngIf="!savingCierre">Guardar
+                                Cambios</span>
+                            <span *ngIf="savingCierre" class="spinner-btn"></span><span
+                                *ngIf="savingCierre">Guardando…</span>
                         </button>
                     </footer>
                 </form>

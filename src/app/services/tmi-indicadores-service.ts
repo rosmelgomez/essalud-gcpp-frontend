@@ -12,8 +12,8 @@ export class TmiIndicadoresService {
   constructor(private http: HttpClient) { }
 
   /// estandares tipo
-  getQueryEstandarTipo(periodo: string) {
-    return this.http.get<any[]>(base_url + `/lista-estandar-tipo/${periodo}`);
+  getQueryEstandarTipo(anio: string) {
+    return this.http.get<any[]>(base_url + `/lista-estandar-tipo/${anio}`);
   }
   putQueryEstandarTipo(dto: any) {
     return this.http.put(base_url + `/update-estandar-tipo`, dto);

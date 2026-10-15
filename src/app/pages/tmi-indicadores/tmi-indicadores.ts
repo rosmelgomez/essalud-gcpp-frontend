@@ -39,7 +39,6 @@ export class TmiIndicadores implements OnInit {
 
   currentDate: string = '';
 
-  // solo se agregan o modifican filas desde el mes anterior al actual (ej. en octubre: desde septiembre)
   periodoMinimoEditable: string = '';
   eliminandoId: number | null = null;
   errorEliminarFila: string = '';
@@ -125,20 +124,28 @@ export class TmiIndicadores implements OnInit {
   public errorEstandarTipo: string = '';
   public mostrarFormularioEstandarTipo: boolean = false;
   public savingEstandarTipo: boolean = false;
-  public errorEstandarTipoForm: string = '';
+  public errorEstandarTipoForm: string = ''; 
   public estandarTipoForm!: FormGroup;
 
   filtersEstandarTipo = {
     id: "",
+    id_estandar: "",
     tipo: "",
     indicador: "",
     tipo_centro: "",
     anio: "",
-    mes: "",
-    periodo: "",
-    estandar: "",
-    acept: "",
-    aceptmenos: ""
+    estandar_01: "",
+    estandar_02: "",
+    estandar_03: "",
+    estandar_04: "",
+    estandar_05: "",
+    estandar_06: "",
+    estandar_07: "",
+    estandar_08: "",
+    estandar_09: "",
+    estandar_10: "",
+    estandar_11: "",
+    estandar_12: "",
   }
 
   // tmi_estandar_nivel
@@ -157,13 +164,23 @@ export class TmiIndicadores implements OnInit {
 
   filtersEstandarNivel = {
     id: "",
+    id_estandar: "",
     tipo: "",
     indicador: "",
     nivel_centro: "",
     anio: "",
-    mes: "",
-    periodo: "",
-    estandar: "",
+    estandar_01: "",
+    estandar_02: "",
+    estandar_03: "",
+    estandar_04: "",
+    estandar_05: "",
+    estandar_06: "",
+    estandar_07: "",
+    estandar_08: "",
+    estandar_09: "",
+    estandar_10: "",
+    estandar_11: "",
+    estandar_12: "",
     acept: "",
     aceptmenos: ""
   };
@@ -188,9 +205,18 @@ export class TmiIndicadores implements OnInit {
     indicador: "",
     categoria_centro: "",
     anio: "",
-    mes: "",
-    periodo: "",
-    estandar: "",
+    estandar_01: "",
+    estandar_02: "",
+    estandar_03: "",
+    estandar_04: "",
+    estandar_05: "",
+    estandar_06: "",
+    estandar_07: "",
+    estandar_08: "",
+    estandar_09: "",
+    estandar_10: "",
+    estandar_11: "",
+    estandar_12: "",
     acept: "",
     aceptmenos: ""
   };
@@ -343,7 +369,7 @@ export class TmiIndicadores implements OnInit {
     this.loadingEstandarTipo = true;
     this.errorEstandarTipo = '';
 
-    this.tmiIndicadoresService.getQueryEstandarTipo(this.periodoEstandarTipo).subscribe({
+    this.tmiIndicadoresService.getQueryEstandarTipo(this.anioEstandarTipo).subscribe({
       next: (res: any) => {
         this.dataEstandarTipo = res || [];
         this.dataEstandarTipoFilter = res || [];
@@ -441,16 +467,22 @@ export class TmiIndicadores implements OnInit {
     this.filtersEstandarTipo[column] = filterValue;
     const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
     this.dataEstandarTipo = this.dataEstandarTipoFilter.filter(row =>
-      check(row.id, this.filtersEstandarTipo.id) &&
       check(row.tipo, this.filtersEstandarTipo.tipo) &&
       check(row.indicador, this.filtersEstandarTipo.indicador) &&
       check(row.tipo_centro, this.filtersEstandarTipo.tipo_centro) &&
       check(row.anio, this.filtersEstandarTipo.anio) &&
-      check(row.mes, this.filtersEstandarTipo.mes) &&
-      check(row.periodo, this.filtersEstandarTipo.periodo) &&
-      check(row.estandar, this.filtersEstandarTipo.estandar) &&
-      check(row.acept, this.filtersEstandarTipo.acept) &&
-      check(row.aceptmenos, this.filtersEstandarTipo.aceptmenos)
+      check(row.estandar_01, this.filtersEstandarTipo.estandar_01) &&
+      check(row.estandar_02, this.filtersEstandarTipo.estandar_02) &&
+      check(row.estandar_03, this.filtersEstandarTipo.estandar_03) &&
+      check(row.estandar_04, this.filtersEstandarTipo.estandar_04) &&
+      check(row.estandar_05, this.filtersEstandarTipo.estandar_05) &&
+      check(row.estandar_06, this.filtersEstandarTipo.estandar_06) &&
+      check(row.estandar_07, this.filtersEstandarTipo.estandar_07) &&
+      check(row.estandar_08, this.filtersEstandarTipo.estandar_08) &&
+      check(row.estandar_09, this.filtersEstandarTipo.estandar_09) &&
+      check(row.estandar_10, this.filtersEstandarTipo.estandar_10) &&
+      check(row.estandar_11, this.filtersEstandarTipo.estandar_11) &&
+      check(row.estandar_12, this.filtersEstandarTipo.estandar_12)
     );
   }
 
@@ -555,14 +587,22 @@ export class TmiIndicadores implements OnInit {
     this.filtersEstandarNivel[column] = filterValue;
     const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
     this.dataEstandarNivel = this.dataEstandarNivelFilter.filter(row =>
-      check(row.id, this.filtersEstandarNivel.id) &&
       check(row.tipo, this.filtersEstandarNivel.tipo) &&
       check(row.indicador, this.filtersEstandarNivel.indicador) &&
       check(row.nivel_centro, this.filtersEstandarNivel.nivel_centro) &&
       check(row.anio, this.filtersEstandarNivel.anio) &&
-      check(row.mes, this.filtersEstandarNivel.mes) &&
-      check(row.periodo, this.filtersEstandarNivel.periodo) &&
-      check(row.estandar, this.filtersEstandarNivel.estandar) &&
+      check(row.estandar_01, this.filtersEstandarNivel.estandar_01) &&
+      check(row.estandar_02, this.filtersEstandarNivel.estandar_02) &&
+      check(row.estandar_03, this.filtersEstandarNivel.estandar_03) &&
+      check(row.estandar_04, this.filtersEstandarNivel.estandar_04) &&
+      check(row.estandar_05, this.filtersEstandarNivel.estandar_05) &&
+      check(row.estandar_06, this.filtersEstandarNivel.estandar_06) &&
+      check(row.estandar_07, this.filtersEstandarNivel.estandar_07) &&
+      check(row.estandar_08, this.filtersEstandarNivel.estandar_08) &&
+      check(row.estandar_09, this.filtersEstandarNivel.estandar_09) &&
+      check(row.estandar_10, this.filtersEstandarNivel.estandar_10) &&
+      check(row.estandar_11, this.filtersEstandarNivel.estandar_11) &&
+      check(row.estandar_12, this.filtersEstandarNivel.estandar_12) &&
       check(row.acept, this.filtersEstandarNivel.acept) &&
       check(row.aceptmenos, this.filtersEstandarNivel.aceptmenos)
     );
@@ -669,16 +709,22 @@ export class TmiIndicadores implements OnInit {
     this.filtersEstandarCategoria[column] = filterValue;
     const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
     this.dataEstandarCategoria = this.dataEstandarCategoriaFilter.filter(row =>
-      check(row.id, this.filtersEstandarCategoria.id) &&
       check(row.tipo, this.filtersEstandarCategoria.tipo) &&
       check(row.indicador, this.filtersEstandarCategoria.indicador) &&
       check(row.categoria_centro, this.filtersEstandarCategoria.categoria_centro) &&
       check(row.anio, this.filtersEstandarCategoria.anio) &&
-      check(row.mes, this.filtersEstandarCategoria.mes) &&
-      check(row.periodo, this.filtersEstandarCategoria.periodo) &&
-      check(row.estandar, this.filtersEstandarCategoria.estandar) &&
-      check(row.acept, this.filtersEstandarCategoria.acept) &&
-      check(row.aceptmenos, this.filtersEstandarCategoria.aceptmenos)
+      check(row.estandar_01, this.filtersEstandarCategoria.estandar_01) &&
+      check(row.estandar_02, this.filtersEstandarCategoria.estandar_02) &&
+      check(row.estandar_03, this.filtersEstandarCategoria.estandar_03) &&
+      check(row.estandar_04, this.filtersEstandarCategoria.estandar_04) &&
+      check(row.estandar_05, this.filtersEstandarCategoria.estandar_05) &&
+      check(row.estandar_06, this.filtersEstandarCategoria.estandar_06) &&
+      check(row.estandar_07, this.filtersEstandarCategoria.estandar_07) &&
+      check(row.estandar_08, this.filtersEstandarCategoria.estandar_08) &&
+      check(row.estandar_09, this.filtersEstandarCategoria.estandar_09) &&
+      check(row.estandar_10, this.filtersEstandarCategoria.estandar_10) &&
+      check(row.estandar_11, this.filtersEstandarCategoria.estandar_11) &&
+      check(row.estandar_12, this.filtersEstandarCategoria.estandar_12)
     );
   }
 
