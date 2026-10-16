@@ -11,6 +11,20 @@ export class TmiIndicadoresService {
 
   constructor(private http: HttpClient) { }
 
+  /// catalogo de estandares (tmi_estandar)
+  getQueryEstandar() {
+    return this.http.get<any[]>(base_url + `/lista-estandar`);
+  }
+  putQueryEstandar(dto: any) {
+    return this.http.put(base_url + `/update-estandar`, dto);
+  }
+  postQueryEstandar(dto: any) {
+    return this.http.post(base_url + `/create-estandar`, dto);
+  }
+  deleteQueryEstandar(id: number) {
+    return this.http.delete(base_url + `/delete-estandar/${id}`);
+  }
+
   /// estandares tipo
   getQueryEstandarTipo(anio: string) {
     return this.http.get<any[]>(base_url + `/lista-estandar-tipo/${anio}`);
@@ -26,8 +40,8 @@ export class TmiIndicadoresService {
   }
 
   /// estandares nivel
-  getQueryEstandarNivel(periodo: string) {
-    return this.http.get<any[]>(base_url + `/lista-estandar-nivel/${periodo}`);
+  getQueryEstandarNivel(anio: string) {
+    return this.http.get<any[]>(base_url + `/lista-estandar-nivel/${anio}`);
   }
   putQueryEstandarNivel(dto: any) {
     return this.http.put(base_url + `/update-estandar-nivel`, dto);
@@ -40,8 +54,8 @@ export class TmiIndicadoresService {
   }
 
   /// estandares categoria
-  getQueryEstandarCategoria(periodo: string) {
-    return this.http.get<any[]>(base_url + `/lista-estandar-categoria/${periodo}`);
+  getQueryEstandarCategoria(anio: string) {
+    return this.http.get<any[]>(base_url + `/lista-estandar-categoria/${anio}`);
   }
   putQueryEstandarCategoria(dto: any) {
     return this.http.put(base_url + `/update-estandar-categoria`, dto);
@@ -54,8 +68,8 @@ export class TmiIndicadoresService {
   }
 
   /// centros TMI
-  getQueryCentrosTMI(periodo: string) {
-    return this.http.get<any[]>(base_url + `/lista-centros/${periodo}`);
+  getQueryCentrosTMI(anio: string) {
+    return this.http.get<any[]>(base_url + `/lista-centros/${anio}`);
   }
 
   /// update centro TMI

@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { FechaActualizacionService } from '../../services/fecha-actualizacion-service';
 import { forkJoin, Observable } from 'rxjs';
 
-export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Fecha Cierre';
+export type TabType = 'Estandares' | 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Fecha Cierre';
 
 @Component({
   selector: 'app-tmi-indicadores',
@@ -32,6 +32,7 @@ export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categ
   styleUrl: './tmi-indicadores.css',
 })
 export class TmiIndicadores implements OnInit {
+  @ViewChild('viewportEstandar') viewportEstandar?: CdkVirtualScrollViewport;
   @ViewChild('viewportTipo') viewportTipo?: CdkVirtualScrollViewport;
   @ViewChild('viewportNivel') viewportNivel?: CdkVirtualScrollViewport;
   @ViewChild('viewportCategoria') viewportCategoria?: CdkVirtualScrollViewport;
@@ -44,7 +45,7 @@ export class TmiIndicadores implements OnInit {
   errorEliminarFila: string = '';
 
   // Tabs
-  activeTab: TabType = 'Estandares Tipo';
+  activeTab: TabType = 'Estandares';
 
   // Filtros de Años y Meses (replicando dashboard-medicas)
   aniosDisponibles: string[] = [];
@@ -73,8 +74,8 @@ export class TmiIndicadores implements OnInit {
   }
 
   onBuscarEstandarTipo(): void {
-    if (!this.anioEstandarTipo || !this.mesEstandarTipo) {
-      this.errorEstandarTipo = 'Por favor seleccione un año y mes válidos.';
+    if (!this.anioEstandarTipo) {
+      this.errorEstandarTipo = 'Por favor seleccione un año válido.';
       return;
     }
     this.selectPeriodoEstandarTipo = false;
@@ -83,8 +84,8 @@ export class TmiIndicadores implements OnInit {
   }
 
   onBuscarEstandarNivel(): void {
-    if (!this.anioEstandarNivel || !this.mesEstandarNivel) {
-      this.errorEstandarNivel = 'Por favor seleccione un año y mes válidos.';
+    if (!this.anioEstandarNivel) {
+      this.errorEstandarNivel = 'Por favor seleccione un año válido.';
       return;
     }
     this.selectPeriodoEstandarNivel = false;
@@ -93,8 +94,8 @@ export class TmiIndicadores implements OnInit {
   }
 
   onBuscarEstandarCategoria(): void {
-    if (!this.anioEstandarCategoria || !this.mesEstandarCategoria) {
-      this.errorEstandarCategoria = 'Por favor seleccione un año y mes válidos.';
+    if (!this.anioEstandarCategoria) {
+      this.errorEstandarCategoria = 'Por favor seleccione un año válido.';
       return;
     }
     this.selectPeriodoEstandarCategoria = false;
@@ -103,8 +104,8 @@ export class TmiIndicadores implements OnInit {
   }
 
   onBuscarCentrosTMI(): void {
-    if (!this.anioCentrosTMI || !this.mesCentrosTMI) {
-      this.errorCentrosTMI = 'Por favor seleccione un año y mes válidos.';
+    if (!this.anioCentrosTMI) {
+      this.errorCentrosTMI = 'Por favor seleccione un año válido.';
       return;
     }
     this.selectPeriodoCentrosTMI = false;
@@ -112,6 +113,25 @@ export class TmiIndicadores implements OnInit {
     this.getQueryCentrosTMI();
   }
 
+
+  // catalogo tmi_estandar (tab Estándares + select en formularios)
+  public listaEstandares: any[] = [];
+  public dataEstandar: any[] = [];
+  public dataEstandarFilter: any[] = [];
+  public loadingEstandar: boolean = false;
+  public errorEstandar: string = '';
+  public mostrarFormularioEstandar: boolean = false;
+  public savingEstandar: boolean = false;
+  public errorEstandarForm: string = '';
+  public estandarForm!: FormGroup;
+
+  filtersEstandar = {
+    id: "",
+    tipo: "",
+    indicador: "",
+    fecha_creacion: "",
+    fecha_modificacion: ""
+  };
 
   // tmi_estandar_tipo
   public dataEstandarTipo: any[] = [];
@@ -201,6 +221,7 @@ export class TmiIndicadores implements OnInit {
 
   filtersEstandarCategoria = {
     id: "",
+    id_estandar: "",
     tipo: "",
     indicador: "",
     categoria_centro: "",
@@ -238,18 +259,26 @@ export class TmiIndicadores implements OnInit {
   filtersCentrosTMI = {
     id: "",
     red: "",
-    codred: "",
     orden: "",
     orden_tipo: "",
     codcentro: "",
-    categoria: "",
-    tipo: "",
-    nivel: "",
     centro: "",
-    estado: "",
+    categoria: "",
+    nivel: "",
+    tipo: "",
     anio: "",
-    mes: "",
-    periodo: ""
+    flag_01: "",
+    flag_02: "",
+    flag_03: "",
+    flag_04: "",
+    flag_05: "",
+    flag_06: "",
+    flag_07: "",
+    flag_08: "",
+    flag_09: "",
+    flag_10: "",
+    flag_11: "",
+    flag_12: ""
   };
 
   constructor(
@@ -289,6 +318,114 @@ export class TmiIndicadores implements OnInit {
     this.periodoMinimoEditable = `${anioDefecto}${mesDefecto}`;
 
     this.reactiveForm();
+    this.getQueryEstandar();
+  }
+
+  // tmi_estandar
+  getQueryEstandar(): void {
+    this.loadingEstandar = true;
+    this.errorEstandar = '';
+    this.tmiIndicadoresService.getQueryEstandar().subscribe({
+      next: (res: any[]) => {
+        this.listaEstandares = res || [];
+        this.dataEstandar = res || [];
+        this.dataEstandarFilter = res || [];
+        this.loadingEstandar = false;
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.viewportEstandar?.checkViewportSize();
+          this.cdr.markForCheck();
+        }, 0);
+      },
+      error: (err: any) => {
+        console.error('Error al cargar catálogo de estándares', err);
+        this.errorEstandar = 'Error al cargar el catálogo de estándares';
+        this.loadingEstandar = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  iniciarAltaEstandar(): void {
+    if (!this.estandarForm) this.reactiveForm();
+    this.estandarForm.reset({
+      id: null,
+      tipo: '',
+      indicador: ''
+    });
+    this.errorEstandarForm = '';
+    this.mostrarFormularioEstandar = true;
+    this.cdr.markForCheck();
+  }
+
+  iniciarEdicionEstandar(row: any): void {
+    if (!this.estandarForm) this.reactiveForm();
+    this.estandarForm.reset({
+      id: row.id ?? null,
+      tipo: row.tipo ?? '',
+      indicador: row.indicador ?? ''
+    });
+    this.errorEstandarForm = '';
+    this.mostrarFormularioEstandar = true;
+    this.cdr.markForCheck();
+  }
+
+  cancelarEdicionEstandar(): void {
+    this.mostrarFormularioEstandar = false;
+    this.errorEstandarForm = '';
+    this.savingEstandar = false;
+    this.cdr.markForCheck();
+  }
+
+  updateQueryEstandar(): void {
+    if (this.estandarForm.invalid) {
+      this.estandarForm.markAllAsTouched();
+      this.errorEstandarForm = 'Por favor, complete todos los campos obligatorios.';
+      return;
+    }
+    this.savingEstandar = true;
+    this.errorEstandarForm = '';
+
+    const valor = this.estandarForm.getRawValue();
+    const dto = {
+      id: valor.id ? Number(valor.id) : null,
+      tipo: String(valor.tipo ?? '').trim(),
+      indicador: String(valor.indicador ?? '').trim()
+    };
+
+    const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandar(dto) : this.tmiIndicadoresService.postQueryEstandar(dto);
+    peticion.subscribe({
+      next: () => {
+        this.savingEstandar = false;
+        this.mostrarFormularioEstandar = false;
+        this.getQueryEstandar();
+      },
+      error: (error: any) => {
+        console.error(error);
+        this.savingEstandar = false;
+        this.errorEstandarForm = typeof error === 'string' ? error : (error?.error?.detail || (dto.id ? 'Error al actualizar ' : 'Error al agregar ') + 'estándar');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  eliminarEstandar(row: any): void {
+    if (this.eliminandoId !== null) return;
+    if (!confirm(`¿Eliminar el estándar ID ${row.id} (${row.tipo} - ${row.indicador})? Esta acción no se puede deshacer.`)) return;
+    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandar(row.id), () => this.getQueryEstandar());
+  }
+
+  filterDataEstandar(column: keyof typeof this.filtersEstandar, event: any): void {
+    const filterValue = event.target.value.toLowerCase().trim();
+    this.filtersEstandar[column] = filterValue;
+    const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
+    this.dataEstandar = this.dataEstandarFilter.filter(row =>
+      check(row.id, this.filtersEstandar.id) &&
+      check(row.tipo, this.filtersEstandar.tipo) &&
+      check(row.indicador, this.filtersEstandar.indicador) &&
+      check(row.fecha_creacion, this.filtersEstandar.fecha_creacion) &&
+      check(row.fecha_modificacion, this.filtersEstandar.fecha_modificacion)
+    );
   }
 
   loadFechaActualizacion() {
@@ -303,65 +440,130 @@ export class TmiIndicadores implements OnInit {
   }
 
   reactiveForm() {
+    // Form 0: tmi_estandar
+    this.estandarForm = this.formBuilder.group({
+      id: [null, []],
+      tipo: ['', [Validators.required]],
+      indicador: ['', [Validators.required]]
+    });
+
     // Form 1: tmi_estandar_tipo
     this.estandarTipoForm = this.formBuilder.group({
-      id: ['', []],
-      tipo: ['', [Validators.required]],
-      indicador: ['', [Validators.required]],
+      id: [null, []],
+      id_estandar: [null, [Validators.required]],
       tipo_centro: ['', [Validators.required]],
-      anio: ['', []],
-      mes: ['', []],
-      periodo: ['', []],
-      estandar: ['', [Validators.required]],
-      acept: ['', [Validators.required]],
-      aceptmenos: ['', [Validators.required]]
+      anio: [null, [Validators.required]],
+      estandar_01: [0, [Validators.required]],
+      estandar_02: [0, [Validators.required]],
+      estandar_03: [0, [Validators.required]],
+      estandar_04: [0, [Validators.required]],
+      estandar_05: [0, [Validators.required]],
+      estandar_06: [0, [Validators.required]],
+      estandar_07: [0, [Validators.required]],
+      estandar_08: [0, [Validators.required]],
+      estandar_09: [0, [Validators.required]],
+      estandar_10: [0, [Validators.required]],
+      estandar_11: [0, [Validators.required]],
+      estandar_12: [0, [Validators.required]]
     });
 
     // Form 2: tmi_estandar_nivel
     this.estandarNivelForm = this.formBuilder.group({
-      id: ['', []],
-      tipo: ['', [Validators.required]],
-      indicador: ['', [Validators.required]],
+      id: [null, []],
+      id_estandar: [null, [Validators.required]],
       nivel_centro: ['', [Validators.required]],
-      anio: ['', []],
-      mes: ['', []],
-      periodo: ['', []],
-      estandar: ['', [Validators.required]],
-      acept: ['', [Validators.required]],
-      aceptmenos: ['', [Validators.required]]
+      anio: [null, [Validators.required]],
+      estandar_01: [0, [Validators.required]],
+      estandar_02: [0, [Validators.required]],
+      estandar_03: [0, [Validators.required]],
+      estandar_04: [0, [Validators.required]],
+      estandar_05: [0, [Validators.required]],
+      estandar_06: [0, [Validators.required]],
+      estandar_07: [0, [Validators.required]],
+      estandar_08: [0, [Validators.required]],
+      estandar_09: [0, [Validators.required]],
+      estandar_10: [0, [Validators.required]],
+      estandar_11: [0, [Validators.required]],
+      estandar_12: [0, [Validators.required]]
     });
 
     // Form 3: tmi_estandar_categoria
     this.estandarCategoriaForm = this.formBuilder.group({
-      id: ['', []],
-      tipo: ['', [Validators.required]],
-      indicador: ['', [Validators.required]],
+      id: [null, []],
+      id_estandar: [null, [Validators.required]],
       categoria_centro: ['', [Validators.required]],
-      anio: ['', []],
-      mes: ['', []],
-      periodo: ['', []],
-      estandar: ['', [Validators.required]],
-      acept: ['', [Validators.required]],
-      aceptmenos: ['', [Validators.required]]
+      anio: [null, [Validators.required]],
+      estandar_01: [0, [Validators.required]],
+      estandar_02: [0, [Validators.required]],
+      estandar_03: [0, [Validators.required]],
+      estandar_04: [0, [Validators.required]],
+      estandar_05: [0, [Validators.required]],
+      estandar_06: [0, [Validators.required]],
+      estandar_07: [0, [Validators.required]],
+      estandar_08: [0, [Validators.required]],
+      estandar_09: [0, [Validators.required]],
+      estandar_10: [0, [Validators.required]],
+      estandar_11: [0, [Validators.required]],
+      estandar_12: [0, [Validators.required]]
     });
 
     // Form 4: tmi_centro
     this.centrosForm = this.formBuilder.group({
-      id: ['', []],
+      id: [null, []],
       red: ['', [Validators.required]],
-      codred: ['', []],
       orden: ['', [Validators.required]],
       orden_tipo: ['', [Validators.required]],
       codcentro: ['', [Validators.required]],
-      categoria: ['', []],
-      tipo: ['', [Validators.required]],
-      nivel: ['', [Validators.required]],
       centro: ['', [Validators.required]],
-      estado: ['', [Validators.required]],
-      anio: ['', []],
-      mes: ['', []],
-      periodo: ['', []]
+      categoria: ['', []],
+      nivel: ['', [Validators.required]],
+      tipo: ['', [Validators.required]],
+      anio: [null, [Validators.required]],
+      flag_01: [true, []],
+      flag_02: [true, []],
+      flag_03: [true, []],
+      flag_04: [true, []],
+      flag_05: [true, []],
+      flag_06: [true, []],
+      flag_07: [true, []],
+      flag_08: [true, []],
+      flag_09: [true, []],
+      flag_10: [true, []],
+      flag_11: [true, []],
+      flag_12: [true, []]
     });
+  }
+
+  private resolverIdEstandar(row: any): number | null {
+    if (row.id_estandar != null && row.id_estandar !== '') {
+      return Number(row.id_estandar);
+    }
+    const encontrado = this.listaEstandares.find(
+      e => e.tipo === row.tipo && e.indicador === row.indicador
+    );
+    return encontrado ? Number(encontrado.id) : null;
+  }
+
+  private payloadEstandarAnual(form: FormGroup, campoCentro: 'tipo_centro' | 'nivel_centro' | 'categoria_centro'): any {
+    const valor = form.getRawValue();
+    return {
+      id: valor.id ? Number(valor.id) : null,
+      id_estandar: Number(valor.id_estandar),
+      [campoCentro]: String(valor[campoCentro] ?? '').trim(),
+      anio: Number(valor.anio),
+      estandar_01: Number(valor.estandar_01 ?? 0),
+      estandar_02: Number(valor.estandar_02 ?? 0),
+      estandar_03: Number(valor.estandar_03 ?? 0),
+      estandar_04: Number(valor.estandar_04 ?? 0),
+      estandar_05: Number(valor.estandar_05 ?? 0),
+      estandar_06: Number(valor.estandar_06 ?? 0),
+      estandar_07: Number(valor.estandar_07 ?? 0),
+      estandar_08: Number(valor.estandar_08 ?? 0),
+      estandar_09: Number(valor.estandar_09 ?? 0),
+      estandar_10: Number(valor.estandar_10 ?? 0),
+      estandar_11: Number(valor.estandar_11 ?? 0),
+      estandar_12: Number(valor.estandar_12 ?? 0)
+    };
   }
 
   // tmi_estandar_tipo
@@ -382,8 +584,6 @@ export class TmiIndicadores implements OnInit {
       },
       error: (error: any) => {
         console.error(error);
-
-
         this.errorEstandarTipo = 'Error al cargar los estándares por tipo';
         this.loadingEstandarTipo = false;
         this.cdr.markForCheck();
@@ -391,38 +591,60 @@ export class TmiIndicadores implements OnInit {
     });
   }
 
-  // nueva fila en el periodo consultado
+  // nueva fila en el año consultado
   iniciarAltaEstandarTipo(): void {
-    if (!this.puedeAgregarFilas(this.periodoEstandarTipo, this.dataEstandarTipoFilter)) return;
+    if (!this.listaEstandares.length) this.getQueryEstandar();
     if (!this.estandarTipoForm) this.reactiveForm();
-    this.estandarTipoForm.reset();
-    this.estandarTipoForm.patchValue({ id: '', ...this.camposPeriodo(this.periodoEstandarTipo) });
+    this.estandarTipoForm.reset({
+      id: null,
+      id_estandar: null,
+      tipo_centro: '',
+      anio: Number(this.anioEstandarTipo),
+      estandar_01: 0,
+      estandar_02: 0,
+      estandar_03: 0,
+      estandar_04: 0,
+      estandar_05: 0,
+      estandar_06: 0,
+      estandar_07: 0,
+      estandar_08: 0,
+      estandar_09: 0,
+      estandar_10: 0,
+      estandar_11: 0,
+      estandar_12: 0
+    });
     this.errorEstandarTipoForm = '';
     this.mostrarFormularioEstandarTipo = true;
     this.cdr.markForCheck();
   }
 
   eliminarEstandarTipo(row: any): void {
-    if (!this.puedeEliminarFila(row, this.dataEstandarTipoFilter)) return;
-    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.indicador}) del periodo ${this.nombrePeriodo(row.periodo)}? Esta acción no se puede deshacer.`)) return;
+    if (this.eliminandoId !== null) return;
+    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.tipo} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
     this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandarTipo(row.id), () => this.getQueryEstandarTipo());
   }
 
   iniciarEdicionEstandarTipo(row: any): void {
-    if (!this.esPeriodoEditable(row.periodo)) return;
+    if (!this.listaEstandares.length) this.getQueryEstandar();
     if (!this.estandarTipoForm) this.reactiveForm();
     this.estandarTipoForm.reset();
     this.estandarTipoForm.patchValue({
-      id: row.id ?? '',
-      tipo: row.tipo ?? '',
-      indicador: row.indicador ?? '',
+      id: row.id ?? null,
+      id_estandar: this.resolverIdEstandar(row),
       tipo_centro: row.tipo_centro ?? '',
-      anio: row.anio ?? '',
-      mes: row.mes ?? '',
-      periodo: row.periodo ?? this.periodoEstandarTipo,
-      estandar: row.estandar ?? '',
-      acept: row.acept ?? '',
-      aceptmenos: row.aceptmenos ?? ''
+      anio: row.anio ?? Number(this.anioEstandarTipo),
+      estandar_01: row.estandar_01 ?? 0,
+      estandar_02: row.estandar_02 ?? 0,
+      estandar_03: row.estandar_03 ?? 0,
+      estandar_04: row.estandar_04 ?? 0,
+      estandar_05: row.estandar_05 ?? 0,
+      estandar_06: row.estandar_06 ?? 0,
+      estandar_07: row.estandar_07 ?? 0,
+      estandar_08: row.estandar_08 ?? 0,
+      estandar_09: row.estandar_09 ?? 0,
+      estandar_10: row.estandar_10 ?? 0,
+      estandar_11: row.estandar_11 ?? 0,
+      estandar_12: row.estandar_12 ?? 0
     });
     this.errorEstandarTipoForm = '';
     this.mostrarFormularioEstandarTipo = true;
@@ -445,7 +667,7 @@ export class TmiIndicadores implements OnInit {
     this.savingEstandarTipo = true;
     this.errorEstandarTipoForm = '';
 
-    const dto = this.payloadFormulario(this.estandarTipoForm);
+    const dto = this.payloadEstandarAnual(this.estandarTipoForm, 'tipo_centro');
     const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandarTipo(dto) : this.tmiIndicadoresService.postQueryEstandarTipo(dto);
     peticion.subscribe({
       next: () => {
@@ -491,7 +713,7 @@ export class TmiIndicadores implements OnInit {
     this.loadingEstandarNivel = true;
     this.errorEstandarNivel = '';
 
-    this.tmiIndicadoresService.getQueryEstandarNivel(this.periodoEstandarNivel).subscribe({
+    this.tmiIndicadoresService.getQueryEstandarNivel(this.anioEstandarNivel).subscribe({
       next: (res: any) => {
         this.dataEstandarNivel = res || [];
         this.dataEstandarNivelFilter = res || [];
@@ -511,38 +733,60 @@ export class TmiIndicadores implements OnInit {
     });
   }
 
-  // nueva fila en el periodo consultado
+  // nueva fila en el año consultado
   iniciarAltaEstandarNivel(): void {
-    if (!this.puedeAgregarFilas(this.periodoEstandarNivel, this.dataEstandarNivelFilter)) return;
+    if (!this.listaEstandares.length) this.getQueryEstandar();
     if (!this.estandarNivelForm) this.reactiveForm();
-    this.estandarNivelForm.reset();
-    this.estandarNivelForm.patchValue({ id: '', ...this.camposPeriodo(this.periodoEstandarNivel) });
+    this.estandarNivelForm.reset({
+      id: null,
+      id_estandar: null,
+      nivel_centro: '',
+      anio: Number(this.anioEstandarNivel),
+      estandar_01: 0,
+      estandar_02: 0,
+      estandar_03: 0,
+      estandar_04: 0,
+      estandar_05: 0,
+      estandar_06: 0,
+      estandar_07: 0,
+      estandar_08: 0,
+      estandar_09: 0,
+      estandar_10: 0,
+      estandar_11: 0,
+      estandar_12: 0
+    });
     this.errorEstandarNivelForm = '';
     this.mostrarFormularioEstandarNivel = true;
     this.cdr.markForCheck();
   }
 
   eliminarEstandarNivel(row: any): void {
-    if (!this.puedeEliminarFila(row, this.dataEstandarNivelFilter)) return;
-    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.indicador}) del periodo ${this.nombrePeriodo(row.periodo)}? Esta acción no se puede deshacer.`)) return;
+    if (this.eliminandoId !== null) return;
+    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.tipo} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
     this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandarNivel(row.id), () => this.getQueryEstandarNivel());
   }
 
   iniciarEdicionEstandarNivel(row: any): void {
-    if (!this.esPeriodoEditable(row.periodo)) return;
+    if (!this.listaEstandares.length) this.getQueryEstandar();
     if (!this.estandarNivelForm) this.reactiveForm();
     this.estandarNivelForm.reset();
     this.estandarNivelForm.patchValue({
-      id: row.id ?? '',
-      tipo: row.tipo ?? '',
-      indicador: row.indicador ?? '',
+      id: row.id ?? null,
+      id_estandar: this.resolverIdEstandar(row),
       nivel_centro: row.nivel_centro ?? '',
-      anio: row.anio ?? '',
-      mes: row.mes ?? '',
-      periodo: row.periodo ?? this.periodoEstandarNivel,
-      estandar: row.estandar ?? '',
-      acept: row.acept ?? '',
-      aceptmenos: row.aceptmenos ?? ''
+      anio: row.anio ?? Number(this.anioEstandarNivel),
+      estandar_01: row.estandar_01 ?? 0,
+      estandar_02: row.estandar_02 ?? 0,
+      estandar_03: row.estandar_03 ?? 0,
+      estandar_04: row.estandar_04 ?? 0,
+      estandar_05: row.estandar_05 ?? 0,
+      estandar_06: row.estandar_06 ?? 0,
+      estandar_07: row.estandar_07 ?? 0,
+      estandar_08: row.estandar_08 ?? 0,
+      estandar_09: row.estandar_09 ?? 0,
+      estandar_10: row.estandar_10 ?? 0,
+      estandar_11: row.estandar_11 ?? 0,
+      estandar_12: row.estandar_12 ?? 0
     });
     this.errorEstandarNivelForm = '';
     this.mostrarFormularioEstandarNivel = true;
@@ -565,7 +809,7 @@ export class TmiIndicadores implements OnInit {
     this.savingEstandarNivel = true;
     this.errorEstandarNivelForm = '';
 
-    const dto = this.payloadFormulario(this.estandarNivelForm);
+    const dto = this.payloadEstandarAnual(this.estandarNivelForm, 'nivel_centro');
     const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandarNivel(dto) : this.tmiIndicadoresService.postQueryEstandarNivel(dto);
     peticion.subscribe({
       next: () => {
@@ -602,9 +846,7 @@ export class TmiIndicadores implements OnInit {
       check(row.estandar_09, this.filtersEstandarNivel.estandar_09) &&
       check(row.estandar_10, this.filtersEstandarNivel.estandar_10) &&
       check(row.estandar_11, this.filtersEstandarNivel.estandar_11) &&
-      check(row.estandar_12, this.filtersEstandarNivel.estandar_12) &&
-      check(row.acept, this.filtersEstandarNivel.acept) &&
-      check(row.aceptmenos, this.filtersEstandarNivel.aceptmenos)
+      check(row.estandar_12, this.filtersEstandarNivel.estandar_12)
     );
   }
 
@@ -613,7 +855,7 @@ export class TmiIndicadores implements OnInit {
     this.loadingEstandarCategoria = true;
     this.errorEstandarCategoria = '';
 
-    this.tmiIndicadoresService.getQueryEstandarCategoria(this.periodoEstandarCategoria).subscribe({
+    this.tmiIndicadoresService.getQueryEstandarCategoria(this.anioEstandarCategoria).subscribe({
       next: (res: any) => {
         this.dataEstandarCategoria = res || [];
         this.dataEstandarCategoriaFilter = res || [];
@@ -633,38 +875,60 @@ export class TmiIndicadores implements OnInit {
     });
   }
 
-  // nueva fila en el periodo consultado
+  // nueva fila en el año consultado
   iniciarAltaEstandarCategoria(): void {
-    if (!this.puedeAgregarFilas(this.periodoEstandarCategoria, this.dataEstandarCategoriaFilter)) return;
+    if (!this.listaEstandares.length) this.getQueryEstandar();
     if (!this.estandarCategoriaForm) this.reactiveForm();
-    this.estandarCategoriaForm.reset();
-    this.estandarCategoriaForm.patchValue({ id: '', ...this.camposPeriodo(this.periodoEstandarCategoria) });
+    this.estandarCategoriaForm.reset({
+      id: null,
+      id_estandar: null,
+      categoria_centro: '',
+      anio: Number(this.anioEstandarCategoria),
+      estandar_01: 0,
+      estandar_02: 0,
+      estandar_03: 0,
+      estandar_04: 0,
+      estandar_05: 0,
+      estandar_06: 0,
+      estandar_07: 0,
+      estandar_08: 0,
+      estandar_09: 0,
+      estandar_10: 0,
+      estandar_11: 0,
+      estandar_12: 0
+    });
     this.errorEstandarCategoriaForm = '';
     this.mostrarFormularioEstandarCategoria = true;
     this.cdr.markForCheck();
   }
 
   eliminarEstandarCategoria(row: any): void {
-    if (!this.puedeEliminarFila(row, this.dataEstandarCategoriaFilter)) return;
-    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.indicador}) del periodo ${this.nombrePeriodo(row.periodo)}? Esta acción no se puede deshacer.`)) return;
+    if (this.eliminandoId !== null) return;
+    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.tipo} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
     this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandarCategoria(row.id), () => this.getQueryEstandarCategoria());
   }
 
   iniciarEdicionEstandarCategoria(row: any): void {
-    if (!this.esPeriodoEditable(row.periodo)) return;
+    if (!this.listaEstandares.length) this.getQueryEstandar();
     if (!this.estandarCategoriaForm) this.reactiveForm();
     this.estandarCategoriaForm.reset();
     this.estandarCategoriaForm.patchValue({
-      id: row.id ?? '',
-      tipo: row.tipo ?? '',
-      indicador: row.indicador ?? '',
+      id: row.id ?? null,
+      id_estandar: this.resolverIdEstandar(row),
       categoria_centro: row.categoria_centro ?? '',
-      anio: row.anio ?? '',
-      mes: row.mes ?? '',
-      periodo: row.periodo ?? this.periodoEstandarCategoria,
-      estandar: row.estandar ?? '',
-      acept: row.acept ?? '',
-      aceptmenos: row.aceptmenos ?? ''
+      anio: row.anio ?? Number(this.anioEstandarCategoria),
+      estandar_01: row.estandar_01 ?? 0,
+      estandar_02: row.estandar_02 ?? 0,
+      estandar_03: row.estandar_03 ?? 0,
+      estandar_04: row.estandar_04 ?? 0,
+      estandar_05: row.estandar_05 ?? 0,
+      estandar_06: row.estandar_06 ?? 0,
+      estandar_07: row.estandar_07 ?? 0,
+      estandar_08: row.estandar_08 ?? 0,
+      estandar_09: row.estandar_09 ?? 0,
+      estandar_10: row.estandar_10 ?? 0,
+      estandar_11: row.estandar_11 ?? 0,
+      estandar_12: row.estandar_12 ?? 0
     });
     this.errorEstandarCategoriaForm = '';
     this.mostrarFormularioEstandarCategoria = true;
@@ -687,7 +951,7 @@ export class TmiIndicadores implements OnInit {
     this.savingEstandarCategoria = true;
     this.errorEstandarCategoriaForm = '';
 
-    const dto = this.payloadFormulario(this.estandarCategoriaForm);
+    const dto = this.payloadEstandarAnual(this.estandarCategoriaForm, 'categoria_centro');
     const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandarCategoria(dto) : this.tmiIndicadoresService.postQueryEstandarCategoria(dto);
     peticion.subscribe({
       next: () => {
@@ -733,7 +997,7 @@ export class TmiIndicadores implements OnInit {
     this.loadingCentrosTMI = true;
     this.errorCentrosTMI = '';
 
-    this.tmiIndicadoresService.getQueryCentrosTMI(this.periodoCentrosTMI).subscribe({
+    this.tmiIndicadoresService.getQueryCentrosTMI(this.anioCentrosTMI).subscribe({
       next: (res: any) => {
         this.dataCentrosTMI = res || [];
         this.dataCentrosTMIFilter = res || [];
@@ -754,42 +1018,70 @@ export class TmiIndicadores implements OnInit {
     });
   }
 
-  // nueva fila en el periodo consultado
+  // nueva fila en el año consultado
   iniciarAltaCentro(): void {
-    if (!this.puedeAgregarFilas(this.periodoCentrosTMI, this.dataCentrosTMIFilter)) return;
     if (!this.centrosForm) this.reactiveForm();
-    this.centrosForm.reset();
-    this.centrosForm.patchValue({ id: '', ...this.camposPeriodo(this.periodoCentrosTMI) });
+    this.centrosForm.reset({
+      id: null,
+      red: '',
+      orden: '',
+      orden_tipo: '',
+      codcentro: '',
+      centro: '',
+      categoria: '',
+      nivel: '',
+      tipo: '',
+      anio: Number(this.anioCentrosTMI),
+      flag_01: true,
+      flag_02: true,
+      flag_03: true,
+      flag_04: true,
+      flag_05: true,
+      flag_06: true,
+      flag_07: true,
+      flag_08: true,
+      flag_09: true,
+      flag_10: true,
+      flag_11: true,
+      flag_12: true
+    });
     this.errorCentroForm = '';
     this.mostrarFormularioCentrosTMI = true;
     this.cdr.markForCheck();
   }
 
   eliminarCentro(row: any): void {
-    if (!this.puedeEliminarFila(row, this.dataCentrosTMIFilter)) return;
-    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.codcentro + ' - ' + row.centro}) del periodo ${this.nombrePeriodo(row.periodo)}? Esta acción no se puede deshacer.`)) return;
+    if (this.eliminandoId !== null) return;
+    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.codcentro} - ${row.centro}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
     this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryCentrosTMI(row.id), () => this.getQueryCentrosTMI());
   }
 
   iniciarEdicionCentro(row: any): void {
-    if (!this.esPeriodoEditable(row.periodo)) return;
     if (!this.centrosForm) this.reactiveForm();
     this.centrosForm.reset();
     this.centrosForm.patchValue({
-      id: row.id ?? '',
+      id: row.id ?? null,
       red: row.red ?? '',
-      codred: row.codred ?? '',
-      orden: row.orden ?? '',
-      orden_tipo: row.orden_tipo ?? '',
-      codcentro: row.codcentro ?? '',
-      categoria: row.categoria ?? '',
-      tipo: row.tipo ?? '',
-      nivel: row.nivel ?? '',
+      orden: String(row.orden ?? ''),
+      orden_tipo: String(row.orden_tipo ?? ''),
+      codcentro: String(row.codcentro ?? ''),
       centro: row.centro ?? '',
-      estado: row.estado ?? '',
-      anio: row.anio ?? '',
-      mes: row.mes ?? '',
-      periodo: row.periodo ?? this.periodoCentrosTMI
+      categoria: row.categoria ?? '',
+      nivel: row.nivel ?? '',
+      tipo: row.tipo ?? '',
+      anio: row.anio ?? Number(this.anioCentrosTMI),
+      flag_01: Boolean(row.flag_01),
+      flag_02: Boolean(row.flag_02),
+      flag_03: Boolean(row.flag_03),
+      flag_04: Boolean(row.flag_04),
+      flag_05: Boolean(row.flag_05),
+      flag_06: Boolean(row.flag_06),
+      flag_07: Boolean(row.flag_07),
+      flag_08: Boolean(row.flag_08),
+      flag_09: Boolean(row.flag_09),
+      flag_10: Boolean(row.flag_10),
+      flag_11: Boolean(row.flag_11),
+      flag_12: Boolean(row.flag_12)
     });
     this.errorCentroForm = '';
     this.mostrarFormularioCentrosTMI = true;
@@ -812,7 +1104,31 @@ export class TmiIndicadores implements OnInit {
     this.savingCentrosTMI = true;
     this.errorCentroForm = '';
 
-    const dto = this.payloadFormulario(this.centrosForm);
+    const valor = this.centrosForm.getRawValue();
+    const dto = {
+      id: valor.id ? Number(valor.id) : null,
+      red: String(valor.red ?? '').trim(),
+      orden: String(valor.orden ?? '').trim(),
+      orden_tipo: String(valor.orden_tipo ?? '').trim(),
+      codcentro: String(valor.codcentro ?? '').trim(),
+      centro: String(valor.centro ?? '').trim(),
+      categoria: valor.categoria ? String(valor.categoria).trim() : null,
+      nivel: String(valor.nivel ?? '').trim(),
+      tipo: String(valor.tipo ?? '').trim(),
+      anio: Number(valor.anio),
+      flag_01: Boolean(valor.flag_01),
+      flag_02: Boolean(valor.flag_02),
+      flag_03: Boolean(valor.flag_03),
+      flag_04: Boolean(valor.flag_04),
+      flag_05: Boolean(valor.flag_05),
+      flag_06: Boolean(valor.flag_06),
+      flag_07: Boolean(valor.flag_07),
+      flag_08: Boolean(valor.flag_08),
+      flag_09: Boolean(valor.flag_09),
+      flag_10: Boolean(valor.flag_10),
+      flag_11: Boolean(valor.flag_11),
+      flag_12: Boolean(valor.flag_12)
+    };
     const peticion = dto.id ? this.tmiIndicadoresService.putQueryCentrosTMI(dto) : this.tmiIndicadoresService.postQueryCentrosTMI(dto);
     peticion.subscribe({
       next: () => {
@@ -833,21 +1149,34 @@ export class TmiIndicadores implements OnInit {
     const filterValue = event.target.value.toLowerCase().trim();
     this.filtersCentrosTMI[column] = filterValue;
     const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
+    const checkFlag = (val: any, filter: string) => {
+      if (!filter) return true;
+      const etiqueta = val ? 'activo' : 'inactivo';
+      return etiqueta.includes(filter);
+    };
     this.dataCentrosTMI = this.dataCentrosTMIFilter.filter(row =>
       check(row.id, this.filtersCentrosTMI.id) &&
       check(row.red, this.filtersCentrosTMI.red) &&
-      check(row.codred, this.filtersCentrosTMI.codred) &&
       check(row.orden, this.filtersCentrosTMI.orden) &&
       check(row.orden_tipo, this.filtersCentrosTMI.orden_tipo) &&
       check(row.codcentro, this.filtersCentrosTMI.codcentro) &&
-      check(row.categoria, this.filtersCentrosTMI.categoria) &&
-      check(row.tipo, this.filtersCentrosTMI.tipo) &&
-      check(row.nivel, this.filtersCentrosTMI.nivel) &&
       check(row.centro, this.filtersCentrosTMI.centro) &&
-      check(row.estado, this.filtersCentrosTMI.estado) &&
+      check(row.categoria, this.filtersCentrosTMI.categoria) &&
+      check(row.nivel, this.filtersCentrosTMI.nivel) &&
+      check(row.tipo, this.filtersCentrosTMI.tipo) &&
       check(row.anio, this.filtersCentrosTMI.anio) &&
-      check(row.mes, this.filtersCentrosTMI.mes) &&
-      check(row.periodo, this.filtersCentrosTMI.periodo)
+      checkFlag(row.flag_01, this.filtersCentrosTMI.flag_01) &&
+      checkFlag(row.flag_02, this.filtersCentrosTMI.flag_02) &&
+      checkFlag(row.flag_03, this.filtersCentrosTMI.flag_03) &&
+      checkFlag(row.flag_04, this.filtersCentrosTMI.flag_04) &&
+      checkFlag(row.flag_05, this.filtersCentrosTMI.flag_05) &&
+      checkFlag(row.flag_06, this.filtersCentrosTMI.flag_06) &&
+      checkFlag(row.flag_07, this.filtersCentrosTMI.flag_07) &&
+      checkFlag(row.flag_08, this.filtersCentrosTMI.flag_08) &&
+      checkFlag(row.flag_09, this.filtersCentrosTMI.flag_09) &&
+      checkFlag(row.flag_10, this.filtersCentrosTMI.flag_10) &&
+      checkFlag(row.flag_11, this.filtersCentrosTMI.flag_11) &&
+      checkFlag(row.flag_12, this.filtersCentrosTMI.flag_12)
     );
   }
 
@@ -1194,6 +1523,7 @@ export class TmiIndicadores implements OnInit {
   setActiveTab(tab: TabType): void {
     this.activeTab = tab;
     this.errorEliminarFila = '';
+    if (tab === 'Estandares') this.getQueryEstandar();
     if (tab === 'Fecha Cierre') this.getQueryCierres();
     this.cdr.markForCheck();
   }

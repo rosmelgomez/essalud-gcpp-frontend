@@ -146,8 +146,8 @@
 }
 
 .grid-table {
-    width: max-content;
-    min-width: 100%;
+    width: 100%;
+    min-width: max-content;
 }
 
 .header-table,
@@ -231,12 +231,16 @@
 }
 
 .viewport-table {
-    width: max-content;
-    min-width: 100%;
+    width: 100%;
+    min-width: max-content;
     height: 460px;
     overflow-x: hidden;
     overflow-y: auto;
     background: var(--rpt-surface);
+}
+
+:host ::ng-deep .viewport-table .cdk-virtual-scroll-content-wrapper {
+    min-width: 100%;
 }
 
 .row-table {
@@ -496,6 +500,7 @@
 }
 
 .field-input input:hover:not([readonly]),
+.field-input select:hover,
 .field-input textarea:hover {
     border-color: #9fb2c5;
 }
@@ -509,6 +514,7 @@
 }
 
 .field-input input.ng-invalid.ng-touched,
+.field-input select.ng-invalid.ng-touched,
 .field-input textarea.ng-invalid.ng-touched {
     border-color: var(--rpt-danger);
 }
