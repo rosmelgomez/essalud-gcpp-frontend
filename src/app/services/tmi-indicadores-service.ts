@@ -11,7 +11,7 @@ export class TmiIndicadoresService {
 
   constructor(private http: HttpClient) { }
 
-  /// catalogo de estandares (tmi_estandar)
+  ///estandares 
   getQueryEstandar() {
     return this.http.get<any[]>(base_url + `/lista-estandar`);
   }
@@ -72,7 +72,6 @@ export class TmiIndicadoresService {
     return this.http.get<any[]>(base_url + `/lista-centros/${anio}`);
   }
 
-  /// update centro TMI
   putQueryCentrosTMI(dto: any) {
     return this.http.put(base_url + `/update-centro`, dto);
   }
@@ -83,7 +82,6 @@ export class TmiIndicadoresService {
     return this.http.delete(base_url + `/delete-centro/${id}`);
   }
 
-  /// cierre (fecha en que se generan centros y estándares del nuevo periodo)
   getQueryCierres() {
     return this.http.get<any[]>(base_url + `/cierre/lista`);
   }
@@ -198,16 +196,13 @@ export class TmiIndicadoresService {
     return this.http.get<any[]>(base_url + `/lista-qx-rendso/${periodo}`);
   }
 
-  /// Descarga del Excel TMI (todas las consultas de vistas, CE_Concent hacia abajo)
+  /// Descarga del Excel TMI
   getExcelTMI(periodo: string) {
     return this.http.get(base_url + `/generar-excel/${periodo}`, {
       responseType: 'blob',
       observe: 'response' as 'response',
     });
   }
-
-
-
 
 
 }
