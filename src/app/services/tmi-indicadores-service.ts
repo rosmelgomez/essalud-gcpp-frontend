@@ -68,7 +68,7 @@ export class TmiIndicadoresService {
   }
 
   /// centros TMI
-  getQueryCentrosTMI(anio?: string) {
+  getQueryCentrosTMI() {
     return this.http.get<any[]>(base_url + `/lista-centros`);
   }
 
