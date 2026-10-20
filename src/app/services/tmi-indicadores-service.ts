@@ -68,8 +68,8 @@ export class TmiIndicadoresService {
   }
 
   /// centros TMI
-  getQueryCentrosTMI(anio: string) {
-    return this.http.get<any[]>(base_url + `/lista-centros/${anio}`);
+  getQueryCentrosTMI(anio?: string) {
+    return this.http.get<any[]>(base_url + `/lista-centros`);
   }
 
   putQueryCentrosTMI(dto: any) {
@@ -80,6 +80,20 @@ export class TmiIndicadoresService {
   }
   deleteQueryCentrosTMI(id: number) {
     return this.http.delete(base_url + `/delete-centro/${id}`);
+  }
+
+  /// exclusion centro estandar
+  getQueryExclusionCentroEstandar(anio: string) {
+    return this.http.get<any[]>(base_url + `/lista-exclusion-centro-estandar/${anio}`);
+  }
+  putQueryExclusionCentroEstandar(dto: any) {
+    return this.http.put(base_url + `/update-exclusion-centro-estandar`, dto);
+  }
+  postQueryExclusionCentroEstandar(dto: any) {
+    return this.http.post(base_url + `/create-exclusion-centro-estandar`, dto);
+  }
+  deleteQueryExclusionCentroEstandar(id: number) {
+    return this.http.delete(base_url + `/delete-exclusion-centro-estandar/${id}`);
   }
 
   getQueryCierres() {

@@ -28,6 +28,10 @@
         <button class="tab-button" [class.active]="activeTab === 'Centros TMI'" (click)="setActiveTab('Centros TMI')">
             Centros TMI
         </button>
+        <button class="tab-button" [class.active]="activeTab === 'Exclusion Centro Estandar'"
+            (click)="setActiveTab('Exclusion Centro Estandar')">
+            Exclusión Centro Estándar
+        </button>
         <button class="tab-button" [class.active]="activeTab === 'Fecha Cierre'" (click)="setActiveTab('Fecha Cierre')">
             Fecha de Cierre
         </button>
@@ -964,18 +968,9 @@
             <h2 class="bar-title">Tabla de Centros Asistenciales TMI</h2>
             <div class="header-actions">
                 <div class="buscar-group">
-                    <select [(ngModel)]="anioCentrosTMI" class="anio-select">
-                        <option value="">Seleccione un Año</option>
-                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
-                    </select>
-                    <button (click)="onBuscarCentrosTMI()" class="btn-search">Buscar</button>
+                    <button (click)="getQueryCentrosTMI()" class="btn-search">Actualizar</button>
                 </div>
             </div>
-        </div>
-
-        <!-- Selecciona Año -->
-        <div *ngIf="selectPeriodoCentrosTMI && !loadingCentrosTMI" class="select-periodo">
-            <p>Por favor, seleccione un año y haga clic en Buscar para ver la información de Centros TMI</p>
         </div>
 
         <div *ngIf="loadingCentrosTMI" class="loading">
@@ -986,14 +981,14 @@
             {{ errorCentrosTMI }}
         </div>
 
-        <div *ngIf="!loadingCentrosTMI && !errorCentrosTMI && !selectPeriodoCentrosTMI" class="dashboard-content">
+        <div *ngIf="!loadingCentrosTMI && !errorCentrosTMI" class="dashboard-content">
             <mat-card class="table"
-                style="--cols-table: minmax(55px, 0.5fr) minmax(130px, 1.3fr) minmax(65px, 0.6fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr) minmax(180px, 2fr) minmax(85px, 0.8fr) minmax(70px, 0.7fr) minmax(90px, 0.8fr) minmax(60px, 0.5fr) repeat(12, minmax(90px, 0.75fr)) minmax(80px, 0.7fr);">
+                style="--cols-table: minmax(55px, 0.5fr) minmax(160px, 1.5fr) minmax(65px, 0.6fr) minmax(90px, 0.8fr) minmax(95px, 0.8fr) minmax(200px, 2fr) minmax(90px, 0.8fr) minmax(75px, 0.7fr) minmax(95px, 0.8fr) minmax(95px, 0.8fr) minmax(85px, 0.7fr);">
                 <div class="table-title-row">
                     <h3>Detalle de Centros TMI</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaCentro()"
                         title="Agregar nuevo centro TMI">
-                        <mat-icon>add</mat-icon> Agregar fila
+                        <mat-icon>add</mat-icon> Agregar centro
                     </button>
                 </div>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
@@ -1009,19 +1004,7 @@
                             <div class="cell categoria">CATEGORIA</div>
                             <div class="cell nivel">NIVEL</div>
                             <div class="cell tipo">TIPO</div>
-                            <div class="cell anio">AÑO</div>
-                            <div class="cell flag_01">ENERO</div>
-                            <div class="cell flag_02">FEBRERO</div>
-                            <div class="cell flag_03">MARZO</div>
-                            <div class="cell flag_04">ABRIL</div>
-                            <div class="cell flag_05">MAYO</div>
-                            <div class="cell flag_06">JUNIO</div>
-                            <div class="cell flag_07">JULIO</div>
-                            <div class="cell flag_08">AGOSTO</div>
-                            <div class="cell flag_09">SEPTIEMBRE</div>
-                            <div class="cell flag_10">OCTUBRE</div>
-                            <div class="cell flag_11">NOVIEMBRE</div>
-                            <div class="cell flag_12">DICIEMBRE</div>
+                            <div class="cell flag">FLAG</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
@@ -1044,32 +1027,8 @@
                                 (keyup)="filterDataCentrosTMI('nivel', $event)" />
                             <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
                                 (keyup)="filterDataCentrosTMI('tipo', $event)" />
-                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
-                                (keyup)="filterDataCentrosTMI('anio', $event)" />
-                            <input type="text" class="filter-input cell flag_01" placeholder="Buscar enero..."
-                                (keyup)="filterDataCentrosTMI('flag_01', $event)" />
-                            <input type="text" class="filter-input cell flag_02" placeholder="Buscar febrero..."
-                                (keyup)="filterDataCentrosTMI('flag_02', $event)" />
-                            <input type="text" class="filter-input cell flag_03" placeholder="Buscar marzo..."
-                                (keyup)="filterDataCentrosTMI('flag_03', $event)" />
-                            <input type="text" class="filter-input cell flag_04" placeholder="Buscar abril..."
-                                (keyup)="filterDataCentrosTMI('flag_04', $event)" />
-                            <input type="text" class="filter-input cell flag_05" placeholder="Buscar mayo..."
-                                (keyup)="filterDataCentrosTMI('flag_05', $event)" />
-                            <input type="text" class="filter-input cell flag_06" placeholder="Buscar junio..."
-                                (keyup)="filterDataCentrosTMI('flag_06', $event)" />
-                            <input type="text" class="filter-input cell flag_07" placeholder="Buscar julio..."
-                                (keyup)="filterDataCentrosTMI('flag_07', $event)" />
-                            <input type="text" class="filter-input cell flag_08" placeholder="Buscar agosto..."
-                                (keyup)="filterDataCentrosTMI('flag_08', $event)" />
-                            <input type="text" class="filter-input cell flag_09" placeholder="Buscar septiembre..."
-                                (keyup)="filterDataCentrosTMI('flag_09', $event)" />
-                            <input type="text" class="filter-input cell flag_10" placeholder="Buscar octubre..."
-                                (keyup)="filterDataCentrosTMI('flag_10', $event)" />
-                            <input type="text" class="filter-input cell flag_11" placeholder="Buscar noviembre..."
-                                (keyup)="filterDataCentrosTMI('flag_11', $event)" />
-                            <input type="text" class="filter-input cell flag_12" placeholder="Buscar diciembre..."
-                                (keyup)="filterDataCentrosTMI('flag_12', $event)" />
+                            <input type="text" class="filter-input cell flag" placeholder="Buscar flag..."
+                                (keyup)="filterDataCentrosTMI('flag', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
@@ -1084,19 +1043,7 @@
                                 <div class="cell categoria">{{ row.categoria ?? '—' }}</div>
                                 <div class="cell nivel">{{ row.nivel ?? '—' }}</div>
                                 <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
-                                <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell flag_01">{{ row.flag_01 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_02">{{ row.flag_02 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_03">{{ row.flag_03 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_04">{{ row.flag_04 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_05">{{ row.flag_05 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_06">{{ row.flag_06 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_07">{{ row.flag_07 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_08">{{ row.flag_08 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_09">{{ row.flag_09 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_10">{{ row.flag_10 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_11">{{ row.flag_11 ? 'Activo' : 'Inactivo' }}</div>
-                                <div class="cell flag_12">{{ row.flag_12 ? 'Activo' : 'Inactivo' }}</div>
+                                <div class="cell flag">{{ row.flag ? 'Activo' : 'Inactivo' }}</div>
                                 <div class="cell acciones">
                                     <button type="button" class="btn-icon-edit" (click)="iniciarEdicionCentro(row)"
                                         title="Editar centro">
@@ -1131,7 +1078,7 @@
                             Edición del registro ID: {{ centrosForm.get('id')?.value }}
                         </p>
                         <p class="modal-subtitle" *ngIf="!centrosForm.get('id')?.value">
-                            Nuevo centro TMI para el año {{ centrosForm.get('anio')?.value }}
+                            Nuevo centro en el catálogo TMI
                         </p>
                     </div>
                     <button type="button" class="close-modal-btn" (click)="cancelarEdicionCentro()"
@@ -1188,91 +1135,8 @@
                             </div>
 
                             <div class="field-input">
-                                <label for="centro_anio">Año <span class="required">*</span></label>
-                                <input type="number" id="centro_anio" formControlName="anio" readonly
-                                    placeholder="Ej. 2026" />
-                            </div>
-
-                            <div class="field-input">
-                                <label for="centro_flag_01">Enero</label>
-                                <select id="centro_flag_01" formControlName="flag_01">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_02">Febrero</label>
-                                <select id="centro_flag_02" formControlName="flag_02">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_03">Marzo</label>
-                                <select id="centro_flag_03" formControlName="flag_03">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_04">Abril</label>
-                                <select id="centro_flag_04" formControlName="flag_04">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_05">Mayo</label>
-                                <select id="centro_flag_05" formControlName="flag_05">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_06">Junio</label>
-                                <select id="centro_flag_06" formControlName="flag_06">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_07">Julio</label>
-                                <select id="centro_flag_07" formControlName="flag_07">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_08">Agosto</label>
-                                <select id="centro_flag_08" formControlName="flag_08">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_09">Septiembre</label>
-                                <select id="centro_flag_09" formControlName="flag_09">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_10">Octubre</label>
-                                <select id="centro_flag_10" formControlName="flag_10">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_11">Noviembre</label>
-                                <select id="centro_flag_11" formControlName="flag_11">
-                                    <option [ngValue]="true">Activo</option>
-                                    <option [ngValue]="false">Inactivo</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="centro_flag_12">Diciembre</label>
-                                <select id="centro_flag_12" formControlName="flag_12">
+                                <label for="centro_flag">Estado (Flag)</label>
+                                <select id="centro_flag" formControlName="flag">
                                     <option [ngValue]="true">Activo</option>
                                     <option [ngValue]="false">Inactivo</option>
                                 </select>
@@ -1289,9 +1153,304 @@
                             [disabled]="savingCentrosTMI">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingCentrosTMI">
                             <mat-icon *ngIf="!savingCentrosTMI">save</mat-icon><span *ngIf="!savingCentrosTMI">{{
-                                centrosForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
+                                centrosForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Centro' }}</span>
                             <span *ngIf="savingCentrosTMI" class="spinner-btn"></span><span
                                 *ngIf="savingCentrosTMI">Guardando…</span>
+                        </button>
+                    </footer>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- tap 5: exclusion_centro_estandar -->
+    <div class="tab-content" *ngIf="activeTab === 'Exclusion Centro Estandar'">
+        <div class="header">
+            <h2 class="bar-title">Exclusión de Centros y Estándares TMI</h2>
+            <div class="header-actions">
+                <div class="buscar-group">
+                    <select [(ngModel)]="anioExclusion" class="anio-select">
+                        <option value="">Seleccione un Año</option>
+                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
+                    </select>
+                    <button (click)="onBuscarExclusion()" class="btn-search">Buscar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selecciona Año -->
+        <div *ngIf="selectPeriodoExclusion && !loadingExclusion" class="select-periodo">
+            <p>Por favor, seleccione un año y haga clic en Buscar para ver las exclusiones de centros y estándares</p>
+        </div>
+
+        <div *ngIf="loadingExclusion" class="loading">
+            <p>Cargando exclusiones de centros y estándares...</p>
+        </div>
+
+        <div *ngIf="errorExclusion" class="alert alert-danger">
+            {{ errorExclusion }}
+        </div>
+
+        <div *ngIf="!loadingExclusion && !errorExclusion && !selectPeriodoExclusion" class="dashboard-content">
+            <mat-card class="table"
+                style="--cols-table: minmax(90px, 0.8fr) minmax(180px, 1.8fr) minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(60px, 0.5fr) repeat(12, minmax(95px, 0.8fr)) minmax(80px, 0.65fr);">
+                <div class="table-title-row">
+                    <h3>Detalle de Exclusiones por Centro y Estándar</h3>
+                    <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaExclusion()"
+                        title="Agregar nueva exclusión">
+                        <mat-icon>add</mat-icon> Agregar exclusión
+                    </button>
+                </div>
+                <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
+                <div class="wrapper-table">
+                    <div class="grid-table">
+                        <div class="header-table">
+                            <div class="cell codcentro">CODCENTRO</div>
+                            <div class="cell centro">CENTRO</div>
+                            <div class="cell tipo">TIPO</div>
+                            <div class="cell indicador">INDICADOR</div>
+                            <div class="cell anio">AÑO</div>
+                            <div class="cell excl_01">ENERO</div>
+                            <div class="cell excl_02">FEBRERO</div>
+                            <div class="cell excl_03">MARZO</div>
+                            <div class="cell excl_04">ABRIL</div>
+                            <div class="cell excl_05">MAYO</div>
+                            <div class="cell excl_06">JUNIO</div>
+                            <div class="cell excl_07">JULIO</div>
+                            <div class="cell excl_08">AGOSTO</div>
+                            <div class="cell excl_09">SEPTIEMBRE</div>
+                            <div class="cell excl_10">OCTUBRE</div>
+                            <div class="cell excl_11">NOVIEMBRE</div>
+                            <div class="cell excl_12">DICIEMBRE</div>
+                            <div class="cell acciones">ACCIONES</div>
+                        </div>
+
+                        <div class="filters-table">
+                            <input type="text" class="filter-input cell codcentro" placeholder="Buscar codcentro..."
+                                (keyup)="filterDataExclusion('codcentro', $event)" />
+                            <input type="text" class="filter-input cell centro" placeholder="Buscar centro..."
+                                (keyup)="filterDataExclusion('centro', $event)" />
+                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
+                                (keyup)="filterDataExclusion('tipo', $event)" />
+                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
+                                (keyup)="filterDataExclusion('indicador', $event)" />
+                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
+                                (keyup)="filterDataExclusion('anio', $event)" />
+                            <input type="text" class="filter-input cell excl_01" placeholder="Buscar enero..."
+                                (keyup)="filterDataExclusion('excl_01', $event)" />
+                            <input type="text" class="filter-input cell excl_02" placeholder="Buscar febrero..."
+                                (keyup)="filterDataExclusion('excl_02', $event)" />
+                            <input type="text" class="filter-input cell excl_03" placeholder="Buscar marzo..."
+                                (keyup)="filterDataExclusion('excl_03', $event)" />
+                            <input type="text" class="filter-input cell excl_04" placeholder="Buscar abril..."
+                                (keyup)="filterDataExclusion('excl_04', $event)" />
+                            <input type="text" class="filter-input cell excl_05" placeholder="Buscar mayo..."
+                                (keyup)="filterDataExclusion('excl_05', $event)" />
+                            <input type="text" class="filter-input cell excl_06" placeholder="Buscar junio..."
+                                (keyup)="filterDataExclusion('excl_06', $event)" />
+                            <input type="text" class="filter-input cell excl_07" placeholder="Buscar julio..."
+                                (keyup)="filterDataExclusion('excl_07', $event)" />
+                            <input type="text" class="filter-input cell excl_08" placeholder="Buscar agosto..."
+                                (keyup)="filterDataExclusion('excl_08', $event)" />
+                            <input type="text" class="filter-input cell excl_09" placeholder="Buscar septiembre..."
+                                (keyup)="filterDataExclusion('excl_09', $event)" />
+                            <input type="text" class="filter-input cell excl_10" placeholder="Buscar octubre..."
+                                (keyup)="filterDataExclusion('excl_10', $event)" />
+                            <input type="text" class="filter-input cell excl_11" placeholder="Buscar noviembre..."
+                                (keyup)="filterDataExclusion('excl_11', $event)" />
+                            <input type="text" class="filter-input cell excl_12" placeholder="Buscar diciembre..."
+                                (keyup)="filterDataExclusion('excl_12', $event)" />
+                            <div class="cell acciones"></div>
+                        </div>
+
+                        <cdk-virtual-scroll-viewport #viewportExclusion class="viewport-table" [itemSize]="44">
+                            <div *cdkVirtualFor="let row of dataExclusion" class="row-table">
+                                <div class="cell codcentro">{{ row.codcentro ?? '—' }}</div>
+                                <div class="cell centro">{{ row.centro ?? '—' }}</div>
+                                <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
+                                <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
+                                <div class="cell anio">{{ row.anio ?? '—' }}</div>
+                                <div class="cell excl_01">{{ row.excl_01 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_02">{{ row.excl_02 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_03">{{ row.excl_03 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_04">{{ row.excl_04 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_05">{{ row.excl_05 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_06">{{ row.excl_06 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_07">{{ row.excl_07 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_08">{{ row.excl_08 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_09">{{ row.excl_09 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_10">{{ row.excl_10 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_11">{{ row.excl_11 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell excl_12">{{ row.excl_12 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell acciones">
+                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionExclusion(row)"
+                                        title="Editar exclusión">
+                                        <mat-icon>edit</mat-icon>
+                                    </button>
+                                    <button type="button" class="btn-icon-delete" (click)="eliminarExclusion(row)"
+                                        [disabled]="eliminandoId === row.id"
+                                        title="Eliminar exclusión">
+                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </cdk-virtual-scroll-viewport>
+                    </div>
+                </div>
+
+                <div class="footer-table">
+                    <div class="footer-left"><strong>Total de filas:</strong></div>
+                    <div class="footer-right num"><strong>{{ dataExclusion.length }}</strong></div>
+                </div>
+            </mat-card>
+        </div>
+
+        <!-- MODAL EDITAR / CREAR EXCLUSIÓN CENTRO ESTÁNDAR -->
+        <div class="modal-overlay" *ngIf="mostrarFormularioExclusion" (click)="cancelarEdicionExclusion()">
+            <div class="modal-card" (click)="$event.stopPropagation()">
+                <header class="modal-header">
+                    <div class="modal-header-info">
+                        <h2>Formulario de Exclusión Centro Estándar</h2>
+                        <p class="modal-subtitle" *ngIf="exclusionForm.get('id')?.value">
+                            Edición del registro ID: {{ exclusionForm.get('id')?.value }}
+                        </p>
+                        <p class="modal-subtitle" *ngIf="!exclusionForm.get('id')?.value">
+                            Nueva exclusión de centro y estándar para el año {{ exclusionForm.get('anio')?.value }}
+                        </p>
+                    </div>
+                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionExclusion()"
+                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
+                </header>
+
+                <form [formGroup]="exclusionForm" (ngSubmit)="updateQueryExclusion()" class="modal-form-container">
+                    <div class="modal-body">
+                        <div class="form-grid">
+                            <input type="hidden" formControlName="id" />
+
+                            <div class="field-input full-width">
+                                <label for="exc_id_centro">Centro Asistencial <span class="required">*</span></label>
+                                <select id="exc_id_centro" formControlName="id_centro">
+                                    <option [ngValue]="null" disabled>Seleccione un centro...</option>
+                                    <option *ngFor="let cen of listaCentros" [ngValue]="cen.id">
+                                        {{ cen.codcentro }} - {{ cen.centro }} ({{ cen.red }})
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="field-input full-width">
+                                <label for="exc_id_estandar">Estándar (Tipo - Indicador) <span class="required">*</span></label>
+                                <select id="exc_id_estandar" formControlName="id_estandar">
+                                    <option [ngValue]="null" disabled>Seleccione un estándar...</option>
+                                    <option *ngFor="let est of listaEstandares" [ngValue]="est.id">
+                                        {{ est.tipo }} - {{ est.indicador }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="field-input">
+                                <label for="exc_anio">Año <span class="required">*</span></label>
+                                <input type="number" id="exc_anio" formControlName="anio" readonly placeholder="Año" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="exc_01">Enero</label>
+                                <select id="exc_01" formControlName="excl_01">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_02">Febrero</label>
+                                <select id="exc_02" formControlName="excl_02">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_03">Marzo</label>
+                                <select id="exc_03" formControlName="excl_03">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_04">Abril</label>
+                                <select id="exc_04" formControlName="excl_04">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_05">Mayo</label>
+                                <select id="exc_05" formControlName="excl_05">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_06">Junio</label>
+                                <select id="exc_06" formControlName="excl_06">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_07">Julio</label>
+                                <select id="exc_07" formControlName="excl_07">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_08">Agosto</label>
+                                <select id="exc_08" formControlName="excl_08">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_09">Septiembre</label>
+                                <select id="exc_09" formControlName="excl_09">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_10">Octubre</label>
+                                <select id="exc_10" formControlName="excl_10">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_11">Noviembre</label>
+                                <select id="exc_11" formControlName="excl_11">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_12">Diciembre</label>
+                                <select id="exc_12" formControlName="excl_12">
+                                    <option [ngValue]="false">No excluido</option>
+                                    <option [ngValue]="true">Excluido</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="validation-message-banner" *ngIf="errorExclusionForm">
+                            <mat-icon>error_outline</mat-icon><span>{{ errorExclusionForm }}</span>
+                        </div>
+                    </div>
+
+                    <footer class="modal-footer">
+                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionExclusion()"
+                            [disabled]="savingExclusion">Cancelar</button>
+                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingExclusion">
+                            <mat-icon *ngIf="!savingExclusion">save</mat-icon><span *ngIf="!savingExclusion">{{
+                                exclusionForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Exclusión' }}</span>
+                            <span *ngIf="savingExclusion" class="spinner-btn"></span><span
+                                *ngIf="savingExclusion">Guardando…</span>
                         </button>
                     </footer>
                 </form>

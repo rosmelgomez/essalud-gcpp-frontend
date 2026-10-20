@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { FechaActualizacionService } from '../../services/fecha-actualizacion-service';
 import { forkJoin, Observable } from 'rxjs';
 
-export type TabType = 'Estandares' | 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Fecha Cierre';
+export type TabType = 'Estandares' | 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre';
 
 @Component({
   selector: 'app-tmi-indicadores',
@@ -37,6 +37,7 @@ export class TmiIndicadores implements OnInit {
   @ViewChild('viewportNivel') viewportNivel?: CdkVirtualScrollViewport;
   @ViewChild('viewportCategoria') viewportCategoria?: CdkVirtualScrollViewport;
   @ViewChild('viewportCentros') viewportCentros?: CdkVirtualScrollViewport;
+  @ViewChild('viewportExclusion') viewportExclusion?: CdkVirtualScrollViewport;
 
   currentDate: string = '';
 
@@ -104,13 +105,18 @@ export class TmiIndicadores implements OnInit {
   }
 
   onBuscarCentrosTMI(): void {
-    if (!this.anioCentrosTMI) {
-      this.errorCentrosTMI = 'Por favor seleccione un año válido.';
+    this.selectPeriodoCentrosTMI = false;
+    this.getQueryCentrosTMI();
+  }
+
+  onBuscarExclusion(): void {
+    if (!this.anioExclusion) {
+      this.errorExclusion = 'Por favor seleccione un año válido.';
       return;
     }
-    this.selectPeriodoCentrosTMI = false;
-    this.periodoCentrosTMI = `${this.anioCentrosTMI}${this.mesCentrosTMI}`;
-    this.getQueryCentrosTMI();
+    this.selectPeriodoExclusion = false;
+    this.periodoExclusion = `${this.anioExclusion}${this.mesExclusion}`;
+    this.getQueryExclusion();
   }
 
 
@@ -243,12 +249,13 @@ export class TmiIndicadores implements OnInit {
   };
 
   // tmi_centro
+  public listaCentros: any[] = [];
   public dataCentrosTMI: any[] = [];
   public dataCentrosTMIFilter: any[] = [];
   anioCentrosTMI: string = '';
   mesCentrosTMI: string = '';
   periodoCentrosTMI: string = '';
-  selectPeriodoCentrosTMI: boolean = true;
+  selectPeriodoCentrosTMI: boolean = false;
   public loadingCentrosTMI: boolean = false;
   public errorCentrosTMI: string = '';
   public mostrarFormularioCentrosTMI: boolean = false;
@@ -266,19 +273,43 @@ export class TmiIndicadores implements OnInit {
     categoria: "",
     nivel: "",
     tipo: "",
+    flag: ""
+  };
+
+  // exclusion_centro_estandar
+  public dataExclusion: any[] = [];
+  public dataExclusionFilter: any[] = [];
+  anioExclusion: string = '';
+  mesExclusion: string = '';
+  periodoExclusion: string = '';
+  selectPeriodoExclusion: boolean = true;
+  public loadingExclusion: boolean = false;
+  public errorExclusion: string = '';
+  public mostrarFormularioExclusion: boolean = false;
+  public savingExclusion: boolean = false;
+  public errorExclusionForm: string = '';
+  public exclusionForm!: FormGroup;
+
+  filtersExclusion = {
+    id: "",
+    red: "",
+    codcentro: "",
+    centro: "",
+    tipo: "",
+    indicador: "",
     anio: "",
-    flag_01: "",
-    flag_02: "",
-    flag_03: "",
-    flag_04: "",
-    flag_05: "",
-    flag_06: "",
-    flag_07: "",
-    flag_08: "",
-    flag_09: "",
-    flag_10: "",
-    flag_11: "",
-    flag_12: ""
+    excl_01: "",
+    excl_02: "",
+    excl_03: "",
+    excl_04: "",
+    excl_05: "",
+    excl_06: "",
+    excl_07: "",
+    excl_08: "",
+    excl_09: "",
+    excl_10: "",
+    excl_11: "",
+    excl_12: ""
   };
 
   constructor(
@@ -312,6 +343,10 @@ export class TmiIndicadores implements OnInit {
     this.mesCentrosTMI = mesDefecto;
     this.periodoCentrosTMI = `${anioDefecto}${mesDefecto}`;
 
+    this.anioExclusion = anioDefecto;
+    this.mesExclusion = mesDefecto;
+    this.periodoExclusion = `${anioDefecto}${mesDefecto}`;
+
     // Excel TMI: último periodo cerrado
     this.anioExcelTMI = anioDefecto;
     this.mesExcelTMI = mesDefecto;
@@ -319,6 +354,7 @@ export class TmiIndicadores implements OnInit {
 
     this.reactiveForm();
     this.getQueryEstandar();
+    this.getQueryCentrosTMI();
   }
 
   // tmi_estandar
@@ -518,19 +554,27 @@ export class TmiIndicadores implements OnInit {
       categoria: ['', []],
       nivel: ['', [Validators.required]],
       tipo: ['', [Validators.required]],
+      flag: [true, []]
+    });
+
+    // Form 5: exclusion_centro_estandar
+    this.exclusionForm = this.formBuilder.group({
+      id: [null, []],
+      id_centro: [null, [Validators.required]],
+      id_estandar: [null, [Validators.required]],
       anio: [null, [Validators.required]],
-      flag_01: [true, []],
-      flag_02: [true, []],
-      flag_03: [true, []],
-      flag_04: [true, []],
-      flag_05: [true, []],
-      flag_06: [true, []],
-      flag_07: [true, []],
-      flag_08: [true, []],
-      flag_09: [true, []],
-      flag_10: [true, []],
-      flag_11: [true, []],
-      flag_12: [true, []]
+      excl_01: [false, []],
+      excl_02: [false, []],
+      excl_03: [false, []],
+      excl_04: [false, []],
+      excl_05: [false, []],
+      excl_06: [false, []],
+      excl_07: [false, []],
+      excl_08: [false, []],
+      excl_09: [false, []],
+      excl_10: [false, []],
+      excl_11: [false, []],
+      excl_12: [false, []]
     });
   }
 
@@ -997,13 +1041,13 @@ export class TmiIndicadores implements OnInit {
     this.loadingCentrosTMI = true;
     this.errorCentrosTMI = '';
 
-    this.tmiIndicadoresService.getQueryCentrosTMI(this.anioCentrosTMI).subscribe({
+    this.tmiIndicadoresService.getQueryCentrosTMI().subscribe({
       next: (res: any) => {
+        this.listaCentros = res || [];
         this.dataCentrosTMI = res || [];
         this.dataCentrosTMIFilter = res || [];
         this.loadingCentrosTMI = false;
         this.cdr.markForCheck();
-        this.getQuerysTmiConsultas();
         setTimeout(() => {
           this.viewportCentros?.checkViewportSize();
           this.cdr.markForCheck();
@@ -1018,7 +1062,7 @@ export class TmiIndicadores implements OnInit {
     });
   }
 
-  // nueva fila en el año consultado
+  // nuevo centro
   iniciarAltaCentro(): void {
     if (!this.centrosForm) this.reactiveForm();
     this.centrosForm.reset({
@@ -1031,19 +1075,7 @@ export class TmiIndicadores implements OnInit {
       categoria: '',
       nivel: '',
       tipo: '',
-      anio: Number(this.anioCentrosTMI),
-      flag_01: true,
-      flag_02: true,
-      flag_03: true,
-      flag_04: true,
-      flag_05: true,
-      flag_06: true,
-      flag_07: true,
-      flag_08: true,
-      flag_09: true,
-      flag_10: true,
-      flag_11: true,
-      flag_12: true
+      flag: true
     });
     this.errorCentroForm = '';
     this.mostrarFormularioCentrosTMI = true;
@@ -1052,7 +1084,7 @@ export class TmiIndicadores implements OnInit {
 
   eliminarCentro(row: any): void {
     if (this.eliminandoId !== null) return;
-    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.codcentro} - ${row.centro}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(`¿Eliminar el centro ID ${row.id} (${row.codcentro} - ${row.centro})? Esta acción no se puede deshacer.`)) return;
     this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryCentrosTMI(row.id), () => this.getQueryCentrosTMI());
   }
 
@@ -1069,19 +1101,7 @@ export class TmiIndicadores implements OnInit {
       categoria: row.categoria ?? '',
       nivel: row.nivel ?? '',
       tipo: row.tipo ?? '',
-      anio: row.anio ?? Number(this.anioCentrosTMI),
-      flag_01: Boolean(row.flag_01),
-      flag_02: Boolean(row.flag_02),
-      flag_03: Boolean(row.flag_03),
-      flag_04: Boolean(row.flag_04),
-      flag_05: Boolean(row.flag_05),
-      flag_06: Boolean(row.flag_06),
-      flag_07: Boolean(row.flag_07),
-      flag_08: Boolean(row.flag_08),
-      flag_09: Boolean(row.flag_09),
-      flag_10: Boolean(row.flag_10),
-      flag_11: Boolean(row.flag_11),
-      flag_12: Boolean(row.flag_12)
+      flag: row.flag !== undefined && row.flag !== null ? Boolean(row.flag) : true
     });
     this.errorCentroForm = '';
     this.mostrarFormularioCentrosTMI = true;
@@ -1115,19 +1135,7 @@ export class TmiIndicadores implements OnInit {
       categoria: valor.categoria ? String(valor.categoria).trim() : null,
       nivel: String(valor.nivel ?? '').trim(),
       tipo: String(valor.tipo ?? '').trim(),
-      anio: Number(valor.anio),
-      flag_01: Boolean(valor.flag_01),
-      flag_02: Boolean(valor.flag_02),
-      flag_03: Boolean(valor.flag_03),
-      flag_04: Boolean(valor.flag_04),
-      flag_05: Boolean(valor.flag_05),
-      flag_06: Boolean(valor.flag_06),
-      flag_07: Boolean(valor.flag_07),
-      flag_08: Boolean(valor.flag_08),
-      flag_09: Boolean(valor.flag_09),
-      flag_10: Boolean(valor.flag_10),
-      flag_11: Boolean(valor.flag_11),
-      flag_12: Boolean(valor.flag_12)
+      flag: Boolean(valor.flag)
     };
     const peticion = dto.id ? this.tmiIndicadoresService.putQueryCentrosTMI(dto) : this.tmiIndicadoresService.postQueryCentrosTMI(dto);
     peticion.subscribe({
@@ -1164,19 +1172,178 @@ export class TmiIndicadores implements OnInit {
       check(row.categoria, this.filtersCentrosTMI.categoria) &&
       check(row.nivel, this.filtersCentrosTMI.nivel) &&
       check(row.tipo, this.filtersCentrosTMI.tipo) &&
-      check(row.anio, this.filtersCentrosTMI.anio) &&
-      checkFlag(row.flag_01, this.filtersCentrosTMI.flag_01) &&
-      checkFlag(row.flag_02, this.filtersCentrosTMI.flag_02) &&
-      checkFlag(row.flag_03, this.filtersCentrosTMI.flag_03) &&
-      checkFlag(row.flag_04, this.filtersCentrosTMI.flag_04) &&
-      checkFlag(row.flag_05, this.filtersCentrosTMI.flag_05) &&
-      checkFlag(row.flag_06, this.filtersCentrosTMI.flag_06) &&
-      checkFlag(row.flag_07, this.filtersCentrosTMI.flag_07) &&
-      checkFlag(row.flag_08, this.filtersCentrosTMI.flag_08) &&
-      checkFlag(row.flag_09, this.filtersCentrosTMI.flag_09) &&
-      checkFlag(row.flag_10, this.filtersCentrosTMI.flag_10) &&
-      checkFlag(row.flag_11, this.filtersCentrosTMI.flag_11) &&
-      checkFlag(row.flag_12, this.filtersCentrosTMI.flag_12)
+      checkFlag(row.flag, this.filtersCentrosTMI.flag)
+    );
+  }
+
+  /// exclusion_centro_estandar
+  getQueryExclusion(): void {
+    this.loadingExclusion = true;
+    this.errorExclusion = '';
+
+    this.tmiIndicadoresService.getQueryExclusionCentroEstandar(this.anioExclusion).subscribe({
+      next: (res: any) => {
+        this.dataExclusion = res || [];
+        this.dataExclusionFilter = res || [];
+        this.loadingExclusion = false;
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.viewportExclusion?.checkViewportSize();
+          this.cdr.markForCheck();
+        }, 0);
+      },
+      error: (error: any) => {
+        console.error(error);
+        this.errorExclusion = 'Error al cargar las exclusiones de centros y estándares';
+        this.loadingExclusion = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  iniciarAltaExclusion(): void {
+    if (!this.listaEstandares.length) this.getQueryEstandar();
+    if (!this.listaCentros.length) this.getQueryCentrosTMI();
+    if (!this.exclusionForm) this.reactiveForm();
+    this.exclusionForm.reset({
+      id: null,
+      id_centro: null,
+      id_estandar: null,
+      anio: Number(this.anioExclusion),
+      excl_01: false,
+      excl_02: false,
+      excl_03: false,
+      excl_04: false,
+      excl_05: false,
+      excl_06: false,
+      excl_07: false,
+      excl_08: false,
+      excl_09: false,
+      excl_10: false,
+      excl_11: false,
+      excl_12: false
+    });
+    this.errorExclusionForm = '';
+    this.mostrarFormularioExclusion = true;
+    this.cdr.markForCheck();
+  }
+
+  iniciarEdicionExclusion(row: any): void {
+    if (!this.listaEstandares.length) this.getQueryEstandar();
+    if (!this.listaCentros.length) this.getQueryCentrosTMI();
+    if (!this.exclusionForm) this.reactiveForm();
+    this.exclusionForm.reset();
+    this.exclusionForm.patchValue({
+      id: row.id ?? null,
+      id_centro: row.id_centro != null ? Number(row.id_centro) : null,
+      id_estandar: this.resolverIdEstandar(row),
+      anio: row.anio ?? Number(this.anioExclusion),
+      excl_01: Boolean(row.excl_01),
+      excl_02: Boolean(row.excl_02),
+      excl_03: Boolean(row.excl_03),
+      excl_04: Boolean(row.excl_04),
+      excl_05: Boolean(row.excl_05),
+      excl_06: Boolean(row.excl_06),
+      excl_07: Boolean(row.excl_07),
+      excl_08: Boolean(row.excl_08),
+      excl_09: Boolean(row.excl_09),
+      excl_10: Boolean(row.excl_10),
+      excl_11: Boolean(row.excl_11),
+      excl_12: Boolean(row.excl_12)
+    });
+    this.errorExclusionForm = '';
+    this.mostrarFormularioExclusion = true;
+    this.cdr.markForCheck();
+  }
+
+  cancelarEdicionExclusion(): void {
+    this.mostrarFormularioExclusion = false;
+    this.errorExclusionForm = '';
+    this.savingExclusion = false;
+    this.cdr.markForCheck();
+  }
+
+  updateQueryExclusion(): void {
+    if (this.exclusionForm.invalid) {
+      this.exclusionForm.markAllAsTouched();
+      this.errorExclusionForm = 'Por favor, seleccione el centro, el estándar y el año.';
+      return;
+    }
+    this.savingExclusion = true;
+    this.errorExclusionForm = '';
+
+    const valor = this.exclusionForm.getRawValue();
+    const dto = {
+      id: valor.id ? Number(valor.id) : null,
+      id_centro: Number(valor.id_centro),
+      id_estandar: Number(valor.id_estandar),
+      anio: Number(valor.anio),
+      excl_01: Boolean(valor.excl_01),
+      excl_02: Boolean(valor.excl_02),
+      excl_03: Boolean(valor.excl_03),
+      excl_04: Boolean(valor.excl_04),
+      excl_05: Boolean(valor.excl_05),
+      excl_06: Boolean(valor.excl_06),
+      excl_07: Boolean(valor.excl_07),
+      excl_08: Boolean(valor.excl_08),
+      excl_09: Boolean(valor.excl_09),
+      excl_10: Boolean(valor.excl_10),
+      excl_11: Boolean(valor.excl_11),
+      excl_12: Boolean(valor.excl_12)
+    };
+    const peticion = dto.id
+      ? this.tmiIndicadoresService.putQueryExclusionCentroEstandar(dto)
+      : this.tmiIndicadoresService.postQueryExclusionCentroEstandar(dto);
+    peticion.subscribe({
+      next: () => {
+        this.savingExclusion = false;
+        this.mostrarFormularioExclusion = false;
+        this.getQueryExclusion();
+      },
+      error: (error: any) => {
+        console.error(error);
+        this.savingExclusion = false;
+        this.errorExclusionForm = typeof error === 'string' ? error : (error?.error?.detail || (dto.id ? 'Error al actualizar ' : 'Error al agregar ') + 'exclusión');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  eliminarExclusion(row: any): void {
+    if (this.eliminandoId !== null) return;
+    if (!confirm(`¿Eliminar la exclusión ID ${row.id} (${row.centro} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
+    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryExclusionCentroEstandar(row.id), () => this.getQueryExclusion());
+  }
+
+  filterDataExclusion(column: keyof typeof this.filtersExclusion, event: any): void {
+    const filterValue = event.target.value.toLowerCase().trim();
+    this.filtersExclusion[column] = filterValue;
+    const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
+    const checkExcl = (val: any, filter: string) => {
+      if (!filter) return true;
+      const etiqueta = val ? 'excluido' : 'no excluido';
+      return etiqueta.includes(filter);
+    };
+    this.dataExclusion = this.dataExclusionFilter.filter(row =>
+      check(row.id, this.filtersExclusion.id) &&
+      check(row.red, this.filtersExclusion.red) &&
+      check(row.codcentro, this.filtersExclusion.codcentro) &&
+      check(row.centro, this.filtersExclusion.centro) &&
+      check(row.tipo, this.filtersExclusion.tipo) &&
+      check(row.indicador, this.filtersExclusion.indicador) &&
+      check(row.anio, this.filtersExclusion.anio) &&
+      checkExcl(row.excl_01, this.filtersExclusion.excl_01) &&
+      checkExcl(row.excl_02, this.filtersExclusion.excl_02) &&
+      checkExcl(row.excl_03, this.filtersExclusion.excl_03) &&
+      checkExcl(row.excl_04, this.filtersExclusion.excl_04) &&
+      checkExcl(row.excl_05, this.filtersExclusion.excl_05) &&
+      checkExcl(row.excl_06, this.filtersExclusion.excl_06) &&
+      checkExcl(row.excl_07, this.filtersExclusion.excl_07) &&
+      checkExcl(row.excl_08, this.filtersExclusion.excl_08) &&
+      checkExcl(row.excl_09, this.filtersExclusion.excl_09) &&
+      checkExcl(row.excl_10, this.filtersExclusion.excl_10) &&
+      checkExcl(row.excl_11, this.filtersExclusion.excl_11) &&
+      checkExcl(row.excl_12, this.filtersExclusion.excl_12)
     );
   }
 
@@ -1524,6 +1691,7 @@ export class TmiIndicadores implements OnInit {
     this.activeTab = tab;
     this.errorEliminarFila = '';
     if (tab === 'Estandares') this.getQueryEstandar();
+    if (tab === 'Centros TMI') this.getQueryCentrosTMI();
     if (tab === 'Fecha Cierre') this.getQueryCierres();
     this.cdr.markForCheck();
   }
