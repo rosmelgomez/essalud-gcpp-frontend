@@ -213,7 +213,7 @@
 
         <div *ngIf="!loadingEstandarTipo && !errorEstandarTipo && !selectPeriodoEstandarTipo" class="dashboard-content">
             <mat-card class="table"
-                style="--cols-table: minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(95px, 0.85fr) minmax(60px, 0.5fr) repeat(12, minmax(88px, 0.75fr)) minmax(80px, 0.65fr);">
+                style="--cols-table: minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(95px, 0.85fr) minmax(60px, 0.5fr) repeat(13, minmax(88px, 0.75fr)) minmax(80px, 0.65fr);">
                 <div class="table-title-row">
                     <h3>Detalle de Estándares por Tipo</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaEstandarTipo()"
@@ -230,18 +230,19 @@
                             <div class="cell indicador">INDICADOR</div>
                             <div class="cell tipo_centro">TIPO_CENTRO</div>
                             <div class="cell anio">AÑO</div>
-                            <div class="cell estandar_01">ENERO</div>
-                            <div class="cell estandar_02">FEBRERO</div>
-                            <div class="cell estandar_03">MARZO</div>
-                            <div class="cell estandar_04">ABRIL</div>
-                            <div class="cell estandar_05">MAYO</div>
-                            <div class="cell estandar_06">JUNIO</div>
-                            <div class="cell estandar_07">JULIO</div>
-                            <div class="cell estandar_08">AGOSTO</div>
-                            <div class="cell estandar_09">SEPTIEMBRE</div>
-                            <div class="cell estandar_10">OCTUBRE</div>
-                            <div class="cell estandar_11">NOVIEMBRE</div>
-                            <div class="cell estandar_12">DICIEMBRE</div>
+                            <div class="cell est_fijo">EST_FIJO</div>
+                            <div class="cell est_01">ENERO</div>
+                            <div class="cell est_02">FEBRERO</div>
+                            <div class="cell est_03">MARZO</div>
+                            <div class="cell est_04">ABRIL</div>
+                            <div class="cell est_05">MAYO</div>
+                            <div class="cell est_06">JUNIO</div>
+                            <div class="cell est_07">JULIO</div>
+                            <div class="cell est_08">AGOSTO</div>
+                            <div class="cell est_09">SEPTIEMBRE</div>
+                            <div class="cell est_10">OCTUBRE</div>
+                            <div class="cell est_11">NOVIEMBRE</div>
+                            <div class="cell est_12">DICIEMBRE</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
@@ -256,30 +257,32 @@
                                 (keyup)="filterDataEstandarTipo('tipo_centro', $event)" />
                             <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
                                 (keyup)="filterDataEstandarTipo('anio', $event)" />
-                            <input type="text" class="filter-input cell estandar_01" placeholder="Buscar enero..."
-                                (keyup)="filterDataEstandarTipo('estandar_01', $event)" />
-                            <input type="text" class="filter-input cell estandar_02" placeholder="Buscar febrero..."
-                                (keyup)="filterDataEstandarTipo('estandar_02', $event)" />
-                            <input type="text" class="filter-input cell estandar_03" placeholder="Buscar marzo..."
-                                (keyup)="filterDataEstandarTipo('estandar_03', $event)" />
-                            <input type="text" class="filter-input cell estandar_04" placeholder="Buscar abril..."
-                                (keyup)="filterDataEstandarTipo('estandar_04', $event)" />
-                            <input type="text" class="filter-input cell estandar_05" placeholder="Buscar mayo..."
-                                (keyup)="filterDataEstandarTipo('estandar_05', $event)" />
-                            <input type="text" class="filter-input cell estandar_06" placeholder="Buscar junio..."
-                                (keyup)="filterDataEstandarTipo('estandar_06', $event)" />
-                            <input type="text" class="filter-input cell estandar_07" placeholder="Buscar julio..."
-                                (keyup)="filterDataEstandarTipo('estandar_07', $event)" />
-                            <input type="text" class="filter-input cell estandar_08" placeholder="Buscar agosto..."
-                                (keyup)="filterDataEstandarTipo('estandar_08', $event)" />
-                            <input type="text" class="filter-input cell estandar_09" placeholder="Buscar septiembre..."
-                                (keyup)="filterDataEstandarTipo('estandar_09', $event)" />
-                            <input type="text" class="filter-input cell estandar_10" placeholder="Buscar octubre..."
-                                (keyup)="filterDataEstandarTipo('estandar_10', $event)" />
-                            <input type="text" class="filter-input cell estandar_11" placeholder="Buscar noviembre..."
-                                (keyup)="filterDataEstandarTipo('estandar_11', $event)" />
-                            <input type="text" class="filter-input cell estandar_12" placeholder="Buscar diciembre..."
-                                (keyup)="filterDataEstandarTipo('estandar_12', $event)" />
+                            <input type="text" class="filter-input cell est_fijo" placeholder="Buscar est. fijo..."
+                                (keyup)="filterDataEstandarTipo('est_fijo', $event)" />
+                            <input type="text" class="filter-input cell est_01" placeholder="Buscar enero..."
+                                (keyup)="filterDataEstandarTipo('est_01', $event)" />
+                            <input type="text" class="filter-input cell est_02" placeholder="Buscar febrero..."
+                                (keyup)="filterDataEstandarTipo('est_02', $event)" />
+                            <input type="text" class="filter-input cell est_03" placeholder="Buscar marzo..."
+                                (keyup)="filterDataEstandarTipo('est_03', $event)" />
+                            <input type="text" class="filter-input cell est_04" placeholder="Buscar abril..."
+                                (keyup)="filterDataEstandarTipo('est_04', $event)" />
+                            <input type="text" class="filter-input cell est_05" placeholder="Buscar mayo..."
+                                (keyup)="filterDataEstandarTipo('est_05', $event)" />
+                            <input type="text" class="filter-input cell est_06" placeholder="Buscar junio..."
+                                (keyup)="filterDataEstandarTipo('est_06', $event)" />
+                            <input type="text" class="filter-input cell est_07" placeholder="Buscar julio..."
+                                (keyup)="filterDataEstandarTipo('est_07', $event)" />
+                            <input type="text" class="filter-input cell est_08" placeholder="Buscar agosto..."
+                                (keyup)="filterDataEstandarTipo('est_08', $event)" />
+                            <input type="text" class="filter-input cell est_09" placeholder="Buscar septiembre..."
+                                (keyup)="filterDataEstandarTipo('est_09', $event)" />
+                            <input type="text" class="filter-input cell est_10" placeholder="Buscar octubre..."
+                                (keyup)="filterDataEstandarTipo('est_10', $event)" />
+                            <input type="text" class="filter-input cell est_11" placeholder="Buscar noviembre..."
+                                (keyup)="filterDataEstandarTipo('est_11', $event)" />
+                            <input type="text" class="filter-input cell est_12" placeholder="Buscar diciembre..."
+                                (keyup)="filterDataEstandarTipo('est_12', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
@@ -290,18 +293,19 @@
                                 <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
                                 <div class="cell tipo_centro">{{ row.tipo_centro ?? '—' }}</div>
                                 <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell estandar_01">{{ row.estandar_01 ?? '—' }}</div>
-                                <div class="cell estandar_02">{{ row.estandar_02 ?? '—' }}</div>
-                                <div class="cell estandar_03">{{ row.estandar_03 ?? '—' }}</div>
-                                <div class="cell estandar_04">{{ row.estandar_04 ?? '—' }}</div>
-                                <div class="cell estandar_05">{{ row.estandar_05 ?? '—' }}</div>
-                                <div class="cell estandar_06">{{ row.estandar_06 ?? '—' }}</div>
-                                <div class="cell estandar_07">{{ row.estandar_07 ?? '—' }}</div>
-                                <div class="cell estandar_08">{{ row.estandar_08 ?? '—' }}</div>
-                                <div class="cell estandar_09">{{ row.estandar_09 ?? '—' }}</div>
-                                <div class="cell estandar_10">{{ row.estandar_10 ?? '—' }}</div>
-                                <div class="cell estandar_11">{{ row.estandar_11 ?? '—' }}</div>
-                                <div class="cell estandar_12">{{ row.estandar_12 ?? '—' }}</div>
+                                <div class="cell est_fijo">{{ row.est_fijo ?? '—' }}</div>
+                                <div class="cell est_01">{{ row.est_01 ?? '—' }}</div>
+                                <div class="cell est_02">{{ row.est_02 ?? '—' }}</div>
+                                <div class="cell est_03">{{ row.est_03 ?? '—' }}</div>
+                                <div class="cell est_04">{{ row.est_04 ?? '—' }}</div>
+                                <div class="cell est_05">{{ row.est_05 ?? '—' }}</div>
+                                <div class="cell est_06">{{ row.est_06 ?? '—' }}</div>
+                                <div class="cell est_07">{{ row.est_07 ?? '—' }}</div>
+                                <div class="cell est_08">{{ row.est_08 ?? '—' }}</div>
+                                <div class="cell est_09">{{ row.est_09 ?? '—' }}</div>
+                                <div class="cell est_10">{{ row.est_10 ?? '—' }}</div>
+                                <div class="cell est_11">{{ row.est_11 ?? '—' }}</div>
+                                <div class="cell est_12">{{ row.est_12 ?? '—' }}</div>
                                 <div class="cell acciones">
                                     <button type="button" class="btn-icon-edit"
                                         (click)="iniciarEdicionEstandarTipo(row)"
@@ -371,53 +375,58 @@
                                 <input type="number" id="st_anio" formControlName="anio" readonly placeholder="Año" />
                             </div>
 
+                            <div class="field-input full-width">
+                                <label for="st_est_fijo">Estándar Fijo <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_fijo" formControlName="est_fijo" />
+                            </div>
+
                             <div class="field-input">
-                                <label for="st_estandar_01">Enero <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_01" formControlName="estandar_01" />
+                                <label for="st_est_01">Enero <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_01" formControlName="est_01" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_02">Febrero <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_02" formControlName="estandar_02" />
+                                <label for="st_est_02">Febrero <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_02" formControlName="est_02" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_03">Marzo <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_03" formControlName="estandar_03" />
+                                <label for="st_est_03">Marzo <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_03" formControlName="est_03" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_04">Abril <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_04" formControlName="estandar_04" />
+                                <label for="st_est_04">Abril <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_04" formControlName="est_04" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_05">Mayo <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_05" formControlName="estandar_05" />
+                                <label for="st_est_05">Mayo <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_05" formControlName="est_05" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_06">Junio <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_06" formControlName="estandar_06" />
+                                <label for="st_est_06">Junio <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_06" formControlName="est_06" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_07">Julio <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_07" formControlName="estandar_07" />
+                                <label for="st_est_07">Julio <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_07" formControlName="est_07" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_08">Agosto <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_08" formControlName="estandar_08" />
+                                <label for="st_est_08">Agosto <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_08" formControlName="est_08" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_09">Septiembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_09" formControlName="estandar_09" />
+                                <label for="st_est_09">Septiembre <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_09" formControlName="est_09" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_10">Octubre <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_10" formControlName="estandar_10" />
+                                <label for="st_est_10">Octubre <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_10" formControlName="est_10" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_11">Noviembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_11" formControlName="estandar_11" />
+                                <label for="st_est_11">Noviembre <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_11" formControlName="est_11" />
                             </div>
                             <div class="field-input">
-                                <label for="st_estandar_12">Diciembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_estandar_12" formControlName="estandar_12" />
+                                <label for="st_est_12">Diciembre <span class="required">*</span></label>
+                                <input type="number" step="any" id="st_est_12" formControlName="est_12" />
                             </div>
                         </div>
 
@@ -473,7 +482,7 @@
         <div *ngIf="!loadingEstandarNivel && !errorEstandarNivel && !selectPeriodoEstandarNivel"
             class="dashboard-content">
             <mat-card class="table"
-                style="--cols-table: minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(105px, 0.9fr) minmax(60px, 0.5fr) repeat(12, minmax(88px, 0.75fr)) minmax(80px, 0.65fr);">
+                style="--cols-table: minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(105px, 0.9fr) minmax(60px, 0.5fr) repeat(13, minmax(88px, 0.75fr)) minmax(80px, 0.65fr);">
                 <div class="table-title-row">
                     <h3>Detalle de Estándares por Nivel</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaEstandarNivel()"
@@ -489,18 +498,19 @@
                             <div class="cell indicador">INDICADOR</div>
                             <div class="cell nivel_centro">NIVEL_CENTRO</div>
                             <div class="cell anio">AÑO</div>
-                            <div class="cell estandar_01">ENERO</div>
-                            <div class="cell estandar_02">FEBRERO</div>
-                            <div class="cell estandar_03">MARZO</div>
-                            <div class="cell estandar_04">ABRIL</div>
-                            <div class="cell estandar_05">MAYO</div>
-                            <div class="cell estandar_06">JUNIO</div>
-                            <div class="cell estandar_07">JULIO</div>
-                            <div class="cell estandar_08">AGOSTO</div>
-                            <div class="cell estandar_09">SEPTIEMBRE</div>
-                            <div class="cell estandar_10">OCTUBRE</div>
-                            <div class="cell estandar_11">NOVIEMBRE</div>
-                            <div class="cell estandar_12">DICIEMBRE</div>
+                            <div class="cell est_fijo">EST_FIJO</div>
+                            <div class="cell est_01">ENERO</div>
+                            <div class="cell est_02">FEBRERO</div>
+                            <div class="cell est_03">MARZO</div>
+                            <div class="cell est_04">ABRIL</div>
+                            <div class="cell est_05">MAYO</div>
+                            <div class="cell est_06">JUNIO</div>
+                            <div class="cell est_07">JULIO</div>
+                            <div class="cell est_08">AGOSTO</div>
+                            <div class="cell est_09">SEPTIEMBRE</div>
+                            <div class="cell est_10">OCTUBRE</div>
+                            <div class="cell est_11">NOVIEMBRE</div>
+                            <div class="cell est_12">DICIEMBRE</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
@@ -515,30 +525,32 @@
                                 (keyup)="filterDataEstandarNivel('nivel_centro', $event)" />
                             <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
                                 (keyup)="filterDataEstandarNivel('anio', $event)" />
-                            <input type="text" class="filter-input cell estandar_01" placeholder="Buscar enero..."
-                                (keyup)="filterDataEstandarNivel('estandar_01', $event)" />
-                            <input type="text" class="filter-input cell estandar_02" placeholder="Buscar febrero..."
-                                (keyup)="filterDataEstandarNivel('estandar_02', $event)" />
-                            <input type="text" class="filter-input cell estandar_03" placeholder="Buscar marzo..."
-                                (keyup)="filterDataEstandarNivel('estandar_03', $event)" />
-                            <input type="text" class="filter-input cell estandar_04" placeholder="Buscar abril..."
-                                (keyup)="filterDataEstandarNivel('estandar_04', $event)" />
-                            <input type="text" class="filter-input cell estandar_05" placeholder="Buscar mayo..."
-                                (keyup)="filterDataEstandarNivel('estandar_05', $event)" />
-                            <input type="text" class="filter-input cell estandar_06" placeholder="Buscar junio..."
-                                (keyup)="filterDataEstandarNivel('estandar_06', $event)" />
-                            <input type="text" class="filter-input cell estandar_07" placeholder="Buscar julio..."
-                                (keyup)="filterDataEstandarNivel('estandar_07', $event)" />
-                            <input type="text" class="filter-input cell estandar_08" placeholder="Buscar agosto..."
-                                (keyup)="filterDataEstandarNivel('estandar_08', $event)" />
-                            <input type="text" class="filter-input cell estandar_09" placeholder="Buscar septiembre..."
-                                (keyup)="filterDataEstandarNivel('estandar_09', $event)" />
-                            <input type="text" class="filter-input cell estandar_10" placeholder="Buscar octubre..."
-                                (keyup)="filterDataEstandarNivel('estandar_10', $event)" />
-                            <input type="text" class="filter-input cell estandar_11" placeholder="Buscar noviembre..."
-                                (keyup)="filterDataEstandarNivel('estandar_11', $event)" />
-                            <input type="text" class="filter-input cell estandar_12" placeholder="Buscar diciembre..."
-                                (keyup)="filterDataEstandarNivel('estandar_12', $event)" />
+                            <input type="text" class="filter-input cell est_fijo" placeholder="Buscar est. fijo..."
+                                (keyup)="filterDataEstandarNivel('est_fijo', $event)" />
+                            <input type="text" class="filter-input cell est_01" placeholder="Buscar enero..."
+                                (keyup)="filterDataEstandarNivel('est_01', $event)" />
+                            <input type="text" class="filter-input cell est_02" placeholder="Buscar febrero..."
+                                (keyup)="filterDataEstandarNivel('est_02', $event)" />
+                            <input type="text" class="filter-input cell est_03" placeholder="Buscar marzo..."
+                                (keyup)="filterDataEstandarNivel('est_03', $event)" />
+                            <input type="text" class="filter-input cell est_04" placeholder="Buscar abril..."
+                                (keyup)="filterDataEstandarNivel('est_04', $event)" />
+                            <input type="text" class="filter-input cell est_05" placeholder="Buscar mayo..."
+                                (keyup)="filterDataEstandarNivel('est_05', $event)" />
+                            <input type="text" class="filter-input cell est_06" placeholder="Buscar junio..."
+                                (keyup)="filterDataEstandarNivel('est_06', $event)" />
+                            <input type="text" class="filter-input cell est_07" placeholder="Buscar julio..."
+                                (keyup)="filterDataEstandarNivel('est_07', $event)" />
+                            <input type="text" class="filter-input cell est_08" placeholder="Buscar agosto..."
+                                (keyup)="filterDataEstandarNivel('est_08', $event)" />
+                            <input type="text" class="filter-input cell est_09" placeholder="Buscar septiembre..."
+                                (keyup)="filterDataEstandarNivel('est_09', $event)" />
+                            <input type="text" class="filter-input cell est_10" placeholder="Buscar octubre..."
+                                (keyup)="filterDataEstandarNivel('est_10', $event)" />
+                            <input type="text" class="filter-input cell est_11" placeholder="Buscar noviembre..."
+                                (keyup)="filterDataEstandarNivel('est_11', $event)" />
+                            <input type="text" class="filter-input cell est_12" placeholder="Buscar diciembre..."
+                                (keyup)="filterDataEstandarNivel('est_12', $event)" />
 
                             <div class="cell acciones"></div>
                         </div>
@@ -549,18 +561,19 @@
                                 <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
                                 <div class="cell nivel_centro">{{ row.nivel_centro ?? '—' }}</div>
                                 <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_01 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_02 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_03 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_04 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_05 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_06 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_07 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_08 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_09 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_10 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_11 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_12 ?? '—' }}</div>
+                                <div class="cell est_fijo">{{ row.est_fijo ?? '—' }}</div>
+                                <div class="cell est_01">{{ row.est_01 ?? '—' }}</div>
+                                <div class="cell est_02">{{ row.est_02 ?? '—' }}</div>
+                                <div class="cell est_03">{{ row.est_03 ?? '—' }}</div>
+                                <div class="cell est_04">{{ row.est_04 ?? '—' }}</div>
+                                <div class="cell est_05">{{ row.est_05 ?? '—' }}</div>
+                                <div class="cell est_06">{{ row.est_06 ?? '—' }}</div>
+                                <div class="cell est_07">{{ row.est_07 ?? '—' }}</div>
+                                <div class="cell est_08">{{ row.est_08 ?? '—' }}</div>
+                                <div class="cell est_09">{{ row.est_09 ?? '—' }}</div>
+                                <div class="cell est_10">{{ row.est_10 ?? '—' }}</div>
+                                <div class="cell est_11">{{ row.est_11 ?? '—' }}</div>
+                                <div class="cell est_12">{{ row.est_12 ?? '—' }}</div>
                                 <div class="cell acciones">
                                     <button type="button" class="btn-icon-edit"
                                         (click)="iniciarEdicionEstandarNivel(row)"
@@ -630,53 +643,58 @@
                                 <input type="number" id="sn_anio" formControlName="anio" readonly placeholder="Año" />
                             </div>
 
+                            <div class="field-input full-width">
+                                <label for="sn_est_fijo">Estándar Fijo <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_fijo" formControlName="est_fijo" />
+                            </div>
+
                             <div class="field-input">
-                                <label for="sn_estandar_01">Enero <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_01" formControlName="estandar_01" />
+                                <label for="sn_est_01">Enero <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_01" formControlName="est_01" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_02">Febrero <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_02" formControlName="estandar_02" />
+                                <label for="sn_est_02">Febrero <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_02" formControlName="est_02" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_03">Marzo <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_03" formControlName="estandar_03" />
+                                <label for="sn_est_03">Marzo <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_03" formControlName="est_03" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_04">Abril <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_04" formControlName="estandar_04" />
+                                <label for="sn_est_04">Abril <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_04" formControlName="est_04" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_05">Mayo <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_05" formControlName="estandar_05" />
+                                <label for="sn_est_05">Mayo <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_05" formControlName="est_05" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_06">Junio <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_06" formControlName="estandar_06" />
+                                <label for="sn_est_06">Junio <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_06" formControlName="est_06" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_07">Julio <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_07" formControlName="estandar_07" />
+                                <label for="sn_est_07">Julio <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_07" formControlName="est_07" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_08">Agosto <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_08" formControlName="estandar_08" />
+                                <label for="sn_est_08">Agosto <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_08" formControlName="est_08" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_09">Septiembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_09" formControlName="estandar_09" />
+                                <label for="sn_est_09">Septiembre <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_09" formControlName="est_09" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_10">Octubre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_10" formControlName="estandar_10" />
+                                <label for="sn_est_10">Octubre <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_10" formControlName="est_10" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_11">Noviembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_11" formControlName="estandar_11" />
+                                <label for="sn_est_11">Noviembre <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_11" formControlName="est_11" />
                             </div>
                             <div class="field-input">
-                                <label for="sn_estandar_12">Diciembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_estandar_12" formControlName="estandar_12" />
+                                <label for="sn_est_12">Diciembre <span class="required">*</span></label>
+                                <input type="number" step="any" id="sn_est_12" formControlName="est_12" />
                             </div>
                         </div>
 
@@ -732,7 +750,7 @@
         <div *ngIf="!loadingEstandarCategoria && !errorEstandarCategoria && !selectPeriodoEstandarCategoria"
             class="dashboard-content">
             <mat-card class="table"
-                style="--cols-table: minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(125px, 1fr) minmax(60px, 0.5fr) repeat(12, minmax(88px, 0.75fr)) minmax(80px, 0.65fr);">
+                style="--cols-table: minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(125px, 1fr) minmax(60px, 0.5fr) repeat(13, minmax(88px, 0.75fr)) minmax(80px, 0.65fr);">
                 <div class="table-title-row">
                     <h3>Detalle de Estándares por Categoría</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaEstandarCategoria()"
@@ -748,18 +766,19 @@
                             <div class="cell indicador">INDICADOR</div>
                             <div class="cell categoria_centro">CATEGORIA_CENTRO</div>
                             <div class="cell anio">AÑO</div>
-                            <div class="cell estandar_01">ENERO</div>
-                            <div class="cell estandar_02">FEBRERO</div>
-                            <div class="cell estandar_03">MARZO</div>
-                            <div class="cell estandar_04">ABRIL</div>
-                            <div class="cell estandar_05">MAYO</div>
-                            <div class="cell estandar_06">JUNIO</div>
-                            <div class="cell estandar_07">JULIO</div>
-                            <div class="cell estandar_08">AGOSTO</div>
-                            <div class="cell estandar_09">SEPTIEMBRE</div>
-                            <div class="cell estandar_10">OCTUBRE</div>
-                            <div class="cell estandar_11">NOVIEMBRE</div>
-                            <div class="cell estandar_12">DICIEMBRE</div>
+                            <div class="cell est_fijo">EST_FIJO</div>
+                            <div class="cell est_01">ENERO</div>
+                            <div class="cell est_02">FEBRERO</div>
+                            <div class="cell est_03">MARZO</div>
+                            <div class="cell est_04">ABRIL</div>
+                            <div class="cell est_05">MAYO</div>
+                            <div class="cell est_06">JUNIO</div>
+                            <div class="cell est_07">JULIO</div>
+                            <div class="cell est_08">AGOSTO</div>
+                            <div class="cell est_09">SEPTIEMBRE</div>
+                            <div class="cell est_10">OCTUBRE</div>
+                            <div class="cell est_11">NOVIEMBRE</div>
+                            <div class="cell est_12">DICIEMBRE</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
@@ -773,30 +792,32 @@
                                 (keyup)="filterDataEstandarCategoria('categoria_centro', $event)" />
                             <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
                                 (keyup)="filterDataEstandarCategoria('anio', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar enero..."
-                                (keyup)="filterDataEstandarCategoria('estandar_01', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar febrero..."
-                                (keyup)="filterDataEstandarCategoria('estandar_02', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar marzo..."
-                                (keyup)="filterDataEstandarCategoria('estandar_03', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar abril..."
-                                (keyup)="filterDataEstandarCategoria('estandar_04', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar mayo..."
-                                (keyup)="filterDataEstandarCategoria('estandar_05', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar junio..."
-                                (keyup)="filterDataEstandarCategoria('estandar_06', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar julio..."
-                                (keyup)="filterDataEstandarCategoria('estandar_07', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar agosto..."
-                                (keyup)="filterDataEstandarCategoria('estandar_08', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar septiembre..."
-                                (keyup)="filterDataEstandarCategoria('estandar_09', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar octubre..."
-                                (keyup)="filterDataEstandarCategoria('estandar_10', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar noviembre..."
-                                (keyup)="filterDataEstandarCategoria('estandar_11', $event)" />
-                            <input type="text" class="filter-input cell estandar" placeholder="Buscar diciembre..."
-                                (keyup)="filterDataEstandarCategoria('estandar_12', $event)" />
+                            <input type="text" class="filter-input cell est_fijo" placeholder="Buscar est. fijo..."
+                                (keyup)="filterDataEstandarCategoria('est_fijo', $event)" />
+                            <input type="text" class="filter-input cell est_01" placeholder="Buscar enero..."
+                                (keyup)="filterDataEstandarCategoria('est_01', $event)" />
+                            <input type="text" class="filter-input cell est_02" placeholder="Buscar febrero..."
+                                (keyup)="filterDataEstandarCategoria('est_02', $event)" />
+                            <input type="text" class="filter-input cell est_03" placeholder="Buscar marzo..."
+                                (keyup)="filterDataEstandarCategoria('est_03', $event)" />
+                            <input type="text" class="filter-input cell est_04" placeholder="Buscar abril..."
+                                (keyup)="filterDataEstandarCategoria('est_04', $event)" />
+                            <input type="text" class="filter-input cell est_05" placeholder="Buscar mayo..."
+                                (keyup)="filterDataEstandarCategoria('est_05', $event)" />
+                            <input type="text" class="filter-input cell est_06" placeholder="Buscar junio..."
+                                (keyup)="filterDataEstandarCategoria('est_06', $event)" />
+                            <input type="text" class="filter-input cell est_07" placeholder="Buscar julio..."
+                                (keyup)="filterDataEstandarCategoria('est_07', $event)" />
+                            <input type="text" class="filter-input cell est_08" placeholder="Buscar agosto..."
+                                (keyup)="filterDataEstandarCategoria('est_08', $event)" />
+                            <input type="text" class="filter-input cell est_09" placeholder="Buscar septiembre..."
+                                (keyup)="filterDataEstandarCategoria('est_09', $event)" />
+                            <input type="text" class="filter-input cell est_10" placeholder="Buscar octubre..."
+                                (keyup)="filterDataEstandarCategoria('est_10', $event)" />
+                            <input type="text" class="filter-input cell est_11" placeholder="Buscar noviembre..."
+                                (keyup)="filterDataEstandarCategoria('est_11', $event)" />
+                            <input type="text" class="filter-input cell est_12" placeholder="Buscar diciembre..."
+                                (keyup)="filterDataEstandarCategoria('est_12', $event)" />
                             <div class="cell acciones"></div>
                         </div>
 
@@ -807,18 +828,19 @@
                                 <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
                                 <div class="cell categoria_centro">{{ row.categoria_centro ?? '—' }}</div>
                                 <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell estandar_01">{{ row.estandar_01 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_02 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_03 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_04 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_05 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_06 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_07 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_08 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_09 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_10 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_11 ?? '—' }}</div>
-                                <div class="cell estandar">{{ row.estandar_12 ?? '—' }}</div>
+                                <div class="cell est_fijo">{{ row.est_fijo ?? '—' }}</div>
+                                <div class="cell est_01">{{ row.est_01 ?? '—' }}</div>
+                                <div class="cell est_02">{{ row.est_02 ?? '—' }}</div>
+                                <div class="cell est_03">{{ row.est_03 ?? '—' }}</div>
+                                <div class="cell est_04">{{ row.est_04 ?? '—' }}</div>
+                                <div class="cell est_05">{{ row.est_05 ?? '—' }}</div>
+                                <div class="cell est_06">{{ row.est_06 ?? '—' }}</div>
+                                <div class="cell est_07">{{ row.est_07 ?? '—' }}</div>
+                                <div class="cell est_08">{{ row.est_08 ?? '—' }}</div>
+                                <div class="cell est_09">{{ row.est_09 ?? '—' }}</div>
+                                <div class="cell est_10">{{ row.est_10 ?? '—' }}</div>
+                                <div class="cell est_11">{{ row.est_11 ?? '—' }}</div>
+                                <div class="cell est_12">{{ row.est_12 ?? '—' }}</div>
                                 <div class="cell acciones">
                                     <button type="button" class="btn-icon-edit"
                                         (click)="iniciarEdicionEstandarCategoria(row)"
@@ -891,53 +913,58 @@
                                 <input type="number" id="sc_anio" formControlName="anio" readonly placeholder="Año" />
                             </div>
 
+                            <div class="field-input full-width">
+                                <label for="sc_est_fijo">Estándar Fijo <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_fijo" formControlName="est_fijo" />
+                            </div>
+
                             <div class="field-input">
-                                <label for="sc_estandar_01">Enero <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_01" formControlName="estandar_01" />
+                                <label for="sc_est_01">Enero <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_01" formControlName="est_01" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_02">Febrero <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_02" formControlName="estandar_02" />
+                                <label for="sc_est_02">Febrero <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_02" formControlName="est_02" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_03">Marzo <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_03" formControlName="estandar_03" />
+                                <label for="sc_est_03">Marzo <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_03" formControlName="est_03" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_04">Abril <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_04" formControlName="estandar_04" />
+                                <label for="sc_est_04">Abril <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_04" formControlName="est_04" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_05">Mayo <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_05" formControlName="estandar_05" />
+                                <label for="sc_est_05">Mayo <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_05" formControlName="est_05" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_06">Junio <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_06" formControlName="estandar_06" />
+                                <label for="sc_est_06">Junio <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_06" formControlName="est_06" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_07">Julio <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_07" formControlName="estandar_07" />
+                                <label for="sc_est_07">Julio <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_07" formControlName="est_07" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_08">Agosto <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_08" formControlName="estandar_08" />
+                                <label for="sc_est_08">Agosto <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_08" formControlName="est_08" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_09">Septiembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_09" formControlName="estandar_09" />
+                                <label for="sc_est_09">Septiembre <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_09" formControlName="est_09" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_10">Octubre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_10" formControlName="estandar_10" />
+                                <label for="sc_est_10">Octubre <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_10" formControlName="est_10" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_11">Noviembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_11" formControlName="estandar_11" />
+                                <label for="sc_est_11">Noviembre <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_11" formControlName="est_11" />
                             </div>
                             <div class="field-input">
-                                <label for="sc_estandar_12">Diciembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_estandar_12" formControlName="estandar_12" />
+                                <label for="sc_est_12">Diciembre <span class="required">*</span></label>
+                                <input type="number" step="any" id="sc_est_12" formControlName="est_12" />
                             </div>
                         </div>
 

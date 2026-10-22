@@ -160,18 +160,19 @@ export class TmiIndicadores implements OnInit {
     indicador: "",
     tipo_centro: "",
     anio: "",
-    estandar_01: "",
-    estandar_02: "",
-    estandar_03: "",
-    estandar_04: "",
-    estandar_05: "",
-    estandar_06: "",
-    estandar_07: "",
-    estandar_08: "",
-    estandar_09: "",
-    estandar_10: "",
-    estandar_11: "",
-    estandar_12: "",
+    est_fijo: "",
+    est_01: "",
+    est_02: "",
+    est_03: "",
+    est_04: "",
+    est_05: "",
+    est_06: "",
+    est_07: "",
+    est_08: "",
+    est_09: "",
+    est_10: "",
+    est_11: "",
+    est_12: "",
   }
 
   // tmi_estandar_nivel
@@ -195,18 +196,19 @@ export class TmiIndicadores implements OnInit {
     indicador: "",
     nivel_centro: "",
     anio: "",
-    estandar_01: "",
-    estandar_02: "",
-    estandar_03: "",
-    estandar_04: "",
-    estandar_05: "",
-    estandar_06: "",
-    estandar_07: "",
-    estandar_08: "",
-    estandar_09: "",
-    estandar_10: "",
-    estandar_11: "",
-    estandar_12: "",
+    est_fijo: "",
+    est_01: "",
+    est_02: "",
+    est_03: "",
+    est_04: "",
+    est_05: "",
+    est_06: "",
+    est_07: "",
+    est_08: "",
+    est_09: "",
+    est_10: "",
+    est_11: "",
+    est_12: "",
     acept: "",
     aceptmenos: ""
   };
@@ -232,18 +234,19 @@ export class TmiIndicadores implements OnInit {
     indicador: "",
     categoria_centro: "",
     anio: "",
-    estandar_01: "",
-    estandar_02: "",
-    estandar_03: "",
-    estandar_04: "",
-    estandar_05: "",
-    estandar_06: "",
-    estandar_07: "",
-    estandar_08: "",
-    estandar_09: "",
-    estandar_10: "",
-    estandar_11: "",
-    estandar_12: "",
+    est_fijo: "",
+    est_01: "",
+    est_02: "",
+    est_03: "",
+    est_04: "",
+    est_05: "",
+    est_06: "",
+    est_07: "",
+    est_08: "",
+    est_09: "",
+    est_10: "",
+    est_11: "",
+    est_12: "",
     acept: "",
     aceptmenos: ""
   };
@@ -489,18 +492,19 @@ export class TmiIndicadores implements OnInit {
       id_estandar: [null, [Validators.required]],
       tipo_centro: ['', [Validators.required]],
       anio: [null, [Validators.required]],
-      estandar_01: [0, [Validators.required]],
-      estandar_02: [0, [Validators.required]],
-      estandar_03: [0, [Validators.required]],
-      estandar_04: [0, [Validators.required]],
-      estandar_05: [0, [Validators.required]],
-      estandar_06: [0, [Validators.required]],
-      estandar_07: [0, [Validators.required]],
-      estandar_08: [0, [Validators.required]],
-      estandar_09: [0, [Validators.required]],
-      estandar_10: [0, [Validators.required]],
-      estandar_11: [0, [Validators.required]],
-      estandar_12: [0, [Validators.required]]
+      est_fijo: [0, [Validators.required]],
+      est_01: [0, [Validators.required]],
+      est_02: [0, [Validators.required]],
+      est_03: [0, [Validators.required]],
+      est_04: [0, [Validators.required]],
+      est_05: [0, [Validators.required]],
+      est_06: [0, [Validators.required]],
+      est_07: [0, [Validators.required]],
+      est_08: [0, [Validators.required]],
+      est_09: [0, [Validators.required]],
+      est_10: [0, [Validators.required]],
+      est_11: [0, [Validators.required]],
+      est_12: [0, [Validators.required]]
     });
 
     // Form 2: tmi_estandar_nivel
@@ -509,18 +513,19 @@ export class TmiIndicadores implements OnInit {
       id_estandar: [null, [Validators.required]],
       nivel_centro: ['', [Validators.required]],
       anio: [null, [Validators.required]],
-      estandar_01: [0, [Validators.required]],
-      estandar_02: [0, [Validators.required]],
-      estandar_03: [0, [Validators.required]],
-      estandar_04: [0, [Validators.required]],
-      estandar_05: [0, [Validators.required]],
-      estandar_06: [0, [Validators.required]],
-      estandar_07: [0, [Validators.required]],
-      estandar_08: [0, [Validators.required]],
-      estandar_09: [0, [Validators.required]],
-      estandar_10: [0, [Validators.required]],
-      estandar_11: [0, [Validators.required]],
-      estandar_12: [0, [Validators.required]]
+      est_fijo: [0, [Validators.required]],
+      est_01: [0, [Validators.required]],
+      est_02: [0, [Validators.required]],
+      est_03: [0, [Validators.required]],
+      est_04: [0, [Validators.required]],
+      est_05: [0, [Validators.required]],
+      est_06: [0, [Validators.required]],
+      est_07: [0, [Validators.required]],
+      est_08: [0, [Validators.required]],
+      est_09: [0, [Validators.required]],
+      est_10: [0, [Validators.required]],
+      est_11: [0, [Validators.required]],
+      est_12: [0, [Validators.required]]
     });
 
     // Form 3: tmi_estandar_categoria
@@ -529,18 +534,19 @@ export class TmiIndicadores implements OnInit {
       id_estandar: [null, [Validators.required]],
       categoria_centro: ['', [Validators.required]],
       anio: [null, [Validators.required]],
-      estandar_01: [0, [Validators.required]],
-      estandar_02: [0, [Validators.required]],
-      estandar_03: [0, [Validators.required]],
-      estandar_04: [0, [Validators.required]],
-      estandar_05: [0, [Validators.required]],
-      estandar_06: [0, [Validators.required]],
-      estandar_07: [0, [Validators.required]],
-      estandar_08: [0, [Validators.required]],
-      estandar_09: [0, [Validators.required]],
-      estandar_10: [0, [Validators.required]],
-      estandar_11: [0, [Validators.required]],
-      estandar_12: [0, [Validators.required]]
+      est_fijo: [0, [Validators.required]],
+      est_01: [0, [Validators.required]],
+      est_02: [0, [Validators.required]],
+      est_03: [0, [Validators.required]],
+      est_04: [0, [Validators.required]],
+      est_05: [0, [Validators.required]],
+      est_06: [0, [Validators.required]],
+      est_07: [0, [Validators.required]],
+      est_08: [0, [Validators.required]],
+      est_09: [0, [Validators.required]],
+      est_10: [0, [Validators.required]],
+      est_11: [0, [Validators.required]],
+      est_12: [0, [Validators.required]]
     });
 
     // Form 4: tmi_centro
@@ -595,18 +601,19 @@ export class TmiIndicadores implements OnInit {
       id_estandar: Number(valor.id_estandar),
       [campoCentro]: String(valor[campoCentro] ?? '').trim(),
       anio: Number(valor.anio),
-      estandar_01: Number(valor.estandar_01 ?? 0),
-      estandar_02: Number(valor.estandar_02 ?? 0),
-      estandar_03: Number(valor.estandar_03 ?? 0),
-      estandar_04: Number(valor.estandar_04 ?? 0),
-      estandar_05: Number(valor.estandar_05 ?? 0),
-      estandar_06: Number(valor.estandar_06 ?? 0),
-      estandar_07: Number(valor.estandar_07 ?? 0),
-      estandar_08: Number(valor.estandar_08 ?? 0),
-      estandar_09: Number(valor.estandar_09 ?? 0),
-      estandar_10: Number(valor.estandar_10 ?? 0),
-      estandar_11: Number(valor.estandar_11 ?? 0),
-      estandar_12: Number(valor.estandar_12 ?? 0)
+      est_fijo: Number(valor.est_fijo ?? 0),
+      est_01: Number(valor.est_01 ?? 0),
+      est_02: Number(valor.est_02 ?? 0),
+      est_03: Number(valor.est_03 ?? 0),
+      est_04: Number(valor.est_04 ?? 0),
+      est_05: Number(valor.est_05 ?? 0),
+      est_06: Number(valor.est_06 ?? 0),
+      est_07: Number(valor.est_07 ?? 0),
+      est_08: Number(valor.est_08 ?? 0),
+      est_09: Number(valor.est_09 ?? 0),
+      est_10: Number(valor.est_10 ?? 0),
+      est_11: Number(valor.est_11 ?? 0),
+      est_12: Number(valor.est_12 ?? 0)
     };
   }
 
@@ -644,18 +651,19 @@ export class TmiIndicadores implements OnInit {
       id_estandar: null,
       tipo_centro: '',
       anio: Number(this.anioEstandarTipo),
-      estandar_01: 0,
-      estandar_02: 0,
-      estandar_03: 0,
-      estandar_04: 0,
-      estandar_05: 0,
-      estandar_06: 0,
-      estandar_07: 0,
-      estandar_08: 0,
-      estandar_09: 0,
-      estandar_10: 0,
-      estandar_11: 0,
-      estandar_12: 0
+      est_fijo: 0,
+      est_01: 0,
+      est_02: 0,
+      est_03: 0,
+      est_04: 0,
+      est_05: 0,
+      est_06: 0,
+      est_07: 0,
+      est_08: 0,
+      est_09: 0,
+      est_10: 0,
+      est_11: 0,
+      est_12: 0
     });
     this.errorEstandarTipoForm = '';
     this.mostrarFormularioEstandarTipo = true;
@@ -677,18 +685,19 @@ export class TmiIndicadores implements OnInit {
       id_estandar: this.resolverIdEstandar(row),
       tipo_centro: row.tipo_centro ?? '',
       anio: row.anio ?? Number(this.anioEstandarTipo),
-      estandar_01: row.estandar_01 ?? 0,
-      estandar_02: row.estandar_02 ?? 0,
-      estandar_03: row.estandar_03 ?? 0,
-      estandar_04: row.estandar_04 ?? 0,
-      estandar_05: row.estandar_05 ?? 0,
-      estandar_06: row.estandar_06 ?? 0,
-      estandar_07: row.estandar_07 ?? 0,
-      estandar_08: row.estandar_08 ?? 0,
-      estandar_09: row.estandar_09 ?? 0,
-      estandar_10: row.estandar_10 ?? 0,
-      estandar_11: row.estandar_11 ?? 0,
-      estandar_12: row.estandar_12 ?? 0
+      est_fijo: row.est_fijo ?? 0,
+      est_01: row.est_01 ?? 0,
+      est_02: row.est_02 ?? 0,
+      est_03: row.est_03 ?? 0,
+      est_04: row.est_04 ?? 0,
+      est_05: row.est_05 ?? 0,
+      est_06: row.est_06 ?? 0,
+      est_07: row.est_07 ?? 0,
+      est_08: row.est_08 ?? 0,
+      est_09: row.est_09 ?? 0,
+      est_10: row.est_10 ?? 0,
+      est_11: row.est_11 ?? 0,
+      est_12: row.est_12 ?? 0
     });
     this.errorEstandarTipoForm = '';
     this.mostrarFormularioEstandarTipo = true;
@@ -737,18 +746,19 @@ export class TmiIndicadores implements OnInit {
       check(row.indicador, this.filtersEstandarTipo.indicador) &&
       check(row.tipo_centro, this.filtersEstandarTipo.tipo_centro) &&
       check(row.anio, this.filtersEstandarTipo.anio) &&
-      check(row.estandar_01, this.filtersEstandarTipo.estandar_01) &&
-      check(row.estandar_02, this.filtersEstandarTipo.estandar_02) &&
-      check(row.estandar_03, this.filtersEstandarTipo.estandar_03) &&
-      check(row.estandar_04, this.filtersEstandarTipo.estandar_04) &&
-      check(row.estandar_05, this.filtersEstandarTipo.estandar_05) &&
-      check(row.estandar_06, this.filtersEstandarTipo.estandar_06) &&
-      check(row.estandar_07, this.filtersEstandarTipo.estandar_07) &&
-      check(row.estandar_08, this.filtersEstandarTipo.estandar_08) &&
-      check(row.estandar_09, this.filtersEstandarTipo.estandar_09) &&
-      check(row.estandar_10, this.filtersEstandarTipo.estandar_10) &&
-      check(row.estandar_11, this.filtersEstandarTipo.estandar_11) &&
-      check(row.estandar_12, this.filtersEstandarTipo.estandar_12)
+      check(row.est_fijo, this.filtersEstandarTipo.est_fijo) &&
+      check(row.est_01, this.filtersEstandarTipo.est_01) &&
+      check(row.est_02, this.filtersEstandarTipo.est_02) &&
+      check(row.est_03, this.filtersEstandarTipo.est_03) &&
+      check(row.est_04, this.filtersEstandarTipo.est_04) &&
+      check(row.est_05, this.filtersEstandarTipo.est_05) &&
+      check(row.est_06, this.filtersEstandarTipo.est_06) &&
+      check(row.est_07, this.filtersEstandarTipo.est_07) &&
+      check(row.est_08, this.filtersEstandarTipo.est_08) &&
+      check(row.est_09, this.filtersEstandarTipo.est_09) &&
+      check(row.est_10, this.filtersEstandarTipo.est_10) &&
+      check(row.est_11, this.filtersEstandarTipo.est_11) &&
+      check(row.est_12, this.filtersEstandarTipo.est_12)
     );
   }
 
@@ -786,18 +796,19 @@ export class TmiIndicadores implements OnInit {
       id_estandar: null,
       nivel_centro: '',
       anio: Number(this.anioEstandarNivel),
-      estandar_01: 0,
-      estandar_02: 0,
-      estandar_03: 0,
-      estandar_04: 0,
-      estandar_05: 0,
-      estandar_06: 0,
-      estandar_07: 0,
-      estandar_08: 0,
-      estandar_09: 0,
-      estandar_10: 0,
-      estandar_11: 0,
-      estandar_12: 0
+      est_fijo: 0,
+      est_01: 0,
+      est_02: 0,
+      est_03: 0,
+      est_04: 0,
+      est_05: 0,
+      est_06: 0,
+      est_07: 0,
+      est_08: 0,
+      est_09: 0,
+      est_10: 0,
+      est_11: 0,
+      est_12: 0
     });
     this.errorEstandarNivelForm = '';
     this.mostrarFormularioEstandarNivel = true;
@@ -819,18 +830,19 @@ export class TmiIndicadores implements OnInit {
       id_estandar: this.resolverIdEstandar(row),
       nivel_centro: row.nivel_centro ?? '',
       anio: row.anio ?? Number(this.anioEstandarNivel),
-      estandar_01: row.estandar_01 ?? 0,
-      estandar_02: row.estandar_02 ?? 0,
-      estandar_03: row.estandar_03 ?? 0,
-      estandar_04: row.estandar_04 ?? 0,
-      estandar_05: row.estandar_05 ?? 0,
-      estandar_06: row.estandar_06 ?? 0,
-      estandar_07: row.estandar_07 ?? 0,
-      estandar_08: row.estandar_08 ?? 0,
-      estandar_09: row.estandar_09 ?? 0,
-      estandar_10: row.estandar_10 ?? 0,
-      estandar_11: row.estandar_11 ?? 0,
-      estandar_12: row.estandar_12 ?? 0
+      est_fijo: row.est_fijo ?? 0,
+      est_01: row.est_01 ?? 0,
+      est_02: row.est_02 ?? 0,
+      est_03: row.est_03 ?? 0,
+      est_04: row.est_04 ?? 0,
+      est_05: row.est_05 ?? 0,
+      est_06: row.est_06 ?? 0,
+      est_07: row.est_07 ?? 0,
+      est_08: row.est_08 ?? 0,
+      est_09: row.est_09 ?? 0,
+      est_10: row.est_10 ?? 0,
+      est_11: row.est_11 ?? 0,
+      est_12: row.est_12 ?? 0
     });
     this.errorEstandarNivelForm = '';
     this.mostrarFormularioEstandarNivel = true;
@@ -879,18 +891,19 @@ export class TmiIndicadores implements OnInit {
       check(row.indicador, this.filtersEstandarNivel.indicador) &&
       check(row.nivel_centro, this.filtersEstandarNivel.nivel_centro) &&
       check(row.anio, this.filtersEstandarNivel.anio) &&
-      check(row.estandar_01, this.filtersEstandarNivel.estandar_01) &&
-      check(row.estandar_02, this.filtersEstandarNivel.estandar_02) &&
-      check(row.estandar_03, this.filtersEstandarNivel.estandar_03) &&
-      check(row.estandar_04, this.filtersEstandarNivel.estandar_04) &&
-      check(row.estandar_05, this.filtersEstandarNivel.estandar_05) &&
-      check(row.estandar_06, this.filtersEstandarNivel.estandar_06) &&
-      check(row.estandar_07, this.filtersEstandarNivel.estandar_07) &&
-      check(row.estandar_08, this.filtersEstandarNivel.estandar_08) &&
-      check(row.estandar_09, this.filtersEstandarNivel.estandar_09) &&
-      check(row.estandar_10, this.filtersEstandarNivel.estandar_10) &&
-      check(row.estandar_11, this.filtersEstandarNivel.estandar_11) &&
-      check(row.estandar_12, this.filtersEstandarNivel.estandar_12)
+      check(row.est_fijo, this.filtersEstandarNivel.est_fijo) &&
+      check(row.est_01, this.filtersEstandarNivel.est_01) &&
+      check(row.est_02, this.filtersEstandarNivel.est_02) &&
+      check(row.est_03, this.filtersEstandarNivel.est_03) &&
+      check(row.est_04, this.filtersEstandarNivel.est_04) &&
+      check(row.est_05, this.filtersEstandarNivel.est_05) &&
+      check(row.est_06, this.filtersEstandarNivel.est_06) &&
+      check(row.est_07, this.filtersEstandarNivel.est_07) &&
+      check(row.est_08, this.filtersEstandarNivel.est_08) &&
+      check(row.est_09, this.filtersEstandarNivel.est_09) &&
+      check(row.est_10, this.filtersEstandarNivel.est_10) &&
+      check(row.est_11, this.filtersEstandarNivel.est_11) &&
+      check(row.est_12, this.filtersEstandarNivel.est_12)
     );
   }
 
@@ -928,18 +941,19 @@ export class TmiIndicadores implements OnInit {
       id_estandar: null,
       categoria_centro: '',
       anio: Number(this.anioEstandarCategoria),
-      estandar_01: 0,
-      estandar_02: 0,
-      estandar_03: 0,
-      estandar_04: 0,
-      estandar_05: 0,
-      estandar_06: 0,
-      estandar_07: 0,
-      estandar_08: 0,
-      estandar_09: 0,
-      estandar_10: 0,
-      estandar_11: 0,
-      estandar_12: 0
+      est_fijo: 0,
+      est_01: 0,
+      est_02: 0,
+      est_03: 0,
+      est_04: 0,
+      est_05: 0,
+      est_06: 0,
+      est_07: 0,
+      est_08: 0,
+      est_09: 0,
+      est_10: 0,
+      est_11: 0,
+      est_12: 0
     });
     this.errorEstandarCategoriaForm = '';
     this.mostrarFormularioEstandarCategoria = true;
@@ -961,18 +975,19 @@ export class TmiIndicadores implements OnInit {
       id_estandar: this.resolverIdEstandar(row),
       categoria_centro: row.categoria_centro ?? '',
       anio: row.anio ?? Number(this.anioEstandarCategoria),
-      estandar_01: row.estandar_01 ?? 0,
-      estandar_02: row.estandar_02 ?? 0,
-      estandar_03: row.estandar_03 ?? 0,
-      estandar_04: row.estandar_04 ?? 0,
-      estandar_05: row.estandar_05 ?? 0,
-      estandar_06: row.estandar_06 ?? 0,
-      estandar_07: row.estandar_07 ?? 0,
-      estandar_08: row.estandar_08 ?? 0,
-      estandar_09: row.estandar_09 ?? 0,
-      estandar_10: row.estandar_10 ?? 0,
-      estandar_11: row.estandar_11 ?? 0,
-      estandar_12: row.estandar_12 ?? 0
+      est_fijo: row.est_fijo ?? 0,
+      est_01: row.est_01 ?? 0,
+      est_02: row.est_02 ?? 0,
+      est_03: row.est_03 ?? 0,
+      est_04: row.est_04 ?? 0,
+      est_05: row.est_05 ?? 0,
+      est_06: row.est_06 ?? 0,
+      est_07: row.est_07 ?? 0,
+      est_08: row.est_08 ?? 0,
+      est_09: row.est_09 ?? 0,
+      est_10: row.est_10 ?? 0,
+      est_11: row.est_11 ?? 0,
+      est_12: row.est_12 ?? 0
     });
     this.errorEstandarCategoriaForm = '';
     this.mostrarFormularioEstandarCategoria = true;
@@ -1021,18 +1036,19 @@ export class TmiIndicadores implements OnInit {
       check(row.indicador, this.filtersEstandarCategoria.indicador) &&
       check(row.categoria_centro, this.filtersEstandarCategoria.categoria_centro) &&
       check(row.anio, this.filtersEstandarCategoria.anio) &&
-      check(row.estandar_01, this.filtersEstandarCategoria.estandar_01) &&
-      check(row.estandar_02, this.filtersEstandarCategoria.estandar_02) &&
-      check(row.estandar_03, this.filtersEstandarCategoria.estandar_03) &&
-      check(row.estandar_04, this.filtersEstandarCategoria.estandar_04) &&
-      check(row.estandar_05, this.filtersEstandarCategoria.estandar_05) &&
-      check(row.estandar_06, this.filtersEstandarCategoria.estandar_06) &&
-      check(row.estandar_07, this.filtersEstandarCategoria.estandar_07) &&
-      check(row.estandar_08, this.filtersEstandarCategoria.estandar_08) &&
-      check(row.estandar_09, this.filtersEstandarCategoria.estandar_09) &&
-      check(row.estandar_10, this.filtersEstandarCategoria.estandar_10) &&
-      check(row.estandar_11, this.filtersEstandarCategoria.estandar_11) &&
-      check(row.estandar_12, this.filtersEstandarCategoria.estandar_12)
+      check(row.est_fijo, this.filtersEstandarCategoria.est_fijo) &&
+      check(row.est_01, this.filtersEstandarCategoria.est_01) &&
+      check(row.est_02, this.filtersEstandarCategoria.est_02) &&
+      check(row.est_03, this.filtersEstandarCategoria.est_03) &&
+      check(row.est_04, this.filtersEstandarCategoria.est_04) &&
+      check(row.est_05, this.filtersEstandarCategoria.est_05) &&
+      check(row.est_06, this.filtersEstandarCategoria.est_06) &&
+      check(row.est_07, this.filtersEstandarCategoria.est_07) &&
+      check(row.est_08, this.filtersEstandarCategoria.est_08) &&
+      check(row.est_09, this.filtersEstandarCategoria.est_09) &&
+      check(row.est_10, this.filtersEstandarCategoria.est_10) &&
+      check(row.est_11, this.filtersEstandarCategoria.est_11) &&
+      check(row.est_12, this.filtersEstandarCategoria.est_12)
     );
   }
 
