@@ -10,7 +10,6 @@ import {
   mensajeError,
 } from '../../../services/tmi-dinamico-service';
 
-/** Variables del pivot: nombre y de qué grupo / actividad / servicio de TOTALIZADO3 se construyen. */
 @Component({
   selector: 'app-tmi-variables',
   imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule],

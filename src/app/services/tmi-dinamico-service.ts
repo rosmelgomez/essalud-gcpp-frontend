@@ -50,13 +50,13 @@ export interface TmiIndicador {
   cero_si_letra_mes_0: boolean;
   sin_datos_anio: 'MOSTRAR' | 'NA' | 'OCULTAR';
   base_estandar:
-    | 'TIPO'
-    | 'NIVEL'
-    | 'CATEGORIA'
-    | 'TIPO_NIVEL'
-    | 'TIPO_CATEGORIA'
-    | 'NIVEL_CATEGORIA'
-    | 'TIPO_NIVEL_CATEGORIA';
+  | 'TIPO'
+  | 'NIVEL'
+  | 'CATEGORIA'
+  | 'TIPO_NIVEL'
+  | 'TIPO_CATEGORIA'
+  | 'NIVEL_CATEGORIA'
+  | 'TIPO_NIVEL_CATEGORIA';
   sentido: 'MENOR' | 'MAYOR' | 'BANDA';
   tipo_tolerancia: 'REL' | 'ABS';
   tolerancia: number;
@@ -181,17 +181,26 @@ export interface TmiPeriodoCalculo {
 
 @Injectable({ providedIn: 'root' })
 export class TmiDinamicoService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // catálogos
-  getGrupos() { return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/grupos`); }
-  getGruposReporte() { return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/grupos-reporte`); }
-  getActividades() { return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/actividades`); }
+  getGrupos() { 
+    return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/grupos`); 
+  }
+  getGruposReporte() { 
+    return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/grupos-reporte`); 
+  }
+  getActividades() { 
+    return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/actividades`); 
+  }
   getServicios(tipgrupo: number, actividad: number) {
     return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/servicios/${tipgrupo}/${actividad}`);
   }
-  getTiposCalculo() { return this.http.get<{ codigo: string; descripcion: string }[]>(`${base_url}/catalogo/tipos-calculo`); }
-  getCentros() { return this.http.get<TmiCentroCatalogo[]>(`${base_url}/catalogo/centros`); }
+  getTiposCalculo() { 
+    return this.http.get<{ codigo: string; descripcion: string }[]>(`${base_url}/catalogo/tipos-calculo`); 
+  }
+  getCentros() { 
+    return this.http.get<TmiCentroCatalogo[]>(`${base_url}/catalogo/centros`); }
 
   // variables y su lógica
   getVariables() { return this.http.get<TmiVariable[]>(`${base_url}/variables`); }
