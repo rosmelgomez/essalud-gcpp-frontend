@@ -11,8 +11,13 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { FechaActualizacionService } from '../../services/fecha-actualizacion-service';
 import { forkJoin, Observable } from 'rxjs';
+import { TmiVariables } from './tmi-variables/tmi-variables';
+import { TmiConfigIndicadores } from './tmi-config-indicadores/tmi-config-indicadores';
+import { TmiCentroEstandarTab } from './tmi-centro-estandar/tmi-centro-estandar';
+import { TmiCalculo } from './tmi-calculo/tmi-calculo';
 
-export type TabType = 'Estandares' | 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre';
+export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre'
+  | 'Variables' | 'Indicadores' | 'Estandar Centro' | 'Calcular';
 
 @Component({
   selector: 'app-tmi-indicadores',
@@ -26,13 +31,16 @@ export type TabType = 'Estandares' | 'Estandares Tipo' | 'Estandares Nivel' | 'E
     ScrollingModule,
     FormsModule,
     MatIconModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    TmiVariables,
+    TmiConfigIndicadores,
+    TmiCentroEstandarTab,
+    TmiCalculo
   ],
   templateUrl: './tmi-indicadores.html',
   styleUrl: './tmi-indicadores.css',
 })
 export class TmiIndicadores implements OnInit {
-  @ViewChild('viewportEstandar') viewportEstandar?: CdkVirtualScrollViewport;
   @ViewChild('viewportTipo') viewportTipo?: CdkVirtualScrollViewport;
   @ViewChild('viewportNivel') viewportNivel?: CdkVirtualScrollViewport;
   @ViewChild('viewportCategoria') viewportCategoria?: CdkVirtualScrollViewport;
@@ -46,7 +54,7 @@ export class TmiIndicadores implements OnInit {
   errorEliminarFila: string = '';
 
   // Tabs
-  activeTab: TabType = 'Estandares';
+  activeTab: TabType = 'Estandares Tipo';
 
   // Filtros de Años y Meses (replicando dashboard-medicas)
   aniosDisponibles: string[] = [];
@@ -120,24 +128,8 @@ export class TmiIndicadores implements OnInit {
   }
 
 
-  // catalogo tmi_estandar (tab Estándares + select en formularios)
+  // catalogo de indicadores/estándares para select en formularios
   public listaEstandares: any[] = [];
-  public dataEstandar: any[] = [];
-  public dataEstandarFilter: any[] = [];
-  public loadingEstandar: boolean = false;
-  public errorEstandar: string = '';
-  public mostrarFormularioEstandar: boolean = false;
-  public savingEstandar: boolean = false;
-  public errorEstandarForm: string = '';
-  public estandarForm!: FormGroup;
-
-  filtersEstandar = {
-    id: "",
-    tipo: "",
-    indicador: "",
-    fecha_creacion: "",
-    fecha_modificacion: ""
-  };
 
   // tmi_estandar_tipo
   public dataEstandarTipo: any[] = [];
@@ -360,111 +352,17 @@ export class TmiIndicadores implements OnInit {
     this.getQueryCentrosTMI();
   }
 
-  // tmi_estandar
+  // catálogo de indicadores/estándares (usado en selectores de formularios)
   getQueryEstandar(): void {
-    this.loadingEstandar = true;
-    this.errorEstandar = '';
     this.tmiIndicadoresService.getQueryEstandar().subscribe({
       next: (res: any[]) => {
         this.listaEstandares = res || [];
-        this.dataEstandar = res || [];
-        this.dataEstandarFilter = res || [];
-        this.loadingEstandar = false;
         this.cdr.markForCheck();
-        setTimeout(() => {
-          this.viewportEstandar?.checkViewportSize();
-          this.cdr.markForCheck();
-        }, 0);
       },
       error: (err: any) => {
         console.error('Error al cargar catálogo de estándares', err);
-        this.errorEstandar = 'Error al cargar el catálogo de estándares';
-        this.loadingEstandar = false;
-        this.cdr.markForCheck();
       }
     });
-  }
-
-  iniciarAltaEstandar(): void {
-    if (!this.estandarForm) this.reactiveForm();
-    this.estandarForm.reset({
-      id: null,
-      tipo: '',
-      indicador: ''
-    });
-    this.errorEstandarForm = '';
-    this.mostrarFormularioEstandar = true;
-    this.cdr.markForCheck();
-  }
-
-  iniciarEdicionEstandar(row: any): void {
-    if (!this.estandarForm) this.reactiveForm();
-    this.estandarForm.reset({
-      id: row.id ?? null,
-      tipo: row.tipo ?? '',
-      indicador: row.indicador ?? ''
-    });
-    this.errorEstandarForm = '';
-    this.mostrarFormularioEstandar = true;
-    this.cdr.markForCheck();
-  }
-
-  cancelarEdicionEstandar(): void {
-    this.mostrarFormularioEstandar = false;
-    this.errorEstandarForm = '';
-    this.savingEstandar = false;
-    this.cdr.markForCheck();
-  }
-
-  updateQueryEstandar(): void {
-    if (this.estandarForm.invalid) {
-      this.estandarForm.markAllAsTouched();
-      this.errorEstandarForm = 'Por favor, complete todos los campos obligatorios.';
-      return;
-    }
-    this.savingEstandar = true;
-    this.errorEstandarForm = '';
-
-    const valor = this.estandarForm.getRawValue();
-    const dto = {
-      id: valor.id ? Number(valor.id) : null,
-      tipo: String(valor.tipo ?? '').trim(),
-      indicador: String(valor.indicador ?? '').trim()
-    };
-
-    const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandar(dto) : this.tmiIndicadoresService.postQueryEstandar(dto);
-    peticion.subscribe({
-      next: () => {
-        this.savingEstandar = false;
-        this.mostrarFormularioEstandar = false;
-        this.getQueryEstandar();
-      },
-      error: (error: any) => {
-        console.error(error);
-        this.savingEstandar = false;
-        this.errorEstandarForm = typeof error === 'string' ? error : (error?.error?.detail || (dto.id ? 'Error al actualizar ' : 'Error al agregar ') + 'estándar');
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  eliminarEstandar(row: any): void {
-    if (this.eliminandoId !== null) return;
-    if (!confirm(`¿Eliminar el estándar ID ${row.id} (${row.tipo} - ${row.indicador})? Esta acción no se puede deshacer.`)) return;
-    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandar(row.id), () => this.getQueryEstandar());
-  }
-
-  filterDataEstandar(column: keyof typeof this.filtersEstandar, event: any): void {
-    const filterValue = event.target.value.toLowerCase().trim();
-    this.filtersEstandar[column] = filterValue;
-    const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
-    this.dataEstandar = this.dataEstandarFilter.filter(row =>
-      check(row.id, this.filtersEstandar.id) &&
-      check(row.tipo, this.filtersEstandar.tipo) &&
-      check(row.indicador, this.filtersEstandar.indicador) &&
-      check(row.fecha_creacion, this.filtersEstandar.fecha_creacion) &&
-      check(row.fecha_modificacion, this.filtersEstandar.fecha_modificacion)
-    );
   }
 
   loadFechaActualizacion() {
@@ -479,13 +377,6 @@ export class TmiIndicadores implements OnInit {
   }
 
   reactiveForm() {
-    // Form 0: tmi_estandar
-    this.estandarForm = this.formBuilder.group({
-      id: [null, []],
-      tipo: ['', [Validators.required]],
-      indicador: ['', [Validators.required]]
-    });
-
     // Form 1: tmi_estandar_tipo
     this.estandarTipoForm = this.formBuilder.group({
       id: [null, []],
@@ -1706,7 +1597,6 @@ export class TmiIndicadores implements OnInit {
   setActiveTab(tab: TabType): void {
     this.activeTab = tab;
     this.errorEliminarFila = '';
-    if (tab === 'Estandares') this.getQueryEstandar();
     if (tab === 'Centros TMI') this.getQueryCentrosTMI();
     if (tab === 'Fecha Cierre') this.getQueryCierres();
     this.cdr.markForCheck();

@@ -1,0 +1,279 @@
+<div class="header">
+    <h2 class="bar-title">Variables del pivot</h2>
+    <div class="header-actions">
+        <div class="buscar-group">
+            <button (click)="cargar()" class="btn-download" [disabled]="loading()">
+                <mat-icon>refresh</mat-icon> Actualizar
+            </button>
+        </div>
+    </div>
+</div>
+
+<p class="dyn-hint">
+    Cada variable se arma sumando las filas de su lógica: un grupo y una actividad de las tablas DIM, y si hace falta
+    un servicio. <strong>MEDIANA</strong> toma la mediana de cada servicio en el mes (camas, salas). Solo se calculan
+    las variables que usa algún indicador activo.
+</p>
+
+@if (error()) {
+<div class="alert alert-danger">{{ error() }}</div>
+}
+
+<div class="dyn-split">
+    <!-- VARIABLES -->
+    <mat-card class="table" style="--cols-table: minmax(190px, 2.6fr) minmax(95px, 1fr) minmax(48px, 0.4fr) minmax(95px, 1.1fr) minmax(76px, 0.6fr);">
+        <div class="table-title-row">
+            <h3>Variables</h3>
+            <button type="button" class="btn-download btn-agregar-fila" (click)="nuevaVariable()">
+                <mat-icon>add</mat-icon> Agregar variable
+            </button>
+        </div>
+        <input type="text" class="filter-input dyn-search" placeholder="Buscar variable..."
+            [ngModel]="filtro()" (ngModelChange)="filtro.set($event)" />
+        <div class="wrapper-table">
+            <div class="grid-table">
+                <div class="header-table">
+                    <div class="cell">VARIABLE</div>
+                    <div class="cell">TOTAL ANUAL</div>
+                    <div class="cell">FILAS</div>
+                    <div class="cell">INDICADORES</div>
+                    <div class="cell acciones">ACCIONES</div>
+                </div>
+                <div class="dyn-scroll">
+                    @if (loading()) {
+                    <div class="dyn-empty">Cargando variables...</div>
+                    }
+                    @for (v of variablesFiltradas(); track v.id) {
+                    <div class="row-table dyn-clickable" [class.dyn-selected]="seleccionada()?.id === v.id"
+                        [class.dyn-inactivo]="!v.activo" (click)="seleccionar(v)">
+                        <div class="cell txt" [title]="v.descripcion || v.nombre">{{ v.nombre }}</div>
+                        <div class="cell">{{ v.total_anual === 'SUMA_MESES' ? 'Suma meses' : 'Mediana periodo' }}</div>
+                        <div class="cell">{{ v.filas_logica }}</div>
+                        <div class="cell txt">{{ v.indicadores || '—' }}</div>
+                        <div class="cell acciones">
+                            <button type="button" class="btn-icon-edit" (click)="editarVariable(v, $event)"
+                                title="Editar variable"><mat-icon>edit</mat-icon></button>
+                            <button type="button" class="btn-icon-delete" (click)="eliminarVariable(v, $event)"
+                                [disabled]="eliminandoId() === v.id" title="Eliminar variable">
+                                <mat-icon>{{ eliminandoId() === v.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                    } @empty {
+                    @if (!loading()) {<div class="dyn-empty">No hay variables.</div>}
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="footer-table">
+            <div class="footer-left"><strong>Total de variables:</strong></div>
+            <div class="footer-right num"><strong>{{ variablesFiltradas().length }}</strong></div>
+        </div>
+    </mat-card>
+
+    <!-- LÓGICA -->
+    <mat-card class="table" style="--cols-table: minmax(120px, 1.4fr) minmax(140px, 1.8fr) minmax(62px, 0.6fr) minmax(70px, 0.6fr) minmax(80px, 0.8fr) minmax(76px, 0.6fr);">
+        <div class="table-title-row">
+            <h3>{{ seleccionada() ? 'Lógica: ' + seleccionada()!.nombre : 'Lógica de la variable' }}</h3>
+            @if (seleccionada()) {
+            <button type="button" class="btn-download btn-agregar-fila" (click)="nuevaLogica()">
+                <mat-icon>add</mat-icon> Agregar actividad
+            </button>
+            }
+        </div>
+        @if (errorLogica()) {
+        <div class="alert alert-danger">{{ errorLogica() }}</div>
+        }
+        @if (!seleccionada()) {
+        <div class="dyn-empty">Seleccione una variable para ver de qué grupo, actividad y servicio se construye.</div>
+        } @else {
+        <div class="wrapper-table">
+            <div class="grid-table">
+                <div class="header-table">
+                    <div class="cell">GRUPO</div>
+                    <div class="cell">ACTIVIDAD</div>
+                    <div class="cell">SERVICIO</div>
+                    <div class="cell">CÁLCULO</div>
+                    <div class="cell">VIGENCIA</div>
+                    <div class="cell acciones">ACCIONES</div>
+                </div>
+                <div class="dyn-scroll">
+                    @if (loadingLogica()) {
+                    <div class="dyn-empty">Cargando...</div>
+                    }
+                    @for (l of logica(); track l.id) {
+                    <div class="row-table" [class.dyn-inactivo]="!l.activo">
+                        <div class="cell txt" [title]="'tipgrupo ' + l.tipgrupo">{{ l.tipgrupo }} · {{ l.desctipgrupo || '¿?' }}</div>
+                        <div class="cell txt" [title]="'actividad ' + l.actividad">{{ l.actividad }} · {{ l.descactividad || '¿?' }}</div>
+                        <div class="cell">{{ l.servicio ?? 'Todos' }}{{ l.condicion_hoja ? ' · ' + l.condicion_hoja : '' }}</div>
+                        <div class="cell"><span class="dyn-badge">{{ l.agregacion }}</span></div>
+                        <div class="cell">{{ vigencia(l) }}</div>
+                        <div class="cell acciones">
+                            <button type="button" class="btn-icon-edit" (click)="editarLogica(l)" title="Editar">
+                                <mat-icon>edit</mat-icon></button>
+                            <button type="button" class="btn-icon-delete" (click)="eliminarLogica(l)"
+                                [disabled]="eliminandoId() === l.id" title="Quitar">
+                                <mat-icon>{{ eliminandoId() === l.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                    } @empty {
+                    @if (!loadingLogica()) {
+                    <div class="dyn-empty">La variable no tiene actividades: no se podrá calcular.</div>
+                    }
+                    }
+                </div>
+            </div>
+        </div>
+        }
+    </mat-card>
+</div>
+
+<!-- MODAL VARIABLE -->
+@if (mostrarFormVariable()) {
+<div class="modal-overlay" (click)="mostrarFormVariable.set(false)">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+            <div class="modal-header-info">
+                <h2>{{ formVariable.controls.id.value ? 'Editar variable' : 'Nueva variable' }}</h2>
+                <p class="modal-subtitle">Use el mismo nombre que en el consolidado de cifras para poder comparar.</p>
+            </div>
+            <button type="button" class="close-modal-btn" (click)="mostrarFormVariable.set(false)" aria-label="Cerrar">
+                <mat-icon>close</mat-icon></button>
+        </header>
+        <form [formGroup]="formVariable" (ngSubmit)="guardarVariable()" class="modal-form-container">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="field-input full-width">
+                        <label for="var_nombre">Nombre <span class="required">*</span></label>
+                        <input id="var_nombre" type="text" formControlName="nombre"
+                            placeholder="Ej. Consulta Externa - Consultas" />
+                    </div>
+                    <div class="field-input full-width">
+                        <label for="var_desc">Descripción</label>
+                        <input id="var_desc" type="text" formControlName="descripcion" />
+                    </div>
+                    <div class="field-input">
+                        <label for="var_total">Total anual</label>
+                        <select id="var_total" formControlName="total_anual">
+                            <option value="SUMA_MESES">Suma de los meses</option>
+                            <option value="MEDIANA_PERIODO">Mediana del periodo (recursos)</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="var_activo">Estado</label>
+                        <select id="var_activo" formControlName="activo">
+                            <option [ngValue]="true">Activa</option>
+                            <option [ngValue]="false">Inactiva</option>
+                        </select>
+                    </div>
+                </div>
+                @if (errorForm()) {
+                <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span></div>
+                }
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn-modal-action btn-cancel" (click)="mostrarFormVariable.set(false)"
+                    [disabled]="guardando()">Cancelar</button>
+                <button type="submit" class="btn-modal-action btn-save" [disabled]="guardando()">
+                    <mat-icon>save</mat-icon>{{ guardando() ? 'Guardando…' : 'Guardar' }}
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>
+}
+
+<!-- MODAL LÓGICA -->
+@if (mostrarFormLogica()) {
+<div class="modal-overlay" (click)="mostrarFormLogica.set(false)">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+            <div class="modal-header-info">
+                <h2>{{ formLogica.controls.id.value ? 'Editar actividad' : 'Agregar actividad' }}</h2>
+                <p class="modal-subtitle">Variable: {{ seleccionada()?.nombre }}</p>
+            </div>
+            <button type="button" class="close-modal-btn" (click)="mostrarFormLogica.set(false)" aria-label="Cerrar">
+                <mat-icon>close</mat-icon></button>
+        </header>
+        <form [formGroup]="formLogica" (ngSubmit)="guardarLogica()" class="modal-form-container">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="field-input full-width">
+                        <label for="lg_grupo">Grupo (DIM_GRUPO) <span class="required">*</span></label>
+                        <select id="lg_grupo" formControlName="tipgrupo" (change)="cargarServicios()">
+                            <option [ngValue]="null">Seleccione un grupo</option>
+                            @for (g of grupos(); track g.id) {
+                            <option [ngValue]="g.tipgrupo ?? g.id">{{ g.tipgrupo ?? g.id }} · {{ g['desctipgrupo'] || g.descripcion }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="field-input full-width">
+                        <label for="lg_act_buscar">Actividad (DIM_ACTIVIDAD) <span class="required">*</span></label>
+                        <input id="lg_act_buscar" type="text" class="dyn-search" placeholder="Filtrar por actividad, descactividad, desclarga o Proceso..."
+                            [ngModel]="filtroActividad()" (ngModelChange)="filtroActividad.set($event)"
+                            [ngModelOptions]="{ standalone: true }" />
+                        <select id="lg_act" formControlName="actividad" (change)="cargarServicios()">
+                            <option [ngValue]="null">Seleccione una actividad</option>
+                            @for (a of actividadesFiltradas(); track a.id) {
+                            <option [ngValue]="a.actividad ?? a.id">
+                                {{ a.actividad ?? a.id }} · {{ a['descactividad'] }}{{ a['desclarga'] && a['desclarga'].trim() !== (a['descactividad'] || '').trim() ? ' — ' + a['desclarga'].trim() : '' }}{{ a['Proceso'] ? ' [' + a['Proceso'] + ']' : '' }}{{ a['Recurso'] || a['recurso'] ? ' (Recurso)' : '' }}
+                            </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="lg_serv">Servicio</label>
+                        <select id="lg_serv" formControlName="servicio">
+                            <option [ngValue]="null">Todos los servicios</option>
+                            @for (s of servicios(); track s.id) {
+                            <option [ngValue]="s.id">{{ s.id }} · {{ s.descripcion || 'sin nombre' }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="lg_agr">Cálculo</label>
+                        <select id="lg_agr" formControlName="agregacion">
+                            <option value="SUMA">SUMA</option>
+                            <option value="MEDIANA">MEDIANA por servicio (recursos)</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="lg_cond">Condición de hoja (DIM_HOJA)</label>
+                        <select id="lg_cond" formControlName="condicion_hoja">
+                            <option value="">Todas</option>
+                            <option value="ASEGURADO">Asegurado</option>
+                            <option value="NO ASEGURADO">No asegurado</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="lg_activo">Estado</label>
+                        <select id="lg_activo" formControlName="activo">
+                            <option [ngValue]="true">Activa</option>
+                            <option [ngValue]="false">Inactiva</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="lg_desde">Vigente desde (AAAAMM)</label>
+                        <input id="lg_desde" type="number" formControlName="periodo_desde" />
+                    </div>
+                    <div class="field-input">
+                        <label for="lg_hasta">Vigente hasta (AAAAMM)</label>
+                        <input id="lg_hasta" type="number" formControlName="periodo_hasta" />
+                    </div>
+                </div>
+                @if (errorForm()) {
+                <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span></div>
+                }
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn-modal-action btn-cancel" (click)="mostrarFormLogica.set(false)"
+                    [disabled]="guardando()">Cancelar</button>
+                <button type="submit" class="btn-modal-action btn-save" [disabled]="guardando()">
+                    <mat-icon>save</mat-icon>{{ guardando() ? 'Guardando…' : 'Guardar' }}
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>
+}

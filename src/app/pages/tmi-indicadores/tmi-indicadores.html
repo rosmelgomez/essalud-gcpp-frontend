@@ -9,10 +9,6 @@
 
     <!-- TABS -->
     <div class="tabs">
-        <button class="tab-button" [class.active]="activeTab === 'Estandares'"
-            (click)="setActiveTab('Estandares')">
-            Estándares
-        </button>
         <button class="tab-button" [class.active]="activeTab === 'Estandares Tipo'"
             (click)="setActiveTab('Estandares Tipo')">
             Estándares Tipo
@@ -35,152 +31,34 @@
         <button class="tab-button" [class.active]="activeTab === 'Fecha Cierre'" (click)="setActiveTab('Fecha Cierre')">
             Fecha de Cierre
         </button>
+        <button class="tab-button" [class.active]="activeTab === 'Variables'" (click)="setActiveTab('Variables')">
+            Variables
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'Indicadores'" (click)="setActiveTab('Indicadores')">
+            Indicadores
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'Estandar Centro'"
+            (click)="setActiveTab('Estandar Centro')">
+            Estándar por Centro
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'Calcular'" (click)="setActiveTab('Calcular')">
+            Calcular y Excel
+        </button>
     </div>
 
-    <!-- tap 0: tmi_estandar -->
-    <div class="tab-content" *ngIf="activeTab === 'Estandares'">
-        <div class="header">
-            <h2 class="bar-title">Catálogo de Estándares TMI</h2>
-            <div class="header-actions">
-                <div class="buscar-group">
-                    <button (click)="getQueryEstandar()" class="btn-search">Actualizar</button>
-                </div>
-            </div>
-        </div>
-
-        <div *ngIf="loadingEstandar" class="loading">
-            <p>Cargando catálogo de estándares...</p>
-        </div>
-
-        <div *ngIf="errorEstandar" class="alert alert-danger">
-            {{ errorEstandar }}
-        </div>
-
-        <div *ngIf="!loadingEstandar && !errorEstandar" class="dashboard-content">
-            <mat-card class="table"
-                style="--cols-table: minmax(70px, 0.5fr) minmax(180px, 1.5fr) minmax(260px, 2.5fr) minmax(150px, 1.2fr) minmax(150px, 1.2fr) minmax(90px, 0.7fr);">
-                <div class="table-title-row">
-                    <h3>Listado de Estándares</h3>
-                    <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaEstandar()"
-                        title="Agregar nuevo estándar">
-                        <mat-icon>add</mat-icon> Agregar estándar
-                    </button>
-                </div>
-                <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
-                <div class="wrapper-table">
-                    <div class="grid-table">
-                        <!-- HEADER -->
-                        <div class="header-table">
-                            <div class="cell id">ID</div>
-                            <div class="cell tipo">TIPO</div>
-                            <div class="cell indicador">INDICADOR</div>
-                            <div class="cell fecha_creacion">FECHA CREACIÓN</div>
-                            <div class="cell fecha_modificacion">FECHA MODIFICACIÓN</div>
-                            <div class="cell acciones">ACCIONES</div>
-                        </div>
-
-                        <!-- FILTERS -->
-                        <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
-                                (keyup)="filterDataEstandar('id', $event)" />
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
-                                (keyup)="filterDataEstandar('tipo', $event)" />
-                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
-                                (keyup)="filterDataEstandar('indicador', $event)" />
-                            <input type="text" class="filter-input cell fecha_creacion" placeholder="Buscar fecha creación..."
-                                (keyup)="filterDataEstandar('fecha_creacion', $event)" />
-                            <input type="text" class="filter-input cell fecha_modificacion" placeholder="Buscar fecha modificación..."
-                                (keyup)="filterDataEstandar('fecha_modificacion', $event)" />
-                            <div class="cell acciones"></div>
-                        </div>
-
-                        <!-- ROWS -->
-                        <cdk-virtual-scroll-viewport #viewportEstandar class="viewport-table" [itemSize]="44">
-                            <div *cdkVirtualFor="let row of dataEstandar" class="row-table">
-                                <div class="cell id">{{ row.id ?? '—' }}</div>
-                                <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
-                                <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
-                                <div class="cell fecha_creacion">{{ formatoFecha(row.fecha_creacion) }}</div>
-                                <div class="cell fecha_modificacion">{{ formatoFecha(row.fecha_modificacion) }}</div>
-                                <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit"
-                                        (click)="iniciarEdicionEstandar(row)"
-                                        title="Editar estándar">
-                                        <mat-icon>edit</mat-icon>
-                                    </button>
-                                    <button type="button" class="btn-icon-delete" (click)="eliminarEstandar(row)"
-                                        [disabled]="eliminandoId === row.id"
-                                        title="Eliminar estándar">
-                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                        </cdk-virtual-scroll-viewport>
-                    </div>
-                </div>
-
-                <div class="footer-table">
-                    <div class="footer-left"><strong>Total de filas:</strong></div>
-                    <div class="footer-right num"><strong>{{ dataEstandar.length }}</strong></div>
-                </div>
-            </mat-card>
-        </div>
-
-        <!-- MODAL EDITAR / CREAR ESTÁNDAR -->
-        <div class="modal-overlay" *ngIf="mostrarFormularioEstandar" (click)="cancelarEdicionEstandar()">
-            <div class="modal-card" (click)="$event.stopPropagation()">
-                <header class="modal-header">
-                    <div class="modal-header-info">
-                        <h2>Formulario de Estándar</h2>
-                        <p class="modal-subtitle" *ngIf="estandarForm.get('id')?.value">
-                            Edición del estándar ID: {{ estandarForm.get('id')?.value }}
-                        </p>
-                        <p class="modal-subtitle" *ngIf="!estandarForm.get('id')?.value">
-                            Nuevo estándar en el catálogo TMI
-                        </p>
-                    </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandar()"
-                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
-                </header>
-
-                <form [formGroup]="estandarForm" (ngSubmit)="updateQueryEstandar()"
-                    class="modal-form-container">
-                    <div class="modal-body">
-                        <div class="form-grid">
-                            <input type="hidden" formControlName="id" />
-
-                            <div class="field-input full-width">
-                                <label for="est_tipo">Tipo <span class="required">*</span></label>
-                                <input type="text" id="est_tipo" formControlName="tipo"
-                                    placeholder="Ej. Consulta Externa" />
-                            </div>
-
-                            <div class="field-input full-width">
-                                <label for="est_indicador">Indicador <span class="required">*</span></label>
-                                <textarea id="est_indicador" formControlName="indicador" rows="2"
-                                    placeholder="Ej. Rendimiento hora médico"></textarea>
-                            </div>
-                        </div>
-
-                        <div class="validation-message-banner" *ngIf="errorEstandarForm">
-                            <mat-icon>error_outline</mat-icon><span>{{ errorEstandarForm }}</span>
-                        </div>
-                    </div>
-
-                    <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel"
-                            (click)="cancelarEdicionEstandar()" [disabled]="savingEstandar">Cancelar</button>
-                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandar">
-                            <mat-icon *ngIf="!savingEstandar">save</mat-icon><span *ngIf="!savingEstandar">{{
-                                estandarForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Estándar' }}</span>
-                            <span *ngIf="savingEstandar" class="spinner-btn"></span><span
-                                *ngIf="savingEstandar">Guardando…</span>
-                        </button>
-                    </footer>
-                </form>
-            </div>
-        </div>
-    </div>
+    <!-- TMI dinámico: variables, indicadores, estándar por centro y cálculo -->
+    @if (activeTab === 'Variables') {
+    <div class="tab-content"><app-tmi-variables /></div>
+    }
+    @if (activeTab === 'Indicadores') {
+    <div class="tab-content"><app-tmi-config-indicadores /></div>
+    }
+    @if (activeTab === 'Estandar Centro') {
+    <div class="tab-content"><app-tmi-centro-estandar /></div>
+    }
+    @if (activeTab === 'Calcular') {
+    <div class="tab-content"><app-tmi-calculo /></div>
+    }
 
     <!-- tap 1: tmi_estandar_tipo -->
     <div class="tab-content" *ngIf="activeTab === 'Estandares Tipo'">

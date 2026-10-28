@@ -1,0 +1,178 @@
+/* Pestañas del TMI dinámico (variables, indicadores, estándar por centro, cálculo).
+   Reutilizan tmi-indicadores.css; aquí solo lo propio de estas pantallas. */
+
+.dyn-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.dyn-scroll {
+    max-height: 460px;
+    overflow: auto;
+}
+
+.dyn-scroll .row-table {
+    min-height: 40px;
+    align-items: center;
+}
+
+.row-table .cell.txt {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.row-table .cell.txt,
+.row-table .cell.dyn-formula {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.row-table.dyn-clickable {
+    cursor: pointer;
+}
+
+.row-table.dyn-selected {
+    background: var(--rpt-surface-2);
+    box-shadow: inset 3px 0 0 var(--rpt-brand);
+}
+
+.row-table.dyn-inactivo {
+    opacity: 0.55;
+}
+
+.dyn-empty {
+    padding: 24px 8px;
+    color: var(--rpt-muted);
+    text-align: center;
+}
+
+.dyn-hint {
+    margin: 4px 0 12px;
+    font-size: 0.85rem;
+    color: var(--rpt-muted);
+    line-height: 1.45;
+}
+
+.dyn-formula {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.dyn-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.5;
+    background: var(--rpt-surface-2);
+    border: 1px solid var(--rpt-line);
+    color: var(--rpt-ink);
+}
+
+.dyn-badge.dyn-p5 { background: #e6f4ea; border-color: #a8d5b5; color: #1e6b34; }
+.dyn-badge.dyn-p3 { background: #fff4d6; border-color: #f0d58a; color: #7a5a00; }
+.dyn-badge.dyn-p1, .dyn-badge.dyn-p0 { background: #fde8e8; border-color: #f2b8b8; color: #9b1c1c; }
+.dyn-badge.dyn-pNA { color: var(--rpt-muted); }
+
+.dyn-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 4px;
+}
+
+.dyn-section-title {
+    margin: 16px 0 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--rpt-ink);
+}
+
+.dyn-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.dyn-inline .field-input {
+    margin: 0;
+}
+
+.dyn-meses {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.dyn-problemas {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.dyn-ok {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #1e6b34;
+    font-size: 0.9rem;
+}
+
+.dyn-modal-wide {
+    width: min(960px, 96vw);
+}
+
+.dyn-search {
+    width: 100%;
+    margin-bottom: 6px;
+}
+
+@media (max-width: 1100px) {
+    .dyn-split {
+        grid-template-columns: 1fr;
+    }
+    .dyn-meses {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+/* Resultado final: meses posteriores al periodo calculado (todavía sin dato) */
+.row-table .cell.dyn-mes-futuro {
+    color: var(--rpt-muted);
+    opacity: 0.6;
+}
+
+/* Pestaña Calcular: tarjeta de cálculo y tarjeta de Excel / resultados */
+.dyn-paso {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+}
+
+.dyn-paso .dyn-hint {
+    margin: 4px 0 0;
+}
+
+.dyn-paso-periodo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+.table-title-row.dyn-sub {
+    padding-top: 0;
+}
+
+.table-title-row.dyn-sub h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}

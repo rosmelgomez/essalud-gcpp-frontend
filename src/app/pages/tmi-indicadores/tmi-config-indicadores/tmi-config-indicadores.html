@@ -1,0 +1,695 @@
+<div class="header">
+    <h2 class="bar-title">Indicadores del TMI</h2>
+    <div class="header-actions">
+        <div class="buscar-group">
+            <button (click)="validar()" class="btn-search" [disabled]="validando()">
+                <mat-icon>rule</mat-icon> {{ validando() ? 'Validando…' : 'Validar configuración' }}
+            </button>
+            <button (click)="cargar()" class="btn-download" [disabled]="loading()">
+                <mat-icon>refresh</mat-icon> Actualizar
+            </button>
+        </div>
+    </div>
+</div>
+
+<p class="dyn-hint">
+    Cada indicador es una hoja del Excel. La fórmula usa letras: cada letra es una o varias variables, que se suman.
+    Ejemplo: Intervalo de sustitución = <span class="dyn-formula">(A - B) / X</span>. Los inactivos no se calculan ni
+    salen en el Excel.
+</p>
+
+@if (error()) {
+<div class="alert alert-danger">{{ error() }}</div>
+}
+
+@if (problemas(); as p) {
+<mat-card class="table" style="margin-bottom: 16px; padding-bottom: 16px;">
+    @if (p.length === 0) {
+    <div class="dyn-ok"><mat-icon>check_circle</mat-icon> La configuración no tiene errores. Ya se puede calcular.</div>
+    } @else {
+    <h3>{{ p.length }} problema(s) en la configuración</h3>
+    <ul class="dyn-problemas">
+        @for (x of p; track $index) {
+        <li><strong>{{ x.elemento }}</strong>: {{ x.problema }}</li>
+        }
+    </ul>
+    }
+</mat-card>
+}
+
+<div class="dyn-split">
+    <!-- LISTA -->
+    <mat-card class="table" style="--cols-table: minmax(36px, 0.3fr) minmax(180px, 2.4fr) minmax(100px, 1.1fr) minmax(90px, 1fr) minmax(80px, 0.8fr) minmax(76px, 0.6fr);">
+        <div class="table-title-row">
+            <h3>Indicadores</h3>
+            <button type="button" class="btn-download btn-agregar-fila" (click)="nuevo()">
+                <mat-icon>add</mat-icon> Agregar indicador
+            </button>
+        </div>
+        <div class="wrapper-table">
+            <div class="grid-table">
+                <div class="header-table">
+                    <div class="cell">#</div>
+                    <div class="cell">INDICADOR</div>
+                    <div class="cell">HOJA</div>
+                    <div class="cell">FÓRMULA</div>
+                    <div class="cell">CÁLCULO</div>
+                    <div class="cell acciones">ACCIONES</div>
+                </div>
+                <div class="dyn-scroll">
+                    @if (loading()) {
+                    <div class="dyn-empty">Cargando indicadores...</div>
+                    }
+                    @for (ind of indicadores(); track ind.id) {
+                    <div class="row-table dyn-clickable" [class.dyn-selected]="seleccionado()?.id === ind.id"
+                        [class.dyn-inactivo]="!ind.activo" (click)="seleccionar(ind)">
+                        <div class="cell">{{ ind.orden }}</div>
+                        <div class="cell txt" [title]="ind.letras || ''">{{ ind.indicador }}{{ ind.activo ? '' : ' (inactivo)' }}</div>
+                        <div class="cell txt">{{ ind.nombre_hoja }}</div>
+                        <div class="cell dyn-formula">({{ ind.expr_numerador }}) / ({{ ind.expr_denominador }})</div>
+                        <div class="cell">{{ ind.tipo_calculo }}</div>
+                        <div class="cell acciones">
+                            <button type="button" class="btn-icon-edit" (click)="editar(ind, $event)" title="Editar indicador">
+                                <mat-icon>edit</mat-icon></button>
+                            <button type="button" class="btn-icon-delete" (click)="eliminar(ind, $event)"
+                                [disabled]="eliminandoId() === ind.id" title="Eliminar indicador">
+                                <mat-icon>{{ eliminandoId() === ind.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                    } @empty {
+                    @if (!loading()) {<div class="dyn-empty">No hay indicadores.</div>}
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="footer-table">
+            <div class="footer-left"><strong>Total de indicadores:</strong></div>
+            <div class="footer-right num"><strong>{{ indicadores().length }}</strong></div>
+        </div>
+    </mat-card>
+
+    <!-- DETALLE -->
+    <mat-card class="table" style="padding-bottom: 16px; --cols-table: minmax(46px, 0.35fr) minmax(170px, 1.5fr) minmax(220px, 2.2fr) minmax(76px, 0.6fr);">
+        @if (seleccionado(); as ind) {
+        <div class="table-title-row">
+            <h3>{{ ind.indicador }}</h3>
+        </div>
+        <div class="dyn-chips">
+            <span class="dyn-badge dyn-formula">({{ ind.expr_numerador }}) / ({{ ind.expr_denominador }}){{ ind.factor !== 1 ? ' × ' + ind.factor : '' }}</span>
+            <span class="dyn-badge">{{ ind.tipo_calculo }}</span>
+            <span class="dyn-badge">{{ textoSentido(ind.sentido) }}</span>
+            <span class="dyn-badge">Tolerancia {{ ind.tipo_tolerancia === 'REL' ? (ind.tolerancia * 100) + ' %' : '± ' + ind.tolerancia }}</span>
+            <span class="dyn-badge">Estándar por {{ ind.base_estandar }}</span>
+        </div>
+
+        @if (errorDetalle()) {
+        <div class="alert alert-danger">{{ errorDetalle() }}</div>
+        }
+
+        <div class="dyn-section-title">Letras de la fórmula (Variables: Grupo, Actividad y Servicio)</div>
+        @if (letrasSinVariable().length) {
+        <div class="validation-message-banner">
+            <mat-icon>error_outline</mat-icon><span>Sin variable: {{ letrasSinVariable().join(', ') }}</span>
+        </div>
+        }
+        <div class="grid-table">
+            <div class="header-table">
+                <div class="cell">LETRA</div>
+                <div class="cell">VARIABLE</div>
+                <div class="cell">GRUPO / ACTIVIDAD / SERVICIO</div>
+                <div class="cell acciones">ACCIONES</div>
+            </div>
+            @for (l of letras(); track l.id) {
+            <div class="row-table">
+                <div class="cell"><strong>{{ l.letra }}</strong></div>
+                <div class="cell txt">{{ l.variable }}</div>
+                <div class="cell txt" [title]="l.detalle_logica || 'Sin actividades configuradas'">
+                    {{ l.detalle_logica || 'Sin grupo/actividad configurado' }}
+                </div>
+                <div class="cell acciones">
+                    <button type="button" class="btn-icon-edit" (click)="abrirLogicaVariable(l)"
+                        title="Configurar Grupo (DIM_GRUPO), Actividad (DIM_ACTIVIDAD) y Servicio">
+                        <mat-icon>tune</mat-icon>
+                    </button>
+                    <button type="button" class="btn-icon-delete" (click)="quitarLetra(l)" title="Quitar letra">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </div>
+            </div>
+            } @empty {
+            <div class="dyn-empty">Sin letras.</div>
+            }
+        </div>
+        <div class="dyn-inline" style="margin-top: 10px;">
+            <div class="field-input" style="width: 90px;">
+                <label for="nl_letra">Letra</label>
+                <select id="nl_letra" [(ngModel)]="nuevaLetra.letra">
+                    @for (x of letrasDisponibles; track x) {<option [value]="x">{{ x }}</option>}
+                </select>
+            </div>
+            <div class="field-input" style="flex: 1; min-width: 240px;">
+                <label for="nl_var">Variable existente</label>
+                <select id="nl_var" [(ngModel)]="nuevaLetra.id_variable">
+                    <option [ngValue]="null">Seleccione una variable</option>
+                    @for (v of variables(); track v.id) {<option [ngValue]="v.id">{{ v.nombre }}</option>}
+                </select>
+            </div>
+            <button type="button" class="btn-download btn-agregar-fila" (click)="agregarLetra()">
+                <mat-icon>add</mat-icon> Asignar variable
+            </button>
+            <button type="button" class="btn-search btn-agregar-fila" (click)="abrirNuevaVariable()"
+                title="Crear nueva variable eligiendo Grupo (DIM_GRUPO), Actividad (DIM_ACTIVIDAD) y Servicio">
+                <mat-icon>playlist_add</mat-icon> Nueva variable (Grupo/Act./Serv.)
+            </button>
+        </div>
+
+        <div class="dyn-section-title">Estándares del indicador (por Nivel, Categoría y/o Tipo y por Periodo)</div>
+        <p class="dyn-hint">
+            Puede definir el estándar uniendo con los centros por <strong>Nivel</strong>, <strong>Categoría</strong> o
+            <strong>Tipo</strong>, o por la <strong>combinación de dos o los tres</strong>, y para un
+            <strong>periodo (AAAAMM)</strong> o rango de periodos. Si una regla combina más criterios (ej. Nivel + Categoría + Tipo),
+            tiene prioridad sobre una regla general.
+        </p>
+        <div class="grid-table" style="--cols-table: minmax(170px, 2fr) minmax(110px, 1fr) minmax(70px, 0.7fr) minmax(70px, 0.7fr) minmax(76px, 0.6fr);">
+            <div class="header-table">
+                <div class="cell">UNIÓN CENTRO (NIVEL / CATEGORÍA / TIPO)</div>
+                <div class="cell">PERIODO</div>
+                <div class="cell">ESTÁNDAR</div>
+                <div class="cell">ROJO</div>
+                <div class="cell acciones">ACCIONES</div>
+            </div>
+            @for (est of estandaresIndicador(); track est.id) {
+            <div class="row-table">
+                <div class="cell txt">{{ descripcionEstandarCentro(est) }}</div>
+                <div class="cell">{{ vigenciaPeriodo(est.periodo_desde, est.periodo_hasta) }}</div>
+                <div class="cell"><strong>{{ est.estandar }}</strong></div>
+                <div class="cell">{{ est.acept ?? 'Auto' }}{{ est.acept_mas != null ? ' / ' + est.acept_mas : '' }}</div>
+                <div class="cell acciones">
+                    <button type="button" class="btn-icon-edit" (click)="editarEstandarIndicador(est)" title="Editar estándar">
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                    <button type="button" class="btn-icon-delete" (click)="quitarEstandarIndicador(est)" title="Eliminar estándar">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </div>
+            </div>
+            } @empty {
+            <div class="dyn-empty">Sin estándares específicos configurados en este indicador.</div>
+            }
+        </div>
+        <div class="dyn-inline" style="margin-top: 10px;">
+            <div class="field-input" style="width: 110px;">
+                <label for="es_nivel">Nivel</label>
+                <select id="es_nivel" [(ngModel)]="nuevoEstandar.nivel">
+                    <option value="">Cualquiera</option>
+                    @for (n of nivelesDisponibles(); track n) {<option [value]="n">{{ n }}</option>}
+                </select>
+            </div>
+            <div class="field-input" style="width: 125px;">
+                <label for="es_cat">Categoría</label>
+                <select id="es_cat" [(ngModel)]="nuevoEstandar.categoria">
+                    <option value="">Cualquiera</option>
+                    @for (cat of categoriasDisponibles(); track cat) {<option [value]="cat">{{ cat }}</option>}
+                </select>
+            </div>
+            <div class="field-input" style="width: 120px;">
+                <label for="es_tipo">Tipo</label>
+                <select id="es_tipo" [(ngModel)]="nuevoEstandar.tipo">
+                    <option value="">Cualquiera</option>
+                    @for (tp of tiposDisponibles(); track tp) {<option [value]="tp">{{ tp }}</option>}
+                </select>
+            </div>
+            <div class="field-input" style="width: 105px;">
+                <label for="es_desde">Periodo desde</label>
+                <input id="es_desde" type="number" [(ngModel)]="nuevoEstandar.periodo_desde" placeholder="202601" />
+            </div>
+            <div class="field-input" style="width: 105px;">
+                <label for="es_hasta">Periodo hasta</label>
+                <input id="es_hasta" type="number" [(ngModel)]="nuevoEstandar.periodo_hasta" placeholder="202612" />
+            </div>
+            <div class="field-input" style="width: 95px;">
+                <label for="es_val">Estándar *</label>
+                <input id="es_val" type="number" step="any" [(ngModel)]="nuevoEstandar.estandar" />
+            </div>
+            <div class="field-input" style="width: 90px;">
+                <label for="es_rojo">Rojo (opc.)</label>
+                <input id="es_rojo" type="number" step="any" [(ngModel)]="nuevoEstandar.acept" />
+            </div>
+            <button type="button" class="btn-download btn-agregar-fila" (click)="guardarEstandarIndicador()">
+                <mat-icon>{{ nuevoEstandar.id ? 'save' : 'add' }}</mat-icon>
+                {{ nuevoEstandar.id ? 'Actualizar' : 'Agregar estándar' }}
+            </button>
+            @if (nuevoEstandar.id) {
+            <button type="button" class="btn-search btn-agregar-fila" (click)="limpiarEstandarIndicador()">
+                Cancelar
+            </button>
+            }
+        </div>
+
+        <div class="dyn-section-title">Ámbito: qué centros se evalúan (Nivel, Categoría, Tipo, Red, Centro y Periodo)</div>
+        <p class="dyn-hint">Sin filas se evalúan todos. Puede filtrar por Nivel, Categoría, Tipo o combinación de ellos, y por periodo.</p>
+        @for (a of ambito(); track a.id) {
+        <div class="row-table" style="--cols-table: minmax(80px, 0.6fr) 2.2fr minmax(110px, 0.9fr) minmax(60px, 0.4fr);">
+            <div class="cell"><span class="dyn-badge">{{ a.incluir ? 'Incluir' : 'Excluir' }}</span></div>
+            <div class="cell txt">{{ descripcionAmbito(a) }}</div>
+            <div class="cell">{{ vigenciaPeriodo(a.periodo_desde, a.periodo_hasta) }}</div>
+            <div class="cell acciones">
+                <button type="button" class="btn-icon-delete" (click)="quitarAmbito(a)" title="Quitar"><mat-icon>delete</mat-icon></button>
+            </div>
+        </div>
+        } @empty {
+        <div class="dyn-empty">Se evalúan todos los centros.</div>
+        }
+        <div class="dyn-inline" style="margin-top: 10px;">
+            <div class="field-input" style="width: 100px;">
+                <label for="am_inc">Acción</label>
+                <select id="am_inc" [(ngModel)]="nuevoAmbito.incluir">
+                    <option [ngValue]="true">Incluir</option>
+                    <option [ngValue]="false">Excluir</option>
+                </select>
+            </div>
+            <div class="field-input" style="width: 105px;">
+                <label for="am_nivel">Nivel</label>
+                <select id="am_nivel" [(ngModel)]="nuevoAmbito.nivel">
+                    <option value="">Todos</option>
+                    @for (n of nivelesDisponibles(); track n) {<option [value]="n">{{ n }}</option>}
+                </select>
+            </div>
+            <div class="field-input" style="width: 120px;">
+                <label for="am_cat">Categoría</label>
+                <select id="am_cat" [(ngModel)]="nuevoAmbito.categoria">
+                    <option value="">Todas</option>
+                    @for (cat of categoriasDisponibles(); track cat) {<option [value]="cat">{{ cat }}</option>}
+                </select>
+            </div>
+            <div class="field-input" style="width: 115px;">
+                <label for="am_tipo">Tipo</label>
+                <select id="am_tipo" [(ngModel)]="nuevoAmbito.tipo">
+                    <option value="">Todos</option>
+                    @for (tp of tiposDisponibles(); track tp) {<option [value]="tp">{{ tp }}</option>}
+                </select>
+            </div>
+            <div class="field-input" style="flex: 1; min-width: 150px;">
+                <label for="am_red">Red</label>
+                <select id="am_red" [(ngModel)]="nuevoAmbito.red">
+                    <option value="">Todas las redes</option>
+                    @for (r of redesDisponibles(); track r) {<option [value]="r">{{ r }}</option>}
+                </select>
+            </div>
+            <div class="field-input" style="width: 100px;">
+                <label for="am_cod">Cód. centro</label>
+                <input id="am_cod" type="number" [(ngModel)]="nuevoAmbito.codcentro" />
+            </div>
+            <div class="field-input" style="width: 105px;">
+                <label for="am_desde">Periodo desde</label>
+                <input id="am_desde" type="number" [(ngModel)]="nuevoAmbito.periodo_desde" />
+            </div>
+            <div class="field-input" style="width: 105px;">
+                <label for="am_hasta">Periodo hasta</label>
+                <input id="am_hasta" type="number" [(ngModel)]="nuevoAmbito.periodo_hasta" />
+            </div>
+            <button type="button" class="btn-download btn-agregar-fila" (click)="agregarAmbito()">
+                <mat-icon>add</mat-icon> Agregar ámbito
+            </button>
+        </div>
+        } @else {
+        <div class="dyn-empty">Seleccione un indicador para ver sus letras y su ámbito.</div>
+        }
+    </mat-card>
+</div>
+
+<!-- MODAL INDICADOR -->
+@if (mostrarForm()) {
+<div class="modal-overlay" (click)="mostrarForm.set(false)">
+    <div class="modal-card dyn-modal-wide" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+            <div class="modal-header-info">
+                <h2>{{ form.controls.id.value ? 'Editar indicador' : 'Nuevo indicador' }}</h2>
+                <p class="modal-subtitle">Después de guardar, asigne las variables a cada letra de la fórmula.</p>
+            </div>
+            <button type="button" class="close-modal-btn" (click)="mostrarForm.set(false)" aria-label="Cerrar">
+                <mat-icon>close</mat-icon></button>
+        </header>
+        <form [formGroup]="form" (ngSubmit)="guardar()" class="modal-form-container">
+            <div class="modal-body">
+                <div class="dyn-section-title" style="margin-top: 0;">Identificación</div>
+                <div class="form-grid">
+                    <div class="field-input full-width">
+                        <label for="in_nombre">Indicador <span class="required">*</span></label>
+                        <input id="in_nombre" type="text" formControlName="indicador" />
+                    </div>
+                    <div class="field-input">
+                        <label for="in_codigo">Código <span class="required">*</span></label>
+                        <input id="in_codigo" type="text" formControlName="codigo" placeholder="CE_Concent" />
+                    </div>
+                    <div class="field-input">
+                        <label for="in_grupo">Sección del reporte</label>
+                        <select id="in_grupo" formControlName="grupo">
+                            <option [ngValue]="null">Sin sección</option>
+                            @for (g of gruposReporte(); track g.id) {<option [ngValue]="g.id">{{ g.descripcion }}</option>}
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_hoja">Nombre de hoja <span class="required">*</span></label>
+                        <input id="in_hoja" type="text" formControlName="nombre_hoja" maxlength="31" />
+                    </div>
+                    <div class="field-input">
+                        <label for="in_orden">Orden <span class="required">*</span></label>
+                        <input id="in_orden" type="number" formControlName="orden" />
+                    </div>
+                    <div class="field-input full-width">
+                        <label for="in_titulo">Título de la hoja</label>
+                        <input id="in_titulo" type="text" formControlName="titulo_hoja" placeholder="Si se deja vacío se usa el nombre del indicador" />
+                    </div>
+                </div>
+
+                <div class="dyn-section-title">Fórmula y cálculo</div>
+                <div class="form-grid">
+                    <div class="field-input">
+                        <label for="in_num">Numerador <span class="required">*</span></label>
+                        <input id="in_num" type="text" class="dyn-formula" formControlName="expr_numerador" placeholder="A - B" />
+                    </div>
+                    <div class="field-input">
+                        <label for="in_den">Denominador <span class="required">*</span></label>
+                        <input id="in_den" type="text" class="dyn-formula" formControlName="expr_denominador" placeholder="X" />
+                    </div>
+                    <div class="field-input">
+                        <label for="in_calc">Tipo de cálculo</label>
+                        <select id="in_calc" formControlName="tipo_calculo">
+                            @for (t of tiposCalculo(); track t.codigo) {<option [value]="t.codigo">{{ t.codigo }} · {{ t.descripcion }}</option>}
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_factor">Factor</label>
+                        <input id="in_factor" type="number" step="any" formControlName="factor" />
+                    </div>
+                    <div class="field-input">
+                        <label for="in_den0">Si el denominador es 0</label>
+                        <select id="in_den0" formControlName="den_cero">
+                            <option value="CERO">Resultado 0</option>
+                            <option value="NA">NA</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_num0">Si el numerador es 0</label>
+                        <select id="in_num0" formControlName="num_cero_na">
+                            <option [ngValue]="false">Se calcula</option>
+                            <option [ngValue]="true">NA</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_letra0">Letra del mes en 0</label>
+                        <select id="in_letra0" formControlName="cero_si_letra_mes_0">
+                            <option [ngValue]="false">Sin regla</option>
+                            <option [ngValue]="true">Resultado 0 si alguna letra del mes es 0</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_sindatos">Centro sin datos en el año</label>
+                        <select id="in_sindatos" formControlName="sin_datos_anio">
+                            <option value="NA">NA</option>
+                            <option value="MOSTRAR">Mostrar 0</option>
+                            <option value="OCULTAR">No listar</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="dyn-section-title">Estándar y puntaje</div>
+                <div class="form-grid">
+                    <div class="field-input">
+                        <label for="in_base">Estándar por (unión con centro)</label>
+                        <select id="in_base" formControlName="base_estandar">
+                            <option value="TIPO">Tipo de centro</option>
+                            <option value="NIVEL">Nivel</option>
+                            <option value="CATEGORIA">Categoría</option>
+                            <option value="TIPO_NIVEL">Combinación: Tipo + Nivel</option>
+                            <option value="TIPO_CATEGORIA">Combinación: Tipo + Categoría</option>
+                            <option value="NIVEL_CATEGORIA">Combinación: Nivel + Categoría</option>
+                            <option value="TIPO_NIVEL_CATEGORIA">Combinación: Tipo + Nivel + Categoría</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_sentido">Sentido</label>
+                        <select id="in_sentido" formControlName="sentido">
+                            <option value="MENOR">Menor es mejor</option>
+                            <option value="MAYOR">Mayor es mejor</option>
+                            <option value="BANDA">Dentro de una banda (Rojo - / Rojo +)</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_formato">Formato en el Excel</label>
+                        <select id="in_formato" formControlName="formato">
+                            <option value="NUMERO">Número (0.00)</option>
+                            <option value="PORCENTAJE">Porcentaje (0.00 %)</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_ttol">Tolerancia</label>
+                        <select id="in_ttol" formControlName="tipo_tolerancia">
+                            <option value="REL">Porcentaje del estándar</option>
+                            <option value="ABS">Valor fijo</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_tol">Valor de tolerancia</label>
+                        <input id="in_tol" type="number" step="any" formControlName="tolerancia" placeholder="0.10" />
+                    </div>
+                    <div class="field-input">
+                        <label for="in_dec">Decimales al calificar</label>
+                        <input id="in_dec" type="number" formControlName="decimales" placeholder="Sin redondeo" />
+                    </div>
+                    <div class="field-input">
+                        <label for="in_logro">Valor 0</label>
+                        <select id="in_logro" formControlName="cero_es_logro">
+                            <option [ngValue]="false">Sin producción (puntaje 0)</option>
+                            <option [ngValue]="true">Es un buen resultado</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_na">Centros sin estándar</label>
+                        <select id="in_na" formControlName="mostrar_no_aplica">
+                            <option [ngValue]="true">Listar como NA</option>
+                            <option [ngValue]="false">No listar</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="in_activo">Estado</label>
+                        <select id="in_activo" formControlName="activo">
+                            <option [ngValue]="true">Activo</option>
+                            <option [ngValue]="false">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                @if (errorForm()) {
+                <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span></div>
+                }
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn-modal-action btn-cancel" (click)="mostrarForm.set(false)"
+                    [disabled]="guardando()">Cancelar</button>
+                <button type="submit" class="btn-modal-action btn-save" [disabled]="guardando()">
+                    <mat-icon>save</mat-icon>{{ guardando() ? 'Guardando…' : 'Guardar' }}
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>
+}
+
+<!-- MODAL CONFIGURAR GRUPO / ACTIVIDAD / SERVICIO DE UNA VARIABLE DEL INDICADOR -->
+@if (mostrarModalLogica() && variableActiva(); as vAct) {
+<div class="modal-overlay" (click)="mostrarModalLogica.set(false)">
+    <div class="modal-card dyn-modal-wide" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+            <div class="modal-header-info">
+                <h2>Grupo, Actividad y Servicio de la variable</h2>
+                <p class="modal-subtitle">Variable: <strong>{{ vAct.nombre }}</strong></p>
+            </div>
+            <button type="button" class="close-modal-btn" (click)="mostrarModalLogica.set(false)" aria-label="Cerrar">
+                <mat-icon>close</mat-icon>
+            </button>
+        </header>
+        <div class="modal-body">
+            @if (errorLogicaModal()) {
+            <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorLogicaModal() }}</span></div>
+            }
+            <div class="grid-table" style="--cols-table: minmax(130px, 1.3fr) minmax(180px, 2fr) minmax(80px, 0.8fr) minmax(80px, 0.7fr) minmax(76px, 0.6fr);">
+                <div class="header-table">
+                    <div class="cell">GRUPO (DIM_GRUPO)</div>
+                    <div class="cell">ACTIVIDAD (DIM_ACTIVIDAD)</div>
+                    <div class="cell">SERVICIO</div>
+                    <div class="cell">CÁLCULO</div>
+                    <div class="cell acciones">ACCIONES</div>
+                </div>
+                @for (fl of logicaVariable(); track fl.id) {
+                <div class="row-table">
+                    <div class="cell txt">{{ fl.tipgrupo }} · {{ fl.desctipgrupo || '¿?' }}</div>
+                    <div class="cell txt">
+                        {{ fl.actividad }} · {{ fl.descactividad_corta || fl.descactividad || '¿?' }}{{ fl.desclarga && fl.desclarga.trim() !== (fl.descactividad_corta || '').trim() ? ' — ' + fl.desclarga.trim() : '' }}{{ fl.Proceso ? ' [' + fl.Proceso + ']' : '' }}
+                    </div>
+                    <div class="cell">{{ fl.servicio ?? 'Todos' }}</div>
+                    <div class="cell"><span class="dyn-badge">{{ fl.agregacion }}</span></div>
+                    <div class="cell acciones">
+                        <button type="button" class="btn-icon-edit" (click)="editarFilaLogica(fl)" title="Editar">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button type="button" class="btn-icon-delete" (click)="quitarFilaLogica(fl)" title="Quitar">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+                </div>
+                } @empty {
+                <div class="dyn-empty">Sin actividades configuradas para esta variable.</div>
+                }
+            </div>
+
+            <div class="dyn-section-title">
+                {{ nuevaFilaLogica.id ? 'Editar fila seleccionada' : 'Agregar Grupo / Actividad / Servicio' }}
+            </div>
+            <div class="form-grid">
+                <div class="field-input full-width">
+                    <label for="ind_lg_grupo">Grupo (DIM_GRUPO: tipgrupo, desctipgrupo) <span class="required">*</span></label>
+                    <select id="ind_lg_grupo" [(ngModel)]="nuevaFilaLogica.tipgrupo"
+                        (change)="cargarServiciosModal(nuevaFilaLogica.tipgrupo, nuevaFilaLogica.actividad)">
+                        <option [ngValue]="null">Seleccione un grupo</option>
+                        @for (g of gruposDim(); track g.id) {
+                        <option [ngValue]="g.tipgrupo ?? g.id">{{ g.tipgrupo ?? g.id }} · {{ g['desctipgrupo'] || g.descripcion }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field-input full-width">
+                    <label for="ind_lg_act_buscar">Actividad (DIM_ACTIVIDAD: actividad, descactividad, desclarga, Recurso, Proceso) <span class="required">*</span></label>
+                    <input id="ind_lg_act_buscar" type="text" class="dyn-search"
+                        placeholder="Filtrar por código, descactividad, desclarga o Proceso..."
+                        [ngModel]="filtroActividad()" (ngModelChange)="filtroActividad.set($event)" />
+                    <select id="ind_lg_act" [(ngModel)]="nuevaFilaLogica.actividad"
+                        (change)="cargarServiciosModal(nuevaFilaLogica.tipgrupo, nuevaFilaLogica.actividad)">
+                        <option [ngValue]="null">Seleccione una actividad</option>
+                        @for (a of actividadesFiltradas(); track a.id) {
+                        <option [ngValue]="a.actividad ?? a.id">
+                            {{ a.actividad ?? a.id }} · {{ a['descactividad'] }}{{ a['desclarga'] && a['desclarga'].trim() !== (a['descactividad'] || '').trim() ? ' — ' + a['desclarga'].trim() : '' }}{{ a['Proceso'] ? ' [' + a['Proceso'] + ']' : '' }}{{ a['Recurso'] || a['recurso'] ? ' (Recurso)' : '' }}
+                        </option>
+                        }
+                    </select>
+                </div>
+                <div class="field-input">
+                    <label for="ind_lg_serv">Servicio (TOTALIZADO3)</label>
+                    <select id="ind_lg_serv" [(ngModel)]="nuevaFilaLogica.servicio">
+                        <option [ngValue]="null">Todos los servicios</option>
+                        @for (s of serviciosDim(); track s.id) {
+                        <option [ngValue]="s.id">{{ s.id }} · {{ s.descripcion || 'sin nombre' }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field-input">
+                    <label for="ind_lg_agr">Cálculo</label>
+                    <select id="ind_lg_agr" [(ngModel)]="nuevaFilaLogica.agregacion">
+                        <option value="SUMA">SUMA</option>
+                        <option value="MEDIANA">MEDIANA por servicio (recursos)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <footer class="modal-footer">
+            @if (nuevaFilaLogica.id) {
+            <button type="button" class="btn-modal-action btn-cancel" (click)="limpiarFilaLogica()">Cancelar edición</button>
+            }
+            <button type="button" class="btn-modal-action btn-cancel" (click)="mostrarModalLogica.set(false)">Cerrar</button>
+            <button type="button" class="btn-modal-action btn-save" (click)="guardarFilaLogica()">
+                <mat-icon>save</mat-icon>{{ nuevaFilaLogica.id ? 'Actualizar fila' : 'Agregar a la variable' }}
+            </button>
+        </footer>
+    </div>
+</div>
+}
+
+<!-- MODAL CREAR NUEVA VARIABLE Y ASIGNAR GRUPO / ACTIVIDAD / SERVICIO DESDE INDICADORES -->
+@if (mostrarModalNuevaVar()) {
+<div class="modal-overlay" (click)="mostrarModalNuevaVar.set(false)">
+    <div class="modal-card dyn-modal-wide" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+            <div class="modal-header-info">
+                <h2>Nueva variable con Grupo, Actividad y Servicio</h2>
+                <p class="modal-subtitle">Se creará la variable, su lógica (DIM_GRUPO / DIM_ACTIVIDAD / Servicio) y se asignará al indicador.</p>
+            </div>
+            <button type="button" class="close-modal-btn" (click)="mostrarModalNuevaVar.set(false)" aria-label="Cerrar">
+                <mat-icon>close</mat-icon>
+            </button>
+        </header>
+        <div class="modal-body">
+            @if (errorLogicaModal()) {
+            <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorLogicaModal() }}</span></div>
+            }
+            <div class="form-grid">
+                <div class="field-input">
+                    <label for="nv_letra">Letra en la fórmula <span class="required">*</span></label>
+                    <select id="nv_letra" [(ngModel)]="nuevaVar.letra">
+                        @for (x of letrasDisponibles; track x) {<option [value]="x">{{ x }}</option>}
+                    </select>
+                </div>
+                <div class="field-input">
+                    <label for="nv_total">Total anual</label>
+                    <select id="nv_total" [(ngModel)]="nuevaVar.total_anual">
+                        <option value="SUMA_MESES">Suma de los meses</option>
+                        <option value="MEDIANA_PERIODO">Mediana del periodo (recursos)</option>
+                    </select>
+                </div>
+                <div class="field-input full-width">
+                    <label for="nv_nombre">Nombre de la variable <span class="required">*</span></label>
+                    <input id="nv_nombre" type="text" [(ngModel)]="nuevaVar.nombre"
+                        placeholder="Ej. Consulta Externa - Consultas" />
+                </div>
+                <div class="field-input full-width">
+                    <label for="nv_grupo">Grupo (DIM_GRUPO: tipgrupo, desctipgrupo) <span class="required">*</span></label>
+                    <select id="nv_grupo" [(ngModel)]="nuevaVar.tipgrupo"
+                        (change)="cargarServiciosModal(nuevaVar.tipgrupo, nuevaVar.actividad)">
+                        <option [ngValue]="null">Seleccione un grupo</option>
+                        @for (g of gruposDim(); track g.id) {
+                        <option [ngValue]="g.tipgrupo ?? g.id">{{ g.tipgrupo ?? g.id }} · {{ g['desctipgrupo'] || g.descripcion }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field-input full-width">
+                    <label for="nv_act_buscar">Actividad (DIM_ACTIVIDAD: actividad, descactividad, desclarga, Recurso, Proceso) <span class="required">*</span></label>
+                    <input id="nv_act_buscar" type="text" class="dyn-search"
+                        placeholder="Filtrar por código, descactividad, desclarga o Proceso..."
+                        [ngModel]="filtroActividad()" (ngModelChange)="filtroActividad.set($event)" />
+                    <select id="nv_act" [(ngModel)]="nuevaVar.actividad"
+                        (change)="cargarServiciosModal(nuevaVar.tipgrupo, nuevaVar.actividad)">
+                        <option [ngValue]="null">Seleccione una actividad</option>
+                        @for (a of actividadesFiltradas(); track a.id) {
+                        <option [ngValue]="a.actividad ?? a.id">
+                            {{ a.actividad ?? a.id }} · {{ a['descactividad'] }}{{ a['desclarga'] && a['desclarga'].trim() !== (a['descactividad'] || '').trim() ? ' — ' + a['desclarga'].trim() : '' }}{{ a['Proceso'] ? ' [' + a['Proceso'] + ']' : '' }}{{ a['Recurso'] || a['recurso'] ? ' (Recurso)' : '' }}
+                        </option>
+                        }
+                    </select>
+                </div>
+                <div class="field-input">
+                    <label for="nv_serv">Servicio (TOTALIZADO3)</label>
+                    <select id="nv_serv" [(ngModel)]="nuevaVar.servicio">
+                        <option [ngValue]="null">Todos los servicios</option>
+                        @for (s of serviciosDim(); track s.id) {
+                        <option [ngValue]="s.id">{{ s.id }} · {{ s.descripcion || 'sin nombre' }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field-input">
+                    <label for="nv_agr">Cálculo</label>
+                    <select id="nv_agr" [(ngModel)]="nuevaVar.agregacion">
+                        <option value="SUMA">SUMA</option>
+                        <option value="MEDIANA">MEDIANA por servicio (recursos)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <footer class="modal-footer">
+            <button type="button" class="btn-modal-action btn-cancel" (click)="mostrarModalNuevaVar.set(false)"
+                [disabled]="guardando()">Cancelar</button>
+            <button type="button" class="btn-modal-action btn-save" (click)="crearVariableYAsignar()" [disabled]="guardando()">
+                <mat-icon>save</mat-icon>{{ guardando() ? 'Guardando…' : 'Crear y asignar al indicador' }}
+            </button>
+        </footer>
+    </div>
+</div>
+}

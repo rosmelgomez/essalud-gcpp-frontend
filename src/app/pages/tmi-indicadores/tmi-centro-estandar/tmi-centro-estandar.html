@@ -1,0 +1,161 @@
+<div class="header">
+    <h2 class="bar-title">Estándar específico por centro</h2>
+    <div class="header-actions">
+        <div class="buscar-group">
+            <select class="anio-select" [value]="anio()" (change)="cambiarAnio($any($event.target).value)">
+                @for (a of anios; track a) {<option [value]="a" [selected]="a === anio()">{{ a }}</option>}
+            </select>
+            <button (click)="cargar()" class="btn-download" [disabled]="loading()">
+                <mat-icon>refresh</mat-icon> Actualizar
+            </button>
+        </div>
+    </div>
+</div>
+
+<p class="dyn-hint">
+    Gana sobre el estándar por tipo, nivel o categoría del centro. Úselo para las excepciones con sustento (carta o
+    directiva), por ejemplo el Pol. Ancije en recetas, o para dejar un indicador en NA ("No aplica") en un centro.
+</p>
+
+@if (error()) {
+<div class="alert alert-danger">{{ error() }}</div>
+}
+
+<mat-card class="table" style="--cols-table: minmax(70px, 0.5fr) minmax(220px, 2.2fr) minmax(220px, 2.2fr) minmax(130px, 1.1fr) minmax(80px, 0.6fr) minmax(200px, 2fr) minmax(90px, 0.7fr);">
+    <div class="table-title-row">
+        <h3>Excepciones {{ anio() }}</h3>
+        <button type="button" class="btn-download btn-agregar-fila" (click)="nuevo()">
+            <mat-icon>add</mat-icon> Agregar estándar
+        </button>
+    </div>
+    <div class="wrapper-table">
+        <div class="grid-table">
+            <div class="header-table">
+                <div class="cell">CÓDIGO</div>
+                <div class="cell">CENTRO</div>
+                <div class="cell">INDICADOR</div>
+                <div class="cell">ESTÁNDAR</div>
+                <div class="cell">ROJO</div>
+                <div class="cell">SUSTENTO</div>
+                <div class="cell acciones">ACCIONES</div>
+            </div>
+            <div class="dyn-scroll">
+                @if (loading()) {<div class="dyn-empty">Cargando...</div>}
+                @for (f of filas(); track f.id) {
+                <div class="row-table">
+                    <div class="cell">{{ f.codcentro }}</div>
+                    <div class="cell txt" [title]="f.red || ''">{{ f.centro || '—' }}</div>
+                    <div class="cell txt">{{ f.indicador || ('Indicador ' + f.id_indicador) }}</div>
+                    <div class="cell">{{ resumenMeses(f) }}</div>
+                    <div class="cell">{{ f.acept ?? '—' }}</div>
+                    <div class="cell txt" [title]="f.sustento || ''">{{ f.sustento || '—' }}</div>
+                    <div class="cell acciones">
+                        <button type="button" class="btn-icon-edit" (click)="editar(f)" title="Editar"><mat-icon>edit</mat-icon></button>
+                        <button type="button" class="btn-icon-delete" (click)="eliminar(f)" [disabled]="eliminandoId() === f.id" title="Eliminar">
+                            <mat-icon>{{ eliminandoId() === f.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+                        </button>
+                    </div>
+                </div>
+                } @empty {
+                @if (!loading()) {<div class="dyn-empty">No hay estándares propios de centro en {{ anio() }}.</div>}
+                }
+            </div>
+        </div>
+    </div>
+    <div class="footer-table">
+        <div class="footer-left"><strong>Total de filas:</strong></div>
+        <div class="footer-right num"><strong>{{ filas().length }}</strong></div>
+    </div>
+</mat-card>
+
+@if (mostrarForm()) {
+<div class="modal-overlay" (click)="mostrarForm.set(false)">
+    <div class="modal-card dyn-modal-wide" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+            <div class="modal-header-info">
+                <h2>{{ form.controls.id.value ? 'Editar estándar del centro' : 'Nuevo estándar del centro' }}</h2>
+                <p class="modal-subtitle">Los meses vacíos usan el estándar general del centro.</p>
+            </div>
+            <button type="button" class="close-modal-btn" (click)="mostrarForm.set(false)" aria-label="Cerrar">
+                <mat-icon>close</mat-icon></button>
+        </header>
+        <form [formGroup]="form" (ngSubmit)="guardar()" class="modal-form-container">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="field-input full-width">
+                        <label for="ce_buscar">Centro <span class="required">*</span></label>
+                        <input id="ce_buscar" type="text" class="dyn-search" placeholder="Filtrar por código, nombre o red..."
+                            [ngModel]="filtroCentro()" (ngModelChange)="filtroCentro.set($event)" [ngModelOptions]="{ standalone: true }" />
+                        <select id="ce_centro" formControlName="codcentro">
+                            <option value="">Seleccione un centro</option>
+                            @for (c of centrosFiltrados(); track c.codcentro) {
+                            <option [value]="'' + c.codcentro">{{ c.codcentro }} · {{ c.centro }} ({{ c.tipo }}, {{ c.red }})</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="ce_ind">Indicador <span class="required">*</span></label>
+                        <select id="ce_ind" formControlName="id_indicador">
+                            <option [ngValue]="null">Seleccione un indicador</option>
+                            @for (i of indicadores(); track i.id) {<option [ngValue]="i.id">{{ i.orden }}. {{ i.indicador }}</option>}
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="ce_anio">Año <span class="required">*</span></label>
+                        <select id="ce_anio" formControlName="anio">
+                            @for (a of anios; track a) {<option [ngValue]="a">{{ a }}</option>}
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="ce_aplica">¿Se evalúa?</label>
+                        <select id="ce_aplica" formControlName="aplica">
+                            <option [ngValue]="true">Sí, con este estándar</option>
+                            <option [ngValue]="false">No aplica (NA)</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="ce_acept">Rojo propio (opcional)</label>
+                        <input id="ce_acept" type="number" step="any" formControlName="acept" placeholder="Usa la tolerancia del indicador" />
+                    </div>
+                </div>
+
+                @if (form.controls.aplica.value) {
+                <div class="dyn-section-title">Estándar por mes</div>
+                <div class="dyn-inline" style="margin-bottom: 10px;">
+                    <div class="field-input" style="width: 180px;">
+                        <label for="ce_todos">Mismo valor para todos</label>
+                        <input id="ce_todos" type="number" step="any" [(ngModel)]="valorTodos" [ngModelOptions]="{ standalone: true }" />
+                    </div>
+                    <button type="button" class="btn-download" (click)="aplicarATodos()"><mat-icon>done_all</mat-icon> Aplicar</button>
+                </div>
+                <div class="dyn-meses">
+                    @for (m of meses; track m; let i = $index) {
+                    <div class="field-input">
+                        <label [for]="'ce_m' + m">{{ mesesCorto[i] }}</label>
+                        <input [id]="'ce_m' + m" type="number" step="any" [formControlName]="'est_' + m" />
+                    </div>
+                    }
+                </div>
+                }
+
+                <div class="form-grid" style="margin-top: 12px;">
+                    <div class="field-input full-width">
+                        <label for="ce_sust">Sustento</label>
+                        <input id="ce_sust" type="text" formControlName="sustento" maxlength="300"
+                            placeholder="Ej. Carta N° 3002-OCPD-EsSalud-2009" />
+                    </div>
+                </div>
+                @if (errorForm()) {
+                <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span></div>
+                }
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn-modal-action btn-cancel" (click)="mostrarForm.set(false)" [disabled]="guardando()">Cancelar</button>
+                <button type="submit" class="btn-modal-action btn-save" [disabled]="guardando()">
+                    <mat-icon>save</mat-icon>{{ guardando() ? 'Guardando…' : 'Guardar' }}
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>
+}

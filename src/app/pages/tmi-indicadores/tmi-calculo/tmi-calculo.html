@@ -1,0 +1,191 @@
+<div class="header">
+    <h2 class="bar-title">Calcular y generar el Excel</h2>
+</div>
+
+@if (error()) {
+<div class="alert alert-danger">{{ error() }}</div>
+}
+@if (mensaje()) {
+<div class="dyn-ok" style="margin-bottom: 12px;"><mat-icon>check_circle</mat-icon> {{ mensaje() }}</div>
+}
+
+<!-- 1. Cálculo: solo el periodo abierto (mes anterior al actual) -->
+<mat-card class="table dyn-paso">
+    <div class="table-title-row">
+        <div>
+            <h3>1. Calcular el periodo</h3>
+            <div class="dyn-paso-periodo">
+                Periodo a calcular:
+                <strong>{{ periodoCalculo() ? nombrePeriodo(periodoCalculo()) : '…' }}</strong>
+                @if (guardadoCalculo(); as g) {
+                <span class="dyn-badge dyn-p5">Último cálculo: {{ fecha(g.fecha_calculo) }}</span>
+                } @else {
+                <span class="dyn-badge dyn-pNA">Todavía no se calculó</span>
+                }
+            </div>
+        </div>
+        <div class="dyn-inline">
+            <button (click)="validar()" class="btn-download" [disabled]="!!ocupado()">
+                <mat-icon>rule</mat-icon> Validar
+            </button>
+            <button (click)="calcular()" class="btn-search" [disabled]="!!ocupado() || !periodoCalculo()">
+                @if (ocupado() === 'calcular') {<span class="spinner-btn"></span>} @else {<mat-icon>calculate</mat-icon>}
+                {{ ocupado() === 'calcular' ? 'Calculando…' : 'Calcular' }}
+            </button>
+        </div>
+    </div>
+    <p class="dyn-hint">
+        Se calcula el mes anterior al actual: arma el pivot de las variables desde TOTALIZADO3, calcula los indicadores
+        activos y guarda el resultado final. Cuando pasa la fecha de cierre, el periodo ya no se recalcula: el mes
+        siguiente se calcula el periodo que sigue.
+    </p>
+    @if (ocupado() === 'calcular') {
+    <div class="loading loading-excel">
+        <p>Calculando TMI {{ nombrePeriodo(periodoCalculo()) }}...</p>
+        <span class="loading-sub">Esto puede tardar unos segundos</span>
+    </div>
+    }
+</mat-card>
+
+@if (problemas(); as p) {
+<mat-card class="table" style="margin-bottom: 16px; padding-bottom: 16px;">
+    @if (p.length === 0) {
+    <div class="dyn-ok"><mat-icon>check_circle</mat-icon> La configuración no tiene errores.</div>
+    } @else {
+    <h3>{{ p.length }} problema(s): corríjalos en las pestañas Variables o Indicadores</h3>
+    <ul class="dyn-problemas">
+        @for (x of p; track $index) {<li><strong>{{ x.elemento }}</strong>: {{ x.problema }}</li>}
+    </ul>
+    }
+</mat-card>
+}
+
+@if (puntajes().length) {
+<mat-card class="table" style="margin-bottom: 16px; padding-bottom: 12px;">
+    <h3>Puntajes de {{ nombrePeriodo(periodoCalculo()) }} (centros × indicadores)</h3>
+    <div class="dyn-chips">
+        @for (x of puntajes(); track x.clave) {
+        <span [class]="claseP(x.clave)">Puntaje {{ x.clave }}: {{ x.valor }}</span>
+        }
+    </div>
+</mat-card>
+}
+
+<mat-card class="table dyn-resultado" [style.--cols-table]="columnasGrid()">
+    <div class="table-title-row">
+        <div>
+            <h3>2. Excel y resultados guardados</h3>
+            <div class="dyn-paso-periodo">
+                @if (guardado(); as g) {
+                <span class="dyn-badge">{{ nombrePeriodo(periodoSel()) }} · guardado el {{ fecha(g.fecha_calculo) }} ·
+                    {{ g.indicadores }} indicadores · {{ g.centros }} centros</span>
+                } @else {
+                <span class="dyn-badge dyn-p0">{{ nombrePeriodo(periodoSel()) }} no tiene resultado guardado</span>
+                }
+            </div>
+        </div>
+        <div class="dyn-inline">
+            <select [(ngModel)]="anio" (ngModelChange)="cambioPeriodo()" class="anio-select" [disabled]="!!ocupado()">
+                @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
+            </select>
+            <select [(ngModel)]="mes" (ngModelChange)="cambioPeriodo()" class="periodo-select" [disabled]="!!ocupado()">
+                @for (m of meses; track m.value) {<option [value]="m.value">{{ m.label }}</option>}
+            </select>
+            <button (click)="descargar()" class="btn-search btn-excel" [disabled]="!!ocupado() || !guardado()"
+                [title]="guardado() ? 'Excel con el resultado guardado del periodo' : 'El periodo no tiene resultado guardado'">
+                @if (ocupado() === 'excel') {<span class="spinner-btn"></span>} @else {<mat-icon>download</mat-icon>}
+                {{ ocupado() === 'excel' ? 'Generando Excel…' : 'Descargar Excel' }}
+            </button>
+        </div>
+    </div>
+    <div class="table-title-row dyn-sub">
+        <h4>Resultado final por indicador</h4>
+        <div class="dyn-inline">
+            <select class="periodo-select" [ngModel]="idIndicador()" (ngModelChange)="idIndicador.set($event); verResultado()"
+                [disabled]="!!ocupado()">
+                @for (i of indicadores(); track i.id) {<option [ngValue]="i.id">{{ i.orden }}. {{ i.indicador }}</option>}
+            </select>
+            <button type="button" class="btn-download" (click)="verResultado()" [disabled]="!!ocupado()">
+                <mat-icon>visibility</mat-icon> Ver
+            </button>
+        </div>
+    </div>
+    <div class="wrapper-table">
+        <div class="grid-table">
+            <div class="header-table">
+                <div class="cell">ORDEN</div>
+                <div class="cell">RED</div>
+                <div class="cell">CÓDIGO</div>
+                <div class="cell">CENTRO</div>
+                <div class="cell">NIVEL</div>
+                <div class="cell">TIPO</div>
+                <div class="cell">ESTÁNDAR</div>
+                <div class="cell">{{ esBanda() ? 'ROJO -' : '% ACEPT' }}</div>
+                @if (esBanda()) {<div class="cell">ROJO +</div>}
+                <div class="cell">TOTAL</div>
+                @for (i of columnasMes; track i) {<div class="cell">{{ encabezadoMes(i) }}</div>}
+                <div class="cell">PUNTAJE</div>
+                <div class="cell">MOTIVO NA</div>
+            </div>
+            <div class="filters-table">
+                <input type="text" class="filter-input" style="grid-column: span 4;" placeholder="Buscar centro, red o código..."
+                    [ngModel]="filtroRed()" (ngModelChange)="filtroRed.set($event)" />
+                <div class="cell" [style.grid-column]="'span ' + (esBanda() ? 18 : 17)"></div>
+                <select class="filter-input" [ngModel]="filtroPuntaje()" (ngModelChange)="filtroPuntaje.set($event)">
+                    <option value="">Todos</option>
+                    @for (x of ['5', '3', '1', '0', 'NA']; track x) {<option [value]="x">{{ x }}</option>}
+                </select>
+                <div class="cell"></div>
+            </div>
+            <div class="dyn-scroll">
+                @if (ocupado() === 'resultado') {<div class="dyn-empty">Cargando resultado...</div>}
+                @for (r of resultadoFiltrado(); track r.codcentro) {
+                <div class="row-table" [class.dyn-inactivo]="!r.visible">
+                    <div class="cell">{{ r.orden }}</div>
+                    <div class="cell txt">{{ r.red }}</div>
+                    <div class="cell">{{ r.codcentro }}</div>
+                    <div class="cell txt">{{ r.centro }}</div>
+                    <div class="cell">{{ r.nivel }}</div>
+                    <div class="cell">{{ r.categoria }}</div>
+                    <div class="cell num">{{ r.estandar == null ? '—' : (r.estandar | number: '1.0-4') }}</div>
+                    <div class="cell num">{{ r.acept == null ? '—' : (r.acept | number: '1.0-4') }}</div>
+                    @if (esBanda()) {<div class="cell num">{{ r.acept_mas == null ? '—' : (r.acept_mas | number: '1.0-4') }}</div>}
+                    <div class="cell num"><strong>{{ r.total == null ? 'NA' : (r.total | number: '1.0-4') }}</strong></div>
+                    @for (i of columnasMes; track i) {
+                    <div class="cell num" [class.dyn-mes-futuro]="i + 1 > +periodoSel().slice(4)">
+                        {{ valorMes(r, i) == null ? 'NA' : (valorMes(r, i) | number: '1.0-4') }}</div>
+                    }
+                    <div class="cell"><span [class]="claseP(r.puntaje)">{{ r.puntaje }}</span></div>
+                    <div class="cell txt">{{ motivo(r.motivo_na) }}{{ r.visible ? '' : ' (no se lista)' }}</div>
+                </div>
+                } @empty {
+                @if (ocupado() !== 'resultado') {
+                <div class="dyn-empty">
+                    {{ periodoSel() === periodoCalculo() ? 'El periodo todavía no se calculó: use "Calcular" arriba.' : 'Este periodo no tiene resultado guardado.' }}
+                </div>
+                }
+                }
+            </div>
+        </div>
+    </div>
+    <div class="footer-table">
+        <div class="footer-left"><strong>Centros:</strong></div>
+        <div class="footer-right num"><strong>{{ resultadoFiltrado().length }}</strong></div>
+    </div>
+</mat-card>
+
+<mat-card class="table" style="margin-top: 16px; padding-bottom: 16px;">
+    <div class="table-title-row">
+        <h3>Scripts SQL del TMI</h3>
+        <button type="button" class="btn-download" (click)="ejecutarScripts()" [disabled]="!!ocupado()">
+            <mat-icon>{{ ocupado() === 'sql' ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
+            {{ ocupado() === 'sql' ? 'Ejecutando…' : 'Ejecutar scripts' }}
+        </button>
+    </div>
+    <p class="dyn-hint">Se ejecutan solos al iniciar el backend. Úselo si se cambiaron los scripts o se restauró la base.</p>
+    @if (scriptsLista().length) {
+    <ul class="dyn-problemas">
+        @for (s of scriptsLista(); track s.nombre) {<li><strong>{{ s.nombre }}</strong>: {{ s.estado }}</li>}
+    </ul>
+    }
+</mat-card>
