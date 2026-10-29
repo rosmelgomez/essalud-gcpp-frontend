@@ -48,7 +48,7 @@ export class TmiCalculo implements OnInit {
   estadoPeriodos = signal<TmiPeriodoCalculo | null>(null);
   /** Periodo seleccionado (signal para que los computed reaccionen al cambiar año o mes). */
   periodoSel = signal(this.periodo);
-  /** Columnas de la grilla: ORDEN, RED, CÓDIGO, CENTRO, NIVEL, TIPO, ESTÁNDAR, % ACEPT, [ROJO +], TOTAL, 12 meses, PUNTAJE, MOTIVO. */
+  /** Columnas de la grilla: ORDEN, RED, CÓDIGO, CENTRO, NIVEL, TIPO, ESTÁNDAR, [% ACEPTMENOS en banda], % ACEPT, TOTAL, 12 meses, PUNTAJE, MOTIVO. */
   columnasGrid = computed(() =>
     `60px 230px 70px 240px 60px 80px 80px 80px ${this.esBanda() ? '80px ' : ''}95px repeat(12, 92px) 75px 160px`);
   esBanda = computed(() => (this.indicadores().find((i) => i.id === this.idIndicador())?.sentido ?? '') === 'BANDA');

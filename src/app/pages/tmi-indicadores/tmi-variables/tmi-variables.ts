@@ -2,8 +2,8 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { CatalogoGas } from '../catalogo-gas';
 import {
-  TmiCatalogo,
   TmiDinamicoService,
   TmiVariable,
   TmiVariableLogica,
@@ -29,21 +29,8 @@ export class TmiVariables implements OnInit {
   seleccionada = signal<TmiVariable | null>(null);
   logica = signal<TmiVariableLogica[]>([]);
 
-  grupos = signal<TmiCatalogo[]>([]);
-  actividades = signal<TmiCatalogo[]>([]);
-  filtroActividad = signal('');
-  actividadesFiltradas = computed(() => {
-    const f = this.filtroActividad().trim().toLowerCase();
-    const lista = this.actividades();
-    return f
-      ? lista.filter((a) =>
-          `${a.actividad ?? a.id} ${a['descactividad'] ?? ''} ${a['desclarga'] ?? ''} ${a.descripcion ?? ''} ${a['Proceso'] ?? ''}`
-            .toLowerCase()
-            .includes(f),
-        )
-      : lista;
-  });
-  servicios = signal<TmiCatalogo[]>([]);
+  /** Grupo -> actividad -> servicio en cascada (DIM_GRUPOACTIVIDADSERVICIO). */
+  readonly gas = new CatalogoGas(this.srv);
 
   loading = signal(false);
   loadingLogica = signal(false);
@@ -78,8 +65,6 @@ export class TmiVariables implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
-    this.srv.getGrupos().subscribe({ next: (g) => this.grupos.set(g) });
-    this.srv.getActividades().subscribe({ next: (a) => this.actividades.set(a) });
   }
 
   cargar(): void {
@@ -190,8 +175,6 @@ export class TmiVariables implements OnInit {
       id: 0, tipgrupo: null, actividad: null, servicio: null, condicion_hoja: '',
       agregacion: 'SUMA', periodo_desde: 200001, periodo_hasta: 999912, activo: true,
     });
-    this.servicios.set([]);
-    this.filtroActividad.set('');
     this.errorForm.set('');
     this.mostrarFormLogica.set(true);
   }
@@ -208,18 +191,17 @@ export class TmiVariables implements OnInit {
       periodo_hasta: l.periodo_hasta,
       activo: l.activo,
     });
-    this.filtroActividad.set('');
     this.errorForm.set('');
-    this.cargarServicios();
     this.mostrarFormLogica.set(true);
   }
 
-  /** Servicios con datos en TOTALIZADO3 para el grupo y la actividad elegidos. */
-  cargarServicios(): void {
-    const { tipgrupo, actividad } = this.formLogica.getRawValue();
-    this.servicios.set([]);
-    if (tipgrupo == null || actividad == null) return;
-    this.srv.getServicios(tipgrupo, actividad).subscribe({ next: (s) => this.servicios.set(s) });
+  /** Al cambiar el grupo se vuelven a elegir la actividad y el servicio (dependen del grupo). */
+  alCambiarGrupo(): void {
+    this.formLogica.patchValue({ actividad: null, servicio: null });
+  }
+
+  alCambiarActividad(): void {
+    this.formLogica.patchValue({ servicio: null });
   }
 
   guardarLogica(): void {

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable, shareReplay } from 'rxjs';
 import { Backend } from '../model/api';
 
 const base_url = Backend.apiTmi + '/dinamico';
@@ -49,17 +50,11 @@ export interface TmiIndicador {
   num_cero_na: boolean;
   cero_si_letra_mes_0: boolean;
   sin_datos_anio: 'MOSTRAR' | 'NA' | 'OCULTAR';
-  base_estandar:
-  | 'TIPO'
-  | 'NIVEL'
-  | 'CATEGORIA'
-  | 'TIPO_NIVEL'
-  | 'TIPO_CATEGORIA'
-  | 'NIVEL_CATEGORIA'
-  | 'TIPO_NIVEL_CATEGORIA';
+  base_estandar: string;   // tmi_tipo_estandar.codigo: NIVEL, NIVEL_TIPO, TIPO, CATEGORIA...
   sentido: 'MENOR' | 'MAYOR' | 'BANDA';
-  tipo_tolerancia: 'REL' | 'ABS';
+  tipo_tolerancia: 'REL' | 'ABS';   // % Acept: REL = % del estándar | ABS = puntos
   tolerancia: number;
+  tolerancia_menos?: number | null; // banda: hacia abajo (null = el mismo que hacia arriba)
   decimales: number | null;
   cero_es_logro: boolean;
   mostrar_no_aplica: boolean;
@@ -67,6 +62,65 @@ export interface TmiIndicador {
   formato: 'NUMERO' | 'PORCENTAJE';   // formato de los valores en el Excel
   grupo_descripcion?: string;
   letras?: string | null;
+}
+
+/** Tabla maestra: tipo de estándar con el que se evalúa un indicador. */
+export interface TmiTipoEstandar {
+  id?: number;
+  codigo: string;
+  descripcion: string;
+  orden: number | null;
+  activo: boolean;
+  claves?: number;
+  indicadores?: string | null;
+}
+
+/** Tabla maestra: clave de un tipo de estándar (valor del centro y tabla de donde sale el estándar). */
+export interface TmiEstandarClave {
+  id?: number;
+  tipo_estandar: string;
+  orden: number | null;
+  fuente: 'NIVEL' | 'TIPO' | 'CATEGORIA';
+  clave: string;
+  descripcion: string | null;
+  prioridad: number;
+  activo: boolean;
+  centros?: number;
+}
+
+/** Estándar por mes de un indicador en una clave de su tipo de estándar. */
+export interface TmiValorEstandar {
+  id_clave: number;
+  orden: number | null;
+  fuente: TmiEstandarClave['fuente'];
+  clave: string;
+  descripcion: string | null;
+  prioridad: number;
+  activo: boolean;
+  centros: number;
+  [mes: `est_${string}`]: number | null;
+}
+
+/** % Acept de un indicador: su porcentaje y el estándar del mes de cada clave (el % Acept se calcula). */
+export interface TmiAceptacionIndicador {
+  id: number;
+  orden: number;
+  codigo: string;
+  indicador: string;
+  grupo: string | null;
+  base_estandar: string;
+  sentido: 'MENOR' | 'MAYOR' | 'BANDA';
+  formato: 'NUMERO' | 'PORCENTAJE';
+  tipo_tolerancia: 'REL' | 'ABS';
+  tolerancia: number;
+  tolerancia_menos: number | null;
+  claves: { orden: number | null; fuente: string; clave: string; descripcion: string | null; estandar: number | null }[];
+}
+
+/** Bloque de la fórmula: operación con el bloque anterior + variable (la operación del primer bloque no se usa). */
+export interface TmiBloqueFormula {
+  op: '+' | '-' | '*' | '/';
+  id_variable: number | null;
 }
 
 export interface TmiLetra {
@@ -103,7 +157,7 @@ export interface TmiIndicadorEstandar {
   periodo_hasta: number;
   estandar: number;
   acept?: number | null;
-  acept_mas?: number | null;
+  aceptmenos?: number | null;
   activo: boolean;
 }
 
@@ -137,6 +191,18 @@ export interface TmiCatalogo {
   Proceso?: string;
   [k: string]: any;
 }
+/** Combinación válida grupo -> actividad -> servicio (DIM_GRUPOACTIVIDADSERVICIO, sin las desactivadas). */
+export interface TmiGrupoActividadServicio {
+  tipgrupo: number;
+  desctipgrupo: string | null;
+  actividad: number;
+  descactividad: string | null;
+  proceso: string | null;
+  recurso: number | boolean | null;
+  servicio: number;
+  descservicio: string | null;
+}
+
 export interface TmiCentroCatalogo {
   codcentro: number;
   centro: string;
@@ -162,7 +228,7 @@ export interface TmiResultadoFinal {
   categoria: string | null;
   estandar: number | null;
   acept: number | null;
-  acept_mas: number | null;
+  aceptmenos: number | null;
   total: number | null;
   periodo_01: number | null; periodo_02: number | null; periodo_03: number | null; periodo_04: number | null;
   periodo_05: number | null; periodo_06: number | null; periodo_07: number | null; periodo_08: number | null;
@@ -182,6 +248,15 @@ export interface TmiPeriodoCalculo {
 @Injectable({ providedIn: 'root' })
 export class TmiDinamicoService {
   constructor(private http: HttpClient) { }
+
+  private relacionGas$?: Observable<TmiGrupoActividadServicio[]>;
+  /** Relación grupo -> actividad -> servicio; se pide una sola vez y la comparten los formularios. */
+  getGrupoActividadServicio() {
+    this.relacionGas$ ??= this.http
+      .get<TmiGrupoActividadServicio[]>(`${base_url}/catalogo/grupo-actividad-servicio`)
+      .pipe(shareReplay(1));
+    return this.relacionGas$;
+  }
 
   // catálogos
   getGrupos() { 
@@ -217,6 +292,35 @@ export class TmiDinamicoService {
   postIndicador(dto: TmiIndicador) { return this.http.post<{ id: number }>(`${base_url}/indicadores`, dto); }
   putIndicador(id: number, dto: TmiIndicador) { return this.http.put(`${base_url}/indicadores/${id}`, dto); }
   deleteIndicador(id: number) { return this.http.delete(`${base_url}/indicadores/${id}`); }
+  // tablas maestras de estándares
+  getTiposEstandar() { return this.http.get<TmiTipoEstandar[]>(`${base_url}/tipos-estandar`); }
+  postTipoEstandar(dto: TmiTipoEstandar) { return this.http.post<{ id: number }>(`${base_url}/tipos-estandar`, dto); }
+  putTipoEstandar(id: number, dto: TmiTipoEstandar) { return this.http.put(`${base_url}/tipos-estandar/${id}`, dto); }
+  deleteTipoEstandar(id: number) { return this.http.delete(`${base_url}/tipos-estandar/${id}`); }
+  getEstandarClaves() { return this.http.get<TmiEstandarClave[]>(`${base_url}/estandar-claves`); }
+  postEstandarClave(dto: TmiEstandarClave) { return this.http.post<{ id: number }>(`${base_url}/estandar-claves`, dto); }
+  putEstandarClave(id: number, dto: TmiEstandarClave) { return this.http.put(`${base_url}/estandar-claves/${id}`, dto); }
+  deleteEstandarClave(id: number) { return this.http.delete(`${base_url}/estandar-claves/${id}`); }
+  getValoresEstandar(idIndicador: number, anio: number) {
+    return this.http.get<TmiValorEstandar[]>(`${base_url}/indicadores/${idIndicador}/valores-estandar/${anio}`);
+  }
+  putValorEstandar(idIndicador: number, dto: { anio: number; fuente: string; clave: string; [mes: string]: any }) {
+    return this.http.put(`${base_url}/indicadores/${idIndicador}/valores-estandar`, dto);
+  }
+
+  // % Acept: porcentaje de cada indicador (el % Acept se calcula con el estándar)
+  getAceptacion(anio: number, mes: number) {
+    return this.http.get<TmiAceptacionIndicador[]>(`${base_url}/aceptacion/${anio}/${mes}`);
+  }
+  putTolerancia(idIndicador: number, dto: { tipo_tolerancia: 'REL' | 'ABS'; tolerancia: number; tolerancia_menos: number | null }) {
+    return this.http.put(`${base_url}/indicadores/${idIndicador}/tolerancia`, dto);
+  }
+
+  /** Guarda la fórmula en bloques: el backend asigna las letras (A, B, C...) y las expresiones. */
+  putFormula(idIndicador: number, numerador: TmiBloqueFormula[], denominador: TmiBloqueFormula[]) {
+    return this.http.put<{ expr_numerador: string; expr_denominador: string }>(
+      `${base_url}/indicadores/${idIndicador}/formula`, { numerador, denominador });
+  }
   getLetras(idIndicador: number) { return this.http.get<TmiLetra[]>(`${base_url}/indicadores/${idIndicador}/letras`); }
   postLetra(dto: TmiLetra) { return this.http.post(`${base_url}/letras`, dto); }
   deleteLetra(id: number) { return this.http.delete(`${base_url}/letras/${id}`); }

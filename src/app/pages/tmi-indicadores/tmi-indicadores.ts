@@ -15,9 +15,11 @@ import { TmiVariables } from './tmi-variables/tmi-variables';
 import { TmiConfigIndicadores } from './tmi-config-indicadores/tmi-config-indicadores';
 import { TmiCentroEstandarTab } from './tmi-centro-estandar/tmi-centro-estandar';
 import { TmiCalculo } from './tmi-calculo/tmi-calculo';
+import { TmiTiposEstandar } from './tmi-tipos-estandar/tmi-tipos-estandar';
+import { TmiAceptacion } from './tmi-aceptacion/tmi-aceptacion';
 
 export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre'
-  | 'Variables' | 'Indicadores' | 'Estandar Centro' | 'Calcular';
+  | 'Tipos Estandar' | 'Aceptacion' | 'Variables' | 'Indicadores' | 'Estandar Centro' | 'Calcular';
 
 @Component({
   selector: 'app-tmi-indicadores',
@@ -35,7 +37,9 @@ export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categ
     TmiVariables,
     TmiConfigIndicadores,
     TmiCentroEstandarTab,
-    TmiCalculo
+    TmiCalculo,
+    TmiTiposEstandar,
+    TmiAceptacion
   ],
   templateUrl: './tmi-indicadores.html',
   styleUrl: './tmi-indicadores.css',

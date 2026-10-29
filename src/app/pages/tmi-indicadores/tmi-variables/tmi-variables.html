@@ -10,8 +10,8 @@
 </div>
 
 <p class="dyn-hint">
-    Cada variable se arma sumando las filas de su lógica: un grupo y una actividad de las tablas DIM, y si hace falta
-    un servicio. <strong>MEDIANA</strong> toma la mediana de cada servicio en el mes (camas, salas). Solo se calculan
+    Cada variable se arma sumando las filas de su lógica: un grupo, una actividad de ese grupo y, si hace falta, un
+    servicio de esa actividad. <strong>MEDIANA</strong> toma la mediana de cada servicio en el mes (camas, salas). Solo se calculan
     las variables que usa algún indicador activo.
 </p>
 
@@ -199,35 +199,33 @@
         <form [formGroup]="formLogica" (ngSubmit)="guardarLogica()" class="modal-form-container">
             <div class="modal-body">
                 <div class="form-grid">
+                    @if (gas.error()) {
+                    <div class="field-input full-width"><div class="alert alert-danger">{{ gas.error() }}</div></div>
+                    }
                     <div class="field-input full-width">
-                        <label for="lg_grupo">Grupo (DIM_GRUPO) <span class="required">*</span></label>
-                        <select id="lg_grupo" formControlName="tipgrupo" (change)="cargarServicios()">
-                            <option [ngValue]="null">Seleccione un grupo</option>
-                            @for (g of grupos(); track g.id) {
-                            <option [ngValue]="g.tipgrupo ?? g.id">{{ g.tipgrupo ?? g.id }} · {{ g['desctipgrupo'] || g.descripcion }}</option>
+                        <label for="lg_grupo">Grupo <span class="required">*</span></label>
+                        <select id="lg_grupo" formControlName="tipgrupo" (change)="alCambiarGrupo()">
+                            <option [ngValue]="null">{{ gas.cargando() ? 'Cargando…' : 'Seleccione un grupo' }}</option>
+                            @for (g of gas.grupos(formLogica.controls.tipgrupo.value); track g.id) {
+                            <option [ngValue]="g.id">{{ g.texto }}</option>
                             }
                         </select>
                     </div>
                     <div class="field-input full-width">
-                        <label for="lg_act_buscar">Actividad (DIM_ACTIVIDAD) <span class="required">*</span></label>
-                        <input id="lg_act_buscar" type="text" class="dyn-search" placeholder="Filtrar por actividad, descactividad, desclarga o Proceso..."
-                            [ngModel]="filtroActividad()" (ngModelChange)="filtroActividad.set($event)"
-                            [ngModelOptions]="{ standalone: true }" />
-                        <select id="lg_act" formControlName="actividad" (change)="cargarServicios()">
-                            <option [ngValue]="null">Seleccione una actividad</option>
-                            @for (a of actividadesFiltradas(); track a.id) {
-                            <option [ngValue]="a.actividad ?? a.id">
-                                {{ a.actividad ?? a.id }} · {{ a['descactividad'] }}{{ a['desclarga'] && a['desclarga'].trim() !== (a['descactividad'] || '').trim() ? ' — ' + a['desclarga'].trim() : '' }}{{ a['Proceso'] ? ' [' + a['Proceso'] + ']' : '' }}{{ a['Recurso'] || a['recurso'] ? ' (Recurso)' : '' }}
-                            </option>
+                        <label for="lg_act">Actividad del grupo <span class="required">*</span></label>
+                        <select id="lg_act" formControlName="actividad" (change)="alCambiarActividad()">
+                            <option [ngValue]="null">{{ formLogica.controls.tipgrupo.value == null ? 'Primero elija el grupo' : 'Seleccione una actividad' }}</option>
+                            @for (a of gas.actividades(formLogica.controls.tipgrupo.value, formLogica.controls.actividad.value); track a.id) {
+                            <option [ngValue]="a.id">{{ a.texto }}</option>
                             }
                         </select>
                     </div>
                     <div class="field-input">
-                        <label for="lg_serv">Servicio</label>
+                        <label for="lg_serv">Servicio de la actividad</label>
                         <select id="lg_serv" formControlName="servicio">
                             <option [ngValue]="null">Todos los servicios</option>
-                            @for (s of servicios(); track s.id) {
-                            <option [ngValue]="s.id">{{ s.id }} · {{ s.descripcion || 'sin nombre' }}</option>
+                            @for (s of gas.servicios(formLogica.controls.tipgrupo.value, formLogica.controls.actividad.value, formLogica.controls.servicio.value); track s.id) {
+                            <option [ngValue]="s.id">{{ s.texto }}</option>
                             }
                         </select>
                     </div>
@@ -239,7 +237,7 @@
                         </select>
                     </div>
                     <div class="field-input">
-                        <label for="lg_cond">Condición de hoja (DIM_HOJA)</label>
+                        <label for="lg_cond">Condición de hoja</label>
                         <select id="lg_cond" formControlName="condicion_hoja">
                             <option value="">Todas</option>
                             <option value="ASEGURADO">Asegurado</option>

@@ -110,6 +110,20 @@
             </button>
         </div>
     </div>
+    <div class="filters-bar">
+        <label class="filter-field filter-field-wide">
+            <span>Centro</span>
+            <input type="text" class="filter-input" placeholder="Buscar centro, red o código..."
+                [ngModel]="filtroRed()" (ngModelChange)="filtroRed.set($event)" />
+        </label>
+        <label class="filter-field">
+            <span>Puntaje</span>
+            <select class="filter-input" [ngModel]="filtroPuntaje()" (ngModelChange)="filtroPuntaje.set($event)">
+                <option value="">Todos</option>
+                @for (x of ['5', '3', '1', '0', 'NA']; track x) {<option [value]="x">{{ x }}</option>}
+            </select>
+        </label>
+    </div>
     <div class="wrapper-table">
         <div class="grid-table">
             <div class="header-table">
@@ -120,22 +134,12 @@
                 <div class="cell">NIVEL</div>
                 <div class="cell">TIPO</div>
                 <div class="cell">ESTÁNDAR</div>
-                <div class="cell">{{ esBanda() ? 'ROJO -' : '% ACEPT' }}</div>
-                @if (esBanda()) {<div class="cell">ROJO +</div>}
+                @if (esBanda()) {<div class="cell">% ACEPTMENOS</div>}
+                <div class="cell">% ACEPT</div>
                 <div class="cell">TOTAL</div>
                 @for (i of columnasMes; track i) {<div class="cell">{{ encabezadoMes(i) }}</div>}
                 <div class="cell">PUNTAJE</div>
                 <div class="cell">MOTIVO NA</div>
-            </div>
-            <div class="filters-table">
-                <input type="text" class="filter-input" style="grid-column: span 4;" placeholder="Buscar centro, red o código..."
-                    [ngModel]="filtroRed()" (ngModelChange)="filtroRed.set($event)" />
-                <div class="cell" [style.grid-column]="'span ' + (esBanda() ? 18 : 17)"></div>
-                <select class="filter-input" [ngModel]="filtroPuntaje()" (ngModelChange)="filtroPuntaje.set($event)">
-                    <option value="">Todos</option>
-                    @for (x of ['5', '3', '1', '0', 'NA']; track x) {<option [value]="x">{{ x }}</option>}
-                </select>
-                <div class="cell"></div>
             </div>
             <div class="dyn-scroll">
                 @if (ocupado() === 'resultado') {<div class="dyn-empty">Cargando resultado...</div>}
@@ -148,8 +152,8 @@
                     <div class="cell">{{ r.nivel }}</div>
                     <div class="cell">{{ r.categoria }}</div>
                     <div class="cell num">{{ r.estandar == null ? '—' : (r.estandar | number: '1.0-4') }}</div>
+                    @if (esBanda()) {<div class="cell num">{{ r.aceptmenos == null ? '—' : (r.aceptmenos | number: '1.0-4') }}</div>}
                     <div class="cell num">{{ r.acept == null ? '—' : (r.acept | number: '1.0-4') }}</div>
-                    @if (esBanda()) {<div class="cell num">{{ r.acept_mas == null ? '—' : (r.acept_mas | number: '1.0-4') }}</div>}
                     <div class="cell num"><strong>{{ r.total == null ? 'NA' : (r.total | number: '1.0-4') }}</strong></div>
                     @for (i of columnasMes; track i) {
                     <div class="cell num" [class.dyn-mes-futuro]="i + 1 > +periodoSel().slice(4)">

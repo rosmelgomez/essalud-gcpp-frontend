@@ -3,24 +3,27 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import {
-  TmiAmbito,
+  TmiBloqueFormula,
   TmiCatalogo,
-  TmiCentroCatalogo,
   TmiDinamicoService,
   TmiIndicador,
-  TmiIndicadorEstandar,
   TmiLetra,
   TmiProblemaConfig,
+  TmiTipoEstandar,
   TmiVariable,
-  TmiVariableLogica,
   mensajeError,
 } from '../../../services/tmi-dinamico-service';
 
-const FORMULA = /^[A-Z0-9 ().+*-]+$/;
+/** Operaciones de los bloques: valor guardado y cómo se muestra. */
+export const OPERACIONES: { op: TmiBloqueFormula['op']; texto: string }[] = [
+  { op: '+', texto: '+ Suma' }, { op: '-', texto: '− Resta' }, { op: '*', texto: '× Multiplica' }, { op: '/', texto: '÷ Divide' },
+];
+const SIMBOLO: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+type Parte = 'num' | 'den';
 const HOJA = /^[^\[\]:*?/\\]+$/;
 export const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-/** Indicadores definidos por el usuario: fórmula con letras, tipo de cálculo, puntaje, letras y ámbito. */
+/** Indicadores definidos por el usuario: fórmula en bloques (variable + operación), cálculo y cómo se evalúa. */
 @Component({
   selector: 'app-tmi-config-indicadores',
   imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule],
@@ -31,78 +34,40 @@ export class TmiConfigIndicadores implements OnInit {
   private srv = inject(TmiDinamicoService);
   private fb = inject(FormBuilder);
 
-  readonly letrasDisponibles = LETRAS;
+  readonly operaciones = OPERACIONES;
   indicadores = signal<TmiIndicador[]>([]);
   seleccionado = signal<TmiIndicador | null>(null);
   letras = signal<TmiLetra[]>([]);
-  ambito = signal<TmiAmbito[]>([]);
-  estandaresIndicador = signal<TmiIndicadorEstandar[]>([]);
-  centrosCatalogo = signal<TmiCentroCatalogo[]>([]);
-  nivelesDisponibles = computed(() =>
-    [...new Set(this.centrosCatalogo().map((c) => c.nivel).filter(Boolean))].sort(),
-  );
-  categoriasDisponibles = computed(() =>
-    [...new Set(this.centrosCatalogo().map((c) => c.categoria || '').filter(Boolean))].sort(),
-  );
-  tiposDisponibles = computed(() =>
-    [...new Set(this.centrosCatalogo().map((c) => c.tipo).filter(Boolean))].sort(),
-  );
-  redesDisponibles = computed(() =>
-    [...new Set(this.centrosCatalogo().map((c) => c.red).filter(Boolean))].sort(),
-  );
   variables = signal<TmiVariable[]>([]);
   gruposReporte = signal<TmiCatalogo[]>([]);
   tiposCalculo = signal<{ codigo: string; descripcion: string }[]>([]);
   problemas = signal<TmiProblemaConfig[] | null>(null);
 
-  // Catálogos DIM_GRUPO, DIM_ACTIVIDAD y Servicio para configurar la lógica de cada variable desde Indicadores
-  gruposDim = signal<TmiCatalogo[]>([]);
-  actividadesDim = signal<TmiCatalogo[]>([]);
-  filtroActividad = signal('');
-  actividadesFiltradas = computed(() => {
-    const f = this.filtroActividad().trim().toLowerCase();
-    const lista = this.actividadesDim();
-    return f
-      ? lista.filter((a) =>
-          `${a.actividad ?? a.id} ${a['descactividad'] ?? ''} ${a['desclarga'] ?? ''} ${a.descripcion ?? ''} ${a['Proceso'] ?? ''}`
-            .toLowerCase()
-            .includes(f),
-        )
-      : lista;
-  });
-  serviciosDim = signal<TmiCatalogo[]>([]);
-  variableActiva = signal<{ id: number; nombre: string } | null>(null);
-  logicaVariable = signal<TmiVariableLogica[]>([]);
-  mostrarModalLogica = signal(false);
-  mostrarModalNuevaVar = signal(false);
-  errorLogicaModal = signal('');
-  nuevaVar = {
-    letra: 'A',
-    nombre: '',
-    total_anual: 'SUMA_MESES' as 'SUMA_MESES' | 'MEDIANA_PERIODO',
-    tipgrupo: null as number | null,
-    actividad: null as number | null,
-    servicio: null as number | null,
-    agregacion: 'SUMA' as 'SUMA' | 'MEDIANA',
-  };
-  nuevaFilaLogica = {
-    id: 0,
-    tipgrupo: null as number | null,
-    actividad: null as number | null,
-    servicio: null as number | null,
-    condicion_hoja: '',
-    agregacion: 'SUMA' as 'SUMA' | 'MEDIANA',
-    periodo_desde: 200001,
-    periodo_hasta: 999912,
-  };
+  /** Tipos de estándar (tabla maestra) para elegir cómo se evalúa el indicador. */
+  tiposEstandar = signal<TmiTipoEstandar[]>([]);
 
-  /** Letras de la fórmula del indicador seleccionado que todavía no tienen variable. */
-  letrasSinVariable = computed(() => {
-    const ind = this.seleccionado();
-    if (!ind) return [];
-    const usadas = new Set((ind.expr_numerador + ' ' + ind.expr_denominador).split('').filter((c) => /[A-Z]/.test(c)));
-    const definidas = new Set(this.letras().map((l) => l.letra));
-    return [...usadas].filter((l) => !definidas.has(l)).sort();
+  // Fórmula en bloques: numerador y denominador; cada variable recibe una letra automática por orden de aparición
+  bloquesNum = signal<TmiBloqueFormula[]>([]);
+  bloquesDen = signal<TmiBloqueFormula[]>([]);
+  /** Texto de la fórmula guardada que no se puede pasar a bloques (números o paréntesis); '' = se puede. */
+  formulaAvanzada = signal('');
+  formulaCambiada = signal(false);
+  guardandoFormula = signal(false);
+  errorFormula = signal('');
+  /** Letra de cada variable: A, B, C... según el orden en que aparece (numerador y luego denominador). */
+  letraDe = computed(() => {
+    const m = new Map<number, string>();
+    for (const b of [...this.bloquesNum(), ...this.bloquesDen()]) {
+      if (b.id_variable != null && !m.has(b.id_variable) && m.size < LETRAS.length) m.set(b.id_variable, LETRAS[m.size]);
+    }
+    return m;
+  });
+  leyenda = computed(() =>
+    [...this.letraDe()].map(([id, letra]) => ({ letra, variable: this.nombreVariable(id) })));
+  vistaPrevia = computed(() => {
+    const num = this.textoBloques(this.bloquesNum()) || '?';
+    const den = this.textoBloques(this.bloquesDen()) || '1';
+    return `(${num}) / (${den})`;
   });
 
   loading = signal(false);
@@ -114,28 +79,6 @@ export class TmiConfigIndicadores implements OnInit {
   guardando = signal(false);
   errorForm = signal('');
 
-  nuevaLetra = { letra: 'A', id_variable: null as number | null };
-  nuevoEstandar = {
-    id: 0,
-    nivel: '',
-    categoria: '',
-    tipo: '',
-    periodo_desde: 202601,
-    periodo_hasta: 202612,
-    estandar: null as number | null,
-    acept: null as number | null,
-    acept_mas: null as number | null,
-  };
-  nuevoAmbito = {
-    red: '',
-    nivel: '',
-    categoria: '',
-    tipo: '',
-    codcentro: null as number | null,
-    incluir: true,
-    periodo_desde: 202601,
-    periodo_hasta: 202612,
-  };
 
   form = this.fb.nonNullable.group({
     id: [0],
@@ -145,8 +88,9 @@ export class TmiConfigIndicadores implements OnInit {
     nombre_hoja: ['', [Validators.required, Validators.maxLength(31), Validators.pattern(HOJA)]],
     titulo_hoja: [''],
     orden: [1, Validators.required],
-    expr_numerador: ['A', [Validators.required, Validators.pattern(FORMULA)]],
-    expr_denominador: ['B', [Validators.required, Validators.pattern(FORMULA)]],
+    // la fórmula se arma con bloques en el panel del indicador; el backend no la toma del formulario
+    expr_numerador: [''],
+    expr_denominador: [''],
     tipo_calculo: ['MENSUAL', Validators.required],
     factor: [1],
     den_cero: ['CERO' as 'CERO' | 'NA'],
@@ -169,19 +113,23 @@ export class TmiConfigIndicadores implements OnInit {
     this.srv.getVariables().subscribe({ next: (v) => this.variables.set(v) });
     this.srv.getGruposReporte().subscribe({ next: (g) => this.gruposReporte.set(g) });
     this.srv.getTiposCalculo().subscribe({ next: (t) => this.tiposCalculo.set(t) });
-    this.srv.getGrupos().subscribe({ next: (g) => this.gruposDim.set(g) });
-    this.srv.getActividades().subscribe({ next: (a) => this.actividadesDim.set(a) });
-    this.srv.getCentros().subscribe({ next: (c) => this.centrosCatalogo.set(c) });
+    this.srv.getTiposEstandar().subscribe({ next: (t) => this.tiposEstandar.set(t) });
   }
 
-  cargar(): void {
+  /** seleccionarId: indicador recién creado, para armar su fórmula a continuación. */
+  cargar(seleccionarId?: number): void {
     this.loading.set(true);
     this.error.set('');
     this.srv.getIndicadores().subscribe({
       next: (lista) => {
         this.indicadores.set(lista);
-        const sel = this.seleccionado();
-        if (sel) this.seleccionado.set(lista.find((x) => x.id === sel.id) ?? null);
+        const nuevo = seleccionarId ? lista.find((x) => x.id === seleccionarId) : undefined;
+        if (nuevo) {
+          this.seleccionar(nuevo);
+        } else {
+          const sel = this.seleccionado();
+          if (sel) this.seleccionado.set(lista.find((x) => x.id === sel.id) ?? null);
+        }
         this.loading.set(false);
       },
       error: (e) => {
@@ -217,17 +165,9 @@ export class TmiConfigIndicadores implements OnInit {
     this.srv.getLetras(id).subscribe({
       next: (l) => {
         this.letras.set(l);
-        this.nuevaLetra.letra = this.letrasSinVariable()[0] ?? this.nuevaLetra.letra;
+        this.cargarBloques();
       },
-      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo cargar las letras.')),
-    });
-    this.srv.getAmbito(id).subscribe({
-      next: (a) => this.ambito.set(a),
-      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo cargar el ámbito.')),
-    });
-    this.srv.getIndicadorEstandares(id).subscribe({
-      next: (est) => this.estandaresIndicador.set(est),
-      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo cargar los estándares del indicador.')),
+      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo cargar la fórmula.')),
     });
   }
 
@@ -250,13 +190,9 @@ export class TmiConfigIndicadores implements OnInit {
 
   guardar(): void {
     const f = this.form.getRawValue();
-    f.expr_numerador = (f.expr_numerador || '').toUpperCase();
-    f.expr_denominador = (f.expr_denominador || '').toUpperCase();
-    this.form.patchValue({ expr_numerador: f.expr_numerador, expr_denominador: f.expr_denominador });
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.errorForm.set('Revise los campos obligatorios. La fórmula solo admite letras A-Z, números, espacios, + - * . y paréntesis; '
-        + 'el nombre de hoja no admite [ ] : * ? / \\ y tiene máximo 31 caracteres.');
+      this.errorForm.set('Revise los campos obligatorios. El nombre de hoja no admite [ ] : * ? / \\ y tiene máximo 31 caracteres.');
       return;
     }
     const { id, ...resto } = f;
@@ -272,11 +208,12 @@ export class TmiConfigIndicadores implements OnInit {
     this.guardando.set(true);
     const req = id ? this.srv.putIndicador(id, dto) : this.srv.postIndicador(dto);
     req.subscribe({
-      next: () => {
+      next: (res: any) => {
         this.guardando.set(false);
         this.mostrarForm.set(false);
         this.problemas.set(null);
-        this.cargar();
+        // indicador nuevo: queda seleccionado para armar su fórmula
+        this.cargar(id ? undefined : res?.id);
       },
       error: (e) => {
         this.errorForm.set(mensajeError(e, 'No se pudo guardar el indicador.'));
@@ -287,7 +224,7 @@ export class TmiConfigIndicadores implements OnInit {
 
   eliminar(ind: TmiIndicador, ev?: Event): void {
     ev?.stopPropagation();
-    if (!ind.id || !confirm(`¿Eliminar el indicador "${ind.indicador}" con sus letras, ámbito y resultados?\n`
+    if (!ind.id || !confirm(`¿Eliminar el indicador "${ind.indicador}" con su fórmula y resultados?\n`
       + 'Si solo quiere quitarlo del reporte, edítelo y márquelo como inactivo.')) return;
     this.eliminandoId.set(ind.id);
     this.srv.deleteIndicador(ind.id).subscribe({
@@ -303,360 +240,128 @@ export class TmiConfigIndicadores implements OnInit {
     });
   }
 
-  // letras
-  agregarLetra(): void {
-    const ind = this.seleccionado();
-    if (!ind?.id || this.nuevaLetra.id_variable == null) {
-      this.errorDetalle.set('Seleccione la letra y la variable.');
-      return;
-    }
-    this.errorDetalle.set('');
-    this.srv.postLetra({ id_indicador: ind.id, letra: this.nuevaLetra.letra, id_variable: Number(this.nuevaLetra.id_variable) })
-      .subscribe({
-        next: () => {
-          this.nuevaLetra.id_variable = null;
-          this.cargarDetalle();
-          this.cargar();
-        },
-        error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo agregar la letra (¿ya existe esa variable en esa letra?).')),
-      });
+  // cómo se evalúa el indicador
+  textoTipoEstandar(codigo: string | null | undefined): string {
+    return this.tiposEstandar().find((t) => t.codigo === codigo)?.descripcion ?? codigo ?? '—';
   }
 
-  quitarLetra(l: TmiLetra): void {
-    if (!l.id) return;
-    this.srv.deleteLetra(l.id).subscribe({
+  // fórmula en bloques
+  nombreVariable(id: number | null): string {
+    return id == null ? '' : (this.variables().find((v) => v.id === id)?.nombre ?? `Variable #${id}`);
+  }
+
+  letra(b: TmiBloqueFormula): string {
+    return b.id_variable == null ? '·' : (this.letraDe().get(b.id_variable) ?? '?');
+  }
+
+  private textoBloques(bloques: TmiBloqueFormula[]): string {
+    return bloques.map((b, i) => `${i ? ' ' + SIMBOLO[b.op] + ' ' : ''}${this.letra(b)}`).join('');
+  }
+
+  private lista(parte: Parte) {
+    return parte === 'num' ? this.bloquesNum : this.bloquesDen;
+  }
+
+  agregarBloque(parte: Parte): void {
+    this.lista(parte).update((b) => [...b, { op: '+', id_variable: null }]);
+    this.formulaCambiada.set(true);
+  }
+
+  cambiarBloque(parte: Parte, i: number, cambio: Partial<TmiBloqueFormula>): void {
+    this.lista(parte).update((b) => b.map((x, k) => (k === i ? { ...x, ...cambio } : x)));
+    this.formulaCambiada.set(true);
+  }
+
+  quitarBloque(parte: Parte, i: number): void {
+    this.lista(parte).update((b) => b.filter((_, k) => k !== i));
+    this.formulaCambiada.set(true);
+  }
+
+  /** Pasa la fórmula guardada (letras + tmi_indicador_variable) a bloques. Una letra con varias variables se
+   *  abre en varios bloques sumados cuando el resultado es el mismo (la letra se suma o va al inicio y no se
+   *  multiplica ni divide); si no, o si la fórmula tiene números o paréntesis, se avisa y se puede rehacer. */
+  cargarBloques(): void {
+    const ind = this.seleccionado();
+    this.formulaCambiada.set(false);
+    this.errorFormula.set('');
+    this.formulaAvanzada.set('');
+    if (!ind) return;
+    const varsDe = new Map<string, number[]>();
+    for (const l of this.letras()) varsDe.set(l.letra, [...(varsDe.get(l.letra) ?? []), l.id_variable]);
+    const convertir = (expr: string | null, esDen: boolean): TmiBloqueFormula[] | null => {
+      const s = (expr ?? '').replace(/\s+/g, '').toUpperCase();
+      if (!s || (esDen && s === '1')) return [];
+      if (!/^[A-Z]([+\-*/][A-Z])*$/.test(s)) return null;
+      const bloques: TmiBloqueFormula[] = [];
+      for (let k = 0; k < s.length; k += 2) {
+        const op = (k ? s[k - 1] : '+') as TmiBloqueFormula['op'];
+        const siguiente = s[k + 1];
+        const vars = varsDe.get(s[k]) ?? [];
+        if (!vars.length) {
+          bloques.push({ op, id_variable: null });
+          continue;
+        }
+        if (vars.length > 1 && (op !== '+' || siguiente === '*' || siguiente === '/')) return null;
+        vars.forEach((v, j) => bloques.push({ op: j ? '+' : op, id_variable: v }));
+      }
+      return bloques;
+    };
+    const num = convertir(ind.expr_numerador, false);
+    const den = convertir(ind.expr_denominador, true);
+    if (num == null || den == null) {
+      this.formulaAvanzada.set(`(${ind.expr_numerador}) / (${ind.expr_denominador})`);
+      this.bloquesNum.set([]);
+      this.bloquesDen.set([]);
+      return;
+    }
+    this.bloquesNum.set(num);
+    this.bloquesDen.set(den);
+  }
+
+  guardarFormula(): void {
+    const ind = this.seleccionado();
+    if (!ind?.id) return;
+    const num = this.bloquesNum();
+    const den = this.bloquesDen();
+    if (!num.length) {
+      this.errorFormula.set('Agregue al menos una variable en el numerador.');
+      return;
+    }
+    if ([...num, ...den].some((b) => b.id_variable == null)) {
+      this.errorFormula.set('Elija la variable de cada bloque o quite los bloques vacíos.');
+      return;
+    }
+    if (new Set([...num, ...den].map((b) => b.id_variable)).size > LETRAS.length) {
+      this.errorFormula.set('La fórmula admite como máximo 26 variables distintas (A-Z).');
+      return;
+    }
+    this.errorFormula.set('');
+    this.guardandoFormula.set(true);
+    this.srv.putFormula(ind.id, num, den).subscribe({
       next: () => {
-        this.cargarDetalle();
+        this.guardandoFormula.set(false);
+        this.formulaCambiada.set(false);
+        this.formulaAvanzada.set('');
+        this.problemas.set(null);
         this.cargar();
-      },
-      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo quitar la letra.')),
-    });
-  }
-
-  // estándares del indicador por Nivel, Categoría y/o Tipo (1, 2 o los 3) y por Periodo
-  limpiarEstandarIndicador(): void {
-    this.nuevoEstandar = {
-      id: 0,
-      nivel: '',
-      categoria: '',
-      tipo: '',
-      periodo_desde: 202601,
-      periodo_hasta: 202612,
-      estandar: null,
-      acept: null,
-      acept_mas: null,
-    };
-  }
-
-  editarEstandarIndicador(e: TmiIndicadorEstandar): void {
-    this.nuevoEstandar = {
-      id: e.id ?? 0,
-      nivel: e.nivel ?? '',
-      categoria: e.categoria ?? '',
-      tipo: e.tipo ?? '',
-      periodo_desde: e.periodo_desde,
-      periodo_hasta: e.periodo_hasta,
-      estandar: e.estandar,
-      acept: e.acept ?? null,
-      acept_mas: e.acept_mas ?? null,
-    };
-  }
-
-  guardarEstandarIndicador(): void {
-    const ind = this.seleccionado();
-    const e = this.nuevoEstandar;
-    if (!ind?.id) return;
-    if (!e.nivel.trim() && !e.categoria.trim() && !e.tipo.trim()) {
-      this.errorDetalle.set('Seleccione al menos Nivel, Categoría o Tipo (o combinación de dos o tres).');
-      return;
-    }
-    if (e.estandar == null || (e.estandar as any) === '') {
-      this.errorDetalle.set('Ingrese el valor del estándar.');
-      return;
-    }
-    if (Number(e.periodo_desde) > Number(e.periodo_hasta)) {
-      this.errorDetalle.set('El periodo "desde" no puede ser mayor que "hasta".');
-      return;
-    }
-    this.errorDetalle.set('');
-    const dto: TmiIndicadorEstandar = {
-      id_indicador: ind.id,
-      nivel: e.nivel.trim() || null,
-      categoria: e.categoria.trim() || null,
-      tipo: e.tipo.trim() || null,
-      periodo_desde: Number(e.periodo_desde || 202601),
-      periodo_hasta: Number(e.periodo_hasta || 202612),
-      estandar: Number(e.estandar),
-      acept: e.acept == null || (e.acept as any) === '' ? null : Number(e.acept),
-      acept_mas: e.acept_mas == null || (e.acept_mas as any) === '' ? null : Number(e.acept_mas),
-      activo: true,
-    };
-    const req = e.id ? this.srv.putIndicadorEstandar(e.id, dto) : this.srv.postIndicadorEstandar(dto);
-    req.subscribe({
-      next: () => {
-        this.limpiarEstandarIndicador();
         this.cargarDetalle();
       },
-      error: (err) => this.errorDetalle.set(mensajeError(err, 'No se pudo guardar el estándar del indicador.')),
-    });
-  }
-
-  quitarEstandarIndicador(e: TmiIndicadorEstandar): void {
-    if (!e.id) return;
-    this.srv.deleteIndicadorEstandar(e.id).subscribe({
-      next: () => this.cargarDetalle(),
-      error: (err) => this.errorDetalle.set(mensajeError(err, 'No se pudo eliminar el estándar.')),
-    });
-  }
-
-  descripcionEstandarCentro(e: TmiIndicadorEstandar): string {
-    const partes = [
-      e.nivel && `Nivel: ${e.nivel}`,
-      e.categoria && `Categoría: ${e.categoria}`,
-      e.tipo && `Tipo: ${e.tipo}`,
-    ];
-    return partes.filter(Boolean).join(' + ');
-  }
-
-  vigenciaPeriodo(desde: number, hasta: number): string {
-    if (desde <= 200001 && hasta >= 999912) return 'Siempre';
-    if (desde === hasta) return String(desde);
-    return `${desde} – ${hasta}`;
-  }
-
-  // ámbito
-  agregarAmbito(): void {
-    const ind = this.seleccionado();
-    const a = this.nuevoAmbito;
-    if (!ind?.id) return;
-    if (!a.red.trim() && !a.nivel.trim() && !a.categoria.trim() && !a.tipo.trim() && a.codcentro == null) {
-      this.errorDetalle.set('Indique al menos nivel, categoría, tipo, red o código de centro.');
-      return;
-    }
-    if (Number(a.periodo_desde) > Number(a.periodo_hasta)) {
-      this.errorDetalle.set('El periodo "desde" no puede ser mayor que "hasta".');
-      return;
-    }
-    this.errorDetalle.set('');
-    this.srv.postAmbito({
-      id_indicador: ind.id,
-      red: a.red.trim() || null,
-      nivel: a.nivel.trim() || null,
-      categoria: a.categoria.trim() || null,
-      tipo: a.tipo.trim() || null,
-      codcentro: a.codcentro == null || (a.codcentro as any) === '' ? null : Number(a.codcentro),
-      incluir: a.incluir,
-      periodo_desde: Number(a.periodo_desde || 200001),
-      periodo_hasta: Number(a.periodo_hasta || 999912),
-    }).subscribe({
-      next: () => {
-        this.nuevoAmbito = {
-          red: '',
-          nivel: '',
-          categoria: '',
-          tipo: '',
-          codcentro: null,
-          incluir: true,
-          periodo_desde: 202601,
-          periodo_hasta: 202612,
-        };
-        this.cargarDetalle();
+      error: (e) => {
+        this.errorFormula.set(mensajeError(e, 'No se pudo guardar la fórmula.'));
+        this.guardandoFormula.set(false);
       },
-      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo agregar el ámbito.')),
     });
   }
 
-  quitarAmbito(a: TmiAmbito): void {
-    if (!a.id) return;
-    this.srv.deleteAmbito(a.id).subscribe({
-      next: () => this.cargarDetalle(),
-      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo quitar el ámbito.')),
-    });
-  }
-
-  descripcionAmbito(a: TmiAmbito): string {
-    const partes = [
-      a.nivel && `Nivel ${a.nivel}`,
-      a.categoria && `Categoría ${a.categoria}`,
-      a.tipo && `Tipo ${a.tipo}`,
-      a.red && `Red ${a.red}`,
-      a.codcentro != null && `Centro ${a.codcentro}`,
-    ];
-    return partes.filter(Boolean).join(' + ');
+  /** Fórmula con números o paréntesis: se descarta y se arma de nuevo con bloques. */
+  rehacerFormula(): void {
+    this.formulaAvanzada.set('');
+    this.bloquesNum.set([{ op: '+', id_variable: null }]);
+    this.bloquesDen.set([]);
+    this.formulaCambiada.set(true);
   }
 
   textoSentido(s: string): string {
     return s === 'MENOR' ? 'Menor es mejor' : s === 'MAYOR' ? 'Mayor es mejor' : 'Dentro de una banda';
-  }
-
-  // Configuración directa de Grupo (DIM_GRUPO), Actividad (DIM_ACTIVIDAD) y Servicio para variables del indicador
-  abrirLogicaVariable(l: TmiLetra): void {
-    this.variableActiva.set({ id: l.id_variable, nombre: l.variable || `Variable #${l.id_variable}` });
-    this.errorLogicaModal.set('');
-    this.filtroActividad.set('');
-    this.limpiarFilaLogica();
-    this.cargarLogicaVariable(l.id_variable);
-    this.mostrarModalLogica.set(true);
-  }
-
-  cargarLogicaVariable(idVariable: number): void {
-    this.srv.getLogica(idVariable).subscribe({
-      next: (filas) => this.logicaVariable.set(filas),
-      error: (e) => this.errorLogicaModal.set(mensajeError(e, 'No se pudo cargar la lógica de la variable.')),
-    });
-  }
-
-  limpiarFilaLogica(): void {
-    this.nuevaFilaLogica = {
-      id: 0,
-      tipgrupo: null,
-      actividad: null,
-      servicio: null,
-      condicion_hoja: '',
-      agregacion: 'SUMA',
-      periodo_desde: 200001,
-      periodo_hasta: 999912,
-    };
-    this.serviciosDim.set([]);
-  }
-
-  editarFilaLogica(fila: TmiVariableLogica): void {
-    this.nuevaFilaLogica = {
-      id: fila.id ?? 0,
-      tipgrupo: fila.tipgrupo,
-      actividad: fila.actividad,
-      servicio: fila.servicio,
-      condicion_hoja: fila.condicion_hoja ?? '',
-      agregacion: fila.agregacion,
-      periodo_desde: fila.periodo_desde,
-      periodo_hasta: fila.periodo_hasta,
-    };
-    this.cargarServiciosModal(fila.tipgrupo, fila.actividad);
-  }
-
-  cargarServiciosModal(tipgrupo: number | null, actividad: number | null): void {
-    this.serviciosDim.set([]);
-    if (tipgrupo == null || actividad == null) return;
-    this.srv.getServicios(Number(tipgrupo), Number(actividad)).subscribe({
-      next: (s) => this.serviciosDim.set(s),
-    });
-  }
-
-  guardarFilaLogica(): void {
-    const v = this.variableActiva();
-    const f = this.nuevaFilaLogica;
-    if (!v) return;
-    if (f.tipgrupo == null || f.actividad == null) {
-      this.errorLogicaModal.set('Seleccione Grupo (DIM_GRUPO) y Actividad (DIM_ACTIVIDAD).');
-      return;
-    }
-    this.errorLogicaModal.set('');
-    const dto: TmiVariableLogica = {
-      id_variable: v.id,
-      tipgrupo: Number(f.tipgrupo),
-      actividad: Number(f.actividad),
-      servicio: f.servicio == null || (f.servicio as any) === '' ? null : Number(f.servicio),
-      condicion_hoja: f.condicion_hoja || null,
-      agregacion: f.agregacion,
-      periodo_desde: Number(f.periodo_desde || 200001),
-      periodo_hasta: Number(f.periodo_hasta || 999912),
-      activo: true,
-    };
-    const req = f.id ? this.srv.putLogica(f.id, dto) : this.srv.postLogica(dto);
-    req.subscribe({
-      next: () => {
-        this.limpiarFilaLogica();
-        this.cargarLogicaVariable(v.id);
-        this.cargarDetalle();
-        this.srv.getVariables().subscribe({ next: (vars) => this.variables.set(vars) });
-      },
-      error: (e) => this.errorLogicaModal.set(mensajeError(e, 'No se pudo guardar el grupo/actividad/servicio.')),
-    });
-  }
-
-  quitarFilaLogica(fila: TmiVariableLogica): void {
-    const v = this.variableActiva();
-    if (!fila.id || !v) return;
-    this.srv.deleteLogica(fila.id).subscribe({
-      next: () => {
-        this.cargarLogicaVariable(v.id);
-        this.cargarDetalle();
-        this.srv.getVariables().subscribe({ next: (vars) => this.variables.set(vars) });
-      },
-      error: (e) => this.errorLogicaModal.set(mensajeError(e, 'No se pudo quitar la actividad.')),
-    });
-  }
-
-  abrirNuevaVariable(): void {
-    this.nuevaVar = {
-      letra: this.nuevaLetra.letra || 'A',
-      nombre: '',
-      total_anual: 'SUMA_MESES',
-      tipgrupo: null,
-      actividad: null,
-      servicio: null,
-      agregacion: 'SUMA',
-    };
-    this.filtroActividad.set('');
-    this.serviciosDim.set([]);
-    this.errorLogicaModal.set('');
-    this.mostrarModalNuevaVar.set(true);
-  }
-
-  crearVariableYAsignar(): void {
-    const ind = this.seleccionado();
-    const nv = this.nuevaVar;
-    if (!ind?.id) return;
-    if (!nv.nombre.trim() || nv.tipgrupo == null || nv.actividad == null) {
-      this.errorLogicaModal.set('Ingrese el nombre de la variable y seleccione Grupo (DIM_GRUPO) y Actividad (DIM_ACTIVIDAD).');
-      return;
-    }
-    this.errorLogicaModal.set('');
-    this.guardando.set(true);
-    this.srv.postVariable({
-      nombre: nv.nombre.trim(),
-      descripcion: null,
-      total_anual: nv.total_anual,
-      activo: true,
-    }).subscribe({
-      next: (res) => {
-        const idVar = res.id;
-        this.srv.postLogica({
-          id_variable: idVar,
-          tipgrupo: Number(nv.tipgrupo),
-          actividad: Number(nv.actividad),
-          servicio: nv.servicio == null || (nv.servicio as any) === '' ? null : Number(nv.servicio),
-          condicion_hoja: null,
-          agregacion: nv.agregacion,
-          periodo_desde: 200001,
-          periodo_hasta: 999912,
-          activo: true,
-        }).subscribe({
-          next: () => {
-            this.srv.postLetra({ id_indicador: ind.id!, letra: nv.letra, id_variable: idVar }).subscribe({
-              next: () => {
-                this.guardando.set(false);
-                this.mostrarModalNuevaVar.set(false);
-                this.srv.getVariables().subscribe({ next: (vars) => this.variables.set(vars) });
-                this.cargarDetalle();
-                this.cargar();
-              },
-              error: (e) => {
-                this.guardando.set(false);
-                this.errorLogicaModal.set(mensajeError(e, 'Variable creada, pero no se pudo asignar a la letra.'));
-              },
-            });
-          },
-          error: (e) => {
-            this.guardando.set(false);
-            this.errorLogicaModal.set(mensajeError(e, 'Variable creada, pero no se pudo guardar su grupo/actividad.'));
-          },
-        });
-      },
-      error: (e) => {
-        this.guardando.set(false);
-        this.errorLogicaModal.set(mensajeError(e, 'No se pudo crear la variable.'));
-      },
-    });
   }
 }

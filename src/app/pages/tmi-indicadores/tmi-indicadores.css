@@ -214,6 +214,35 @@
     transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* filtros fuera de la tabla (pestañas de estándares) */
+.filters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 180px;
+    max-width: 260px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rpt-ink);
+}
+
+.filter-field-wide {
+    flex: 2 1 260px;
+    max-width: 420px;
+}
+
+.filter-field .filter-input {
+    width: 100%;
+    margin: 0;
+}
+
 .filter-input::placeholder {
     color: #6b7d90;
     text-overflow: ellipsis;

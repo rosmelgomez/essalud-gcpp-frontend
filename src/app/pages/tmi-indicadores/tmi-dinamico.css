@@ -176,3 +176,207 @@
     font-size: 14px;
     font-weight: 600;
 }
+
+/* Fórmula en bloques (Indicadores) */
+.dyn-formula-parte {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 8px;
+    align-items: start;
+    margin-bottom: 10px;
+}
+
+.dyn-formula-titulo {
+    padding-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--rpt-muted);
+}
+
+.dyn-bloques {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.dyn-bloque {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 4px 4px 6px;
+    border: 1px solid var(--rpt-line);
+    border-radius: 8px;
+    background: var(--rpt-surface);
+}
+
+.dyn-bloque.dyn-bloque-vacio {
+    border-style: dashed;
+}
+
+.dyn-bloque select {
+    max-width: 280px;
+    border: none;
+    background: transparent;
+}
+
+.dyn-bloque-letra {
+    display: inline-grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--rpt-brand);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.dyn-bloque-op {
+    width: auto;
+    font-weight: 600;
+}
+
+.dyn-bloque-agregar {
+    padding: 4px 10px;
+}
+
+.dyn-bloque-nota {
+    margin: 0;
+}
+
+.dyn-formula-resumen {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+/* Indicadores: las dos partes del panel (1. cálculo, 2. estándares) */
+.dyn-parte-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 22px 0 6px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--rpt-line);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.dyn-parte-titulo span {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--rpt-brand);
+    color: #fff;
+    font-size: 12px;
+}
+
+/* Estándares por clave y mes */
+.dyn-valores-estandar {
+    --cols-table: 170px 80px 64px repeat(12, 64px) 120px 64px;
+}
+
+.dyn-input-mes {
+    width: 100%;
+    min-width: 0;
+    padding: 4px 6px;
+    text-align: right;
+}
+
+.dyn-anual {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* % Acept: una tarjeta por indicador, como la hoja "Estándares de indicadores" */
+.dyn-acept-card {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+}
+
+.dyn-acept-edicion {
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.dyn-acept-edicion .field-input {
+    width: 130px;
+}
+
+.dyn-pct {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dyn-pct input {
+    width: 80px;
+    text-align: right;
+}
+
+.dyn-acept-tabla {
+    display: grid;
+    grid-template-columns: 150px repeat(var(--n), minmax(70px, 1fr));
+    min-width: max-content;
+    margin: 0 8px;
+    border: 1px solid var(--rpt-line);
+}
+
+.dyn-acept-fila {
+    display: contents;
+}
+
+.dyn-acept-fila .cell {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--rpt-line-soft);
+    border-right: 1px solid var(--rpt-line-soft);
+    text-align: center;
+    font-size: 13px;
+}
+
+.dyn-acept-cab .cell {
+    background: var(--rpt-surface-2);
+    font-weight: 700;
+}
+
+.dyn-acept-etq {
+    text-align: left !important;
+    font-weight: 700;
+}
+
+.dyn-acept-etq.dyn-verde {
+    color: #1e6b34;
+}
+
+.dyn-acept-etq.dyn-rojo {
+    color: #9b1c1c;
+}
+
+.dyn-acept-fila .cell.dyn-sin {
+    background: var(--rpt-surface-2);
+}
+
+/* celdas de mes: sin flechas de número, para que se lea el valor completo */
+.dyn-input-mes {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.dyn-input-mes::-webkit-inner-spin-button,
+.dyn-input-mes::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.dyn-input-mes::placeholder {
+    color: var(--rpt-muted);
+    opacity: 0.7;
+}
+

@@ -1,0 +1,111 @@
+<div class="header">
+    <h2 class="bar-title">% Acept de los indicadores</h2>
+    <div class="header-actions">
+        <div class="buscar-group">
+            <select class="anio-select" [ngModel]="anio()" (ngModelChange)="cambiarPeriodo($event, mes())" aria-label="Año">
+                @for (a of anios; track a) {<option [ngValue]="a">{{ a }}</option>}
+            </select>
+            <select class="periodo-select" [ngModel]="mes()" (ngModelChange)="cambiarPeriodo(anio(), $event)" aria-label="Mes">
+                @for (m of meses; track m.value) {<option [ngValue]="m.value">{{ m.label }}</option>}
+            </select>
+            <button (click)="cargar()" class="btn-download" [disabled]="cargando()">
+                <mat-icon>refresh</mat-icon> Actualizar
+            </button>
+        </div>
+    </div>
+</div>
+
+<p class="dyn-hint">
+    El <strong>% Acept</strong> se calcula: el estándar más (menor es mejor) o menos (mayor es mejor) el porcentaje del
+    indicador; en banda, un porcentaje hacia arriba y otro hacia abajo. Solo se define el <strong>porcentaje</strong>
+    (o puntos, en indicadores que ya son porcentajes, como el 5 de la ocupación de cama). Cada tabla muestra el estándar
+    del mes elegido y el % Acept que resulta. El % Acept propio de un centro (pestaña Estándar por Centro) gana sobre este.
+</p>
+
+@if (error()) {
+<div class="alert alert-danger">{{ error() }}</div>
+}
+@if (mensaje()) {
+<div class="dyn-ok" style="margin-bottom: 12px;"><mat-icon>check_circle</mat-icon> {{ mensaje() }}</div>
+}
+
+<input type="text" class="dyn-search" style="margin-bottom: 12px; max-width: 420px;" placeholder="Buscar indicador..."
+    [ngModel]="filtro()" (ngModelChange)="filtro.set($event)" aria-label="Buscar indicador" />
+
+@if (cargando()) {<div class="dyn-empty">Cargando...</div>}
+@for (i of visibles(); track i.id) {
+@if (edicion()[i.id]; as e) {
+<mat-card class="table dyn-acept-card">
+    <div class="table-title-row">
+        <div>
+            <h3>{{ i.orden }}. {{ i.indicador }}</h3>
+            <div class="dyn-chips">
+                @if (i.grupo) {<span class="dyn-badge">{{ i.grupo }}</span>}
+                <span class="dyn-badge">Se evalúa por {{ textoTipo(i.base_estandar) }}</span>
+                <span class="dyn-badge">{{ textoSentido(i.sentido) }}</span>
+            </div>
+        </div>
+        <div class="dyn-inline dyn-acept-edicion">
+            <div class="field-input">
+                <label [for]="'tipo_' + i.id">Se mide en</label>
+                <select [id]="'tipo_' + i.id" [ngModel]="e.tipo" (ngModelChange)="cambiar(i, 'tipo', $event)">
+                    <option value="REL">% del estándar</option>
+                    <option value="ABS">puntos</option>
+                </select>
+            </div>
+            <div class="field-input">
+                <label [for]="'arriba_' + i.id">{{ i.sentido === 'MAYOR' ? 'Hacia abajo' : 'Hacia arriba' }}</label>
+                <div class="dyn-pct"><input [id]="'arriba_' + i.id" type="number" step="any" min="0" [ngModel]="e.arriba"
+                    (ngModelChange)="cambiar(i, 'arriba', $event)" /><span>{{ e.tipo === 'REL' ? '%' : 'pts' }}</span></div>
+            </div>
+            @if (i.sentido === 'BANDA') {
+            <div class="field-input">
+                <label [for]="'abajo_' + i.id">Hacia abajo</label>
+                <div class="dyn-pct"><input [id]="'abajo_' + i.id" type="number" step="any" min="0" [ngModel]="e.abajo"
+                    [placeholder]="e.arriba ?? ''" (ngModelChange)="cambiar(i, 'abajo', $event)" /><span>{{ e.tipo === 'REL' ? '%' : 'pts' }}</span></div>
+            </div>
+            }
+            <button type="button" class="btn-search" (click)="guardar(i)" [disabled]="!e.cambiado || guardando() === i.id">
+                <mat-icon>{{ guardando() === i.id ? 'hourglass_empty' : 'save' }}</mat-icon> Guardar
+            </button>
+        </div>
+    </div>
+    <div class="wrapper-table">
+        <div class="dyn-acept-tabla" [style.--n]="i.claves.length">
+            <div class="dyn-acept-fila dyn-acept-cab">
+                <div class="cell">Nivel</div>
+                @for (k of i.claves; track k.fuente + k.clave) {<div class="cell" [title]="k.fuente + ' ' + k.clave">{{ k.descripcion || k.clave }}</div>}
+            </div>
+            <div class="dyn-acept-fila">
+                <div class="cell dyn-acept-etq dyn-verde">Estándar</div>
+                @for (k of i.claves; track k.fuente + k.clave) {
+                <div class="cell num" [class.dyn-sin]="k.estandar == null">
+                    @if (k.estandar != null) { {{ esPorcentaje(i) ? (k.estandar | percent: '1.0-2') : (k.estandar | number: '1.1-2') }} }
+                </div>
+                }
+            </div>
+            <div class="dyn-acept-fila">
+                <div class="cell dyn-acept-etq dyn-rojo">{{ i.sentido === 'BANDA' ? '% Acept (arriba)' : '% Acept' }}</div>
+                @for (k of i.claves; track k.fuente + k.clave) {
+                <div class="cell num" [class.dyn-sin]="k.estandar == null">
+                    @if (calcular(i, k.estandar); as v) { {{ esPorcentaje(i) ? (v | percent: '1.0-2') : (v | number: '1.1-2') }} }
+                </div>
+                }
+            </div>
+            @if (i.sentido === 'BANDA') {
+            <div class="dyn-acept-fila">
+                <div class="cell dyn-acept-etq dyn-rojo">% Aceptmenos (abajo)</div>
+                @for (k of i.claves; track k.fuente + k.clave) {
+                <div class="cell num" [class.dyn-sin]="k.estandar == null">
+                    @if (calcular(i, k.estandar, true); as v) { {{ esPorcentaje(i) ? (v | percent: '1.0-2') : (v | number: '1.1-2') }} }
+                </div>
+                }
+            </div>
+            }
+        </div>
+    </div>
+</mat-card>
+}
+} @empty {
+@if (!cargando()) {<div class="dyn-empty">No hay indicadores activos.</div>}
+}

@@ -21,6 +21,12 @@
             (click)="setActiveTab('Estandares Categoria')">
             Estándares Categoría
         </button>
+        <button class="tab-button" [class.active]="activeTab === 'Tipos Estandar'" (click)="setActiveTab('Tipos Estandar')">
+            Tipos de Estándar
+        </button>
+        <button class="tab-button" [class.active]="activeTab === 'Aceptacion'" (click)="setActiveTab('Aceptacion')">
+            % Acept
+        </button>
         <button class="tab-button" [class.active]="activeTab === 'Centros TMI'" (click)="setActiveTab('Centros TMI')">
             Centros TMI
         </button>
@@ -47,6 +53,12 @@
     </div>
 
     <!-- TMI dinámico: variables, indicadores, estándar por centro y cálculo -->
+    @if (activeTab === 'Tipos Estandar') {
+    <div class="tab-content"><app-tmi-tipos-estandar /></div>
+    }
+    @if (activeTab === 'Aceptacion') {
+    <div class="tab-content"><app-tmi-aceptacion /></div>
+    }
     @if (activeTab === 'Variables') {
     <div class="tab-content"><app-tmi-variables /></div>
     }
@@ -100,6 +112,23 @@
                     </button>
                 </div>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
+                <div class="filters-bar">
+                    <label class="filter-field">
+                        <span>Tipo</span>
+                        <input type="text" class="filter-input" placeholder="Buscar tipo..."
+                            (keyup)="filterDataEstandarTipo('tipo', $event)" />
+                    </label>
+                    <label class="filter-field filter-field-wide">
+                        <span>Indicador</span>
+                        <input type="text" class="filter-input" placeholder="Buscar indicador..."
+                            (keyup)="filterDataEstandarTipo('indicador', $event)" />
+                    </label>
+                    <label class="filter-field">
+                        <span>Tipo de centro</span>
+                        <input type="text" class="filter-input" placeholder="Buscar tipo de centro..."
+                            (keyup)="filterDataEstandarTipo('tipo_centro', $event)" />
+                    </label>
+                </div>
                 <div class="wrapper-table">
                     <div class="grid-table">
                         <!-- HEADER -->
@@ -122,46 +151,6 @@
                             <div class="cell est_11">NOVIEMBRE</div>
                             <div class="cell est_12">DICIEMBRE</div>
                             <div class="cell acciones">ACCIONES</div>
-                        </div>
-
-                        <!-- FILTERS -->
-                        <div class="filters-table">
-
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
-                                (keyup)="filterDataEstandarTipo('tipo', $event)" />
-                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
-                                (keyup)="filterDataEstandarTipo('indicador', $event)" />
-                            <input type="text" class="filter-input cell tipo_centro" placeholder="Buscar tipo centro..."
-                                (keyup)="filterDataEstandarTipo('tipo_centro', $event)" />
-                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
-                                (keyup)="filterDataEstandarTipo('anio', $event)" />
-                            <input type="text" class="filter-input cell est_fijo" placeholder="Buscar est. fijo..."
-                                (keyup)="filterDataEstandarTipo('est_fijo', $event)" />
-                            <input type="text" class="filter-input cell est_01" placeholder="Buscar enero..."
-                                (keyup)="filterDataEstandarTipo('est_01', $event)" />
-                            <input type="text" class="filter-input cell est_02" placeholder="Buscar febrero..."
-                                (keyup)="filterDataEstandarTipo('est_02', $event)" />
-                            <input type="text" class="filter-input cell est_03" placeholder="Buscar marzo..."
-                                (keyup)="filterDataEstandarTipo('est_03', $event)" />
-                            <input type="text" class="filter-input cell est_04" placeholder="Buscar abril..."
-                                (keyup)="filterDataEstandarTipo('est_04', $event)" />
-                            <input type="text" class="filter-input cell est_05" placeholder="Buscar mayo..."
-                                (keyup)="filterDataEstandarTipo('est_05', $event)" />
-                            <input type="text" class="filter-input cell est_06" placeholder="Buscar junio..."
-                                (keyup)="filterDataEstandarTipo('est_06', $event)" />
-                            <input type="text" class="filter-input cell est_07" placeholder="Buscar julio..."
-                                (keyup)="filterDataEstandarTipo('est_07', $event)" />
-                            <input type="text" class="filter-input cell est_08" placeholder="Buscar agosto..."
-                                (keyup)="filterDataEstandarTipo('est_08', $event)" />
-                            <input type="text" class="filter-input cell est_09" placeholder="Buscar septiembre..."
-                                (keyup)="filterDataEstandarTipo('est_09', $event)" />
-                            <input type="text" class="filter-input cell est_10" placeholder="Buscar octubre..."
-                                (keyup)="filterDataEstandarTipo('est_10', $event)" />
-                            <input type="text" class="filter-input cell est_11" placeholder="Buscar noviembre..."
-                                (keyup)="filterDataEstandarTipo('est_11', $event)" />
-                            <input type="text" class="filter-input cell est_12" placeholder="Buscar diciembre..."
-                                (keyup)="filterDataEstandarTipo('est_12', $event)" />
-                            <div class="cell acciones"></div>
                         </div>
 
                         <!-- ROWS -->
@@ -369,6 +358,23 @@
                     </button>
                 </div>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
+                <div class="filters-bar">
+                    <label class="filter-field">
+                        <span>Tipo</span>
+                        <input type="text" class="filter-input" placeholder="Buscar tipo..."
+                            (keyup)="filterDataEstandarNivel('tipo', $event)" />
+                    </label>
+                    <label class="filter-field filter-field-wide">
+                        <span>Indicador</span>
+                        <input type="text" class="filter-input" placeholder="Buscar indicador..."
+                            (keyup)="filterDataEstandarNivel('indicador', $event)" />
+                    </label>
+                    <label class="filter-field">
+                        <span>Nivel de centro</span>
+                        <input type="text" class="filter-input" placeholder="Buscar nivel de centro..."
+                            (keyup)="filterDataEstandarNivel('nivel_centro', $event)" />
+                    </label>
+                </div>
                 <div class="wrapper-table">
                     <div class="grid-table">
                         <div class="header-table">
@@ -390,47 +396,6 @@
                             <div class="cell est_11">NOVIEMBRE</div>
                             <div class="cell est_12">DICIEMBRE</div>
                             <div class="cell acciones">ACCIONES</div>
-                        </div>
-
-                        <div class="filters-table">
-
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
-                                (keyup)="filterDataEstandarNivel('tipo', $event)" />
-                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
-                                (keyup)="filterDataEstandarNivel('indicador', $event)" />
-                            <input type="text" class="filter-input cell nivel_centro"
-                                placeholder="Buscar nivel centro..."
-                                (keyup)="filterDataEstandarNivel('nivel_centro', $event)" />
-                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
-                                (keyup)="filterDataEstandarNivel('anio', $event)" />
-                            <input type="text" class="filter-input cell est_fijo" placeholder="Buscar est. fijo..."
-                                (keyup)="filterDataEstandarNivel('est_fijo', $event)" />
-                            <input type="text" class="filter-input cell est_01" placeholder="Buscar enero..."
-                                (keyup)="filterDataEstandarNivel('est_01', $event)" />
-                            <input type="text" class="filter-input cell est_02" placeholder="Buscar febrero..."
-                                (keyup)="filterDataEstandarNivel('est_02', $event)" />
-                            <input type="text" class="filter-input cell est_03" placeholder="Buscar marzo..."
-                                (keyup)="filterDataEstandarNivel('est_03', $event)" />
-                            <input type="text" class="filter-input cell est_04" placeholder="Buscar abril..."
-                                (keyup)="filterDataEstandarNivel('est_04', $event)" />
-                            <input type="text" class="filter-input cell est_05" placeholder="Buscar mayo..."
-                                (keyup)="filterDataEstandarNivel('est_05', $event)" />
-                            <input type="text" class="filter-input cell est_06" placeholder="Buscar junio..."
-                                (keyup)="filterDataEstandarNivel('est_06', $event)" />
-                            <input type="text" class="filter-input cell est_07" placeholder="Buscar julio..."
-                                (keyup)="filterDataEstandarNivel('est_07', $event)" />
-                            <input type="text" class="filter-input cell est_08" placeholder="Buscar agosto..."
-                                (keyup)="filterDataEstandarNivel('est_08', $event)" />
-                            <input type="text" class="filter-input cell est_09" placeholder="Buscar septiembre..."
-                                (keyup)="filterDataEstandarNivel('est_09', $event)" />
-                            <input type="text" class="filter-input cell est_10" placeholder="Buscar octubre..."
-                                (keyup)="filterDataEstandarNivel('est_10', $event)" />
-                            <input type="text" class="filter-input cell est_11" placeholder="Buscar noviembre..."
-                                (keyup)="filterDataEstandarNivel('est_11', $event)" />
-                            <input type="text" class="filter-input cell est_12" placeholder="Buscar diciembre..."
-                                (keyup)="filterDataEstandarNivel('est_12', $event)" />
-
-                            <div class="cell acciones"></div>
                         </div>
 
                         <cdk-virtual-scroll-viewport #viewportNivel class="viewport-table" [itemSize]="44">
@@ -637,6 +602,23 @@
                     </button>
                 </div>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
+                <div class="filters-bar">
+                    <label class="filter-field">
+                        <span>Tipo</span>
+                        <input type="text" class="filter-input" placeholder="Buscar tipo..."
+                            (keyup)="filterDataEstandarCategoria('tipo', $event)" />
+                    </label>
+                    <label class="filter-field filter-field-wide">
+                        <span>Indicador</span>
+                        <input type="text" class="filter-input" placeholder="Buscar indicador..."
+                            (keyup)="filterDataEstandarCategoria('indicador', $event)" />
+                    </label>
+                    <label class="filter-field">
+                        <span>Categoría de centro</span>
+                        <input type="text" class="filter-input" placeholder="Buscar categoría de centro..."
+                            (keyup)="filterDataEstandarCategoria('categoria_centro', $event)" />
+                    </label>
+                </div>
                 <div class="wrapper-table">
                     <div class="grid-table">
                         <div class="header-table">
@@ -658,45 +640,6 @@
                             <div class="cell est_11">NOVIEMBRE</div>
                             <div class="cell est_12">DICIEMBRE</div>
                             <div class="cell acciones">ACCIONES</div>
-                        </div>
-
-                        <div class="filters-table">
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
-                                (keyup)="filterDataEstandarCategoria('tipo', $event)" />
-                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
-                                (keyup)="filterDataEstandarCategoria('indicador', $event)" />
-                            <input type="text" class="filter-input cell categoria_centro"
-                                placeholder="Buscar categoría centro..."
-                                (keyup)="filterDataEstandarCategoria('categoria_centro', $event)" />
-                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
-                                (keyup)="filterDataEstandarCategoria('anio', $event)" />
-                            <input type="text" class="filter-input cell est_fijo" placeholder="Buscar est. fijo..."
-                                (keyup)="filterDataEstandarCategoria('est_fijo', $event)" />
-                            <input type="text" class="filter-input cell est_01" placeholder="Buscar enero..."
-                                (keyup)="filterDataEstandarCategoria('est_01', $event)" />
-                            <input type="text" class="filter-input cell est_02" placeholder="Buscar febrero..."
-                                (keyup)="filterDataEstandarCategoria('est_02', $event)" />
-                            <input type="text" class="filter-input cell est_03" placeholder="Buscar marzo..."
-                                (keyup)="filterDataEstandarCategoria('est_03', $event)" />
-                            <input type="text" class="filter-input cell est_04" placeholder="Buscar abril..."
-                                (keyup)="filterDataEstandarCategoria('est_04', $event)" />
-                            <input type="text" class="filter-input cell est_05" placeholder="Buscar mayo..."
-                                (keyup)="filterDataEstandarCategoria('est_05', $event)" />
-                            <input type="text" class="filter-input cell est_06" placeholder="Buscar junio..."
-                                (keyup)="filterDataEstandarCategoria('est_06', $event)" />
-                            <input type="text" class="filter-input cell est_07" placeholder="Buscar julio..."
-                                (keyup)="filterDataEstandarCategoria('est_07', $event)" />
-                            <input type="text" class="filter-input cell est_08" placeholder="Buscar agosto..."
-                                (keyup)="filterDataEstandarCategoria('est_08', $event)" />
-                            <input type="text" class="filter-input cell est_09" placeholder="Buscar septiembre..."
-                                (keyup)="filterDataEstandarCategoria('est_09', $event)" />
-                            <input type="text" class="filter-input cell est_10" placeholder="Buscar octubre..."
-                                (keyup)="filterDataEstandarCategoria('est_10', $event)" />
-                            <input type="text" class="filter-input cell est_11" placeholder="Buscar noviembre..."
-                                (keyup)="filterDataEstandarCategoria('est_11', $event)" />
-                            <input type="text" class="filter-input cell est_12" placeholder="Buscar diciembre..."
-                                (keyup)="filterDataEstandarCategoria('est_12', $event)" />
-                            <div class="cell acciones"></div>
                         </div>
 
 
@@ -897,6 +840,38 @@
                     </button>
                 </div>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
+                <div class="filters-bar">
+                    <label class="filter-field">
+                        <span>Código</span>
+                        <input type="text" class="filter-input" placeholder="Buscar código..."
+                            (keyup)="filterDataCentrosTMI('codcentro', $event)" />
+                    </label>
+                    <label class="filter-field filter-field-wide">
+                        <span>Centro</span>
+                        <input type="text" class="filter-input" placeholder="Buscar centro..."
+                            (keyup)="filterDataCentrosTMI('centro', $event)" />
+                    </label>
+                    <label class="filter-field">
+                        <span>Red</span>
+                        <input type="text" class="filter-input" placeholder="Buscar red..."
+                            (keyup)="filterDataCentrosTMI('red', $event)" />
+                    </label>
+                    <label class="filter-field">
+                        <span>Categoría</span>
+                        <input type="text" class="filter-input" placeholder="Buscar categoría..."
+                            (keyup)="filterDataCentrosTMI('categoria', $event)" />
+                    </label>
+                    <label class="filter-field">
+                        <span>Nivel</span>
+                        <input type="text" class="filter-input" placeholder="Buscar nivel..."
+                            (keyup)="filterDataCentrosTMI('nivel', $event)" />
+                    </label>
+                    <label class="filter-field">
+                        <span>Tipo</span>
+                        <input type="text" class="filter-input" placeholder="Buscar tipo..."
+                            (keyup)="filterDataCentrosTMI('tipo', $event)" />
+                    </label>
+                </div>
                 <div class="wrapper-table">
                     <div class="grid-table">
                         <div class="header-table">
@@ -911,30 +886,6 @@
                             <div class="cell tipo">TIPO</div>
                             <div class="cell flag">FLAG</div>
                             <div class="cell acciones">ACCIONES</div>
-                        </div>
-
-                        <div class="filters-table">
-                            <input type="text" class="filter-input cell id" placeholder="Buscar ID..."
-                                (keyup)="filterDataCentrosTMI('id', $event)" />
-                            <input type="text" class="filter-input cell red" placeholder="Buscar red..."
-                                (keyup)="filterDataCentrosTMI('red', $event)" />
-                            <input type="text" class="filter-input cell orden" placeholder="Buscar orden..."
-                                (keyup)="filterDataCentrosTMI('orden', $event)" />
-                            <input type="text" class="filter-input cell orden_tipo" placeholder="Buscar orden_tipo..."
-                                (keyup)="filterDataCentrosTMI('orden_tipo', $event)" />
-                            <input type="text" class="filter-input cell codcentro" placeholder="Buscar codcentro..."
-                                (keyup)="filterDataCentrosTMI('codcentro', $event)" />
-                            <input type="text" class="filter-input cell centro" placeholder="Buscar centro..."
-                                (keyup)="filterDataCentrosTMI('centro', $event)" />
-                            <input type="text" class="filter-input cell categoria" placeholder="Buscar categoría..."
-                                (keyup)="filterDataCentrosTMI('categoria', $event)" />
-                            <input type="text" class="filter-input cell nivel" placeholder="Buscar nivel..."
-                                (keyup)="filterDataCentrosTMI('nivel', $event)" />
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
-                                (keyup)="filterDataCentrosTMI('tipo', $event)" />
-                            <input type="text" class="filter-input cell flag" placeholder="Buscar flag..."
-                                (keyup)="filterDataCentrosTMI('flag', $event)" />
-                            <div class="cell acciones"></div>
                         </div>
 
                         <cdk-virtual-scroll-viewport #viewportCentros class="viewport-table" [itemSize]="44">
@@ -1107,6 +1058,28 @@
                     </button>
                 </div>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
+                <div class="filters-bar">
+                    <label class="filter-field">
+                        <span>Código</span>
+                        <input type="text" class="filter-input" placeholder="Buscar código..."
+                            (keyup)="filterDataExclusion('codcentro', $event)" />
+                    </label>
+                    <label class="filter-field filter-field-wide">
+                        <span>Centro</span>
+                        <input type="text" class="filter-input" placeholder="Buscar centro..."
+                            (keyup)="filterDataExclusion('centro', $event)" />
+                    </label>
+                    <label class="filter-field">
+                        <span>Tipo</span>
+                        <input type="text" class="filter-input" placeholder="Buscar tipo..."
+                            (keyup)="filterDataExclusion('tipo', $event)" />
+                    </label>
+                    <label class="filter-field filter-field-wide">
+                        <span>Indicador</span>
+                        <input type="text" class="filter-input" placeholder="Buscar indicador..."
+                            (keyup)="filterDataExclusion('indicador', $event)" />
+                    </label>
+                </div>
                 <div class="wrapper-table">
                     <div class="grid-table">
                         <div class="header-table">
@@ -1128,44 +1101,6 @@
                             <div class="cell excl_11">NOVIEMBRE</div>
                             <div class="cell excl_12">DICIEMBRE</div>
                             <div class="cell acciones">ACCIONES</div>
-                        </div>
-
-                        <div class="filters-table">
-                            <input type="text" class="filter-input cell codcentro" placeholder="Buscar codcentro..."
-                                (keyup)="filterDataExclusion('codcentro', $event)" />
-                            <input type="text" class="filter-input cell centro" placeholder="Buscar centro..."
-                                (keyup)="filterDataExclusion('centro', $event)" />
-                            <input type="text" class="filter-input cell tipo" placeholder="Buscar tipo..."
-                                (keyup)="filterDataExclusion('tipo', $event)" />
-                            <input type="text" class="filter-input cell indicador" placeholder="Buscar indicador..."
-                                (keyup)="filterDataExclusion('indicador', $event)" />
-                            <input type="text" class="filter-input cell anio" placeholder="Buscar año..."
-                                (keyup)="filterDataExclusion('anio', $event)" />
-                            <input type="text" class="filter-input cell excl_01" placeholder="Buscar enero..."
-                                (keyup)="filterDataExclusion('excl_01', $event)" />
-                            <input type="text" class="filter-input cell excl_02" placeholder="Buscar febrero..."
-                                (keyup)="filterDataExclusion('excl_02', $event)" />
-                            <input type="text" class="filter-input cell excl_03" placeholder="Buscar marzo..."
-                                (keyup)="filterDataExclusion('excl_03', $event)" />
-                            <input type="text" class="filter-input cell excl_04" placeholder="Buscar abril..."
-                                (keyup)="filterDataExclusion('excl_04', $event)" />
-                            <input type="text" class="filter-input cell excl_05" placeholder="Buscar mayo..."
-                                (keyup)="filterDataExclusion('excl_05', $event)" />
-                            <input type="text" class="filter-input cell excl_06" placeholder="Buscar junio..."
-                                (keyup)="filterDataExclusion('excl_06', $event)" />
-                            <input type="text" class="filter-input cell excl_07" placeholder="Buscar julio..."
-                                (keyup)="filterDataExclusion('excl_07', $event)" />
-                            <input type="text" class="filter-input cell excl_08" placeholder="Buscar agosto..."
-                                (keyup)="filterDataExclusion('excl_08', $event)" />
-                            <input type="text" class="filter-input cell excl_09" placeholder="Buscar septiembre..."
-                                (keyup)="filterDataExclusion('excl_09', $event)" />
-                            <input type="text" class="filter-input cell excl_10" placeholder="Buscar octubre..."
-                                (keyup)="filterDataExclusion('excl_10', $event)" />
-                            <input type="text" class="filter-input cell excl_11" placeholder="Buscar noviembre..."
-                                (keyup)="filterDataExclusion('excl_11', $event)" />
-                            <input type="text" class="filter-input cell excl_12" placeholder="Buscar diciembre..."
-                                (keyup)="filterDataExclusion('excl_12', $event)" />
-                            <div class="cell acciones"></div>
                         </div>
 
                         <cdk-virtual-scroll-viewport #viewportExclusion class="viewport-table" [itemSize]="44">
