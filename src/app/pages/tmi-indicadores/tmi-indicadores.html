@@ -32,7 +32,7 @@
         </button>
         <button class="tab-button" [class.active]="activeTab === 'Exclusion Centro Estandar'"
             (click)="setActiveTab('Exclusion Centro Estandar')">
-            Exclusión Centro Estándar
+            Exclusión Centro Indicador
         </button>
         <button class="tab-button" [class.active]="activeTab === 'Fecha Cierre'" (click)="setActiveTab('Fecha Cierre')">
             Fecha de Cierre
@@ -224,7 +224,7 @@
                             <div class="field-input full-width">
                                 <label for="st_id_estandar">Estándar (Tipo - Indicador) <span class="required">*</span></label>
                                 <select id="st_id_estandar" formControlName="id_estandar">
-                                    <option [ngValue]="null" disabled>Seleccione un estándar...</option>
+                                    <option [ngValue]="null" disabled>Seleccione un indicador...</option>
                                     <option *ngFor="let est of listaEstandares" [ngValue]="est.id">
                                         {{ est.tipo }} - {{ est.indicador }}
                                     </option>
@@ -1022,7 +1022,7 @@
     <!-- tap 5: exclusion_centro_estandar -->
     <div class="tab-content" *ngIf="activeTab === 'Exclusion Centro Estandar'">
         <div class="header">
-            <h2 class="bar-title">Exclusión de Centros y Estándares TMI</h2>
+            <h2 class="bar-title">Exclusión de Centros por Indicador</h2>
             <div class="header-actions">
                 <div class="buscar-group">
                     <select [(ngModel)]="anioExclusion" class="anio-select">
@@ -1051,7 +1051,7 @@
             <mat-card class="table"
                 style="--cols-table: minmax(90px, 0.8fr) minmax(180px, 1.8fr) minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(60px, 0.5fr) repeat(12, minmax(95px, 0.8fr)) minmax(80px, 0.65fr);">
                 <div class="table-title-row">
-                    <h3>Detalle de Exclusiones por Centro y Estándar</h3>
+                    <h3>Detalle de Exclusiones por Centro e Indicador</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaExclusion()"
                         title="Agregar nueva exclusión">
                         <mat-icon>add</mat-icon> Agregar exclusión
@@ -1145,12 +1145,12 @@
             </mat-card>
         </div>
 
-        <!-- MODAL EDITAR / CREAR EXCLUSIÓN CENTRO ESTÁNDAR -->
+        <!-- MODAL EDITAR / CREAR EXCLUSIÓN CENTRO INDICADOR -->
         <div class="modal-overlay" *ngIf="mostrarFormularioExclusion" (click)="cancelarEdicionExclusion()">
             <div class="modal-card" (click)="$event.stopPropagation()">
                 <header class="modal-header">
                     <div class="modal-header-info">
-                        <h2>Formulario de Exclusión Centro Estándar</h2>
+                        <h2>Formulario de Exclusión Centro Indicador</h2>
                         <p class="modal-subtitle" *ngIf="exclusionForm.get('id')?.value">
                             Edición del registro ID: {{ exclusionForm.get('id')?.value }}
                         </p>
@@ -1178,7 +1178,7 @@
                             </div>
 
                             <div class="field-input full-width">
-                                <label for="exc_id_estandar">Estándar (Tipo - Indicador) <span class="required">*</span></label>
+                                <label for="exc_id_estandar">Indicador <span class="required">*</span></label>
                                 <select id="exc_id_estandar" formControlName="id_estandar">
                                     <option [ngValue]="null" disabled>Seleccione un estándar...</option>
                                     <option *ngFor="let est of listaEstandares" [ngValue]="est.id">
