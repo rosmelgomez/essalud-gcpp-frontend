@@ -1018,7 +1018,7 @@
 
         <div *ngIf="!loadingExclusion && !errorExclusion && !selectPeriodoExclusion" class="dashboard-content">
             <mat-card class="table"
-                style="--cols-table: minmax(90px, 0.8fr) minmax(180px, 1.8fr) minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(60px, 0.5fr) repeat(12, minmax(95px, 0.8fr)) minmax(80px, 0.65fr);">
+                style="--cols-table: minmax(90px, 0.8fr) minmax(180px, 1.8fr) minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(60px, 0.5fr) repeat(12, minmax(95px, 0.8fr)) minmax(110px, 0.8fr) minmax(80px, 0.65fr);">
                 <div class="table-title-row">
                     <h3>Detalle de Exclusiones por Centro e Indicador</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaExclusion()"
@@ -1069,6 +1069,7 @@
                             <div class="cell excl_10">OCTUBRE</div>
                             <div class="cell excl_11">NOVIEMBRE</div>
                             <div class="cell excl_12">DICIEMBRE</div>
+                            <div class="cell resultado" title="Cómo queda el mes excluido en el resultado final">RESULTADO</div>
                             <div class="cell acciones">ACCIONES</div>
                         </div>
 
@@ -1091,6 +1092,7 @@
                                 <div class="cell excl_10">{{ row.excl_10 ? 'Excluido' : 'No excluido' }}</div>
                                 <div class="cell excl_11">{{ row.excl_11 ? 'Excluido' : 'No excluido' }}</div>
                                 <div class="cell excl_12">{{ row.excl_12 ? 'Excluido' : 'No excluido' }}</div>
+                                <div class="cell resultado">{{ row.resultado === '0' ? '0' : 'NA' }}</div>
                                 <div class="cell acciones">
                                     <button type="button" class="btn-icon-edit" (click)="iniciarEdicionExclusion(row)"
                                         title="Editar exclusión">
@@ -1159,6 +1161,14 @@
                             <div class="field-input">
                                 <label for="exc_anio">Año <span class="required">*</span></label>
                                 <input type="number" id="exc_anio" formControlName="anio" readonly placeholder="Año" />
+                            </div>
+
+                            <div class="field-input">
+                                <label for="exc_resultado">Resultado del mes excluido <span class="required">*</span></label>
+                                <select id="exc_resultado" formControlName="resultado">
+                                    <option value="NA">NA (no aplica)</option>
+                                    <option value="0">0 (puntaje 0)</option>
+                                </select>
                             </div>
 
                             <div class="field-input">

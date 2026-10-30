@@ -19,6 +19,7 @@ const MOTIVOS: Record<string, string> = {
   SIN_DATOS_ANIO: 'Sin datos en el año',
   SIN_DATO: 'Sin dato',
   EXCLUIDO: 'Excluido',
+  EXCLUIDO_CERO: 'Excluido (puntaje 0)',
   FUERA_DE_AMBITO: 'Fuera de ámbito',
   NO_VIGENTE_MES: 'No vigente en el mes',
   NO_FUNCIONA: 'No funciona',

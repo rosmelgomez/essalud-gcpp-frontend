@@ -318,13 +318,21 @@ export class TmiDinamicoService {
     return this.http.get<{ codigo: string; descripcion: string }[]>(`${base_url}/catalogo/tipos-calculo`); 
   }
   getCentros() { 
-    return this.http.get<TmiCentroCatalogo[]>(`${base_url}/catalogo/centros`); }
+    return this.http.get<TmiCentroCatalogo[]>(`${base_url}/catalogo/centros`); 
+  }
 
   // variables y su lógica
-  getVariables() { return this.http.get<TmiVariable[]>(`${base_url}/variables`); }
-  postVariable(dto: TmiVariable) { return this.http.post<{ id: number }>(`${base_url}/variables`, dto); }
-  putVariable(id: number, dto: TmiVariable) { return this.http.put(`${base_url}/variables/${id}`, dto); }
-  deleteVariable(id: number) { return this.http.delete(`${base_url}/variables/${id}`); }
+  getVariables() { 
+    return this.http.get<TmiVariable[]>(`${base_url}/variables`); 
+  }
+  postVariable(dto: TmiVariable) { 
+    return this.http.post<{ id: number }>(`${base_url}/variables`, dto); 
+  }
+  putVariable(id: number, dto: TmiVariable) { 
+    return this.http.put(`${base_url}/variables/${id}`, dto); }
+  deleteVariable(id: number) { 
+    return this.http.delete(`${base_url}/variables/${id}`); 
+  }
   getComponentes(idVariable: number) {
     return this.http.get<TmiVariableComponente[]>(`${base_url}/variables/${idVariable}/componentes`);
   }
