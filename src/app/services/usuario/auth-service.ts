@@ -131,4 +131,22 @@ export class AuthService {
   }
 
   private ultimoErrorSinServidor = false;
+  private renovacionEnCurso: Observable<boolean> | null = null;
+
+  /**
+   * Renueva el access_token en essalud-gcpp-backend: su filtro JWT lo regenera con el api_token y lo devuelve
+   * en la cookie. Lo usan los backends que solo validan el token (TMI). Las renovaciones simultáneas se comparten.
+   */
+  renovarAcceso(): Observable<boolean> {
+    if (!this.renovacionEnCurso) {
+      this.renovacionEnCurso = this.http.get(base_url + `/user/me`, { withCredentials: true }).pipe(
+        timeout(8000),
+        map(() => true),
+        catchError(() => of(false)),
+        finalize(() => (this.renovacionEnCurso = null)),
+        shareReplay(1),
+      );
+    }
+    return this.renovacionEnCurso;
+  }
 }

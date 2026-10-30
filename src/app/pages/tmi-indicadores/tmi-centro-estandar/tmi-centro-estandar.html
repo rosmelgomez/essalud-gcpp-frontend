@@ -10,12 +10,16 @@
             </button>
         </div>
     </div>
+    <details class="dyn-ayuda">
+        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
+        <p>
+        Gana sobre el estándar por tipo, nivel o categoría del centro. Úselo para las excepciones con sustento (carta o
+        directiva), como las notas de la hoja Estándares del Excel (Pol. Ancije en recetas, San Isidro Labrador...). Un centro
+        sin estándar ya queda en NA. El % Acept propio es opcional: si no se ingresa, se usa el % Acept del indicador en el
+        periodo de la consulta (en gris).
+        </p>
+    </details>
 </div>
-
-<p class="dyn-hint">
-    Gana sobre el estándar por tipo, nivel o categoría del centro. Úselo para las excepciones con sustento (carta o
-    directiva), por ejemplo el Pol. Ancije en recetas, o para dejar un indicador en NA ("No aplica") en un centro.
-</p>
 
 @if (error()) {
 <div class="alert alert-danger">{{ error() }}</div>
@@ -47,7 +51,8 @@
                     <div class="cell txt" [title]="f.red || ''">{{ f.centro || '—' }}</div>
                     <div class="cell txt">{{ f.indicador || ('Indicador ' + f.id_indicador) }}</div>
                     <div class="cell">{{ resumenMeses(f) }}</div>
-                    <div class="cell">{{ f.acept ?? '—' }}</div>
+                    <div class="cell">@if (f.acept != null) { {{ f.acept }} } @else if (f.acept_defecto != null) {<span class="dyn-acept-defecto"
+                        title="% Acept del indicador en el periodo de la consulta">{{ f.acept_defecto | number: '1.0-4' }}</span>} @else { — }</div>
                     <div class="cell txt" [title]="f.sustento || ''">{{ f.sustento || '—' }}</div>
                     <div class="cell acciones">
                         <button type="button" class="btn-icon-edit" (click)="editar(f)" title="Editar"><mat-icon>edit</mat-icon></button>
@@ -107,15 +112,8 @@
                         </select>
                     </div>
                     <div class="field-input">
-                        <label for="ce_aplica">¿Se evalúa?</label>
-                        <select id="ce_aplica" formControlName="aplica">
-                            <option [ngValue]="true">Sí, con este estándar</option>
-                            <option [ngValue]="false">No aplica (NA)</option>
-                        </select>
-                    </div>
-                    <div class="field-input">
                         <label for="ce_acept">% Acept propio (opcional)</label>
-                        <input id="ce_acept" type="number" step="any" formControlName="acept" placeholder="Usa la tolerancia del indicador" />
+                        <input id="ce_acept" type="number" step="any" formControlName="acept" placeholder="Usa el % Acept del indicador" />
                     </div>
                 </div>
 

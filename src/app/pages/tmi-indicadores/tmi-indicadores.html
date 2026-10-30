@@ -7,55 +7,24 @@
         </div>
     </header>
 
-    <!-- TABS -->
-    <div class="tabs">
-        <button class="tab-button" [class.active]="activeTab === 'Estandares Tipo'"
-            (click)="setActiveTab('Estandares Tipo')">
-            Estándares Tipo
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Estandares Nivel'"
-            (click)="setActiveTab('Estandares Nivel')">
-            Estándares Nivel
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Estandares Categoria'"
-            (click)="setActiveTab('Estandares Categoria')">
-            Estándares Categoría
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Tipos Estandar'" (click)="setActiveTab('Tipos Estandar')">
-            Tipos de Estándar
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Aceptacion'" (click)="setActiveTab('Aceptacion')">
-            % Acept
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Centros TMI'" (click)="setActiveTab('Centros TMI')">
-            Centros TMI
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Exclusion Centro Estandar'"
-            (click)="setActiveTab('Exclusion Centro Estandar')">
-            Exclusión Centro Indicador
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Fecha Cierre'" (click)="setActiveTab('Fecha Cierre')">
-            Fecha de Cierre
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Variables'" (click)="setActiveTab('Variables')">
-            Variables
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Indicadores'" (click)="setActiveTab('Indicadores')">
-            Indicadores
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Estandar Centro'"
-            (click)="setActiveTab('Estandar Centro')">
-            Estándar por Centro
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'Calcular'" (click)="setActiveTab('Calcular')">
-            Calcular y Excel
-        </button>
-    </div>
+    <!-- TABS: agrupadas por etapa del trabajo -->
+    <nav class="tabs tmi-tabs" aria-label="Secciones del TMI">
+        @for (g of gruposTabs; track g.titulo) {
+        <div class="tmi-tab-grupo" role="group" [attr.aria-label]="g.titulo">
+            <span class="tmi-tab-grupo-titulo" aria-hidden="true">{{ g.titulo }}</span>
+            <div class="tmi-tab-grupo-botones">
+                @for (t of g.tabs; track t.id) {
+                <button type="button" class="tab-button" [class.active]="activeTab === t.id"
+                    [attr.aria-current]="activeTab === t.id ? 'page' : null" (click)="setActiveTab(t.id)">
+                    {{ t.texto }}
+                </button>
+                }
+            </div>
+        </div>
+        }
+    </nav>
 
     <!-- TMI dinámico: variables, indicadores, estándar por centro y cálculo -->
-    @if (activeTab === 'Tipos Estandar') {
-    <div class="tab-content"><app-tmi-tipos-estandar /></div>
-    }
     @if (activeTab === 'Aceptacion') {
     <div class="tab-content"><app-tmi-aceptacion /></div>
     }
@@ -1307,31 +1276,8 @@
                     <button (click)="getQueryCierres()" class="btn-download" [disabled]="loadingCierre">
                         <mat-icon>refresh</mat-icon> Actualizar
                     </button>
-                    <select [(ngModel)]="anioExcelTMI" class="anio-select" [disabled]="descargandoExcelTMI">
-                        <option value="">Seleccione un Año</option>
-                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
-                    </select>
-                    <select [(ngModel)]="mesExcelTMI" class="periodo-select" [disabled]="descargandoExcelTMI">
-                        <option value="">Seleccione un periodo</option>
-                        <option *ngFor="let m of mesesDisponibles" [value]="m.value">{{ m.label }}</option>
-                    </select>
-                    <button (click)="descargarExcelTMI()" class="btn-search btn-excel"
-                        [disabled]="descargandoExcelTMI || !anioExcelTMI || !mesExcelTMI">
-                        <span *ngIf="descargandoExcelTMI" class="spinner-btn"></span>
-                        <mat-icon *ngIf="!descargandoExcelTMI">download</mat-icon>
-                        {{ descargandoExcelTMI ? 'Generando Excel...' : 'Descargar Excel TMI' }}
-                    </button>
                 </div>
             </div>
-        </div>
-
-        <div *ngIf="descargandoExcelTMI" class="loading loading-excel">
-            <p>Generando Excel TMI {{ nombrePeriodo(anioExcelTMI + mesExcelTMI) }}...</p>
-            <span class="loading-sub">Esto puede tardar unos segundos</span>
-        </div>
-
-        <div *ngIf="errorExcelTMI" class="alert alert-danger">
-            {{ errorExcelTMI }}
         </div>
 
         <div *ngIf="loadingCierre" class="loading">

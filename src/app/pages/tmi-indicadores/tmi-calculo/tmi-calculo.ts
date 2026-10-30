@@ -24,8 +24,8 @@ const MOTIVOS: Record<string, string> = {
   NO_FUNCIONA: 'No funciona',
 };
 
-/** Validar, calcular el periodo abierto, revisar el resultado final guardado y descargar el Excel del TMI dinámico.
- *  Solo se calcula el mes anterior: los periodos cerrados se consultan y descargan con el resultado guardado. */
+/** Validar, calcular un periodo (año y mes, hasta el mes anterior), revisar el resultado final guardado y descargar
+ *  el Excel del TMI dinámico con los indicadores que elija el usuario. */
 @Component({
   selector: 'app-tmi-calculo',
   imports: [FormsModule, MatCardModule, MatIconModule, DecimalPipe],
@@ -52,11 +52,22 @@ export class TmiCalculo implements OnInit {
   columnasGrid = computed(() =>
     `60px 230px 70px 240px 60px 80px 80px 80px ${this.esBanda() ? '80px ' : ''}95px repeat(12, 92px) 75px 160px`);
   esBanda = computed(() => (this.indicadores().find((i) => i.id === this.idIndicador())?.sentido ?? '') === 'BANDA');
-  /** Único periodo que se calcula: el mes anterior al actual (en octubre se calcula septiembre). */
+  /** Último periodo que se puede calcular: el mes anterior al actual (en octubre, septiembre). */
   periodoCalculo = computed(() => this.estadoPeriodos()?.periodo_calculo ?? '');
+  /** Periodo que eligió el usuario para calcular (año y mes). */
+  anioCalc = signal(String(new Date().getFullYear()));
+  mesCalc = signal('01');
+  periodoCalcSel = computed(() => `${this.anioCalc()}${this.mesCalc()}`);
+  /** Solo hasta el mes anterior: un periodo futuro todavía no tiene datos. */
+  puedeCalcular = computed(() => !!this.periodoCalculo() && this.periodoCalcSel() <= this.periodoCalculo());
+  /** Periodo del último cálculo hecho en esta pantalla (para el resumen de puntajes). */
+  periodoCalculado = signal('');
+  /** Indicadores que lleva el Excel (por defecto, todos los activos). */
+  excelIds = signal<Set<number>>(new Set());
+  todosEnExcel = computed(() => this.indicadores().every((i) => this.excelIds().has(i.id!)));
   /** Resultado guardado del periodo elegido en los select (para el Excel) y del periodo que se calcula. */
   guardado = computed(() => this.guardadoDe(this.periodoSel()));
-  guardadoCalculo = computed(() => this.guardadoDe(this.periodoCalculo()));
+  guardadoCalculo = computed(() => this.guardadoDe(this.periodoCalcSel()));
   filtroRed = signal('');
   filtroPuntaje = signal('');
   resultadoFiltrado = computed(() => {
@@ -68,9 +79,8 @@ export class TmiCalculo implements OnInit {
   });
   resumen = signal<Record<string, number> | null>(null);
   problemas = signal<TmiProblemaConfig[] | null>(null);
-  scripts = signal<Record<string, string> | null>(null);
 
-  ocupado = signal<'' | 'validar' | 'calcular' | 'excel' | 'resultado' | 'sql'>('');
+  ocupado = signal<'' | 'validar' | 'calcular' | 'excel' | 'resultado'>('');
   error = signal('');
   mensaje = signal('');
 
@@ -102,6 +112,7 @@ export class TmiCalculo implements OnInit {
       next: (lista) => {
         const activos = lista.filter((i) => i.activo);
         this.indicadores.set(activos);
+        this.excelIds.set(new Set(activos.map((i) => i.id!)));
         if (activos.length && this.idIndicador() == null) this.idIndicador.set(activos[0].id ?? null);
         this.verResultado();
       },
@@ -115,6 +126,8 @@ export class TmiCalculo implements OnInit {
       next: (e) => {
         this.estadoPeriodos.set(e);
         if (inicial) {
+          this.anioCalc.set(e.periodo_calculo.slice(0, 4));
+          this.mesCalc.set(e.periodo_calculo.slice(4));
           this.anio = e.periodo_calculo.slice(0, 4);
           this.mes = e.periodo_calculo.slice(4);
           this.cambioPeriodo();
@@ -128,7 +141,7 @@ export class TmiCalculo implements OnInit {
     this.verResultado();
   }
 
-  private inicio(accion: 'validar' | 'calcular' | 'excel' | 'resultado' | 'sql'): void {
+  private inicio(accion: 'validar' | 'calcular' | 'excel' | 'resultado'): void {
     this.ocupado.set(accion);
     this.error.set('');
     this.mensaje.set('');
@@ -148,14 +161,18 @@ export class TmiCalculo implements OnInit {
     });
   }
 
-  /** Calcula el periodo abierto (no el de los select) y deja los select en ese periodo para ver el resultado. */
+  /** Calcula el periodo elegido (año y mes) y deja los select del Excel en ese periodo para ver el resultado. */
   calcular(): void {
-    const periodo = this.periodoCalculo();
-    if (!periodo) return;
+    const periodo = this.periodoCalcSel();
+    if (!this.puedeCalcular()) return;
+    if (periodo < this.periodoCalculo() && this.guardadoCalculo()
+      && !confirm(`${this.nombrePeriodo(periodo)} ya pasó su fecha de cierre y tiene un resultado guardado.\n`
+        + '¿Volver a calcularlo? Se reemplaza el resultado guardado.')) return;
     this.inicio('calcular');
     this.srv.calcular(periodo).subscribe({
       next: (r) => {
         this.resumen.set(r.puntajes);
+        this.periodoCalculado.set(periodo);
         this.problemas.set([]);
         this.mensaje.set(`Cálculo de ${this.nombrePeriodo(periodo)} terminado y guardado.`);
         this.ocupado.set('');
@@ -191,7 +208,12 @@ export class TmiCalculo implements OnInit {
   /** Excel del periodo de los select, armado con su resultado guardado (no recalcula). */
   descargar(): void {
     this.inicio('excel');
-    this.srv.getExcel(this.periodo, false).subscribe({
+    if (!this.excelIds().size) {
+      this.error.set('Elija al menos un indicador para el Excel.');
+      return;
+    }
+    const ids = this.todosEnExcel() ? undefined : this.indicadores().filter((i) => this.excelIds().has(i.id!)).map((i) => i.id!);
+    this.srv.getExcel(this.periodo, false, ids).subscribe({
       next: (resp) => {
         const blob = resp.body;
         if (blob) {
@@ -221,21 +243,16 @@ export class TmiCalculo implements OnInit {
     });
   }
 
-  ejecutarScripts(): void {
-    if (!confirm('¿Volver a ejecutar los scripts SQL del TMI (tablas, vistas, datos iniciales y procedimientos)?\n'
-      + 'No borran datos: solo crean lo que falta.')) return;
-    this.inicio('sql');
-    this.srv.ejecutarSql().subscribe({
-      next: (r) => {
-        this.scripts.set(r);
-        this.ocupado.set('');
-      },
-      error: (e) => {
-        if (e?.error?.detail && typeof e.error.detail === 'object') this.scripts.set(e.error.detail);
-        this.error.set(mensajeError(e, 'No se pudo ejecutar los scripts SQL.'));
-        this.ocupado.set('');
-      },
+  enExcel(id: number, incluir: boolean): void {
+    this.excelIds.update((s) => {
+      const n = new Set(s);
+      if (incluir) n.add(id); else n.delete(id);
+      return n;
     });
+  }
+
+  marcarExcel(todos: boolean): void {
+    this.excelIds.set(new Set(todos ? this.indicadores().map((i) => i.id!) : []));
   }
 
   fecha(f: string | undefined): string {
@@ -254,10 +271,5 @@ export class TmiCalculo implements OnInit {
     const r = this.resumen();
     if (!r) return [];
     return ['5', '3', '1', '0', 'NA'].filter((k) => r[k] != null).map((k) => ({ clave: k, valor: r[k] }));
-  }
-
-  scriptsLista(): { nombre: string; estado: string }[] {
-    const s = this.scripts();
-    return s ? Object.entries(s).map(([nombre, estado]) => ({ nombre, estado })) : [];
   }
 }

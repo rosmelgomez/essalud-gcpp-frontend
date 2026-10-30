@@ -5,13 +5,28 @@ import { Backend } from '../model/api';
 
 const base_url = Backend.apiTmi + '/dinamico';
 
+/** Componente de una variable compuesta: la variable suma el valor de otra. */
+export interface TmiVariableComponente {
+  id?: number;
+  id_variable: number;
+  id_variable_componente: number;
+  activo?: boolean;
+  componente?: string;
+  componente_activo?: boolean;
+  agregacion?: 'SUMA' | 'MEDIANA';
+  filas_logica?: number;
+  componentes?: number;
+}
+
 export interface TmiVariable {
   id?: number;
   nombre: string;
   descripcion?: string | null;
+  agregacion: 'SUMA' | 'MEDIANA';   // cálculo de la variable: todos sus conjuntos se combinan con OR
   total_anual: 'SUMA_MESES' | 'MEDIANA_PERIODO';
   activo: boolean;
   filas_logica?: number;
+  componentes?: number;   // variables que suma (variable compuesta)
   indicadores?: string | null;
 }
 
@@ -22,7 +37,6 @@ export interface TmiVariableLogica {
   actividad: number;
   servicio: number | null;
   condicion_hoja: string | null;
-  agregacion: 'SUMA' | 'MEDIANA';
   periodo_desde: number;
   periodo_hasta: number;
   activo: boolean;
@@ -42,13 +56,11 @@ export interface TmiIndicador {
   nombre_hoja: string;
   titulo_hoja: string | null;
   orden: number;
-  expr_numerador: string;
-  expr_denominador: string;
+  /** Fórmula del usuario con letras: (A - B) / C; cada letra es una variable (getLetras). Se guarda con putFormula. */
+  formula_alias?: string | null;
+  /** Fórmula interna con términos de TOTALIZADO3 ([3;50#0] - [3;49#0]) / [3;47#0], generada desde formula_alias. */
+  formula?: string | null;
   tipo_calculo: string;
-  factor: number;
-  den_cero: 'CERO' | 'NA';
-  num_cero_na: boolean;
-  cero_si_letra_mes_0: boolean;
   sin_datos_anio: 'MOSTRAR' | 'NA' | 'OCULTAR';
   base_estandar: string;   // tmi_tipo_estandar.codigo: NIVEL, NIVEL_TIPO, TIPO, CATEGORIA...
   sentido: 'MENOR' | 'MAYOR' | 'BANDA';
@@ -61,7 +73,6 @@ export interface TmiIndicador {
   activo: boolean;
   formato: 'NUMERO' | 'PORCENTAJE';   // formato de los valores en el Excel
   grupo_descripcion?: string;
-  letras?: string | null;
 }
 
 /** Tabla maestra: tipo de estándar con el que se evalúa un indicador. */
@@ -114,21 +125,51 @@ export interface TmiAceptacionIndicador {
   tipo_tolerancia: 'REL' | 'ABS';
   tolerancia: number;
   tolerancia_menos: number | null;
+  /** % Acept fijo del año: cada mes lo toma en su fecha de cierre. */
+  tolerancia_fijo: number | null;
+  tolerancia_menos_fijo: number | null;
+  /** El mes ya alcanzó su fecha de cierre: tiene su propio valor (tomado del fijo), que se puede modificar. */
+  mes_cerrado: boolean;
+  varia_en_anio?: boolean;
   claves: { orden: number | null; fuente: string; clave: string; descripcion: string | null; estandar: number | null }[];
 }
 
-/** Bloque de la fórmula: operación con el bloque anterior + variable (la operación del primer bloque no se usa). */
-export interface TmiBloqueFormula {
-  op: '+' | '-' | '*' | '/';
-  id_variable: number | null;
+/** Término de la fórmula de un indicador: [grupo;actividad#servicios] o MEDIANA([..]), con sus descripciones. */
+export interface TmiTerminoFormula {
+  codigo: string;   // T1, T2...
+  texto: string;
+  tipgrupo: number;
+  grupo: string | null;
+  actividad: number;
+  descactividad: string | null;
+  servicios: { servicio: number; descservicio: string | null }[];   // vacío = todos
+  mediana: boolean;
+  problema: string | null;
 }
 
+export interface TmiAnalisisFormula {
+  formula_alias: string;
+  formula: string;   // términos de TOTALIZADO3
+  formula_sql: string;
+  variables: { letra: string; id_variable: number; nombre: string; agregacion: string; expresion: string;
+               aviso: string | null; usada: boolean }[];
+  terminos: TmiTerminoFormula[];
+}
+
+/** Resultado del query automático: valor de la fórmula por centro y mes ('01'..'12'), directo de TOTALIZADO3. */
+export interface TmiResultadoDirecto {
+  sql: string;
+  filas: ({ codcentro: number; centro: string | null; total: number | null } & Record<string, number | string | null>)[];
+}
+
+/** Letra (alias) de la fórmula de un indicador: una variable por letra. */
 export interface TmiLetra {
   id?: number;
-  id_indicador: number;
+  id_indicador?: number;
   letra: string;
   id_variable: number;
   variable?: string;
+  agregacion?: string;
   total_anual?: string;
   filas_logica?: number;
   detalle_logica?: string | null;
@@ -171,6 +212,8 @@ export interface TmiCentroEstandar {
   est_05: number | null; est_06: number | null; est_07: number | null; est_08: number | null;
   est_09: number | null; est_10: number | null; est_11: number | null; est_12: number | null;
   acept: number | null;
+  /** % Acept del indicador en el periodo de la consulta: se usa si el centro no tiene uno propio. */
+  acept_defecto?: number | null;
   sustento: string | null;
   indicador?: string;
   centro?: string;
@@ -282,6 +325,11 @@ export class TmiDinamicoService {
   postVariable(dto: TmiVariable) { return this.http.post<{ id: number }>(`${base_url}/variables`, dto); }
   putVariable(id: number, dto: TmiVariable) { return this.http.put(`${base_url}/variables/${id}`, dto); }
   deleteVariable(id: number) { return this.http.delete(`${base_url}/variables/${id}`); }
+  getComponentes(idVariable: number) {
+    return this.http.get<TmiVariableComponente[]>(`${base_url}/variables/${idVariable}/componentes`);
+  }
+  postComponente(dto: TmiVariableComponente) { return this.http.post(`${base_url}/componentes`, dto); }
+  deleteComponente(id: number) { return this.http.delete(`${base_url}/componentes/${id}`); }
   getLogica(idVariable: number) { return this.http.get<TmiVariableLogica[]>(`${base_url}/variables/${idVariable}/logica`); }
   postLogica(dto: TmiVariableLogica) { return this.http.post(`${base_url}/logica`, dto); }
   putLogica(id: number, dto: TmiVariableLogica) { return this.http.put(`${base_url}/logica/${id}`, dto); }
@@ -312,14 +360,31 @@ export class TmiDinamicoService {
   getAceptacion(anio: number, mes: number) {
     return this.http.get<TmiAceptacionIndicador[]>(`${base_url}/aceptacion/${anio}/${mes}`);
   }
-  putTolerancia(idIndicador: number, dto: { tipo_tolerancia: 'REL' | 'ABS'; tolerancia: number; tolerancia_menos: number | null }) {
+  putTolerancia(
+    idIndicador: number,
+    dto: {
+      tipo_tolerancia: 'REL' | 'ABS';
+      tolerancia: number;
+      tolerancia_menos: number | null;
+      tolerancia_fijo?: number | null;
+      tolerancia_menos_fijo?: number | null;
+      anio?: number;
+      mes?: number;
+    },
+  ) {
     return this.http.put(`${base_url}/indicadores/${idIndicador}/tolerancia`, dto);
   }
 
-  /** Guarda la fórmula en bloques: el backend asigna las letras (A, B, C...) y las expresiones. */
-  putFormula(idIndicador: number, numerador: TmiBloqueFormula[], denominador: TmiBloqueFormula[]) {
-    return this.http.put<{ expr_numerador: string; expr_denominador: string }>(
-      `${base_url}/indicadores/${idIndicador}/formula`, { numerador, denominador });
+  /** Guarda la fórmula con letras ((A - B) / C) y la variable de cada letra: el backend genera la fórmula interna. */
+  putFormula(idIndicador: number, formula_alias: string, variables: Record<string, number>) {
+    return this.http.put<TmiAnalisisFormula>(`${base_url}/indicadores/${idIndicador}/formula`, { formula_alias, variables });
+  }
+  analizarFormula(formula_alias: string, variables: Record<string, number>) {
+    return this.http.post<TmiAnalisisFormula>(`${base_url}/formula/analizar`, { formula_alias, variables });
+  }
+  /** Calcula el indicador con el query automático sobre TOTALIZADO3 (sin estándares ni exclusiones). */
+  getResultadoDirecto(idIndicador: number, periodo: number) {
+    return this.http.get<TmiResultadoDirecto>(`${base_url}/indicadores/${idIndicador}/resultado-directo/${periodo}`);
   }
   getLetras(idIndicador: number) { return this.http.get<TmiLetra[]>(`${base_url}/indicadores/${idIndicador}/letras`); }
   postLetra(dto: TmiLetra) { return this.http.post(`${base_url}/letras`, dto); }
@@ -346,8 +411,7 @@ export class TmiDinamicoService {
   putCentroEstandar(id: number, dto: TmiCentroEstandar) { return this.http.put(`${base_url}/centro-estandar/${id}`, dto); }
   deleteCentroEstandar(id: number) { return this.http.delete(`${base_url}/centro-estandar/${id}`); }
 
-  // ejecución, validación, cálculo y Excel
-  ejecutarSql() { return this.http.post<Record<string, string>>(`${base_url}/ejecutar-sql`, {}); }
+  // validación, cálculo y Excel
   validarConfig() { return this.http.get<TmiProblemaConfig[]>(`${base_url}/validar-config`); }
   calcular(periodo: string) {
     return this.http.post<{ periodo: string; puntajes: Record<string, number> }>(`${base_url}/calcular/${periodo}`, {});
@@ -356,8 +420,10 @@ export class TmiDinamicoService {
   getResultado(periodo: string, idIndicador: number) {
     return this.http.get<TmiResultadoFinal[]>(`${base_url}/resultado/${periodo}/${idIndicador}`);
   }
-  getExcel(periodo: string, calcular: boolean) {
-    return this.http.get(`${base_url}/generar-excel/${periodo}?calcular=${calcular}`, {
+  /** ids: indicadores que lleva el Excel; sin ids, todos. */
+  getExcel(periodo: string, calcular: boolean, ids?: number[]) {
+    const filtro = ids?.length ? `&indicadores=${ids.join(',')}` : '';
+    return this.http.get(`${base_url}/generar-excel/${periodo}?calcular=${calcular}${filtro}`, {
       responseType: 'blob',
       observe: 'response' as 'response',
     });

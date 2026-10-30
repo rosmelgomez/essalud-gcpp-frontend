@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,7 +17,7 @@ export const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ag
 /** Estándar específico de un centro: gana sobre el estándar por tipo, nivel o categoría. */
 @Component({
   selector: 'app-tmi-centro-estandar',
-  imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule],
+  imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, DecimalPipe],
   templateUrl: './tmi-centro-estandar.html',
   styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css'],
 })
@@ -129,7 +130,7 @@ export class TmiCentroEstandarTab implements OnInit {
     const meses: Record<string, number | null> = {};
     MESES.forEach((m) => (meses['est_' + m] = f.aplica ? num((f as any)['est_' + m]) : null));
     if (f.aplica && Object.values(meses).every((v) => v == null)) {
-      this.errorForm.set('Ingrese el estándar de al menos un mes, o marque "No aplica".');
+      this.errorForm.set('Ingrese el estándar de al menos un mes.');
       return;
     }
     const dto = {

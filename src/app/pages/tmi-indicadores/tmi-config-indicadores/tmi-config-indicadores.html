@@ -10,14 +10,16 @@
             </button>
         </div>
     </div>
+    <details class="dyn-ayuda">
+        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
+        <p>
+        Cada indicador es una hoja del Excel. Su fórmula se escribe con letras: cada variable recibe una letra (A, B, C…)
+        y se combina con + - * /, paréntesis y números. Ejemplo: Intervalo de sustitución =
+        <span class="dyn-formula">(A - B) / C</span>. El resultado se calcula directo de TOTALIZADO3. Los inactivos no se
+        calculan ni salen en el Excel.
+        </p>
+    </details>
 </div>
-
-<p class="dyn-hint">
-    Cada indicador es una hoja del Excel. Su fórmula se arma con bloques: se elige una variable y la operación con la
-    anterior (suma, resta, multiplicación o división); cada variable recibe una letra automática (A, B, C…).
-    Ejemplo: Intervalo de sustitución = <span class="dyn-formula">(A − B) / C</span>. Los inactivos no se calculan ni
-    salen en el Excel.
-</p>
 
 @if (error()) {
 <div class="alert alert-danger">{{ error() }}</div>
@@ -40,7 +42,7 @@
 
 <div class="dyn-split">
     <!-- LISTA -->
-    <mat-card class="table" style="--cols-table: minmax(36px, 0.3fr) minmax(180px, 2.4fr) minmax(100px, 1.1fr) minmax(90px, 1fr) minmax(80px, 0.8fr) minmax(76px, 0.6fr);">
+    <mat-card class="table" style="--cols-table: minmax(36px, 0.3fr) minmax(170px, 2fr) minmax(90px, 0.9fr) minmax(150px, 1.8fr) minmax(104px, 0.8fr) minmax(76px, 0.6fr);">
         <div class="table-title-row">
             <h3>Indicadores</h3>
             <button type="button" class="btn-download btn-agregar-fila" (click)="nuevo()">
@@ -65,10 +67,10 @@
                     <div class="row-table dyn-clickable" [class.dyn-selected]="seleccionado()?.id === ind.id"
                         [class.dyn-inactivo]="!ind.activo" (click)="seleccionar(ind)">
                         <div class="cell">{{ ind.orden }}</div>
-                        <div class="cell txt" [title]="ind.letras || ''">{{ ind.indicador }}{{ ind.activo ? '' : ' (inactivo)' }}</div>
-                        <div class="cell txt">{{ ind.nombre_hoja }}</div>
-                        <div class="cell dyn-formula">({{ ind.expr_numerador }}) / ({{ ind.expr_denominador }})</div>
-                        <div class="cell">{{ ind.tipo_calculo }}</div>
+                        <div class="cell txt" [title]="ind.indicador">{{ ind.indicador }}{{ ind.activo ? '' : ' (inactivo)' }}</div>
+                        <div class="cell txt" [title]="ind.nombre_hoja">{{ ind.nombre_hoja }}</div>
+                        <div class="cell txt dyn-formula" [title]="ind.formula || ''">{{ ind.formula_alias || ind.formula || 'Sin fórmula' }}</div>
+                        <div class="cell"><span class="dyn-badge">{{ ind.tipo_calculo }}</span></div>
                         <div class="cell acciones">
                             <button type="button" class="btn-icon-edit" (click)="editar(ind, $event)" title="Editar indicador">
                                 <mat-icon>edit</mat-icon></button>
@@ -97,11 +99,10 @@
             <h3>{{ ind.indicador }}</h3>
         </div>
         <div class="dyn-chips">
-            <span class="dyn-badge dyn-formula">({{ ind.expr_numerador }}) / ({{ ind.expr_denominador }}){{ ind.factor !== 1 ? ' × ' + ind.factor : '' }}</span>
             <span class="dyn-badge">{{ ind.tipo_calculo }}</span>
             <span class="dyn-badge">{{ textoSentido(ind.sentido) }}</span>
             <span class="dyn-badge" title="Se cambia en la pestaña % Acept">% Acept {{ ind.tipo_tolerancia === 'REL' ? (ind.tolerancia * 100) + ' %' : '± ' + (ind.tolerancia * 100) + ' pts' }}</span>
-            <span class="dyn-badge" title="Se cambia al editar el indicador; los valores se cargan en la pestaña Tipos de Estándar">Se evalúa por {{ textoTipoEstandar(ind.base_estandar) }}</span>
+            <span class="dyn-badge" title="Se cambia al editar el indicador">Se evalúa por {{ textoTipoEstandar(ind.base_estandar) }}</span>
         </div>
 
         @if (errorDetalle()) {
@@ -110,65 +111,131 @@
 
         <div class="dyn-section-title">Fórmula</div>
         <p class="dyn-hint">
-            Elija la variable de cada bloque y la operación con el bloque anterior. Cada variable recibe una letra automática
-            (A, B, C…); la misma variable usa la misma letra en el numerador y el denominador. × y ÷ se calculan antes que + y −.
-            Las variables se crean en la pestaña Variables.
+            1. Agregue las variables que usa el indicador: cada una recibe una letra (A, B, C…). Las variables se crean en
+            la pestaña Variables. 2. Arme la fórmula haciendo clic en las variables, las operaciones y los paréntesis; cada clic
+            agrega un bloque al final. Los bloques se pueden arrastrar para cambiarlos de lugar. Ejemplo:
+            <span class="dyn-formula">( A − B ) ÷ C</span>. La multiplicación y la división van antes que la suma y la resta:
+            use paréntesis para agrupar. Una división entre 0 da NA ese mes.
         </p>
-        @if (formulaAvanzada()) {
-        <div class="validation-message-banner">
-            <mat-icon>info</mat-icon>
-            <span>La fórmula guardada <strong class="dyn-formula">{{ formulaAvanzada() }}</strong> tiene números, paréntesis o letras
-                que suman varias variables donde no se pueden separar: no se puede mostrar en bloques.</span>
-            <button type="button" class="btn-download" (click)="rehacerFormula()"><mat-icon>restart_alt</mat-icon> Rehacer con bloques</button>
+
+        <div class="dyn-inline">
+            <select class="dyn-calc-select" aria-label="Variable para agregar a la fórmula"
+                [ngModel]="idVariableNueva()" (ngModelChange)="idVariableNueva.set($event)">
+                <option [ngValue]="null">Elija una variable…</option>
+                @for (v of variablesLibres(); track v.id) {
+                <option [ngValue]="v.id">{{ v.nombre }} ({{ v.agregacion }})</option>
+                }
+            </select>
+            <button type="button" class="btn-download" (click)="agregarVariable()"
+                [disabled]="idVariableNueva() == null || letras().length >= 26">
+                <mat-icon>add</mat-icon> Agregar variable
+            </button>
         </div>
-        } @else {
-        @for (parte of ['num', 'den']; track parte) {
-        <div class="dyn-formula-parte">
-            <div class="dyn-formula-titulo">{{ parte === 'num' ? 'Numerador' : 'Denominador' }}</div>
-            <div class="dyn-bloques">
-                @for (b of (parte === 'num' ? bloquesNum() : bloquesDen()); track $index; let i = $index) {
-                @if (i > 0) {
-                <select class="dyn-bloque-op" [ngModel]="b.op" (ngModelChange)="cambiarBloque($any(parte), i, { op: $event })"
-                    [attr.aria-label]="'Operación del bloque ' + (i + 1)">
-                    @for (o of operaciones; track o.op) {<option [value]="o.op">{{ o.texto }}</option>}
-                </select>
-                }
-                <div class="dyn-bloque" [class.dyn-bloque-vacio]="b.id_variable == null">
-                    <span class="dyn-bloque-letra">{{ letra(b) }}</span>
-                    <select [ngModel]="b.id_variable" (ngModelChange)="cambiarBloque($any(parte), i, { id_variable: $event })"
-                        [attr.aria-label]="'Variable del bloque ' + (i + 1)">
-                        <option [ngValue]="null">Elija una variable</option>
-                        @for (v of variables(); track v.id) {
-                        <option [ngValue]="v.id">{{ v.nombre }}{{ v.activo ? '' : ' (inactiva)' }}</option>
-                        }
-                    </select>
-                    <button type="button" class="btn-icon-delete" (click)="quitarBloque($any(parte), i)" title="Quitar bloque">
-                        <mat-icon>close</mat-icon>
-                    </button>
-                </div>
-                }
-                <button type="button" class="btn-download dyn-bloque-agregar" (click)="agregarBloque($any(parte))">
-                    <mat-icon>add</mat-icon> Variable
+        <div class="dyn-calc-vars">
+            @for (l of letras(); track l.letra) {
+            <div class="dyn-calc-var" role="button" tabindex="0" (click)="agregarBloque(l.letra)"
+                (keydown.enter)="agregarBloque(l.letra)" [title]="'Agregar ' + l.letra + ' a la fórmula'">
+                <span class="dyn-calc-letra">{{ l.letra }}</span>
+                <span class="dyn-calc-var-nombre">{{ l.variable }}</span>
+                <button type="button" class="dyn-calc-quitar" (click)="$event.stopPropagation(); quitarLetra(l.letra)"
+                    [disabled]="letrasUsadas().has(l.letra)"
+                    [title]="letrasUsadas().has(l.letra) ? 'Está en la fórmula: quítela primero' : 'Quitar variable'">
+                    <mat-icon>close</mat-icon>
                 </button>
-                @if (parte === 'den' && !bloquesDen().length) {<span class="dyn-hint dyn-bloque-nota">Sin variables = 1</span>}
             </div>
+            } @empty {
+            <span class="dyn-hint dyn-bloque-nota">Todavía no hay variables: agregue la primera.</span>
+            }
+        </div>
+
+        <div class="dyn-bloques-paleta">
+            @for (o of operaciones; track o) {
+            <button type="button" class="dyn-bloque-op" (click)="agregarBloque(o)" [title]="'Agregar ' + simbolo(o)">
+                {{ simbolo(o) }}
+            </button>
+            }
+            <input #campoNumero class="dyn-bloque-numero" type="text" inputmode="decimal" placeholder="100"
+                aria-label="Número para agregar a la fórmula" [value]="numero()" (input)="numero.set(campoNumero.value)"
+                (keydown.enter)="agregarNumero()">
+            <button type="button" class="btn-download" (click)="agregarNumero()" [disabled]="!numero().trim()">
+                <mat-icon>add</mat-icon> Agregar número
+            </button>
+        </div>
+
+        <div class="dyn-bloques" cdkDropList cdkDropListOrientation="mixed" (cdkDropListDropped)="moverBloque($event)"
+            aria-label="Fórmula del indicador">
+            @for (b of bloques(); track $index) {
+            <div class="dyn-bloque" cdkDrag [attr.data-tipo]="b.tipo">
+                @if (b.tipo === 'var') {
+                <span class="dyn-calc-letra">{{ b.valor }}</span>
+                <span class="dyn-bloque-nombre">{{ nombreVariable(b.valor) }}</span>
+                } @else {
+                <span class="dyn-bloque-valor">{{ simbolo(b.valor) }}</span>
+                }
+                <button type="button" class="dyn-calc-quitar" (click)="quitarBloque($index)" title="Quitar de la fórmula">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </div>
+            } @empty {
+            <span class="dyn-hint">Haga clic en una variable o una operación para armar la fórmula.</span>
+            }
+        </div>
+        @if (bloques().length) {
+        <div class="dyn-vista-previa">
+            <span class="dyn-vista-titulo">Vista previa</span>
+            @if (vista()) {
+            <div class="dyn-vista-formula" [innerHTML]="vista()"></div>
+            } @else {
+            <span class="dyn-hint">La vista previa aparece cuando la fórmula está completa.</span>
+            }
+        </div>
+        <div class="dyn-inline dyn-bloques-acciones">
+            <button type="button" class="btn-download" (click)="borrarUltimo()"><mat-icon>backspace</mat-icon> Borrar último</button>
+            <button type="button" class="btn-download" (click)="limpiarFormula()"><mat-icon>delete_sweep</mat-icon> Limpiar</button>
         </div>
         }
-        <div class="dyn-formula-resumen">
-            <span class="dyn-badge dyn-formula">{{ vistaPrevia() }}</span>
-            @for (x of leyenda(); track x.letra) {<span class="dyn-leyenda"><strong>{{ x.letra }}</strong> = {{ x.variable }}</span>}
-        </div>
+
+        @if (errorAnalisis()) {
+        <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorAnalisis() }}</span></div>
+        } @else if (analisis(); as a) {
+        @for (v of a.variables; track v.letra) {
+        @if (v.aviso) {
+        <div class="validation-message-banner"><mat-icon>warning</mat-icon><span>{{ v.letra }} · {{ v.nombre }}: {{ v.aviso }}</span></div>
+        }
+        }
+        <details class="dyn-formula-interna">
+            <summary>Fórmula interna (TOTALIZADO3)</summary>
+            <code class="dyn-formula">{{ a.formula }}</code>
+            <div class="wrapper-table dyn-terminos">
+                <div class="grid-table">
+                    <div class="header-table">
+                        <div class="cell">TÉRMINO</div>
+                        <div class="cell">GRUPO</div>
+                        <div class="cell">ACTIVIDAD</div>
+                        <div class="cell">SERVICIOS</div>
+                    </div>
+                    @for (t of a.terminos; track t.codigo) {
+                    <div class="row-table" [class.dyn-fila-error]="t.problema">
+                        <div class="cell dyn-formula">{{ t.texto }}</div>
+                        <div class="cell txt" [title]="t.grupo || ''">{{ t.tipgrupo }} · {{ t.grupo || '¿?' }}</div>
+                        <div class="cell txt" [title]="t.problema || t.descactividad || ''">{{ t.actividad }} · {{ t.descactividad || '¿?' }}</div>
+                        <div class="cell txt">{{ textoServicios(t) }}{{ t.mediana ? ' (mediana)' : '' }}</div>
+                    </div>
+                    }
+                </div>
+            </div>
+        </details>
         }
         @if (errorFormula()) {
         <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorFormula() }}</span></div>
         }
         <div class="dyn-inline" style="margin-top: 10px;">
             <button type="button" class="btn-search" (click)="guardarFormula()"
-                [disabled]="guardandoFormula() || !formulaCambiada() || !!formulaAvanzada()">
+                [disabled]="guardandoFormula() || !formulaCambiada() || !!errorAnalisis() || analizando() || !formulaAlias()">
                 <mat-icon>save</mat-icon> {{ guardandoFormula() ? 'Guardando…' : 'Guardar fórmula' }}
             </button>
             @if (formulaCambiada()) {
-            <button type="button" class="btn-download" (click)="cargarBloques()" [disabled]="guardandoFormula()">
+            <button type="button" class="btn-download" (click)="deshacerFormula()" [disabled]="guardandoFormula()">
                 <mat-icon>undo</mat-icon> Deshacer cambios
             </button>
             <span class="dyn-hint dyn-bloque-nota">Hay cambios sin guardar.</span>
@@ -188,7 +255,7 @@
         <header class="modal-header">
             <div class="modal-header-info">
                 <h2>{{ form.controls.id.value ? 'Editar indicador' : 'Nuevo indicador' }}</h2>
-                <p class="modal-subtitle">Después de guardar, arme la fórmula con bloques en el panel del indicador.</p>
+                <p class="modal-subtitle">Después de guardar, escriba la fórmula en el panel del indicador.</p>
             </div>
             <button type="button" class="close-modal-btn" (click)="mostrarForm.set(false)" aria-label="Cerrar">
                 <mat-icon>close</mat-icon></button>
@@ -227,38 +294,13 @@
                 </div>
 
                 <div class="dyn-section-title">1. Cálculo del pivot final</div>
-                <p class="dyn-hint">La fórmula (variables y operaciones) se arma con bloques en el panel del indicador
-                    {{ form.controls.id.value ? '' : 'después de guardarlo' }}.</p>
+                <p class="dyn-hint">La fórmula se escribe en el panel del indicador
+                    {{ form.controls.id.value ? '' : 'después de guardarlo' }}. Una división entre 0 da NA ese mes.</p>
                 <div class="form-grid">
                     <div class="field-input">
                         <label for="in_calc">Tipo de cálculo</label>
                         <select id="in_calc" formControlName="tipo_calculo">
                             @for (t of tiposCalculo(); track t.codigo) {<option [value]="t.codigo">{{ t.codigo }} · {{ t.descripcion }}</option>}
-                        </select>
-                    </div>
-                    <div class="field-input">
-                        <label for="in_factor">Factor</label>
-                        <input id="in_factor" type="number" step="any" formControlName="factor" />
-                    </div>
-                    <div class="field-input">
-                        <label for="in_den0">Si el denominador es 0</label>
-                        <select id="in_den0" formControlName="den_cero">
-                            <option value="CERO">Resultado 0</option>
-                            <option value="NA">NA</option>
-                        </select>
-                    </div>
-                    <div class="field-input">
-                        <label for="in_num0">Si el numerador es 0</label>
-                        <select id="in_num0" formControlName="num_cero_na">
-                            <option [ngValue]="false">Se calcula</option>
-                            <option [ngValue]="true">NA</option>
-                        </select>
-                    </div>
-                    <div class="field-input">
-                        <label for="in_letra0">Letra del mes en 0</label>
-                        <select id="in_letra0" formControlName="cero_si_letra_mes_0">
-                            <option [ngValue]="false">Sin regla</option>
-                            <option [ngValue]="true">Resultado 0 si alguna letra del mes es 0</option>
                         </select>
                     </div>
                     <div class="field-input">
@@ -272,7 +314,7 @@
                 </div>
 
                 <div class="dyn-section-title">2. Evaluación</div>
-                <p class="dyn-hint">Cómo se evalúa el indicador. Los valores de los estándares se cargan en la pestaña Tipos de Estándar y el porcentaje del % Acept en la pestaña % Acept.</p>
+                <p class="dyn-hint">Cómo se evalúa el indicador. Los valores de los estándares se cargan en las pestañas de Estándares y el porcentaje del % Acept en la pestaña % Acept.</p>
                 <div class="form-grid">
                     <div class="field-input">
                         <label for="in_base">Se evalúa por</label>

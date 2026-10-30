@@ -929,3 +929,69 @@
         animation: none;
     }
 }
+
+/* ---------- Pestañas agrupadas por etapa ---------- */
+.rpt .tabs.tmi-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 6px 4px;
+}
+
+.tmi-tab-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 8px;
+}
+
+.tmi-tab-grupo + .tmi-tab-grupo {
+    border-left: 1px solid var(--rpt-line-soft);
+}
+
+.tmi-tab-grupo-titulo {
+    padding: 2px 6px 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--rpt-muted);
+}
+
+.tmi-tab-grupo-botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+}
+
+.rpt .tmi-tabs .tab-button {
+    padding: 6px 12px;
+}
+
+@media (max-width: 640px) {
+    .rpt .tabs.tmi-tabs {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 6px;
+    }
+
+    .tmi-tab-grupo {
+        padding: 0;
+    }
+
+    .tmi-tab-grupo + .tmi-tab-grupo {
+        padding-top: 6px;
+        border-left: 0;
+        border-top: 1px solid var(--rpt-line-soft);
+    }
+
+    .rpt .tmi-tabs .tab-button {
+        flex: 1 1 auto;
+        white-space: nowrap;
+    }
+
+    .rpt .tmi-tabs .tab-button:last-child:nth-child(odd) {
+        grid-column: auto;
+    }
+}

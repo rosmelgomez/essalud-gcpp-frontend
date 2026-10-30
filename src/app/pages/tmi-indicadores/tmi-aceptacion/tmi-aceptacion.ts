@@ -7,16 +7,24 @@ import { TmiAceptacionIndicador, TmiDinamicoService, TmiTipoEstandar, mensajeErr
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-/** Lo que el usuario edita de un indicador: el porcentaje (en % en pantalla) y si es % del estándar o puntos. */
-interface Edicion {
-  tipo: 'REL' | 'ABS';
+/** Porcentajes de un % Acept (en % en pantalla). En banda, arriba y abajo. */
+interface Porcentaje {
   arriba: number | null;
   abajo: number | null;
+}
+
+/** Lo que el usuario edita de un indicador: si es % del estándar o puntos, el fijo del año y el valor del mes
+ *  (solo si el mes ya alcanzó su fecha de cierre; antes el mes usa el fijo). */
+interface Edicion {
+  tipo: 'REL' | 'ABS';
+  fijo: Porcentaje;
+  mes: Porcentaje;
   cambiado: boolean;
 }
 
 /** % Acept de cada indicador, como la hoja "Estándares de indicadores": estándar y % Acept por clave. El % Acept se
- *  calcula (estándar ± porcentaje); el usuario solo define el porcentaje. */
+ *  calcula (estándar ± porcentaje); el usuario solo define el porcentaje. Como el estándar fijo: hay un porcentaje fijo
+ *  del año, que cada mes toma al llegar su fecha de cierre, y luego el valor del mes se puede modificar. */
 @Component({
   selector: 'app-tmi-aceptacion',
   imports: [FormsModule, MatCardModule, MatIconModule, DecimalPipe, PercentPipe],
@@ -30,6 +38,7 @@ export class TmiAceptacion implements OnInit {
   readonly anios = Array.from({ length: 4 }, (_, i) => new Date().getFullYear() + 1 - i);
   anio = signal(new Date().getFullYear());
   mes = signal(new Date().getMonth() === 0 ? 12 : new Date().getMonth());
+  nombreMes = computed(() => this.meses.find((m) => m.value === this.mes())?.label ?? '');
 
   indicadores = signal<TmiAceptacionIndicador[]>([]);
   tipos = signal<TmiTipoEstandar[]>([]);
@@ -60,8 +69,8 @@ export class TmiAceptacion implements OnInit {
         for (const i of lista) {
           ed[i.id] = {
             tipo: i.tipo_tolerancia === 'ABS' ? 'ABS' : 'REL',
-            arriba: this.aPorcentaje(i.tolerancia),
-            abajo: this.aPorcentaje(i.tolerancia_menos),
+            fijo: { arriba: this.aPorcentaje(i.tolerancia_fijo), abajo: this.aPorcentaje(i.tolerancia_menos_fijo) },
+            mes: { arriba: this.aPorcentaje(i.tolerancia), abajo: this.aPorcentaje(i.tolerancia_menos) },
             cambiado: false,
           };
         }
@@ -98,7 +107,8 @@ export class TmiAceptacion implements OnInit {
   calcular(i: TmiAceptacionIndicador, estandar: number | null, haciaAbajo = false): number | null {
     const e = this.edicion()[i.id];
     if (!e || estandar == null) return null;
-    const pct = haciaAbajo ? (e.abajo ?? e.arriba) : e.arriba;
+    const p = i.mes_cerrado ? e.mes : e.fijo;
+    const pct = haciaAbajo ? (p.abajo ?? p.arriba) : p.arriba;
     if (pct == null) return null;
     const t = pct / 100;
     const sube = !haciaAbajo && (i.sentido === 'MENOR' || i.sentido === 'BANDA');
@@ -106,32 +116,39 @@ export class TmiAceptacion implements OnInit {
     return Math.round(v * 10000) / 10000;
   }
 
-  cambiar(i: TmiAceptacionIndicador, campo: 'tipo' | 'arriba' | 'abajo', valor: any): void {
+  cambiar(i: TmiAceptacionIndicador, campo: 'tipo' | 'arriba' | 'abajo', valor: any, de: 'fijo' | 'mes' = 'fijo'): void {
     const e = { ...this.edicion()[i.id] };
     if (campo === 'tipo') e.tipo = valor;
-    else e[campo] = valor === '' || valor == null ? null : Number(valor);
+    else e[de] = { ...e[de], [campo]: valor === '' || valor == null ? null : Number(valor) };
     e.cambiado = true;
     this.edicion.update((ed) => ({ ...ed, [i.id]: e }));
   }
 
   guardar(i: TmiAceptacionIndicador): void {
     const e = this.edicion()[i.id];
-    if (e.arriba == null || e.arriba < 0) {
+    const mes = i.mes_cerrado ? e.mes : e.fijo;
+    if (e.fijo.arriba == null || e.fijo.arriba < 0 || mes.arriba == null || mes.arriba < 0) {
       this.error.set(`Ingrese el porcentaje de ${i.indicador}.`);
       return;
     }
+    const banda = (v: number | null) => (i.sentido === 'BANDA' && v != null ? v / 100 : null);
     const dto = {
       tipo_tolerancia: e.tipo,
-      tolerancia: e.arriba / 100,
-      tolerancia_menos: i.sentido === 'BANDA' && e.abajo != null ? e.abajo / 100 : null,
+      tolerancia_fijo: e.fijo.arriba / 100,
+      tolerancia_menos_fijo: banda(e.fijo.abajo),
+      tolerancia: mes.arriba / 100,
+      tolerancia_menos: banda(mes.abajo),
+      anio: this.anio(),
+      mes: this.mes(),
     };
+    const alcance = i.mes_cerrado ? `${this.anio()} y ${this.nombreMes()}` : `${this.anio()}`;
     this.guardando.set(i.id);
     this.error.set('');
     this.mensaje.set('');
     this.srv.putTolerancia(i.id, dto).subscribe({
       next: () => {
         this.guardando.set(null);
-        this.mensaje.set(`% Acept de ${i.indicador} guardado. Se aplica desde el próximo cálculo.`);
+        this.mensaje.set(`% Acept de ${i.indicador} guardado para ${alcance}. Se aplica desde el próximo cálculo.`);
         this.cargar();
       },
       error: (err) => {

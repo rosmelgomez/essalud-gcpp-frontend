@@ -13,14 +13,19 @@
             </button>
         </div>
     </div>
+    <details class="dyn-ayuda">
+        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
+        <p>
+        El <strong>% Acept</strong> se calcula: el estándar más (menor es mejor) o menos (mayor es mejor) el porcentaje del
+        indicador; en banda, un porcentaje hacia arriba y otro hacia abajo. Solo se define el <strong>porcentaje</strong>
+        (o puntos, en indicadores que ya son porcentajes, como el 5 de la ocupación de cama). Cada tabla muestra el estándar
+        del mes elegido y el % Acept que resulta. Igual que el estándar fijo, cada indicador tiene un porcentaje
+        <strong>fijo del año</strong>: cuando un mes llega a su fecha de cierre (el de octubre, en el cierre de noviembre),
+        ese mes toma el fijo y desde ahí se puede modificar solo para ese mes. Mientras no llega, el mes usa el fijo.
+        El % Acept propio de un centro (pestaña Estándar por Centro) gana sobre este.
+        </p>
+    </details>
 </div>
-
-<p class="dyn-hint">
-    El <strong>% Acept</strong> se calcula: el estándar más (menor es mejor) o menos (mayor es mejor) el porcentaje del
-    indicador; en banda, un porcentaje hacia arriba y otro hacia abajo. Solo se define el <strong>porcentaje</strong>
-    (o puntos, en indicadores que ya son porcentajes, como el 5 de la ocupación de cama). Cada tabla muestra el estándar
-    del mes elegido y el % Acept que resulta. El % Acept propio de un centro (pestaña Estándar por Centro) gana sobre este.
-</p>
 
 @if (error()) {
 <div class="alert alert-danger">{{ error() }}</div>
@@ -43,6 +48,7 @@
                 @if (i.grupo) {<span class="dyn-badge">{{ i.grupo }}</span>}
                 <span class="dyn-badge">Se evalúa por {{ textoTipo(i.base_estandar) }}</span>
                 <span class="dyn-badge">{{ textoSentido(i.sentido) }}</span>
+                <span class="dyn-badge">{{ i.varia_en_anio ? (nombreMes() + ' ' + anio() + ' · varía por mes') : ('Año ' + anio()) }}</span>
             </div>
         </div>
         <div class="dyn-inline dyn-acept-edicion">
@@ -53,17 +59,26 @@
                     <option value="ABS">puntos</option>
                 </select>
             </div>
-            <div class="field-input">
-                <label [for]="'arriba_' + i.id">{{ i.sentido === 'MAYOR' ? 'Hacia abajo' : 'Hacia arriba' }}</label>
-                <div class="dyn-pct"><input [id]="'arriba_' + i.id" type="number" step="any" min="0" [ngModel]="e.arriba"
-                    (ngModelChange)="cambiar(i, 'arriba', $event)" /><span>{{ e.tipo === 'REL' ? '%' : 'pts' }}</span></div>
-            </div>
-            @if (i.sentido === 'BANDA') {
-            <div class="field-input">
-                <label [for]="'abajo_' + i.id">Hacia abajo</label>
-                <div class="dyn-pct"><input [id]="'abajo_' + i.id" type="number" step="any" min="0" [ngModel]="e.abajo"
-                    [placeholder]="e.arriba ?? ''" (ngModelChange)="cambiar(i, 'abajo', $event)" /><span>{{ e.tipo === 'REL' ? '%' : 'pts' }}</span></div>
-            </div>
+            @for (de of (i.mes_cerrado ? ['fijo', 'mes'] : ['fijo']); track de) {
+            @let p = de === 'fijo' ? e.fijo : e.mes;
+            <fieldset class="dyn-acept-grupo">
+                <legend>{{ de === 'fijo' ? 'Fijo ' + anio() : nombreMes() + ' ' + anio() }}</legend>
+                <div class="field-input">
+                    <label [for]="de + '_arriba_' + i.id">{{ i.sentido === 'MAYOR' ? 'Hacia abajo' : 'Hacia arriba' }}</label>
+                    <div class="dyn-pct"><input [id]="de + '_arriba_' + i.id" type="number" step="any" min="0" [ngModel]="p.arriba"
+                        (ngModelChange)="cambiar(i, 'arriba', $event, $any(de))" /><span>{{ e.tipo === 'REL' ? '%' : 'pts' }}</span></div>
+                </div>
+                @if (i.sentido === 'BANDA') {
+                <div class="field-input">
+                    <label [for]="de + '_abajo_' + i.id">Hacia abajo</label>
+                    <div class="dyn-pct"><input [id]="de + '_abajo_' + i.id" type="number" step="any" min="0" [ngModel]="p.abajo"
+                        [placeholder]="p.arriba ?? ''" (ngModelChange)="cambiar(i, 'abajo', $event, $any(de))" /><span>{{ e.tipo === 'REL' ? '%' : 'pts' }}</span></div>
+                </div>
+                }
+            </fieldset>
+            }
+            @if (!i.mes_cerrado) {
+            <span class="dyn-hint dyn-acept-nota">{{ nombreMes() }} aún no llega a su fecha de cierre: usa el fijo.</span>
             }
             <button type="button" class="btn-search" (click)="guardar(i)" [disabled]="!e.cambiado || guardando() === i.id">
                 <mat-icon>{{ guardando() === i.id ? 'hourglass_empty' : 'save' }}</mat-icon> Guardar

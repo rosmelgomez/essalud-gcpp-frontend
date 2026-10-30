@@ -9,15 +9,15 @@
 <div class="dyn-ok" style="margin-bottom: 12px;"><mat-icon>check_circle</mat-icon> {{ mensaje() }}</div>
 }
 
-<!-- 1. Cálculo: solo el periodo abierto (mes anterior al actual) -->
+<!-- 1. Cálculo: el periodo que elige el usuario (hasta el mes anterior al actual) -->
 <mat-card class="table dyn-paso">
     <div class="table-title-row">
         <div>
             <h3>1. Calcular el periodo</h3>
             <div class="dyn-paso-periodo">
-                Periodo a calcular:
-                <strong>{{ periodoCalculo() ? nombrePeriodo(periodoCalculo()) : '…' }}</strong>
-                @if (guardadoCalculo(); as g) {
+                @if (!puedeCalcular() && periodoCalculo()) {
+                <span class="dyn-badge dyn-p0">Se puede calcular hasta {{ nombrePeriodo(periodoCalculo()) }}</span>
+                } @else if (guardadoCalculo(); as g) {
                 <span class="dyn-badge dyn-p5">Último cálculo: {{ fecha(g.fecha_calculo) }}</span>
                 } @else {
                 <span class="dyn-badge dyn-pNA">Todavía no se calculó</span>
@@ -25,23 +25,30 @@
             </div>
         </div>
         <div class="dyn-inline">
+            <select class="anio-select" aria-label="Año a calcular" [ngModel]="anioCalc()" (ngModelChange)="anioCalc.set($event)"
+                [disabled]="!!ocupado()">
+                @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
+            </select>
+            <select class="periodo-select" aria-label="Mes a calcular" [ngModel]="mesCalc()" (ngModelChange)="mesCalc.set($event)"
+                [disabled]="!!ocupado()">
+                @for (m of meses; track m.value) {<option [value]="m.value">{{ m.label }}</option>}
+            </select>
             <button (click)="validar()" class="btn-download" [disabled]="!!ocupado()">
                 <mat-icon>rule</mat-icon> Validar
             </button>
-            <button (click)="calcular()" class="btn-search" [disabled]="!!ocupado() || !periodoCalculo()">
+            <button (click)="calcular()" class="btn-search" [disabled]="!!ocupado() || !puedeCalcular()">
                 @if (ocupado() === 'calcular') {<span class="spinner-btn"></span>} @else {<mat-icon>calculate</mat-icon>}
                 {{ ocupado() === 'calcular' ? 'Calculando…' : 'Calcular' }}
             </button>
         </div>
     </div>
     <p class="dyn-hint">
-        Se calcula el mes anterior al actual: arma el pivot de las variables desde TOTALIZADO3, calcula los indicadores
-        activos y guarda el resultado final. Cuando pasa la fecha de cierre, el periodo ya no se recalcula: el mes
-        siguiente se calcula el periodo que sigue.
+        Elija el año y el mes: calcula los indicadores activos desde TOTALIZADO3 y guarda el resultado final. Se puede
+        calcular hasta el mes anterior al actual; si el periodo ya tenía un resultado guardado, se reemplaza.
     </p>
     @if (ocupado() === 'calcular') {
     <div class="loading loading-excel">
-        <p>Calculando TMI {{ nombrePeriodo(periodoCalculo()) }}...</p>
+        <p>Calculando TMI {{ nombrePeriodo(periodoCalcSel()) }}...</p>
         <span class="loading-sub">Esto puede tardar unos segundos</span>
     </div>
     }
@@ -62,7 +69,7 @@
 
 @if (puntajes().length) {
 <mat-card class="table" style="margin-bottom: 16px; padding-bottom: 12px;">
-    <h3>Puntajes de {{ nombrePeriodo(periodoCalculo()) }} (centros × indicadores)</h3>
+    <h3>Puntajes de {{ nombrePeriodo(periodoCalculado()) }} (centros × indicadores)</h3>
     <div class="dyn-chips">
         @for (x of puntajes(); track x.clave) {
         <span [class]="claseP(x.clave)">Puntaje {{ x.clave }}: {{ x.valor }}</span>
@@ -91,13 +98,31 @@
             <select [(ngModel)]="mes" (ngModelChange)="cambioPeriodo()" class="periodo-select" [disabled]="!!ocupado()">
                 @for (m of meses; track m.value) {<option [value]="m.value">{{ m.label }}</option>}
             </select>
-            <button (click)="descargar()" class="btn-search btn-excel" [disabled]="!!ocupado() || !guardado()"
+            <button (click)="descargar()" class="btn-search btn-excel" [disabled]="!!ocupado() || !guardado() || !excelIds().size"
                 [title]="guardado() ? 'Excel con el resultado guardado del periodo' : 'El periodo no tiene resultado guardado'">
                 @if (ocupado() === 'excel') {<span class="spinner-btn"></span>} @else {<mat-icon>download</mat-icon>}
                 {{ ocupado() === 'excel' ? 'Generando Excel…' : 'Descargar Excel' }}
             </button>
         </div>
     </div>
+    <details class="dyn-excel-indicadores">
+        <summary>
+            Indicadores del Excel:
+            <strong>{{ todosEnExcel() ? 'todos' : excelIds().size + ' de ' + indicadores().length }}</strong>
+        </summary>
+        <div class="dyn-inline dyn-excel-acciones">
+            <button type="button" class="btn-download" (click)="marcarExcel(true)"><mat-icon>done_all</mat-icon> Todos</button>
+            <button type="button" class="btn-download" (click)="marcarExcel(false)"><mat-icon>remove_done</mat-icon> Ninguno</button>
+        </div>
+        <div class="dyn-excel-lista">
+            @for (i of indicadores(); track i.id) {
+            <label>
+                <input type="checkbox" [checked]="excelIds().has(i.id!)" (change)="enExcel(i.id!, $any($event.target).checked)" />
+                {{ i.orden }}. {{ i.indicador }}
+            </label>
+            }
+        </div>
+    </details>
     <div class="table-title-row dyn-sub">
         <h4>Resultado final por indicador</h4>
         <div class="dyn-inline">
@@ -176,20 +201,4 @@
         <div class="footer-left"><strong>Centros:</strong></div>
         <div class="footer-right num"><strong>{{ resultadoFiltrado().length }}</strong></div>
     </div>
-</mat-card>
-
-<mat-card class="table" style="margin-top: 16px; padding-bottom: 16px;">
-    <div class="table-title-row">
-        <h3>Scripts SQL del TMI</h3>
-        <button type="button" class="btn-download" (click)="ejecutarScripts()" [disabled]="!!ocupado()">
-            <mat-icon>{{ ocupado() === 'sql' ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
-            {{ ocupado() === 'sql' ? 'Ejecutando…' : 'Ejecutar scripts' }}
-        </button>
-    </div>
-    <p class="dyn-hint">Se ejecutan solos al iniciar el backend. Úselo si se cambiaron los scripts o se restauró la base.</p>
-    @if (scriptsLista().length) {
-    <ul class="dyn-problemas">
-        @for (s of scriptsLista(); track s.nombre) {<li><strong>{{ s.nombre }}</strong>: {{ s.estado }}</li>}
-    </ul>
-    }
 </mat-card>

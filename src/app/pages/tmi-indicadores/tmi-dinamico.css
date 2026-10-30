@@ -68,14 +68,15 @@
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.5;
+    white-space: nowrap;
     background: var(--rpt-surface-2);
     border: 1px solid var(--rpt-line);
     color: var(--rpt-ink);
 }
 
 .dyn-badge.dyn-p5 { background: #e6f4ea; border-color: #a8d5b5; color: #1e6b34; }
-.dyn-badge.dyn-p3 { background: #fff4d6; border-color: #f0d58a; color: #7a5a00; }
-.dyn-badge.dyn-p1, .dyn-badge.dyn-p0 { background: #fde8e8; border-color: #f2b8b8; color: #9b1c1c; }
+.dyn-badge.dyn-p3 { background: var(--rpt-warn-bg); border-color: var(--rpt-warn-line); color: var(--rpt-warn); }
+.dyn-badge.dyn-p1, .dyn-badge.dyn-p0 { background: var(--rpt-danger-bg); border-color: var(--rpt-danger-line); color: var(--rpt-danger); }
 .dyn-badge.dyn-pNA { color: var(--rpt-muted); }
 
 .dyn-chips {
@@ -120,7 +121,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #1e6b34;
+    color: var(--rpt-ok);
     font-size: 0.9rem;
 }
 
@@ -178,121 +179,8 @@
 }
 
 /* Fórmula en bloques (Indicadores) */
-.dyn-formula-parte {
-    display: grid;
-    grid-template-columns: 110px 1fr;
-    gap: 8px;
-    align-items: start;
-    margin-bottom: 10px;
-}
-
-.dyn-formula-titulo {
-    padding-top: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--rpt-muted);
-}
-
-.dyn-bloques {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-}
-
-.dyn-bloque {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 4px 4px 6px;
-    border: 1px solid var(--rpt-line);
-    border-radius: 8px;
-    background: var(--rpt-surface);
-}
-
-.dyn-bloque.dyn-bloque-vacio {
-    border-style: dashed;
-}
-
-.dyn-bloque select {
-    max-width: 280px;
-    border: none;
-    background: transparent;
-}
-
-.dyn-bloque-letra {
-    display: inline-grid;
-    place-items: center;
-    min-width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    background: var(--rpt-brand);
-    color: #fff;
-    font-weight: 700;
-    font-size: 13px;
-}
-
-.dyn-bloque-op {
-    width: auto;
-    font-weight: 600;
-}
-
-.dyn-bloque-agregar {
-    padding: 4px 10px;
-}
-
 .dyn-bloque-nota {
     margin: 0;
-}
-
-.dyn-formula-resumen {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 14px;
-    margin-top: 4px;
-    font-size: 13px;
-}
-
-/* Indicadores: las dos partes del panel (1. cálculo, 2. estándares) */
-.dyn-parte-titulo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 22px 0 6px;
-    padding-bottom: 6px;
-    border-bottom: 2px solid var(--rpt-line);
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.dyn-parte-titulo span {
-    display: inline-grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--rpt-brand);
-    color: #fff;
-    font-size: 12px;
-}
-
-/* Estándares por clave y mes */
-.dyn-valores-estandar {
-    --cols-table: 170px 80px 64px repeat(12, 64px) 120px 64px;
-}
-
-.dyn-input-mes {
-    width: 100%;
-    min-width: 0;
-    padding: 4px 6px;
-    text-align: right;
-}
-
-.dyn-anual {
-    display: flex;
-    align-items: center;
-    gap: 2px;
 }
 
 /* % Acept: una tarjeta por indicador, como la hoja "Estándares de indicadores" */
@@ -308,6 +196,27 @@
 
 .dyn-acept-edicion .field-input {
     width: 130px;
+}
+
+.dyn-acept-grupo {
+    display: flex;
+    gap: 8px;
+    margin: 0;
+    padding: 2px 10px 8px;
+    border: 1px solid var(--rpt-line);
+    border-radius: 8px;
+}
+
+.dyn-acept-grupo legend {
+    padding: 0 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rpt-muted);
+}
+
+.dyn-acept-nota {
+    max-width: 180px;
+    align-self: center;
 }
 
 .dyn-pct {
@@ -352,31 +261,416 @@
 }
 
 .dyn-acept-etq.dyn-verde {
-    color: #1e6b34;
+    color: var(--rpt-ok);
 }
 
 .dyn-acept-etq.dyn-rojo {
-    color: #9b1c1c;
+    color: var(--rpt-danger);
 }
 
 .dyn-acept-fila .cell.dyn-sin {
     background: var(--rpt-surface-2);
 }
 
-/* celdas de mes: sin flechas de número, para que se lea el valor completo */
-.dyn-input-mes {
-    -moz-appearance: textfield;
-    appearance: textfield;
+/* Variables: componentes de una variable compuesta y servicios con selección múltiple */
+.row-table.dyn-componente {
+    grid-template-columns: minmax(180px, 2fr) minmax(110px, 1fr) 60px;
 }
 
-.dyn-input-mes::-webkit-inner-spin-button,
-.dyn-input-mes::-webkit-outer-spin-button {
-    -webkit-appearance: none;
+.dyn-servicios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    max-height: 180px;
+    overflow: auto;
+    padding: 6px 8px;
+    border: 1px solid var(--rpt-line);
+    border-radius: 6px;
+}
+
+.dyn-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: normal;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.dyn-check input[type="checkbox"] {
+    width: auto;
+    height: auto;
     margin: 0;
+    padding: 0;
+    flex: none;
 }
 
-.dyn-input-mes::placeholder {
+/* En las tablas de dos paneles el texto largo se corta con "..." en vez de ensanchar la tabla */
+.dyn-split .grid-table {
+    min-width: 100%;
+}
+
+.dyn-split .row-table .cell.txt {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.dyn-calculo-variable {
+    margin: 0 0 8px;
+}
+
+/* Fórmula con bloques: variables (A, B, C…), operaciones y números */
+.dyn-calc-select {
+    flex: 1;
+    min-width: 220px;
+    max-width: 480px;
+}
+
+.dyn-calc-vars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.dyn-calc-var {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px 4px 4px;
+    background: var(--rpt-surface);
+    border: 1px solid var(--rpt-line);
+    border-radius: 8px;
+    cursor: pointer;
+    max-width: 100%;
+}
+
+.dyn-calc-var:hover,
+.dyn-calc-var:focus-visible {
+    border-color: var(--rpt-brand);
+}
+
+.dyn-calc-letra {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--rpt-brand);
+    color: #fff;
+    font-weight: 700;
+}
+
+.dyn-calc-var-nombre {
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dyn-calc-quitar {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: var(--rpt-muted);
-    opacity: 0.7;
+    cursor: pointer;
 }
 
+.dyn-calc-quitar mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.dyn-calc-quitar:hover:not(:disabled) {
+    color: var(--rpt-danger);
+}
+
+.dyn-calc-quitar:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.dyn-bloques-paleta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.dyn-bloque-op {
+    min-width: 36px;
+    height: 34px;
+    padding: 0 8px;
+    border: 1px solid var(--rpt-line);
+    border-radius: 6px;
+    background: var(--rpt-surface);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--rpt-brand-deep);
+    cursor: pointer;
+}
+
+.dyn-bloque-op:hover {
+    background: var(--rpt-brand-tint);
+    border-color: rgba(0, 100, 175, 0.35);
+}
+
+.dyn-bloque-numero {
+    width: 80px;
+    height: 34px;
+    box-sizing: border-box;
+    margin-left: 8px;
+    padding: 0 8px;
+    border: 1px solid var(--rpt-line);
+    border-radius: 6px;
+}
+
+.dyn-bloques {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 48px;
+    margin-top: 10px;
+    padding: 8px;
+    border: 2px dashed var(--rpt-line);
+    border-radius: 8px;
+    background: var(--rpt-surface);
+}
+
+.dyn-bloque {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 4px 4px 6px;
+    border: 1px solid var(--rpt-line);
+    border-radius: 8px;
+    background: var(--rpt-surface-2);
+    cursor: grab;
+    user-select: none;
+}
+
+.dyn-bloque[data-tipo='op'],
+.dyn-bloque[data-tipo='par'] {
+    background: var(--rpt-brand-tint);
+}
+
+.dyn-bloque[data-tipo='num'] {
+    background: rgba(15, 138, 79, 0.07);
+}
+
+.dyn-bloque-valor {
+    min-width: 14px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.dyn-bloque-nombre {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+.dyn-bloque.cdk-drag-preview {
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
+}
+
+.dyn-bloque.cdk-drag-placeholder {
+    opacity: 0.35;
+}
+
+.dyn-bloques.cdk-drop-list-dragging .dyn-bloque:not(.cdk-drag-placeholder) {
+    transition: transform 200ms ease;
+}
+
+.dyn-vista-previa {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(0, 100, 175, 0.2);
+    border-radius: 8px;
+    background: var(--rpt-brand-tint);
+}
+
+.dyn-vista-titulo {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rpt-muted);
+}
+
+.dyn-vista-formula {
+    overflow-x: auto;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* la vista previa se dibuja con [innerHTML]: sus clases necesitan ::ng-deep */
+.dyn-vista-formula ::ng-deep .fx-frac {
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: middle;
+    text-align: center;
+    margin: 2px 4px;
+}
+
+.dyn-vista-formula ::ng-deep .fx-num {
+    padding: 0 4px 2px;
+    border-bottom: 1.5px solid currentColor;
+}
+
+.dyn-vista-formula ::ng-deep .fx-den {
+    padding: 2px 4px 0;
+}
+
+.dyn-vista-formula ::ng-deep .fx-var {
+    font-weight: 600;
+    color: var(--rpt-brand-deep);
+}
+
+.dyn-vista-formula ::ng-deep .fx-op {
+    padding: 0 4px;
+    color: var(--rpt-ink-2);
+}
+
+.dyn-vista-formula ::ng-deep .fx-n {
+    font-weight: 600;
+}
+
+.dyn-bloques-acciones {
+    margin-top: 6px;
+}
+
+.dyn-formula-interna {
+    margin-top: 10px;
+}
+
+.dyn-formula-interna summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--rpt-muted);
+}
+
+.dyn-formula-interna code {
+    display: block;
+    margin: 6px 0;
+    word-break: break-all;
+}
+
+.dyn-terminos,
+.dyn-resultado {
+    margin-top: 8px;
+}
+
+.dyn-terminos .grid-table {
+    --cols-table: minmax(110px, 1fr) minmax(140px, 1.3fr) minmax(170px, 2fr) minmax(110px, 1fr);
+    min-width: 100%;
+}
+
+.dyn-terminos .row-table .cell.txt,
+.dyn-resultado .row-table .cell.txt {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dyn-fila-error {
+    background: var(--rpt-danger-bg);
+}
+
+/* Indicadores que lleva el Excel */
+.dyn-excel-indicadores {
+    margin: 4px 0 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--rpt-line);
+    border-radius: 8px;
+}
+
+.dyn-excel-indicadores summary {
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dyn-excel-acciones {
+    margin: 10px 0 6px;
+}
+
+.dyn-excel-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 4px 16px;
+    font-size: 13px;
+}
+
+.dyn-excel-lista label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.dyn-acept-defecto {
+    color: var(--rpt-muted);
+    font-style: italic;
+}
+
+/* Ayuda de cada pestaña: plegada dentro de la cabecera, se abre cuando se necesita */
+.dyn-ayuda {
+    flex: 1 0 100%;
+    margin: -6px 0 0;
+    font-size: 13px;
+    color: var(--rpt-ink-2);
+}
+
+.dyn-ayuda summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px 2px 2px;
+    border-radius: var(--rpt-radius-sm);
+    font-weight: 600;
+    color: var(--rpt-brand);
+    cursor: pointer;
+    list-style: none;
+    transition: background-color 0.15s ease;
+}
+
+.dyn-ayuda summary::-webkit-details-marker {
+    display: none;
+}
+
+.dyn-ayuda summary:hover {
+    background: var(--rpt-brand-tint);
+}
+
+.dyn-ayuda summary:focus-visible {
+    outline: 2px solid var(--rpt-brand);
+    outline-offset: 1px;
+}
+
+.dyn-ayuda summary mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}
+
+.dyn-ayuda p {
+    max-width: 110ch;
+    margin: 8px 0 2px;
+    line-height: 1.55;
+}
+
+.dyn-ayuda[open] summary {
+    background: var(--rpt-brand-tint);
+}

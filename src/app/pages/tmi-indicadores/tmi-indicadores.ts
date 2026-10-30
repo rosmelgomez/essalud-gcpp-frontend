@@ -15,11 +15,11 @@ import { TmiVariables } from './tmi-variables/tmi-variables';
 import { TmiConfigIndicadores } from './tmi-config-indicadores/tmi-config-indicadores';
 import { TmiCentroEstandarTab } from './tmi-centro-estandar/tmi-centro-estandar';
 import { TmiCalculo } from './tmi-calculo/tmi-calculo';
-import { TmiTiposEstandar } from './tmi-tipos-estandar/tmi-tipos-estandar';
+
 import { TmiAceptacion } from './tmi-aceptacion/tmi-aceptacion';
 
 export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre'
-  | 'Tipos Estandar' | 'Aceptacion' | 'Variables' | 'Indicadores' | 'Estandar Centro' | 'Calcular';
+  | 'Aceptacion' | 'Variables' | 'Indicadores' | 'Estandar Centro' | 'Calcular';
 
 @Component({
   selector: 'app-tmi-indicadores',
@@ -38,7 +38,7 @@ export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categ
     TmiConfigIndicadores,
     TmiCentroEstandarTab,
     TmiCalculo,
-    TmiTiposEstandar,
+
     TmiAceptacion
   ],
   templateUrl: './tmi-indicadores.html',
@@ -57,8 +57,29 @@ export class TmiIndicadores implements OnInit {
   eliminandoId: number | null = null;
   errorEliminarFila: string = '';
 
-  // Tabs
+  // Tabs, agrupadas en el orden del trabajo: fórmulas, estándares, centros y cierre
   activeTab: TabType = 'Estandares Tipo';
+  readonly gruposTabs: { titulo: string; tabs: { id: TabType; texto: string }[] }[] = [
+    { titulo: 'Fórmulas', tabs: [
+      { id: 'Variables', texto: 'Variables' },
+      { id: 'Indicadores', texto: 'Indicadores' },
+    ] },
+    { titulo: 'Estándares', tabs: [
+      { id: 'Estandares Tipo', texto: 'Por tipo' },
+      { id: 'Estandares Nivel', texto: 'Por nivel' },
+      { id: 'Estandares Categoria', texto: 'Por categoría' },
+      { id: 'Estandar Centro', texto: 'Por centro' },
+      { id: 'Aceptacion', texto: '% Acept' },
+    ] },
+    { titulo: 'Centros', tabs: [
+      { id: 'Centros TMI', texto: 'Centros TMI' },
+      { id: 'Exclusion Centro Estandar', texto: 'Exclusiones' },
+    ] },
+    { titulo: 'Cierre', tabs: [
+      { id: 'Fecha Cierre', texto: 'Fecha de cierre' },
+      { id: 'Calcular', texto: 'Calcular y Excel' },
+    ] },
+  ];
 
   // Filtros de Años y Meses (replicando dashboard-medicas)
   aniosDisponibles: string[] = [];
@@ -346,9 +367,6 @@ export class TmiIndicadores implements OnInit {
     this.mesExclusion = mesDefecto;
     this.periodoExclusion = `${anioDefecto}${mesDefecto}`;
 
-    // Excel TMI: último periodo cerrado
-    this.anioExcelTMI = anioDefecto;
-    this.mesExcelTMI = mesDefecto;
     this.periodoMinimoEditable = `${anioDefecto}${mesDefecto}`;
 
     this.reactiveForm();
@@ -1346,47 +1364,6 @@ export class TmiIndicadores implements OnInit {
 
   }
 
-
-  public descargandoExcelTMI: boolean = false;
-  public errorExcelTMI: string = '';
-  anioExcelTMI: string = '';
-  mesExcelTMI: string = '';
-
-  descargarExcelTMI(): void {
-    if (!this.anioExcelTMI || !this.mesExcelTMI) {
-      this.errorExcelTMI = 'Por favor seleccione un año y periodo válidos.';
-      return;
-    }
-    const periodo = `${this.anioExcelTMI}${this.mesExcelTMI}`;
-    this.descargandoExcelTMI = true;
-    this.errorExcelTMI = '';
-    this.cdr.markForCheck();
-
-    this.tmiIndicadoresService.getExcelTMI(periodo).subscribe({
-      next: (response: any) => {
-        const blob = response.body;
-        if (blob) {
-          const fileBlob = new Blob([blob], {
-            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          });
-          const url = window.URL.createObjectURL(fileBlob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `TMI_Prelim_${periodo}.xlsx`;
-          link.click();
-          window.URL.revokeObjectURL(url);
-        }
-        this.descargandoExcelTMI = false;
-        this.cdr.markForCheck();
-      },
-      error: (error: any) => {
-        console.error('Error al descargar el Excel TMI', error);
-        this.errorExcelTMI = 'Error al generar/descargar el Excel del TMI.';
-        this.descargandoExcelTMI = false;
-        this.cdr.markForCheck();
-      },
-    });
-  }
 
   downloadCSV(): void {
     if (!this.dataCentrosTMI?.length) {

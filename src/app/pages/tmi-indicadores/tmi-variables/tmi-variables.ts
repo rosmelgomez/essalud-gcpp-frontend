@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,6 +7,7 @@ import { CatalogoGas } from '../catalogo-gas';
 import {
   TmiDinamicoService,
   TmiVariable,
+  TmiVariableComponente,
   TmiVariableLogica,
   mensajeError,
 } from '../../../services/tmi-dinamico-service';
@@ -28,6 +30,17 @@ export class TmiVariables implements OnInit {
   });
   seleccionada = signal<TmiVariable | null>(null);
   logica = signal<TmiVariableLogica[]>([]);
+  /** Variables que suma la variable seleccionada (variable compuesta). */
+  componentes = signal<TmiVariableComponente[]>([]);
+  nuevoComponente: number | null = null;
+  /** Variables que se pueden agregar como componente: con el mismo cálculo, ni la misma ni las que ya están. */
+  candidatos = computed(() => {
+    const sel = this.seleccionada();
+    const ya = new Set(this.componentes().map((c) => c.id_variable_componente));
+    return this.variables().filter((v) => v.id !== sel?.id && !ya.has(v.id!) && v.agregacion === sel?.agregacion);
+  });
+  /** Alta de una actividad: servicios marcados (se crea una fila por cada uno; ninguno = todos los servicios). */
+  serviciosMarcados = signal<number[]>([]);
 
   /** Grupo -> actividad -> servicio en cascada (DIM_GRUPOACTIVIDADSERVICIO). */
   readonly gas = new CatalogoGas(this.srv);
@@ -47,6 +60,7 @@ export class TmiVariables implements OnInit {
     id: [0],
     nombre: ['', [Validators.required, Validators.maxLength(200)]],
     descripcion: [''],
+    agregacion: ['SUMA' as 'SUMA' | 'MEDIANA'],
     total_anual: ['SUMA_MESES' as 'SUMA_MESES' | 'MEDIANA_PERIODO'],
     activo: [true],
   });
@@ -57,7 +71,6 @@ export class TmiVariables implements OnInit {
     actividad: [null as number | null, Validators.required],
     servicio: [null as number | null],
     condicion_hoja: [''],
-    agregacion: ['SUMA' as 'SUMA' | 'MEDIANA'],
     periodo_desde: [200001, [Validators.required, Validators.min(200001), Validators.max(999912)]],
     periodo_hasta: [999912, [Validators.required, Validators.min(200001), Validators.max(999912)]],
     activo: [true],
@@ -92,6 +105,7 @@ export class TmiVariables implements OnInit {
   cargarLogica(): void {
     const v = this.seleccionada();
     if (!v?.id) return;
+    this.cargarComponentes();
     this.loadingLogica.set(true);
     this.errorLogica.set('');
     this.srv.getLogica(v.id).subscribe({
@@ -108,7 +122,7 @@ export class TmiVariables implements OnInit {
 
   // variable
   nuevaVariable(): void {
-    this.formVariable.reset({ id: 0, nombre: '', descripcion: '', total_anual: 'SUMA_MESES', activo: true });
+    this.formVariable.reset({ id: 0, nombre: '', descripcion: '', agregacion: 'SUMA', total_anual: 'SUMA_MESES', activo: true });
     this.errorForm.set('');
     this.mostrarFormVariable.set(true);
   }
@@ -119,11 +133,18 @@ export class TmiVariables implements OnInit {
       id: v.id ?? 0,
       nombre: v.nombre,
       descripcion: v.descripcion ?? '',
+      agregacion: v.agregacion,
       total_anual: v.total_anual,
       activo: v.activo,
     });
     this.errorForm.set('');
     this.mostrarFormVariable.set(true);
+  }
+
+  /** Una variable MEDIANA (recursos) por defecto toma como total anual la mediana del periodo. */
+  alCambiarCalculo(): void {
+    const f = this.formVariable.controls;
+    f.total_anual.setValue(f.agregacion.value === 'MEDIANA' ? 'MEDIANA_PERIODO' : 'SUMA_MESES');
   }
 
   guardarVariable(): void {
@@ -133,7 +154,12 @@ export class TmiVariables implements OnInit {
       return;
     }
     const { id, ...dto } = this.formVariable.getRawValue();
-    const datos: TmiVariable = { ...dto, descripcion: dto.descripcion || null };
+    // la mediana del periodo solo aplica a una variable MEDIANA
+    const datos: TmiVariable = {
+      ...dto,
+      descripcion: dto.descripcion || null,
+      total_anual: dto.agregacion === 'SUMA' ? 'SUMA_MESES' : dto.total_anual,
+    };
     this.guardando.set(true);
     const req = id ? this.srv.putVariable(id, datos) : this.srv.postVariable(datos);
     req.subscribe({
@@ -169,11 +195,57 @@ export class TmiVariables implements OnInit {
     });
   }
 
+  /** Texto del cálculo de la variable para la lista y el panel. */
+  textoCalculo(v: TmiVariable): string {
+    if (v.agregacion === 'SUMA') return 'Suma';
+    return v.total_anual === 'MEDIANA_PERIODO' ? 'Mediana (total: mediana del periodo)' : 'Mediana (total: suma de meses)';
+  }
+
+  // componentes (variable compuesta)
+  cargarComponentes(): void {
+    const v = this.seleccionada();
+    if (!v?.id) return;
+    this.srv.getComponentes(v.id).subscribe({
+      next: (c) => this.componentes.set(c),
+      error: (e) => this.errorLogica.set(mensajeError(e, 'No se pudo cargar los componentes de la variable.')),
+    });
+  }
+
+  agregarComponente(): void {
+    const v = this.seleccionada();
+    if (!v?.id || this.nuevoComponente == null) return;
+    this.errorLogica.set('');
+    this.srv.postComponente({ id_variable: v.id, id_variable_componente: Number(this.nuevoComponente) }).subscribe({
+      next: () => {
+        this.nuevoComponente = null;
+        this.cargarComponentes();
+        this.cargar();
+      },
+      error: (e) => this.errorLogica.set(mensajeError(e, 'No se pudo agregar el componente.')),
+    });
+  }
+
+  quitarComponente(c: TmiVariableComponente): void {
+    if (!c.id || !confirm(`¿Quitar "${c.componente}" de la variable?`)) return;
+    this.srv.deleteComponente(c.id).subscribe({
+      next: () => {
+        this.cargarComponentes();
+        this.cargar();
+      },
+      error: (e) => this.errorLogica.set(mensajeError(e, 'No se pudo quitar el componente.')),
+    });
+  }
+
   // lógica
+  marcarServicio(id: number, marcado: boolean): void {
+    this.serviciosMarcados.update((s) => (marcado ? [...s, id] : s.filter((x) => x !== id)));
+  }
+
   nuevaLogica(): void {
+    this.serviciosMarcados.set([]);
     this.formLogica.reset({
       id: 0, tipgrupo: null, actividad: null, servicio: null, condicion_hoja: '',
-      agregacion: 'SUMA', periodo_desde: 200001, periodo_hasta: 999912, activo: true,
+      periodo_desde: 200001, periodo_hasta: 999912, activo: true,
     });
     this.errorForm.set('');
     this.mostrarFormLogica.set(true);
@@ -186,7 +258,6 @@ export class TmiVariables implements OnInit {
       actividad: l.actividad,
       servicio: l.servicio,
       condicion_hoja: l.condicion_hoja ?? '',
-      agregacion: l.agregacion,
       periodo_desde: l.periodo_desde,
       periodo_hasta: l.periodo_hasta,
       activo: l.activo,
@@ -198,10 +269,12 @@ export class TmiVariables implements OnInit {
   /** Al cambiar el grupo se vuelven a elegir la actividad y el servicio (dependen del grupo). */
   alCambiarGrupo(): void {
     this.formLogica.patchValue({ actividad: null, servicio: null });
+    this.serviciosMarcados.set([]);
   }
 
   alCambiarActividad(): void {
     this.formLogica.patchValue({ servicio: null });
+    this.serviciosMarcados.set([]);
   }
 
   guardarLogica(): void {
@@ -223,13 +296,18 @@ export class TmiVariables implements OnInit {
       actividad: Number(f.actividad),
       servicio: f.servicio == null || (f.servicio as any) === '' ? null : Number(f.servicio),
       condicion_hoja: f.condicion_hoja || null,
-      agregacion: f.agregacion ?? 'SUMA',
       periodo_desde: Number(f.periodo_desde),
       periodo_hasta: Number(f.periodo_hasta),
       activo: !!f.activo,
     };
     this.guardando.set(true);
-    const req = f.id ? this.srv.putLogica(f.id, dto) : this.srv.postLogica(dto);
+    // alta con varios servicios marcados: una fila por servicio (como "servicio IN (...)" en Generar_pivot.sql)
+    const marcados = f.id ? [] : this.serviciosMarcados();
+    const req = f.id
+      ? this.srv.putLogica(f.id, dto)
+      : marcados.length
+        ? forkJoin(marcados.map((s) => this.srv.postLogica({ ...dto, servicio: s })))
+        : this.srv.postLogica(dto);
     req.subscribe({
       next: () => {
         this.guardando.set(false);

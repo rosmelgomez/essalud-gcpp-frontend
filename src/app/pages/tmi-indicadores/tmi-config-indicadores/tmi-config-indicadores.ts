@@ -1,44 +1,125 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { Subject, catchError, debounceTime, map, of, switchMap } from 'rxjs';
 import {
-  TmiBloqueFormula,
+  TmiAnalisisFormula,
   TmiCatalogo,
   TmiDinamicoService,
   TmiIndicador,
   TmiLetra,
   TmiProblemaConfig,
+  TmiTerminoFormula,
   TmiTipoEstandar,
   TmiVariable,
   mensajeError,
 } from '../../../services/tmi-dinamico-service';
 
-/** Operaciones de los bloques: valor guardado y cómo se muestra. */
-export const OPERACIONES: { op: TmiBloqueFormula['op']; texto: string }[] = [
-  { op: '+', texto: '+ Suma' }, { op: '-', texto: '− Resta' }, { op: '*', texto: '× Multiplica' }, { op: '/', texto: '÷ Divide' },
-];
-const SIMBOLO: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' };
-type Parte = 'num' | 'den';
 const HOJA = /^[^\[\]:*?/\\]+$/;
-export const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-/** Indicadores definidos por el usuario: fórmula en bloques (variable + operación), cálculo y cómo se evalúa. */
+/** Bloque de la fórmula: una variable (su letra), una operación, un paréntesis o un número. */
+interface Bloque {
+  tipo: 'var' | 'op' | 'par' | 'num';
+  valor: string;
+}
+
+/** Operaciones y paréntesis que se pueden agregar a la fórmula. */
+const OPERACIONES = ['+', '-', '*', '/', '(', ')'];
+
+/** Convierte la fórmula guardada ((A - B) / C) en bloques. */
+function aBloques(texto: string | null | undefined): Bloque[] {
+  return ((texto ?? '').toUpperCase().match(/[A-Z]|\d+(?:\.\d+)?|[-+*/()]/g) ?? []).map((v): Bloque => ({
+    tipo: /[A-Z]/.test(v) ? 'var' : /\d/.test(v) ? 'num' : v === '(' || v === ')' ? 'par' : 'op',
+    valor: v,
+  }));
+}
+
+/** Parte de la vista previa: su HTML y si es un solo grupo entre paréntesis (que la raya de la fracción ya agrupa). */
+interface Pieza {
+  h: string;
+  grupo: boolean;
+}
+
+const escapar = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+/** HTML de la fórmula como se lee en matemáticas (la división como fracción); '' si los bloques no forman una fórmula. */
+function vistaPrevia(bloques: Bloque[], nombre: (letra: string) => string): string {
+  let i = 0;
+  const op = (s: string) => `<span class="fx-op">${s}</span>`;
+  const sinGrupo = (p: Pieza) => (p.grupo ? p.h.slice(op('(').length, -op(')').length) : p.h);
+  // suma y resta
+  const expresion = (): Pieza | null => {
+    let p = termino();
+    while (p && (bloques[i]?.valor === '+' || bloques[i]?.valor === '-')) {
+      const s = bloques[i++].valor === '+' ? '+' : '−';
+      const d = termino();
+      p = d && { h: p.h + op(s) + d.h, grupo: false };
+    }
+    return p;
+  };
+  // multiplicación y división (la división se dibuja como fracción)
+  const termino = (): Pieza | null => {
+    let p = factor();
+    while (p && (bloques[i]?.valor === '*' || bloques[i]?.valor === '/')) {
+      const s = bloques[i++].valor;
+      const d = factor();
+      if (!d) return null;
+      p = s === '*'
+        ? { h: p.h + op('×') + d.h, grupo: false }
+        : { h: `<span class="fx-frac"><span class="fx-num">${sinGrupo(p)}</span><span class="fx-den">${sinGrupo(d)}</span></span>`, grupo: false };
+    }
+    return p;
+  };
+  // menos, variable, número o paréntesis
+  const factor = (): Pieza | null => {
+    const b = bloques[i++];
+    if (!b) return null;
+    if (b.valor === '-') {
+      const p = factor();
+      return p && { h: op('−') + p.h, grupo: false };
+    }
+    if (b.tipo === 'var') return { h: `<span class="fx-var" title="${escapar(nombre(b.valor))}">${escapar(b.valor)}</span>`, grupo: false };
+    if (b.tipo === 'num') return { h: `<span class="fx-n">${escapar(b.valor)}</span>`, grupo: false };
+    if (b.valor !== '(') return null;
+    const p = expresion();
+    if (!p || bloques[i++]?.valor !== ')') return null;
+    return { h: op('(') + p.h + op(')'), grupo: true };
+  };
+  const p = expresion();
+  return p && i === bloques.length ? p.h : '';
+}
+
+/** El backend indica la posición del carácter en el texto; con bloques se muestra el número de bloque. */
+function enBloques(mensaje: string, alias: string): string {
+  return mensaje.replace(/en la posición (\d+)/, (_, pos) =>
+    `en el bloque ${alias.slice(0, Number(pos) - 1).split(' ').filter(Boolean).length + 1}`);
+}
+
+/** Fórmula para comparar si cambió: en mayúsculas y sin espacios. */
+function normalizar(texto: string | null | undefined): string {
+  return (texto ?? '').toUpperCase().replace(/\s+/g, '');
+}
+
+/** Indicadores definidos por el usuario: fórmula con variables como letras (A, B, C…), cálculo y cómo se evalúa.
+ *  Internamente la fórmula se guarda con términos de TOTALIZADO3 (la genera el backend). */
 @Component({
   selector: 'app-tmi-config-indicadores',
-  imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule],
+  imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, CdkDropList, CdkDrag],
   templateUrl: './tmi-config-indicadores.html',
   styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css'],
 })
 export class TmiConfigIndicadores implements OnInit {
   private srv = inject(TmiDinamicoService);
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
 
-  readonly operaciones = OPERACIONES;
   indicadores = signal<TmiIndicador[]>([]);
   seleccionado = signal<TmiIndicador | null>(null);
-  letras = signal<TmiLetra[]>([]);
-  variables = signal<TmiVariable[]>([]);
   gruposReporte = signal<TmiCatalogo[]>([]);
   tiposCalculo = signal<{ codigo: string; descripcion: string }[]>([]);
   problemas = signal<TmiProblemaConfig[] | null>(null);
@@ -46,29 +127,35 @@ export class TmiConfigIndicadores implements OnInit {
   /** Tipos de estándar (tabla maestra) para elegir cómo se evalúa el indicador. */
   tiposEstandar = signal<TmiTipoEstandar[]>([]);
 
-  // Fórmula en bloques: numerador y denominador; cada variable recibe una letra automática por orden de aparición
-  bloquesNum = signal<TmiBloqueFormula[]>([]);
-  bloquesDen = signal<TmiBloqueFormula[]>([]);
-  /** Texto de la fórmula guardada que no se puede pasar a bloques (números o paréntesis); '' = se puede. */
-  formulaAvanzada = signal('');
-  formulaCambiada = signal(false);
+  /** Fórmula armada con bloques ((A - B) / C) y variable de cada letra. */
+  bloques = signal<Bloque[]>([]);
+  numero = signal('');
+  readonly operaciones = OPERACIONES;
+  letras = signal<TmiLetra[]>([]);
+  variables = signal<TmiVariable[]>([]);
+  idVariableNueva = signal<number | null>(null);
+  /** Fórmula que se envía: los bloques separados por espacios. */
+  formulaAlias = computed(() => this.bloques().map((b) => b.valor).join(' '));
+  /** Cómo va quedando la fórmula, con las letras asignadas. */
+  vista = computed(() => vistaPrevia(this.bloques(), (l) => this.nombreVariable(l)));
+  /** Estado guardado (fórmula y letras) para saber si hay cambios. */
+  private guardado = signal({ alias: '', letras: '' });
+  private claveLetras = computed(() => this.letras().map((l) => `${l.letra}=${l.id_variable}`).sort().join(','));
+  formulaCambiada = computed(() =>
+    normalizar(this.formulaAlias()) !== this.guardado().alias || this.claveLetras() !== this.guardado().letras);
+  letrasUsadas = computed(() => new Set(this.bloques().filter((b) => b.tipo === 'var').map((b) => b.valor)));
+  /** Variables que se pueden agregar: activas y sin letra. */
+  variablesLibres = computed(() => {
+    const ya = new Set(this.letras().map((l) => l.id_variable));
+    return this.variables().filter((v) => v.activo && !ya.has(v.id!));
+  });
+  /** Análisis del backend: fórmula interna y términos de TOTALIZADO3, o el error. */
+  analisis = signal<TmiAnalisisFormula | null>(null);
+  errorAnalisis = signal('');
+  analizando = signal(false);
   guardandoFormula = signal(false);
   errorFormula = signal('');
-  /** Letra de cada variable: A, B, C... según el orden en que aparece (numerador y luego denominador). */
-  letraDe = computed(() => {
-    const m = new Map<number, string>();
-    for (const b of [...this.bloquesNum(), ...this.bloquesDen()]) {
-      if (b.id_variable != null && !m.has(b.id_variable) && m.size < LETRAS.length) m.set(b.id_variable, LETRAS[m.size]);
-    }
-    return m;
-  });
-  leyenda = computed(() =>
-    [...this.letraDe()].map(([id, letra]) => ({ letra, variable: this.nombreVariable(id) })));
-  vistaPrevia = computed(() => {
-    const num = this.textoBloques(this.bloquesNum()) || '?';
-    const den = this.textoBloques(this.bloquesDen()) || '1';
-    return `(${num}) / (${den})`;
-  });
+  private aAnalizar = new Subject<{ alias: string; vars: Record<string, number> }>();
 
   loading = signal(false);
   error = signal('');
@@ -88,14 +175,8 @@ export class TmiConfigIndicadores implements OnInit {
     nombre_hoja: ['', [Validators.required, Validators.maxLength(31), Validators.pattern(HOJA)]],
     titulo_hoja: [''],
     orden: [1, Validators.required],
-    // la fórmula se arma con bloques en el panel del indicador; el backend no la toma del formulario
-    expr_numerador: [''],
-    expr_denominador: [''],
+    // la fórmula se escribe en el panel del indicador (PUT /formula); el backend no la toma del formulario
     tipo_calculo: ['MENSUAL', Validators.required],
-    factor: [1],
-    den_cero: ['CERO' as 'CERO' | 'NA'],
-    num_cero_na: [false],
-    cero_si_letra_mes_0: [false],
     sin_datos_anio: ['NA' as 'MOSTRAR' | 'NA' | 'OCULTAR'],
     base_estandar: ['TIPO' as TmiIndicador['base_estandar']],
     sentido: ['MENOR' as TmiIndicador['sentido']],
@@ -110,6 +191,22 @@ export class TmiConfigIndicadores implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+    // la fórmula se analiza en el backend mientras se arma (el mismo análisis que al guardar)
+    this.aAnalizar.pipe(
+      debounceTime(350),
+      switchMap(({ alias, vars }) => {
+        if (!alias) return of({ ok: null as TmiAnalisisFormula | null, err: '' });
+        this.analizando.set(true);
+        return this.srv.analizarFormula(alias, vars).pipe(
+          map((a) => ({ ok: a as TmiAnalisisFormula | null, err: '' })),
+          catchError((e) => of({ ok: null, err: enBloques(mensajeError(e, 'Fórmula no válida.'), alias) })));
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(({ ok, err }) => {
+      this.analizando.set(false);
+      this.analisis.set(ok);
+      this.errorAnalisis.set(err);
+    });
     this.srv.getVariables().subscribe({ next: (v) => this.variables.set(v) });
     this.srv.getGruposReporte().subscribe({ next: (g) => this.gruposReporte.set(g) });
     this.srv.getTiposCalculo().subscribe({ next: (t) => this.tiposCalculo.set(t) });
@@ -156,19 +253,7 @@ export class TmiConfigIndicadores implements OnInit {
   seleccionar(ind: TmiIndicador): void {
     this.seleccionado.set(ind);
     this.errorDetalle.set('');
-    this.cargarDetalle();
-  }
-
-  cargarDetalle(): void {
-    const id = this.seleccionado()?.id;
-    if (!id) return;
-    this.srv.getLetras(id).subscribe({
-      next: (l) => {
-        this.letras.set(l);
-        this.cargarBloques();
-      },
-      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo cargar la fórmula.')),
-    });
+    this.deshacerFormula();
   }
 
   // indicador
@@ -201,7 +286,6 @@ export class TmiConfigIndicadores implements OnInit {
       grupo: resto.grupo == null ? null : Number(resto.grupo),
       titulo_hoja: resto.titulo_hoja || null,
       orden: Number(resto.orden),
-      factor: Number(resto.factor ?? 1),
       tolerancia: Number(resto.tolerancia ?? 0),
       decimales: resto.decimales == null || (resto.decimales as any) === '' ? null : Number(resto.decimales),
     };
@@ -212,7 +296,7 @@ export class TmiConfigIndicadores implements OnInit {
         this.guardando.set(false);
         this.mostrarForm.set(false);
         this.problemas.set(null);
-        // indicador nuevo: queda seleccionado para armar su fórmula
+        // indicador nuevo: queda seleccionado para escribir su fórmula
         this.cargar(id ? undefined : res?.id);
       },
       error: (e) => {
@@ -245,120 +329,129 @@ export class TmiConfigIndicadores implements OnInit {
     return this.tiposEstandar().find((t) => t.codigo === codigo)?.descripcion ?? codigo ?? '—';
   }
 
-  // fórmula en bloques
-  nombreVariable(id: number | null): string {
-    return id == null ? '' : (this.variables().find((v) => v.id === id)?.nombre ?? `Variable #${id}`);
+  // fórmula con variables como letras (A, B, C…)
+  private mapa(): Record<string, number> {
+    return Object.fromEntries(this.letras().map((l) => [l.letra, l.id_variable]));
   }
 
-  letra(b: TmiBloqueFormula): string {
-    return b.id_variable == null ? '·' : (this.letraDe().get(b.id_variable) ?? '?');
-  }
-
-  private textoBloques(bloques: TmiBloqueFormula[]): string {
-    return bloques.map((b, i) => `${i ? ' ' + SIMBOLO[b.op] + ' ' : ''}${this.letra(b)}`).join('');
-  }
-
-  private lista(parte: Parte) {
-    return parte === 'num' ? this.bloquesNum : this.bloquesDen;
-  }
-
-  agregarBloque(parte: Parte): void {
-    this.lista(parte).update((b) => [...b, { op: '+', id_variable: null }]);
-    this.formulaCambiada.set(true);
-  }
-
-  cambiarBloque(parte: Parte, i: number, cambio: Partial<TmiBloqueFormula>): void {
-    this.lista(parte).update((b) => b.map((x, k) => (k === i ? { ...x, ...cambio } : x)));
-    this.formulaCambiada.set(true);
-  }
-
-  quitarBloque(parte: Parte, i: number): void {
-    this.lista(parte).update((b) => b.filter((_, k) => k !== i));
-    this.formulaCambiada.set(true);
-  }
-
-  /** Pasa la fórmula guardada (letras + tmi_indicador_variable) a bloques. Una letra con varias variables se
-   *  abre en varios bloques sumados cuando el resultado es el mismo (la letra se suma o va al inicio y no se
-   *  multiplica ni divide); si no, o si la fórmula tiene números o paréntesis, se avisa y se puede rehacer. */
-  cargarBloques(): void {
-    const ind = this.seleccionado();
-    this.formulaCambiada.set(false);
+  private analizar(): void {
     this.errorFormula.set('');
-    this.formulaAvanzada.set('');
-    if (!ind) return;
-    const varsDe = new Map<string, number[]>();
-    for (const l of this.letras()) varsDe.set(l.letra, [...(varsDe.get(l.letra) ?? []), l.id_variable]);
-    const convertir = (expr: string | null, esDen: boolean): TmiBloqueFormula[] | null => {
-      const s = (expr ?? '').replace(/\s+/g, '').toUpperCase();
-      if (!s || (esDen && s === '1')) return [];
-      if (!/^[A-Z]([+\-*/][A-Z])*$/.test(s)) return null;
-      const bloques: TmiBloqueFormula[] = [];
-      for (let k = 0; k < s.length; k += 2) {
-        const op = (k ? s[k - 1] : '+') as TmiBloqueFormula['op'];
-        const siguiente = s[k + 1];
-        const vars = varsDe.get(s[k]) ?? [];
-        if (!vars.length) {
-          bloques.push({ op, id_variable: null });
-          continue;
-        }
-        if (vars.length > 1 && (op !== '+' || siguiente === '*' || siguiente === '/')) return null;
-        vars.forEach((v, j) => bloques.push({ op: j ? '+' : op, id_variable: v }));
-      }
-      return bloques;
-    };
-    const num = convertir(ind.expr_numerador, false);
-    const den = convertir(ind.expr_denominador, true);
-    if (num == null || den == null) {
-      this.formulaAvanzada.set(`(${ind.expr_numerador}) / (${ind.expr_denominador})`);
-      this.bloquesNum.set([]);
-      this.bloquesDen.set([]);
+    this.aAnalizar.next({ alias: this.formulaAlias(), vars: this.mapa() });
+  }
+
+  private cambiarBloques(bloques: Bloque[]): void {
+    this.bloques.set(bloques);
+    this.analizar();
+  }
+
+  agregarBloque(valor: string): void {
+    const tipo: Bloque['tipo'] = /[A-Z]/.test(valor) ? 'var' : valor === '(' || valor === ')' ? 'par' : 'op';
+    this.cambiarBloques([...this.bloques(), { tipo, valor }]);
+  }
+
+  agregarNumero(): void {
+    const n = this.numero().trim().replace(',', '.');
+    if (!/^\d+(\.\d+)?$/.test(n)) {
+      this.errorFormula.set('Escriba un número, por ejemplo 100 o 0.5.');
       return;
     }
-    this.bloquesNum.set(num);
-    this.bloquesDen.set(den);
+    this.cambiarBloques([...this.bloques(), { tipo: 'num', valor: n }]);
+    this.numero.set('');
+  }
+
+  quitarBloque(i: number): void {
+    this.cambiarBloques(this.bloques().filter((_, j) => j !== i));
+  }
+
+  borrarUltimo(): void {
+    this.cambiarBloques(this.bloques().slice(0, -1));
+  }
+
+  limpiarFormula(): void {
+    this.cambiarBloques([]);
+  }
+
+  /** Reordena la fórmula al arrastrar un bloque. */
+  moverBloque(ev: CdkDragDrop<Bloque[]>): void {
+    if (ev.previousIndex === ev.currentIndex) return;
+    const bloques = [...this.bloques()];
+    moveItemInArray(bloques, ev.previousIndex, ev.currentIndex);
+    this.cambiarBloques(bloques);
+  }
+
+  simbolo(valor: string): string {
+    return ({ '-': '−', '*': '×', '/': '÷' } as Record<string, string>)[valor] ?? valor;
+  }
+
+  nombreVariable(letra: string): string {
+    return this.letras().find((l) => l.letra === letra)?.variable ?? 'Sin variable';
+  }
+
+  /** La variable elegida recibe la siguiente letra libre (A, B, C…). */
+  agregarVariable(): void {
+    const v = this.variables().find((x) => x.id === Number(this.idVariableNueva()));
+    const libre = LETRAS.find((l) => !this.letras().some((x) => x.letra === l));
+    if (!v || !libre) return;
+    this.letras.update((l) => [...l, { letra: libre, id_variable: v.id!, variable: v.nombre, agregacion: v.agregacion }]);
+    this.idVariableNueva.set(null);
+    this.analizar();
+  }
+
+  quitarLetra(letra: string): void {
+    if (this.letrasUsadas().has(letra)) return;
+    this.letras.update((l) => l.filter((x) => x.letra !== letra));
+    this.analizar();
+  }
+
+  /** Carga la fórmula guardada del indicador y la variable de cada letra. */
+  deshacerFormula(): void {
+    const ind = this.seleccionado();
+    this.bloques.set(aBloques(ind?.formula_alias));
+    this.letras.set([]);
+    this.guardado.set({ alias: normalizar(ind?.formula_alias), letras: '' });
+    this.analisis.set(null);
+    this.errorAnalisis.set('');
+    if (!ind?.id) return;
+    this.srv.getLetras(ind.id).subscribe({
+      next: (l) => {
+        if (this.seleccionado()?.id !== ind.id) return;
+        this.letras.set(l.map((x) => ({ letra: x.letra, id_variable: x.id_variable, variable: x.variable, agregacion: x.agregacion })));
+        this.guardado.set({ alias: normalizar(ind.formula_alias), letras: this.claveLetras() });
+        this.analizar();
+      },
+      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo cargar las variables de la fórmula.')),
+    });
+  }
+
+  textoServicios(t: TmiTerminoFormula): string {
+    return t.servicios.length
+      ? t.servicios.map((s) => (s.descservicio ? `${s.servicio} · ${s.descservicio}` : String(s.servicio))).join(', ')
+      : 'Todos';
   }
 
   guardarFormula(): void {
     const ind = this.seleccionado();
+    const alias = this.formulaAlias();
     if (!ind?.id) return;
-    const num = this.bloquesNum();
-    const den = this.bloquesDen();
-    if (!num.length) {
-      this.errorFormula.set('Agregue al menos una variable en el numerador.');
+    if (!alias) {
+      this.errorFormula.set('Arme la fórmula con los bloques de las variables y operaciones.');
       return;
     }
-    if ([...num, ...den].some((b) => b.id_variable == null)) {
-      this.errorFormula.set('Elija la variable de cada bloque o quite los bloques vacíos.');
-      return;
-    }
-    if (new Set([...num, ...den].map((b) => b.id_variable)).size > LETRAS.length) {
-      this.errorFormula.set('La fórmula admite como máximo 26 variables distintas (A-Z).');
-      return;
-    }
-    this.errorFormula.set('');
     this.guardandoFormula.set(true);
-    this.srv.putFormula(ind.id, num, den).subscribe({
-      next: () => {
+    this.srv.putFormula(ind.id, alias, this.mapa()).subscribe({
+      next: (a) => {
         this.guardandoFormula.set(false);
-        this.formulaCambiada.set(false);
-        this.formulaAvanzada.set('');
         this.problemas.set(null);
-        this.cargar();
-        this.cargarDetalle();
+        const actualizado = { ...ind, formula_alias: a.formula_alias, formula: a.formula };
+        this.seleccionado.set(actualizado);
+        this.indicadores.update((l) => l.map((x) => (x.id === ind.id ? actualizado : x)));
+        this.deshacerFormula();   // recarga las letras que quedaron (solo las usadas)
       },
       error: (e) => {
         this.errorFormula.set(mensajeError(e, 'No se pudo guardar la fórmula.'));
         this.guardandoFormula.set(false);
       },
     });
-  }
-
-  /** Fórmula con números o paréntesis: se descarta y se arma de nuevo con bloques. */
-  rehacerFormula(): void {
-    this.formulaAvanzada.set('');
-    this.bloquesNum.set([{ op: '+', id_variable: null }]);
-    this.bloquesDen.set([]);
-    this.formulaCambiada.set(true);
   }
 
   textoSentido(s: string): string {
