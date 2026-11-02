@@ -1,14 +1,18 @@
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { Subject, catchError, debounceTime, map, of, switchMap } from 'rxjs';
 import {
+  TmiCatalogoService,
+  TmiVariableService,
+  TmiIndicadorService,
+  TmiEstandarService,
+  TmiCalculoService,
   TmiAnalisisFormula,
   TmiCatalogo,
-  TmiDinamicoService,
   TmiIndicador,
   TmiLetra,
   TmiProblemaConfig,
@@ -16,7 +20,8 @@ import {
   TmiTipoEstandar,
   TmiVariable,
   mensajeError,
-} from '../../../services/tmi-dinamico-service';
+} from '../../../services/tmi';
+import { AyudaFlotante } from '../ayuda-flotante';
 
 const HOJA = /^[^\[\]:*?/\\]+$/;
 const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -29,6 +34,30 @@ interface Bloque {
 
 /** Operaciones y paréntesis que se pueden agregar a la fórmula. */
 const OPERACIONES = ['+', '-', '*', '/', '(', ')'];
+
+/** Ayuda de cada campo del formulario del indicador (se abre con el "?" junto al nombre del campo). */
+const AYUDA_INDICADOR = {
+  grupo: 'Sección del reporte en la que se agrupa el indicador, por ejemplo Consulta Externa u Hospitalización.',
+  tipo_calculo: 'MENSUAL: cada letra de la fórmula toma el valor del mes. ACUMULADO: cada letra toma la suma de enero '
+    + 'hasta el mes, sin contar los meses excluidos.',
+  sin_datos_anio: 'Qué pasa con un centro que no tiene ningún registro en todo el año. NA: aparece en la hoja con NA. '
+    + 'Mostrar 0: aparece con 0. No listar: no aparece en la hoja del indicador.',
+  base_estandar: 'Qué estándar se usa para evaluar al centro: el de su nivel, su tipo, su categoría o una combinación. '
+    + 'Los valores se cargan en las pestañas de Estándares. Si el centro tiene un estándar propio en Estándar por '
+    + 'Centro, se usa ese.',
+  sentido: 'Menor es mejor: puntaje 5 si el valor no pasa el estándar, 3 si no pasa el % Acept y 1 si lo pasa. '
+    + 'Mayor es mejor: lo mismo, al revés. Dentro de una banda: 5 si el valor queda cerca del estándar, 3 si queda '
+    + 'entre el % Aceptmenos y el % Acept, y 1 si sale de la banda.',
+  formato: 'Cómo se muestran los valores del indicador en el Excel: como número o como porcentaje.',
+  decimales: 'Decimales a los que se redondea el valor antes de compararlo con el estándar. Si lo deja vacío, no se '
+    + 'redondea.',
+  cero_es_logro: 'Qué puntaje recibe un mes con valor 0. Sin producción: puntaje 0. Es un buen resultado: el 0 se '
+    + 'califica contra el estándar como cualquier otro valor.',
+  mostrar_no_aplica: 'Centros que no tienen estándar o que quedan fuera del ámbito del indicador. Listar como NA: '
+    + 'aparecen en la hoja con NA. No listar: no aparecen.',
+  activo: 'Un indicador inactivo no se calcula ni sale en el Excel.',
+} as const;
+type CampoAyuda = keyof typeof AYUDA_INDICADOR;
 
 /** Convierte la fórmula guardada ((A - B) / C) en bloques. */
 function aBloques(texto: string | null | undefined): Bloque[] {
@@ -109,12 +138,16 @@ function normalizar(texto: string | null | undefined): string {
  *  Internamente la fórmula se guarda con términos de TOTALIZADO3 (la genera el backend). */
 @Component({
   selector: 'app-tmi-config-indicadores',
-  imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, CdkDropList, CdkDrag],
+  imports: [AyudaFlotante, ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, CdkDropList, CdkDrag],
   templateUrl: './tmi-config-indicadores.html',
-  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css'],
+  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css'],
 })
 export class TmiConfigIndicadores implements OnInit {
-  private srv = inject(TmiDinamicoService);
+  private catalogoSrv = inject(TmiCatalogoService);
+  private variableSrv = inject(TmiVariableService);
+  private indicadorSrv = inject(TmiIndicadorService);
+  private estandarSrv = inject(TmiEstandarService);
+  private calculoSrv = inject(TmiCalculoService);
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
 
@@ -126,6 +159,21 @@ export class TmiConfigIndicadores implements OnInit {
 
   /** Tipos de estándar (tabla maestra) para elegir cómo se evalúa el indicador. */
   tiposEstandar = signal<TmiTipoEstandar[]>([]);
+
+  /** Campo del formulario con su ayuda abierta (una a la vez). */
+  readonly ayuda = AYUDA_INDICADOR;
+  ayudaCampo = signal<CampoAyuda | null>(null);
+
+  alternarAyuda(campo: CampoAyuda, ev: Event): void {
+    ev.stopPropagation();
+    this.ayudaCampo.update((c) => (c === campo ? null : campo));
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  cerrarAyuda(): void {
+    this.ayudaCampo.set(null);
+  }
 
   /** Fórmula armada con bloques ((A - B) / C) y variable de cada letra. */
   bloques = signal<Bloque[]>([]);
@@ -197,7 +245,7 @@ export class TmiConfigIndicadores implements OnInit {
       switchMap(({ alias, vars }) => {
         if (!alias) return of({ ok: null as TmiAnalisisFormula | null, err: '' });
         this.analizando.set(true);
-        return this.srv.analizarFormula(alias, vars).pipe(
+        return this.indicadorSrv.analizarFormula(alias, vars).pipe(
           map((a) => ({ ok: a as TmiAnalisisFormula | null, err: '' })),
           catchError((e) => of({ ok: null, err: enBloques(mensajeError(e, 'Fórmula no válida.'), alias) })));
       }),
@@ -207,17 +255,17 @@ export class TmiConfigIndicadores implements OnInit {
       this.analisis.set(ok);
       this.errorAnalisis.set(err);
     });
-    this.srv.getVariables().subscribe({ next: (v) => this.variables.set(v) });
-    this.srv.getGruposReporte().subscribe({ next: (g) => this.gruposReporte.set(g) });
-    this.srv.getTiposCalculo().subscribe({ next: (t) => this.tiposCalculo.set(t) });
-    this.srv.getTiposEstandar().subscribe({ next: (t) => this.tiposEstandar.set(t) });
+    this.variableSrv.getVariables().subscribe({ next: (v) => this.variables.set(v) });
+    this.catalogoSrv.getGruposReporte().subscribe({ next: (g) => this.gruposReporte.set(g) });
+    this.catalogoSrv.getTiposCalculo().subscribe({ next: (t) => this.tiposCalculo.set(t) });
+    this.estandarSrv.getTiposEstandar().subscribe({ next: (t) => this.tiposEstandar.set(t) });
   }
 
   /** seleccionarId: indicador recién creado, para armar su fórmula a continuación. */
   cargar(seleccionarId?: number): void {
     this.loading.set(true);
     this.error.set('');
-    this.srv.getIndicadores().subscribe({
+    this.indicadorSrv.getIndicadores().subscribe({
       next: (lista) => {
         this.indicadores.set(lista);
         const nuevo = seleccionarId ? lista.find((x) => x.id === seleccionarId) : undefined;
@@ -238,7 +286,7 @@ export class TmiConfigIndicadores implements OnInit {
 
   validar(): void {
     this.validando.set(true);
-    this.srv.validarConfig().subscribe({
+    this.calculoSrv.validarConfig().subscribe({
       next: (p) => {
         this.problemas.set(p);
         this.validando.set(false);
@@ -290,7 +338,7 @@ export class TmiConfigIndicadores implements OnInit {
       decimales: resto.decimales == null || (resto.decimales as any) === '' ? null : Number(resto.decimales),
     };
     this.guardando.set(true);
-    const req = id ? this.srv.putIndicador(id, dto) : this.srv.postIndicador(dto);
+    const req = id ? this.indicadorSrv.putIndicador(id, dto) : this.indicadorSrv.postIndicador(dto);
     req.subscribe({
       next: (res: any) => {
         this.guardando.set(false);
@@ -311,7 +359,7 @@ export class TmiConfigIndicadores implements OnInit {
     if (!ind.id || !confirm(`¿Eliminar el indicador "${ind.indicador}" con su fórmula y resultados?\n`
       + 'Si solo quiere quitarlo del reporte, edítelo y márquelo como inactivo.')) return;
     this.eliminandoId.set(ind.id);
-    this.srv.deleteIndicador(ind.id).subscribe({
+    this.indicadorSrv.deleteIndicador(ind.id).subscribe({
       next: () => {
         this.eliminandoId.set(null);
         if (this.seleccionado()?.id === ind.id) this.seleccionado.set(null);
@@ -412,7 +460,7 @@ export class TmiConfigIndicadores implements OnInit {
     this.analisis.set(null);
     this.errorAnalisis.set('');
     if (!ind?.id) return;
-    this.srv.getLetras(ind.id).subscribe({
+    this.indicadorSrv.getLetras(ind.id).subscribe({
       next: (l) => {
         if (this.seleccionado()?.id !== ind.id) return;
         this.letras.set(l.map((x) => ({ letra: x.letra, id_variable: x.id_variable, variable: x.variable, agregacion: x.agregacion })));
@@ -438,7 +486,7 @@ export class TmiConfigIndicadores implements OnInit {
       return;
     }
     this.guardandoFormula.set(true);
-    this.srv.putFormula(ind.id, alias, this.mapa()).subscribe({
+    this.indicadorSrv.putFormula(ind.id, alias, this.mapa()).subscribe({
       next: (a) => {
         this.guardandoFormula.set(false);
         this.problemas.set(null);

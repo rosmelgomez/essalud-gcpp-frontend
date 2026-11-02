@@ -1,0 +1,102 @@
+/* Calendario de cierre: un año por fila, el día de cierre de cada periodo */
+.cierre-card + .cierre-card {
+    margin-top: 16px;
+}
+
+.cal-mensaje {
+    margin-bottom: 12px;
+}
+
+.cal-table th.cal-mes,
+.cal-table td.cal-mes {
+    padding-right: 4px;
+    padding-left: 4px;
+    text-align: center;
+}
+
+.cal-table td.cal-acciones,
+.cal-table th.cal-acciones {
+    width: 52px;
+}
+
+.cal-dia {
+    display: inline-grid;
+    place-items: center;
+    min-width: 28px;
+    height: 26px;
+    padding: 0 4px;
+    font-variant-numeric: tabular-nums;
+    color: var(--rpt-muted);
+    border-radius: 6px;
+}
+
+.cal-dia-general {
+    font-weight: 600;
+    color: var(--rpt-ink);
+    background: var(--rpt-surface-2);
+    border: 1px solid var(--rpt-line-strong);
+}
+
+.cal-dia-propio {
+    font-weight: 600;
+    color: var(--rpt-brand);
+    background: var(--rpt-brand-tint);
+}
+
+/* Ya cerrado: tachado, conserva si era día propio o general */
+.cal-dia-ejecutado {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.cal-leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    padding: 12px 0 2px;
+    font-size: 12px;
+    color: var(--rpt-muted);
+}
+
+.cal-leyenda > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Modal: día general y una casilla por periodo */
+.cal-modal {
+    max-width: 640px;
+}
+
+.cal-general {
+    max-width: 160px;
+    margin-bottom: 16px;
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.cal-grid input::placeholder {
+    color: var(--rpt-muted);
+}
+
+.cal-grid input:disabled {
+    color: var(--rpt-muted);
+    background: var(--rpt-surface-2);
+    cursor: not-allowed;
+}
+
+.cal-fecha {
+    font-size: 11.5px;
+    color: var(--rpt-muted);
+}
+
+@media (max-width: 640px) {
+    .cal-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

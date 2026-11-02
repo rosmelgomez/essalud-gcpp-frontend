@@ -9,12 +9,14 @@
     </div>
     <details class="dyn-ayuda">
         <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
-        <p>
-        Cada variable toma los registros de TOTALIZADO3 que cumplen <strong>cualquiera</strong> de sus conjuntos (grupo, actividad y
-        servicios), como el <code>WHERE ... OR ...</code> de Generar_pivot.sql, y les aplica <strong>su</strong> cálculo: <strong>SUMA</strong>
-        de cantidades o <strong>MEDIANA</strong> de cada servicio en el mes (camas, salas). Solo se calculan las variables que usa algún
-        indicador activo.
-        </p>
+        <div class="dyn-ayuda-panel" role="note">
+            <p>
+            Una variable reúne los registros que cumplen <strong>al menos uno</strong> de sus conjuntos. Cada conjunto es un
+            grupo, una actividad y, si hace falta, algunos de sus servicios. Con esos registros, la variable hace su cálculo:
+            <strong>SUMA</strong> de las cantidades, o <strong>MEDIANA</strong> de cada servicio en el mes. Solo se calculan
+            las variables que usa algún indicador activo.
+            </p>
+        </div>
     </details>
 </div>
 
@@ -24,7 +26,7 @@
 
 <div class="dyn-split">
     <!-- VARIABLES -->
-    <mat-card class="table" style="--cols-table: minmax(190px, 2.6fr) minmax(80px, 0.8fr) minmax(56px, 0.5fr) minmax(95px, 1.1fr) minmax(76px, 0.6fr);">
+    <mat-card class="table" style="--cols-table: minmax(190px, 3fr) minmax(80px, 0.8fr) minmax(56px, 0.6fr) minmax(76px, 0.6fr);">
         <div class="table-title-row">
             <h3>Variables</h3>
             <button type="button" class="btn-download btn-agregar-fila" (click)="nuevaVariable()">
@@ -39,7 +41,6 @@
                     <div class="cell">VARIABLE</div>
                     <div class="cell">CÁLCULO</div>
                     <div class="cell">FILAS</div>
-                    <div class="cell">INDICADORES</div>
                     <div class="cell acciones">ACCIONES</div>
                 </div>
                 <div class="dyn-scroll">
@@ -50,10 +51,8 @@
                     <div class="row-table dyn-clickable" [class.dyn-selected]="seleccionada()?.id === v.id"
                         [class.dyn-inactivo]="!v.activo" (click)="seleccionar(v)">
                         <div class="cell txt" [title]="v.descripcion || v.nombre">{{ v.nombre }}</div>
-                        <div class="cell" [title]="textoCalculo(v)"><span class="dyn-badge">{{ v.agregacion }}</span></div>
-                        <div class="cell" [title]="v.componentes ? 'Variable compuesta: suma ' + v.componentes + ' variable(s)' + (v.filas_logica ? ' y ' + v.filas_logica + ' conjunto(s) propio(s)' : '') : ''">{{ v.componentes ? (v.filas_logica ? v.filas_logica + ' + ' : '') + v.componentes + ' var.' : v.filas_logica }}</div>
-                        <div class="cell txt">{{ v.indicadores || '—' }}</div>
-                        <div class="cell acciones">
+                        <div class="cell" [title]="'Cálculo: ' + textoCalculo(v)"><span class="dyn-badge">{{ v.agregacion }}</span></div>
+                        <div class="cell" [title]="v.componentes ? 'Variable compuesta: suma ' + v.componentes + ' variable(s)' + (v.filas_logica ? ' y ' + v.filas_logica + ' conjunto(s) propio(s)' : '') : ''">{{ v.componentes ? (v.filas_logica ? v.filas_logica + ' + ' : '') + v.componentes + ' var.' : v.filas_logica }}</div>                        <div class="cell acciones">
                             <button type="button" class="btn-icon-edit" (click)="editarVariable(v, $event)"
                                 title="Editar variable"><mat-icon>edit</mat-icon></button>
                             <button type="button" class="btn-icon-delete" (click)="eliminarVariable(v, $event)"
@@ -88,10 +87,10 @@
         <p class="dyn-hint dyn-calculo-variable">
             Cálculo de la variable: <span class="dyn-badge">{{ sv.agregacion }}</span> {{ textoCalculo(sv) }}.
             @if (logica().length > 1) {
-            Toma los registros que cumplen <strong>cualquiera</strong> de estos {{ logica().length }} conjuntos: un registro
-            cuenta una sola vez aunque cumpla dos.
+            Toma los registros que cumplen <strong>al menos uno</strong> de estos {{ logica().length }} conjuntos; un registro
+            que cumple dos cuenta una sola vez.
             }
-            <span class="dyn-bloque-nota">(se cambia en <em>Editar variable</em>)</span>
+            <span class="dyn-bloque-nota">El cálculo se cambia en <em>Editar variable</em>.</span>
         </p>
         }
         @if (errorLogica()) {
@@ -138,9 +137,16 @@
         </div>
 
         <div class="dyn-section-title">Variables que suma (variable compuesta)</div>
-        <p class="dyn-hint">Además de sus conjuntos, la variable suma el valor de estas variables (A + B), cada una con su
-            cálculo. Ej.: el Consolidado de Consultas suma Consultas, Teleconsulta, CAI y las demás. Solo se pueden sumar
-            variables con el mismo cálculo ({{ seleccionada()?.agregacion }}).</p>
+        <details class="dyn-ayuda dyn-ayuda-seccion">
+            <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
+            <div class="dyn-ayuda-panel" role="note">
+                <p>
+                Además de sus conjuntos, la variable puede sumar el valor de otras variables, y cada una conserva su
+                propio cálculo. Por ejemplo, el Consolidado de Consultas suma Consultas, Teleconsulta, CAI y las demás.
+                Solo se suman variables con el mismo cálculo que esta: {{ seleccionada()?.agregacion }}.
+                </p>
+            </div>
+        </details>
         @for (c of componentes(); track c.id) {
         <div class="row-table dyn-componente" [class.dyn-inactivo]="!c.componente_activo">
             <div class="cell txt">{{ c.componente }}</div>
@@ -152,9 +158,10 @@
         } @empty {
         <div class="dyn-empty">No suma otras variables.</div>
         }
-        <div class="dyn-inline" style="margin-top: 8px;">
-            <select [(ngModel)]="nuevoComponente" aria-label="Variable a sumar" style="flex: 1; min-width: 220px;">
-                <option [ngValue]="null">Elija una variable para sumar...</option>
+        <div class="dyn-inline dyn-calc-agregar dyn-componente-agregar">
+            <select class="style-select dyn-calc-select" [(ngModel)]="nuevoComponente" aria-label="Variable a sumar"
+                [class.is-vacio]="nuevoComponente == null" [disabled]="!candidatos().length">
+                <option [ngValue]="null">{{ candidatos().length ? 'Elija una variable para sumar…' : 'No quedan variables para sumar' }}</option>
                 @for (v of candidatos(); track v.id) {<option [ngValue]="v.id">{{ v.nombre }}</option>}
             </select>
             <button type="button" class="btn-download" (click)="agregarComponente()" [disabled]="nuevoComponente == null">
@@ -193,7 +200,7 @@
                         <label for="var_agr">Cálculo de la variable</label>
                         <select id="var_agr" formControlName="agregacion" (change)="alCambiarCalculo()">
                             <option value="SUMA">SUMA de cantidades</option>
-                            <option value="MEDIANA">MEDIANA por servicio (recursos: camas, salas)</option>
+                            <option value="MEDIANA">MEDIANA por servicio</option>
                         </select>
                     </div>
                     @if (formVariable.controls.agregacion.value === 'MEDIANA') {
@@ -206,8 +213,8 @@
                     </div>
                     }
                     <div class="field-input full-width">
-                        <span class="dyn-hint dyn-bloque-nota">Se aplica a todos los conjuntos de la variable, que se combinan
-                            con O: un registro de TOTALIZADO3 entra si cumple cualquiera de ellos.</span>
+                        <span class="dyn-hint dyn-bloque-nota">El cálculo vale para todos los conjuntos de la variable. Un
+                            registro entra si cumple al menos uno de ellos.</span>
                     </div>
                     <div class="field-input">
                         <label for="var_activo">Estado</label>
@@ -281,7 +288,7 @@
                     </div>
                     } @else {
                     <div class="field-input full-width">
-                        <label>Servicios de la actividad <span class="dyn-hint dyn-bloque-nota">(sin marcar = todos; varios = una fila por servicio)</span></label>
+                        <label>Servicios de la actividad <span class="dyn-hint dyn-bloque-nota">Si no marca ninguno, entran todos. Si marca varios, se guarda un conjunto por cada servicio.</span></label>
                         <div class="dyn-servicios">
                             @for (s of gas.servicios(formLogica.controls.tipgrupo.value, formLogica.controls.actividad.value); track s.id) {
                             <label class="dyn-check"><input type="checkbox" [checked]="serviciosMarcados().includes(s.id)"

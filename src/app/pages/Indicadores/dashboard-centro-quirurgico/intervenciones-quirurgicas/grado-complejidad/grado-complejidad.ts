@@ -1,20 +1,14 @@
 import { Routes } from '@angular/router';
-import { DiqComplejidadAGc } from './diq-complejidad-a-gc/diq-complejidad-a-gc';
-import { DiqComplejidadBGc } from './diq-complejidad-b-gc/diq-complejidad-b-gc';
-import { DiqComplejidadCGc } from './diq-complejidad-c-gc/diq-complejidad-c-gc';
-import { DiqComplejidadDGc } from './diq-complejidad-d-gc/diq-complejidad-d-gc';
-import { DiqComplejidadEGc } from './diq-complejidad-e-gc/diq-complejidad-e-gc';
-import { DiqSinComplejidadGc } from './diq-sin-complejidad-gc/diq-sin-complejidad-gc';    
 
 
 export const gradoComplejidadRoutes: Routes = [
 
     // ruta padre /indicador/centro-quirurgico/intervenciones-quirurgicas/grado-complejidad/..
-    { path: 'diq-complejidad-a-gc', component: DiqComplejidadAGc},
-    { path: 'diq-complejidad-b-gc', component: DiqComplejidadBGc},
-    { path: 'diq-complejidad-c-gc', component: DiqComplejidadCGc},
-    { path: 'diq-complejidad-d-gc', component: DiqComplejidadDGc},
-    { path: 'diq-complejidad-e-gc', component: DiqComplejidadEGc},
-    { path: 'diq-sin-complejidad-gc', component: DiqSinComplejidadGc},
+    { path: 'diq-complejidad-a-gc', loadComponent: () => import('./diq-complejidad-a-gc/diq-complejidad-a-gc').then((m) => m.DiqComplejidadAGc)},
+    { path: 'diq-complejidad-b-gc', loadComponent: () => import('./diq-complejidad-b-gc/diq-complejidad-b-gc').then((m) => m.DiqComplejidadBGc)},
+    { path: 'diq-complejidad-c-gc', loadComponent: () => import('./diq-complejidad-c-gc/diq-complejidad-c-gc').then((m) => m.DiqComplejidadCGc)},
+    { path: 'diq-complejidad-d-gc', loadComponent: () => import('./diq-complejidad-d-gc/diq-complejidad-d-gc').then((m) => m.DiqComplejidadDGc)},
+    { path: 'diq-complejidad-e-gc', loadComponent: () => import('./diq-complejidad-e-gc/diq-complejidad-e-gc').then((m) => m.DiqComplejidadEGc)},
+    { path: 'diq-sin-complejidad-gc', loadComponent: () => import('./diq-sin-complejidad-gc/diq-sin-complejidad-gc').then((m) => m.DiqSinComplejidadGc)},
 
 ];

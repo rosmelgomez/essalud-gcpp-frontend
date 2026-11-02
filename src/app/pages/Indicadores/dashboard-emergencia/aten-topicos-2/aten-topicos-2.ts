@@ -22,7 +22,7 @@ import { EmergenciasService } from '../../../../services/reportes/emergencias-se
   selector: 'app-aten-topicos-2',
   imports: [CommonModule, MatTableModule, MatCardModule, MatButtonModule, MatPaginatorModule, MatSortModule, ScrollingModule],
   templateUrl: './aten-topicos-2.html',
-  styleUrl: './aten-topicos-2.css',
+  styleUrl: '../estilos-dashboard-emergencia.css',
 })
 export class AtenTopicos2 implements OnInit, OnDestroy {
   nameCentro: string = '';

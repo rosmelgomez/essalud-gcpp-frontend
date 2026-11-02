@@ -1,11 +1,9 @@
 import { Routes } from "@angular/router";
-import { SolicitudAccesoRegistro } from "./solicitud-acceso-registro/solicitud-acceso-registro";
-import { SolicitudAccesoReports } from "./solicitud-acceso-reports/solicitud-acceso-reports";
 import { authenticateGuard } from "../../guards/authenticate-guard";
 
 
 export const solicitudAccesoRoutes: Routes = [
     //solicitud-acceso/...  
-    { path: 'registro', component: SolicitudAccesoRegistro },
-    { path: 'reports', component: SolicitudAccesoReports, canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
+    { path: 'registro', loadComponent: () => import('./solicitud-acceso-registro/solicitud-acceso-registro').then((m) => m.SolicitudAccesoRegistro) },
+    { path: 'reports', loadComponent: () => import('./solicitud-acceso-reports/solicitud-acceso-reports').then((m) => m.SolicitudAccesoReports), canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
 ]   

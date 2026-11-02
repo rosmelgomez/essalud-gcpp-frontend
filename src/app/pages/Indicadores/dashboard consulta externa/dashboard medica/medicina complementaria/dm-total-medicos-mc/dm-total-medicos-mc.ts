@@ -36,7 +36,7 @@ interface PivotRow {
     ScrollingModule,
   ],
   templateUrl: './dm-total-medicos-mc.html',
-  styleUrl: './dm-total-medicos-mc.css',
+  styleUrl: '../../estilos-dashboard-medica-3.css',
 })
 export class DmTotalMedicosMc implements OnInit, AfterViewInit, OnDestroy {
   periodo: string = '';

@@ -42,7 +42,7 @@ interface PivotRow {
   selector: 'app-dm-total-medicos-mp',
   imports: [CommonModule, FormsModule, MatCardModule, ScrollingModule],
   templateUrl: './dm-total-medicos-mp.html',
-  styleUrl: './dm-total-medicos-mp.css',
+  styleUrl: '../../estilos-dashboard-medica-3.css',
 })
 export class DmTotalMedicosMp implements OnInit, AfterViewInit, OnDestroy {
   periodo: string = '';

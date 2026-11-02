@@ -24,7 +24,7 @@ import { LocalStorageService } from '../../../../../../services/local-storage-se
     ScrollingModule,
   ],
   templateUrl: './dm-total-atenciones-cai.html',
-  styleUrl: './dm-total-atenciones-cai.css',
+  styleUrl: '../../../estilos-dashboard-consulta-externa.css',
 })
 export class DmTotalAtencionesCai implements OnInit, OnDestroy {
   nameCentro: string = '';

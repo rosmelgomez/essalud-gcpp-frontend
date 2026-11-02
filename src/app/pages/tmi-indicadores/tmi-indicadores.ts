@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
-import { TmiIndicadoresService } from '../../services/tmi-indicadores-service';
+import { TmiEstandarService, TmiCentroService } from '../../services/tmi';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
@@ -10,11 +10,12 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { FechaActualizacionService } from '../../services/fecha-actualizacion-service';
-import { forkJoin, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { TmiVariables } from './tmi-variables/tmi-variables';
 import { TmiConfigIndicadores } from './tmi-config-indicadores/tmi-config-indicadores';
 import { TmiCentroEstandarTab } from './tmi-centro-estandar/tmi-centro-estandar';
 import { TmiCalculo } from './tmi-calculo/tmi-calculo';
+import { TmiCierreComponent } from './tmi-cierre/tmi-cierre';
 
 import { TmiAceptacion } from './tmi-aceptacion/tmi-aceptacion';
 
@@ -38,6 +39,7 @@ export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categ
     TmiConfigIndicadores,
     TmiCentroEstandarTab,
     TmiCalculo,
+    TmiCierreComponent,
 
     TmiAceptacion
   ],
@@ -333,7 +335,8 @@ export class TmiIndicadores implements OnInit {
   };
 
   constructor(
-    private tmiIndicadoresService: TmiIndicadoresService,
+    private estandarSrv: TmiEstandarService,
+    private centroSrv: TmiCentroService,
     private formBuilder: FormBuilder,
     private cdr: ChangeDetectorRef,
     private fechaService: FechaActualizacionService
@@ -372,11 +375,12 @@ export class TmiIndicadores implements OnInit {
     this.reactiveForm();
     this.getQueryEstandar();
     this.getQueryCentrosTMI();
+    this.setActiveTab(this.activeTab);
   }
 
   // catálogo de indicadores/estándares (usado en selectores de formularios)
   getQueryEstandar(): void {
-    this.tmiIndicadoresService.getQueryEstandar().subscribe({
+    this.estandarSrv.getQueryEstandar().subscribe({
       next: (res: any[]) => {
         this.listaEstandares = res || [];
         this.cdr.markForCheck();
@@ -536,7 +540,7 @@ export class TmiIndicadores implements OnInit {
     this.loadingEstandarTipo = true;
     this.errorEstandarTipo = '';
 
-    this.tmiIndicadoresService.getQueryEstandarTipo(this.anioEstandarTipo).subscribe({
+    this.estandarSrv.getQueryEstandarTipo(this.anioEstandarTipo).subscribe({
       next: (res: any) => {
         this.dataEstandarTipo = res || [];
         this.dataEstandarTipoFilter = res || [];
@@ -587,7 +591,7 @@ export class TmiIndicadores implements OnInit {
   eliminarEstandarTipo(row: any): void {
     if (this.eliminandoId !== null) return;
     if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.tipo} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
-    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandarTipo(row.id), () => this.getQueryEstandarTipo());
+    this.eliminarFila(row, this.estandarSrv.deleteQueryEstandarTipo(row.id), () => this.getQueryEstandarTipo());
   }
 
   iniciarEdicionEstandarTipo(row: any): void {
@@ -635,7 +639,7 @@ export class TmiIndicadores implements OnInit {
     this.errorEstandarTipoForm = '';
 
     const dto = this.payloadEstandarAnual(this.estandarTipoForm, 'tipo_centro');
-    const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandarTipo(dto) : this.tmiIndicadoresService.postQueryEstandarTipo(dto);
+    const peticion = dto.id ? this.estandarSrv.putQueryEstandarTipo(dto) : this.estandarSrv.postQueryEstandarTipo(dto);
     peticion.subscribe({
       next: () => {
         this.savingEstandarTipo = false;
@@ -681,7 +685,7 @@ export class TmiIndicadores implements OnInit {
     this.loadingEstandarNivel = true;
     this.errorEstandarNivel = '';
 
-    this.tmiIndicadoresService.getQueryEstandarNivel(this.anioEstandarNivel).subscribe({
+    this.estandarSrv.getQueryEstandarNivel(this.anioEstandarNivel).subscribe({
       next: (res: any) => {
         this.dataEstandarNivel = res || [];
         this.dataEstandarNivelFilter = res || [];
@@ -732,7 +736,7 @@ export class TmiIndicadores implements OnInit {
   eliminarEstandarNivel(row: any): void {
     if (this.eliminandoId !== null) return;
     if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.tipo} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
-    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandarNivel(row.id), () => this.getQueryEstandarNivel());
+    this.eliminarFila(row, this.estandarSrv.deleteQueryEstandarNivel(row.id), () => this.getQueryEstandarNivel());
   }
 
   iniciarEdicionEstandarNivel(row: any): void {
@@ -780,7 +784,7 @@ export class TmiIndicadores implements OnInit {
     this.errorEstandarNivelForm = '';
 
     const dto = this.payloadEstandarAnual(this.estandarNivelForm, 'nivel_centro');
-    const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandarNivel(dto) : this.tmiIndicadoresService.postQueryEstandarNivel(dto);
+    const peticion = dto.id ? this.estandarSrv.putQueryEstandarNivel(dto) : this.estandarSrv.postQueryEstandarNivel(dto);
     peticion.subscribe({
       next: () => {
         this.savingEstandarNivel = false;
@@ -826,7 +830,7 @@ export class TmiIndicadores implements OnInit {
     this.loadingEstandarCategoria = true;
     this.errorEstandarCategoria = '';
 
-    this.tmiIndicadoresService.getQueryEstandarCategoria(this.anioEstandarCategoria).subscribe({
+    this.estandarSrv.getQueryEstandarCategoria(this.anioEstandarCategoria).subscribe({
       next: (res: any) => {
         this.dataEstandarCategoria = res || [];
         this.dataEstandarCategoriaFilter = res || [];
@@ -877,7 +881,7 @@ export class TmiIndicadores implements OnInit {
   eliminarEstandarCategoria(row: any): void {
     if (this.eliminandoId !== null) return;
     if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.tipo} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
-    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryEstandarCategoria(row.id), () => this.getQueryEstandarCategoria());
+    this.eliminarFila(row, this.estandarSrv.deleteQueryEstandarCategoria(row.id), () => this.getQueryEstandarCategoria());
   }
 
   iniciarEdicionEstandarCategoria(row: any): void {
@@ -925,7 +929,7 @@ export class TmiIndicadores implements OnInit {
     this.errorEstandarCategoriaForm = '';
 
     const dto = this.payloadEstandarAnual(this.estandarCategoriaForm, 'categoria_centro');
-    const peticion = dto.id ? this.tmiIndicadoresService.putQueryEstandarCategoria(dto) : this.tmiIndicadoresService.postQueryEstandarCategoria(dto);
+    const peticion = dto.id ? this.estandarSrv.putQueryEstandarCategoria(dto) : this.estandarSrv.postQueryEstandarCategoria(dto);
     peticion.subscribe({
       next: () => {
         this.savingEstandarCategoria = false;
@@ -971,7 +975,7 @@ export class TmiIndicadores implements OnInit {
     this.loadingCentrosTMI = true;
     this.errorCentrosTMI = '';
 
-    this.tmiIndicadoresService.getQueryCentrosTMI().subscribe({
+    this.centroSrv.getQueryCentrosTMI().subscribe({
       next: (res: any) => {
         this.listaCentros = res || [];
         this.dataCentrosTMI = res || [];
@@ -1015,7 +1019,7 @@ export class TmiIndicadores implements OnInit {
   eliminarCentro(row: any): void {
     if (this.eliminandoId !== null) return;
     if (!confirm(`¿Eliminar el centro ID ${row.id} (${row.codcentro} - ${row.centro})? Esta acción no se puede deshacer.`)) return;
-    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryCentrosTMI(row.id), () => this.getQueryCentrosTMI());
+    this.eliminarFila(row, this.centroSrv.deleteQueryCentrosTMI(row.id), () => this.getQueryCentrosTMI());
   }
 
   iniciarEdicionCentro(row: any): void {
@@ -1067,7 +1071,7 @@ export class TmiIndicadores implements OnInit {
       tipo: String(valor.tipo ?? '').trim(),
       flag: Boolean(valor.flag)
     };
-    const peticion = dto.id ? this.tmiIndicadoresService.putQueryCentrosTMI(dto) : this.tmiIndicadoresService.postQueryCentrosTMI(dto);
+    const peticion = dto.id ? this.centroSrv.putQueryCentrosTMI(dto) : this.centroSrv.postQueryCentrosTMI(dto);
     peticion.subscribe({
       next: () => {
         this.savingCentrosTMI = false;
@@ -1111,7 +1115,7 @@ export class TmiIndicadores implements OnInit {
     this.loadingExclusion = true;
     this.errorExclusion = '';
 
-    this.tmiIndicadoresService.getQueryExclusionCentroEstandar(this.anioExclusion).subscribe({
+    this.centroSrv.getQueryExclusionCentroEstandar(this.anioExclusion).subscribe({
       next: (res: any) => {
         this.dataExclusion = res || [];
         this.dataExclusionFilter = res || [];
@@ -1225,8 +1229,8 @@ export class TmiIndicadores implements OnInit {
       excl_12: Boolean(valor.excl_12)
     };
     const peticion = dto.id
-      ? this.tmiIndicadoresService.putQueryExclusionCentroEstandar(dto)
-      : this.tmiIndicadoresService.postQueryExclusionCentroEstandar(dto);
+      ? this.centroSrv.putQueryExclusionCentroEstandar(dto)
+      : this.centroSrv.postQueryExclusionCentroEstandar(dto);
     peticion.subscribe({
       next: () => {
         this.savingExclusion = false;
@@ -1245,7 +1249,7 @@ export class TmiIndicadores implements OnInit {
   eliminarExclusion(row: any): void {
     if (this.eliminandoId !== null) return;
     if (!confirm(`¿Eliminar la exclusión ID ${row.id} (${row.centro} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
-    this.eliminarFila(row, this.tmiIndicadoresService.deleteQueryExclusionCentroEstandar(row.id), () => this.getQueryExclusion());
+    this.eliminarFila(row, this.centroSrv.deleteQueryExclusionCentroEstandar(row.id), () => this.getQueryExclusion());
   }
 
   filterDataExclusion(column: keyof typeof this.filtersExclusion, event: any): void {
@@ -1280,95 +1284,6 @@ export class TmiIndicadores implements OnInit {
     );
   }
 
-  ///  consultas
-  dataCeConcent: any[] = [];
-   dataCeGCHProg: any[] = [];
-  dataCeRecetas: any[] = [];
-  dataCeRHrMedico: any[] = [];
-  dataEmPrioI_II: any[] = [];
-  dataEmPrioIV_V: any[] = [];
-  dataHEstancias: any[] = [];
-  dataHISust: any[] = [];
-  dataHOcamas: any[] = [];
-  dataHRcama: any[] = [];
-  dataHTBMHosp: any[] = [];
-  dataOConcent: any[] = [];
-  dataOGCHodon: any[] = [];
-  dataOHrOdont: any[] = [];
-  dataONTOdontS: any[] = [];
-  dataQxGCHProg: any[] = [];
-  dataQxHTCesareas: any[] = [];
-  dataQxIAlta: any[] = [];
-  dataQxIMenor: any[] = [];
-  dataQxIntSusp: any[] = [];
-  dataQRendSO: any[] = [];
-
-  getQuerysTmiConsultas() : void {
-
-     forkJoin({
-      CeConcent: this.tmiIndicadoresService.getQueryCeConcent(this.periodoCentrosTMI),
-      CeGCHProg: this.tmiIndicadoresService.getQueryCeGCHProg(this.periodoCentrosTMI),
-      CeRecetas: this.tmiIndicadoresService.getQueryCeRecetas(this.periodoCentrosTMI),
-      CeRHrMedico: this.tmiIndicadoresService.getQueryCeRHrMedico(this.periodoCentrosTMI),
-      EmPrioI_II: this.tmiIndicadoresService.getQueryEmPrioI_II(this.periodoCentrosTMI),
-      EmPrioIV_V: this.tmiIndicadoresService.getQueryEmPrioIV_V(this.periodoCentrosTMI),
-      HEstancias: this.tmiIndicadoresService.getQueryHEstancias(this.periodoCentrosTMI),
-      HISust: this.tmiIndicadoresService.getQueryHISust(this.periodoCentrosTMI),
-      HOcamas: this.tmiIndicadoresService.getQueryHOCamas(this.periodoCentrosTMI),
-      HRcama: this.tmiIndicadoresService.getQueryHRCama(this.periodoCentrosTMI),
-      HTBMHosp: this.tmiIndicadoresService.getQueryHTBHosp(this.periodoCentrosTMI),
-      OConcent: this.tmiIndicadoresService.getQueryOConcent(this.periodoCentrosTMI),
-      OGCHodon: this.tmiIndicadoresService.getQueryOGCHodon(this.periodoCentrosTMI),
-      OHrOdont: this.tmiIndicadoresService.getQueryOHrOdont(this.periodoCentrosTMI),
-      ONTOdontS: this.tmiIndicadoresService.getQueryONTOdontS(this.periodoCentrosTMI),
-      QxGCHProg: this.tmiIndicadoresService.getQueryQxGCHProg(this.periodoCentrosTMI),
-      QxHTCesareas: this.tmiIndicadoresService.getQueryQxHTCesareas(this.periodoCentrosTMI),
-      QxIAlta: this.tmiIndicadoresService.getQueryQxIAlta(this.periodoCentrosTMI),
-      QxIMenor: this.tmiIndicadoresService.getQueryQxIMenor(this.periodoCentrosTMI),
-      QxIntSusp: this.tmiIndicadoresService.getQueryQxIntSusp(this.periodoCentrosTMI),
-      QRendSO: this.tmiIndicadoresService.getQueryQRendSO(this.periodoCentrosTMI)
-     }).subscribe({
-       next: (data) => {
-        console.log('Datos de consultas TMI:', data);
-          this.dataCeConcent = data.CeConcent || [];
-          this.dataCeGCHProg = data.CeGCHProg || [];
-          this.dataCeRecetas = data.CeRecetas || [];
-          this.dataCeRHrMedico = data.CeRHrMedico || [];
-          this.dataEmPrioI_II = data.EmPrioI_II || [];
-          this.dataEmPrioIV_V = data.EmPrioIV_V || [];
-          this.dataHEstancias = data.HEstancias || [];
-          this.dataHISust = data.HISust || [];
-          this.dataHOcamas = data.HOcamas || [];
-          this.dataHRcama = data.HRcama || [];
-          this.dataHTBMHosp = data.HTBMHosp || [];
-          this.dataOConcent = data.OConcent || [];
-          this.dataOGCHodon = data.OGCHodon || [];
-          this.dataOHrOdont = data.OHrOdont || [];
-          this.dataONTOdontS = data.ONTOdontS || [];
-          this.dataQxGCHProg = data.QxGCHProg || [];
-          this.dataQxHTCesareas = data.QxHTCesareas || [];
-          this.dataQxIAlta = data.QxIAlta || [];
-          this.dataQxIMenor = data.QxIMenor || [];
-          this.dataQxIntSusp = data.QxIntSusp || [];
-          this.dataQRendSO = data.QRendSO || [];
-
-
-       }
-
-
-
-
-
-
-
-
-
-     })
-
-
-  }
-
-
   downloadCSV(): void {
     if (!this.dataCentrosTMI?.length) {
       console.warn('No hay datos para descargar');
@@ -1394,132 +1309,11 @@ export class TmiIndicadores implements OnInit {
   }
 
 
-  // cierre
-  public dataCierre: any[] = [];
-  public loadingCierre: boolean = false;
-  public errorCierre: string = '';
-  public cierreSeleccionado: any = null;
-  public fechaCierreEdit: string = '';
-  public savingCierre: boolean = false;
-  public errorCierreForm: string = '';
-  public readonly hoyISO: string = this.toISODate(new Date());
-
-  private readonly estadosCierre: Record<string, string> = {
-    PENDIENTE: 'Pendiente',
-    EN_PROCESO: 'En proceso',
-    EJECUTADO: 'Ejecutado',
-    ERROR: 'Error'
-  };
-
-  getQueryCierres(): void {
-    this.loadingCierre = true;
-    this.errorCierre = '';
-    this.tmiIndicadoresService.getQueryCierres().subscribe({
-      next: (res: any) => {
-        this.dataCierre = res || [];
-        this.loadingCierre = false;
-        this.cdr.markForCheck();
-      },
-      error: (error: any) => {
-        console.error(error);
-        this.errorCierre = 'Error al cargar las fechas de cierre';
-        this.loadingCierre = false;
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  iniciarEdicionCierre(row: any): void {
-    this.cierreSeleccionado = row;
-    this.fechaCierreEdit = String(row.fecha_cierre ?? '').substring(0, 10);
-    this.errorCierreForm = '';
-    this.cdr.markForCheck();
-  }
-
-  cancelarEdicionCierre(): void {
-    this.cierreSeleccionado = null;
-    this.errorCierreForm = '';
-    this.savingCierre = false;
-    this.cdr.markForCheck();
-  }
-
-  updateQueryFechaCierre(): void {
-    if (!this.fechaCierreEdit) {
-      this.errorCierreForm = 'Seleccione una fecha de cierre.';
-      return;
-    }
-    // el cierre se ejecuta cuando llega la fecha de cierre (o en la siguiente revisión si ya pasó)
-    if (this.fechaCierreEdit < this.hoyISO) {
-      this.errorCierreForm = 'La fecha de cierre no puede ser anterior a hoy.';
-      return;
-    }
-    this.savingCierre = true;
-    this.errorCierreForm = '';
-    this.tmiIndicadoresService.putQueryFechaCierre(this.cierreSeleccionado.periodo, this.fechaCierreEdit).subscribe({
-      next: () => {
-        this.savingCierre = false;
-        this.cierreSeleccionado = null;
-        this.getQueryCierres();
-      },
-      error: (error: any) => {
-        console.error(error);
-        this.savingCierre = false;
-        this.errorCierreForm = error?.error?.detail || 'Error al actualizar la fecha de cierre';
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  esCierreEditable(row: any): boolean {
-    return row.estado === 'PENDIENTE' || row.estado === 'ERROR';
-  }
-
-  esCierreHoy(row: any): boolean {
-    return String(row.fecha_cierre ?? '').substring(0, 10) === this.hoyISO;
-  }
-
-  etiquetaEstadoCierre(estado: string): string {
-    return this.estadosCierre[estado] ?? estado;
-  }
-
-  get cierresConError(): number {
-    return this.dataCierre.filter(row => row.estado === 'ERROR').length;
-  }
-
-  get cierresAtrasados(): number {
-    return this.dataCierre.filter(row => this.esCierreAtrasado(row)).length;
-  }
-
-  // pendiente cuya fecha de cierre ya pasó
-  esCierreAtrasado(row: any): boolean {
-    const fecha = String(row.fecha_cierre ?? '').substring(0, 10);
-    return row.estado === 'PENDIENTE' && !!fecha && fecha < this.hoyISO;
-  }
-
-  // un cierre en ERROR solo se reintenta automáticamente el mismo día en que falló
-  errorSeReintentaHoy(row: any): boolean {
-    return row.estado === 'ERROR' && String(row.fecha_ejecucion ?? '').substring(0, 10) === this.hoyISO;
-  }
-
   // 202608 -> Agosto 2026
   nombrePeriodo(periodo: string): string {
     const p = String(periodo ?? '').trim();
     const mes = this.mesesDisponibles.find(m => m.value === p.substring(4, 6));
     return mes ? `${mes.label} ${p.substring(0, 4)}` : p;
-  }
-
-  // 2026-09-10 -> 10/09/2026 (sin conversión de zona horaria)
-  formatoFecha(valor: string): string {
-    if (!valor) return '—';
-    const [fecha, hora] = String(valor).split('T');
-    const [a, m, d] = fecha.split('-');
-    return hora ? `${d}/${m}/${a} ${hora.substring(0, 5)}` : `${d}/${m}/${a}`;
-  }
-
-  private toISODate(fecha: Date): string {
-    const m = String(fecha.getMonth() + 1).padStart(2, '0');
-    const d = String(fecha.getDate()).padStart(2, '0');
-    return `${fecha.getFullYear()}-${m}-${d}`;
   }
 
   // periodos anteriores al mínimo ya no se agregan ni modifican
@@ -1582,8 +1376,12 @@ export class TmiIndicadores implements OnInit {
   setActiveTab(tab: TabType): void {
     this.activeTab = tab;
     this.errorEliminarFila = '';
+    // los estándares y exclusiones se cargan solos la primera vez que se abre la pestaña
+    if (tab === 'Estandares Tipo' && this.selectPeriodoEstandarTipo) this.onBuscarEstandarTipo();
+    if (tab === 'Estandares Nivel' && this.selectPeriodoEstandarNivel) this.onBuscarEstandarNivel();
+    if (tab === 'Estandares Categoria' && this.selectPeriodoEstandarCategoria) this.onBuscarEstandarCategoria();
+    if (tab === 'Exclusion Centro Estandar' && this.selectPeriodoExclusion) this.onBuscarExclusion();
     if (tab === 'Centros TMI') this.getQueryCentrosTMI();
-    if (tab === 'Fecha Cierre') this.getQueryCierres();
     this.cdr.markForCheck();
   }
 }

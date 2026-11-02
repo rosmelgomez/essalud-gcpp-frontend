@@ -4,8 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import {
-  TmiDinamicoService, TmiIndicador, TmiPeriodoCalculo, TmiProblemaConfig, TmiResultadoFinal, mensajeError,
-} from '../../../services/tmi-dinamico-service';
+  TmiIndicadorService,
+  TmiCalculoService,
+  TmiIndicador,
+  TmiPeriodoCalculo,
+  TmiProblemaConfig,
+  TmiResultadoFinal,
+  mensajeError,
+} from '../../../services/tmi';
 
 const MESES = [
   { value: '01', label: 'Enero' }, { value: '02', label: 'Febrero' }, { value: '03', label: 'Marzo' },
@@ -34,7 +40,8 @@ const MOTIVOS: Record<string, string> = {
   styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css'],
 })
 export class TmiCalculo implements OnInit {
-  private srv = inject(TmiDinamicoService);
+  private indicadorSrv = inject(TmiIndicadorService);
+  private calculoSrv = inject(TmiCalculoService);
 
   readonly meses = MESES;
   readonly anios = Array.from({ length: 6 }, (_, i) => String(new Date().getFullYear() - i));
@@ -109,7 +116,7 @@ export class TmiCalculo implements OnInit {
   }
 
   ngOnInit(): void {
-    this.srv.getIndicadores().subscribe({
+    this.indicadorSrv.getIndicadores().subscribe({
       next: (lista) => {
         const activos = lista.filter((i) => i.activo);
         this.indicadores.set(activos);
@@ -123,7 +130,7 @@ export class TmiCalculo implements OnInit {
 
   /** Periodo abierto para cálculo y periodos con resultado guardado. inicial = se posiciona en el periodo abierto. */
   cargarPeriodos(inicial = false): void {
-    this.srv.getPeriodoCalculo().subscribe({
+    this.calculoSrv.getPeriodoCalculo().subscribe({
       next: (e) => {
         this.estadoPeriodos.set(e);
         if (inicial) {
@@ -150,7 +157,7 @@ export class TmiCalculo implements OnInit {
 
   validar(): void {
     this.inicio('validar');
-    this.srv.validarConfig().subscribe({
+    this.calculoSrv.validarConfig().subscribe({
       next: (p) => {
         this.problemas.set(p);
         this.ocupado.set('');
@@ -170,7 +177,7 @@ export class TmiCalculo implements OnInit {
       && !confirm(`${this.nombrePeriodo(periodo)} ya pasó su fecha de cierre y tiene un resultado guardado.\n`
         + '¿Volver a calcularlo? Se reemplaza el resultado guardado.')) return;
     this.inicio('calcular');
-    this.srv.calcular(periodo).subscribe({
+    this.calculoSrv.calcular(periodo).subscribe({
       next: (r) => {
         this.resumen.set(r.puntajes);
         this.periodoCalculado.set(periodo);
@@ -194,7 +201,7 @@ export class TmiCalculo implements OnInit {
     const id = this.idIndicador();
     if (id == null) return;
     this.inicio('resultado');
-    this.srv.getResultado(this.periodo, id).subscribe({
+    this.calculoSrv.getResultado(this.periodo, id).subscribe({
       next: (r) => {
         this.resultado.set(r);
         this.ocupado.set('');
@@ -214,7 +221,7 @@ export class TmiCalculo implements OnInit {
       return;
     }
     const ids = this.todosEnExcel() ? undefined : this.indicadores().filter((i) => this.excelIds().has(i.id!)).map((i) => i.id!);
-    this.srv.getExcel(this.periodo, false, ids).subscribe({
+    this.calculoSrv.getExcel(this.periodo, false, ids).subscribe({
       next: (resp) => {
         const blob = resp.body;
         if (blob) {

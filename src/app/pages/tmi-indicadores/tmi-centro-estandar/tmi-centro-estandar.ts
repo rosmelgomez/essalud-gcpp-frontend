@@ -4,12 +4,14 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import {
+  TmiIndicadorService,
+  TmiCentroService,
   TmiCentroCatalogo,
   TmiCentroEstandar,
-  TmiDinamicoService,
   TmiIndicador,
   mensajeError,
-} from '../../../services/tmi-dinamico-service';
+} from '../../../services/tmi';
+import { AyudaFlotante } from '../ayuda-flotante';
 
 export const MESES = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 export const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -17,12 +19,13 @@ export const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ag
 /** Estándar específico de un centro: gana sobre el estándar por tipo, nivel o categoría. */
 @Component({
   selector: 'app-tmi-centro-estandar',
-  imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, DecimalPipe],
+  imports: [AyudaFlotante, ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, DecimalPipe],
   templateUrl: './tmi-centro-estandar.html',
-  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css'],
+  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css'],
 })
 export class TmiCentroEstandarTab implements OnInit {
-  private srv = inject(TmiDinamicoService);
+  private indicadorSrv = inject(TmiIndicadorService);
+  private centroSrv = inject(TmiCentroService);
   private fb = inject(FormBuilder);
 
   readonly meses = MESES;
@@ -64,14 +67,14 @@ export class TmiCentroEstandarTab implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
-    this.srv.getCentros().subscribe({ next: (c) => this.centros.set(c) });
-    this.srv.getIndicadores().subscribe({ next: (i) => this.indicadores.set(i) });
+    this.centroSrv.getCentros().subscribe({ next: (c) => this.centros.set(c) });
+    this.indicadorSrv.getIndicadores().subscribe({ next: (i) => this.indicadores.set(i) });
   }
 
   cargar(): void {
     this.loading.set(true);
     this.error.set('');
-    this.srv.getCentroEstandar(this.anio()).subscribe({
+    this.centroSrv.getCentroEstandar(this.anio()).subscribe({
       next: (f) => {
         this.filas.set(f);
         this.loading.set(false);
@@ -143,7 +146,7 @@ export class TmiCentroEstandarTab implements OnInit {
       sustento: f.sustento || null,
     } as TmiCentroEstandar;
     this.guardando.set(true);
-    const req = f.id ? this.srv.putCentroEstandar(f.id, dto) : this.srv.postCentroEstandar(dto);
+    const req = f.id ? this.centroSrv.putCentroEstandar(f.id, dto) : this.centroSrv.postCentroEstandar(dto);
     req.subscribe({
       next: () => {
         this.guardando.set(false);
@@ -160,7 +163,7 @@ export class TmiCentroEstandarTab implements OnInit {
   eliminar(f: TmiCentroEstandar): void {
     if (!f.id || !confirm(`¿Eliminar el estándar propio de ${f.centro ?? f.codcentro} en "${f.indicador}"?`)) return;
     this.eliminandoId.set(f.id);
-    this.srv.deleteCentroEstandar(f.id).subscribe({
+    this.centroSrv.deleteCentroEstandar(f.id).subscribe({
       next: () => {
         this.eliminandoId.set(null);
         this.cargar();

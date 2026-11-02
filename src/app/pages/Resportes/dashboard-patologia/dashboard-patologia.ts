@@ -934,26 +934,11 @@ export class DashboardPatologia implements OnInit, OnDestroy {
     });
   }
 
-  private loadPlotly(): Promise<void> {
-    return new Promise((resolve) => {
-      const plotlyLib = (window as any).Plotly;
-      if (plotlyLib) {
-        resolve();
-        return;
-      }
-
-      const scriptId = 'plotly-cdn-script';
-      let script = document.getElementById(scriptId) as HTMLScriptElement;
-
-      if (!script) {
-        script = document.createElement('script');
-        script.id = scriptId;
-        script.src = 'https://cdn.plot.ly/plotly-2.24.1.min.js';
-        document.body.appendChild(script);
-      }
-
-      script.addEventListener('load', () => resolve());
-    });
+  /** Plotly se descarga solo al abrir este dashboard (chunk propio) y desde el propio servidor, no de un CDN. */
+  private async loadPlotly(): Promise<void> {
+    if ((window as any).Plotly) return;
+    const mod: any = await import('plotly.js-dist-min');
+    (window as any).Plotly = mod.default ?? mod;
   }
 
   buildChartDiagnosticoServiciosMasFrecPato(): void {

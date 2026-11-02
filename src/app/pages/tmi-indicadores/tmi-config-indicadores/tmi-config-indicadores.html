@@ -12,12 +12,20 @@
     </div>
     <details class="dyn-ayuda">
         <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
-        <p>
-        Cada indicador es una hoja del Excel. Su fórmula se escribe con letras: cada variable recibe una letra (A, B, C…)
-        y se combina con + - * /, paréntesis y números. Ejemplo: Intervalo de sustitución =
-        <span class="dyn-formula">(A - B) / C</span>. El resultado se calcula directo de TOTALIZADO3. Los inactivos no se
-        calculan ni salen en el Excel.
-        </p>
+        <div class="dyn-ayuda-panel" role="note">
+            <p>
+            La fórmula de un indicador se arma con letras. Cada variable que usa recibe una letra (A, B, C…), y las letras se
+            combinan con sumas, restas, multiplicaciones, divisiones, paréntesis y números. Por ejemplo, el Intervalo de
+            sustitución es <span class="dyn-formula">(A - B) / C</span>. Los indicadores inactivos no se calculan ni salen en
+            el Excel.
+            </p>
+            <p>
+            <strong>Validar configuración</strong> revisa los indicadores activos antes de calcular: que todos tengan
+            fórmula, que sus variables usen grupos y actividades que existen en los datos, y que su tipo de cálculo y su
+            forma de evaluarse sean válidos. Si encuentra problemas, los lista para corregirlos; mientras haya alguno, el
+            TMI no se calcula, ni a mano ni en el cierre.
+            </p>
+        </div>
     </details>
 </div>
 
@@ -110,18 +118,31 @@
         }
 
         <div class="dyn-section-title">Fórmula</div>
-        <p class="dyn-hint">
-            1. Agregue las variables que usa el indicador: cada una recibe una letra (A, B, C…). Las variables se crean en
-            la pestaña Variables. 2. Arme la fórmula haciendo clic en las variables, las operaciones y los paréntesis; cada clic
-            agrega un bloque al final. Los bloques se pueden arrastrar para cambiarlos de lugar. Ejemplo:
-            <span class="dyn-formula">( A − B ) ÷ C</span>. La multiplicación y la división van antes que la suma y la resta:
-            use paréntesis para agrupar. Una división entre 0 da NA ese mes.
-        </p>
+        <details class="dyn-ayuda dyn-ayuda-seccion">
+            <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
+            <div class="dyn-ayuda-panel" role="note">
+                <p>
+                Primero agregue las variables que usa el indicador. Cada una recibe una letra (A, B, C…); las variables se
+                crean en la pestaña Variables.
+                </p>
+                <p>
+                Después arme la fórmula con clics en las letras, las operaciones y los paréntesis. Cada clic agrega un bloque
+                al final, y puede arrastrar los bloques para cambiarlos de lugar. Por ejemplo:
+                <span class="dyn-formula">( A − B ) ÷ C</span>.
+                </p>
+                <p>
+                La multiplicación y la división se resuelven antes que la suma y la resta, así que use paréntesis para
+                agrupar. Si en un mes se divide entre 0, ese mes queda como NA.
+                </p>
+            </div>
+        </details>
 
-        <div class="dyn-inline">
-            <select class="dyn-calc-select" aria-label="Variable para agregar a la fórmula"
+        <div class="dyn-inline dyn-calc-agregar">
+            <select class="style-select dyn-calc-select" aria-label="Variable para agregar a la fórmula"
+                [class.is-vacio]="idVariableNueva() == null" [disabled]="!variablesLibres().length"
                 [ngModel]="idVariableNueva()" (ngModelChange)="idVariableNueva.set($event)">
-                <option [ngValue]="null">Elija una variable…</option>
+                <option [ngValue]="null">{{ variablesLibres().length ? 'Elija una variable…'
+                    : letras().length ? 'Todas las variables ya tienen letra' : 'No hay variables: créelas en la pestaña Variables' }}</option>
                 @for (v of variablesLibres(); track v.id) {
                 <option [ngValue]="v.id">{{ v.nombre }} ({{ v.agregacion }})</option>
                 }
@@ -165,10 +186,10 @@
         <div class="dyn-bloques" cdkDropList cdkDropListOrientation="mixed" (cdkDropListDropped)="moverBloque($event)"
             aria-label="Fórmula del indicador">
             @for (b of bloques(); track $index) {
-            <div class="dyn-bloque" cdkDrag [attr.data-tipo]="b.tipo">
+            <div class="dyn-bloque" cdkDrag [attr.data-tipo]="b.tipo"
+                [attr.title]="b.tipo === 'var' ? b.valor + ' · ' + nombreVariable(b.valor) : null">
                 @if (b.tipo === 'var') {
                 <span class="dyn-calc-letra">{{ b.valor }}</span>
-                <span class="dyn-bloque-nombre">{{ nombreVariable(b.valor) }}</span>
                 } @else {
                 <span class="dyn-bloque-valor">{{ simbolo(b.valor) }}</span>
                 }
@@ -204,7 +225,7 @@
         }
         }
         <details class="dyn-formula-interna">
-            <summary>Fórmula interna (TOTALIZADO3)</summary>
+            <summary>Fórmula interna</summary>
             <code class="dyn-formula">{{ a.formula }}</code>
             <div class="wrapper-table dyn-terminos">
                 <div class="grid-table">
@@ -251,7 +272,7 @@
 <!-- MODAL INDICADOR -->
 @if (mostrarForm()) {
 <div class="modal-overlay" (click)="mostrarForm.set(false)">
-    <div class="modal-card dyn-modal-wide" (click)="$event.stopPropagation()">
+    <div class="modal-card dyn-modal-wide" (click)="$event.stopPropagation(); cerrarAyuda()">
         <header class="modal-header">
             <div class="modal-header-info">
                 <h2>{{ form.controls.id.value ? 'Editar indicador' : 'Nuevo indicador' }}</h2>
@@ -273,7 +294,15 @@
                         <input id="in_codigo" type="text" formControlName="codigo" placeholder="CE_Concent" />
                     </div>
                     <div class="field-input">
-                        <label for="in_grupo">Sección del reporte</label>
+                        <div class="dyn-campo-cab">
+                            <label for="in_grupo">Sección del reporte</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'grupo'"
+                                [attr.aria-expanded]="ayudaCampo() === 'grupo'" aria-label="Qué hace: Sección del reporte" (click)="alternarAyuda('grupo', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'grupo') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.grupo }}</div>
+                        }
                         <select id="in_grupo" formControlName="grupo">
                             <option [ngValue]="null">Sin sección</option>
                             @for (g of gruposReporte(); track g.id) {<option [ngValue]="g.id">{{ g.descripcion }}</option>}
@@ -298,13 +327,29 @@
                     {{ form.controls.id.value ? '' : 'después de guardarlo' }}. Una división entre 0 da NA ese mes.</p>
                 <div class="form-grid">
                     <div class="field-input">
-                        <label for="in_calc">Tipo de cálculo</label>
+                        <div class="dyn-campo-cab">
+                            <label for="in_calc">Tipo de cálculo</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'tipo_calculo'"
+                                [attr.aria-expanded]="ayudaCampo() === 'tipo_calculo'" aria-label="Qué hace: Tipo de cálculo" (click)="alternarAyuda('tipo_calculo', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'tipo_calculo') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.tipo_calculo }}</div>
+                        }
                         <select id="in_calc" formControlName="tipo_calculo">
                             @for (t of tiposCalculo(); track t.codigo) {<option [value]="t.codigo">{{ t.codigo }} · {{ t.descripcion }}</option>}
                         </select>
                     </div>
                     <div class="field-input">
-                        <label for="in_sindatos">Centro sin datos en el año</label>
+                        <div class="dyn-campo-cab">
+                            <label for="in_sindatos">Centro sin datos en el año</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'sin_datos_anio'"
+                                [attr.aria-expanded]="ayudaCampo() === 'sin_datos_anio'" aria-label="Qué hace: Centro sin datos en el año" (click)="alternarAyuda('sin_datos_anio', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'sin_datos_anio') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.sin_datos_anio }}</div>
+                        }
                         <select id="in_sindatos" formControlName="sin_datos_anio">
                             <option value="NA">NA</option>
                             <option value="MOSTRAR">Mostrar 0</option>
@@ -317,7 +362,15 @@
                 <p class="dyn-hint">Cómo se evalúa el indicador. Los valores de los estándares se cargan en las pestañas de Estándares y el porcentaje del % Acept en la pestaña % Acept.</p>
                 <div class="form-grid">
                     <div class="field-input">
-                        <label for="in_base">Se evalúa por</label>
+                        <div class="dyn-campo-cab">
+                            <label for="in_base">Se evalúa por</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'base_estandar'"
+                                [attr.aria-expanded]="ayudaCampo() === 'base_estandar'" aria-label="Qué hace: Se evalúa por" (click)="alternarAyuda('base_estandar', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'base_estandar') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.base_estandar }}</div>
+                        }
                         <select id="in_base" formControlName="base_estandar">
                             @for (t of tiposEstandar(); track t.codigo) {
                             <option [value]="t.codigo">{{ t.descripcion }}{{ t.activo ? '' : ' (inactivo)' }}</option>
@@ -325,7 +378,15 @@
                         </select>
                     </div>
                     <div class="field-input">
-                        <label for="in_sentido">Sentido</label>
+                        <div class="dyn-campo-cab">
+                            <label for="in_sentido">Sentido</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'sentido'"
+                                [attr.aria-expanded]="ayudaCampo() === 'sentido'" aria-label="Qué hace: Sentido" (click)="alternarAyuda('sentido', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'sentido') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.sentido }}</div>
+                        }
                         <select id="in_sentido" formControlName="sentido">
                             <option value="MENOR">Menor es mejor</option>
                             <option value="MAYOR">Mayor es mejor</option>
@@ -333,32 +394,72 @@
                         </select>
                     </div>
                     <div class="field-input">
-                        <label for="in_formato">Formato en el Excel</label>
+                        <div class="dyn-campo-cab">
+                            <label for="in_formato">Formato en el Excel</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'formato'"
+                                [attr.aria-expanded]="ayudaCampo() === 'formato'" aria-label="Qué hace: Formato en el Excel" (click)="alternarAyuda('formato', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'formato') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.formato }}</div>
+                        }
                         <select id="in_formato" formControlName="formato">
                             <option value="NUMERO">Número (0.00)</option>
                             <option value="PORCENTAJE">Porcentaje (0.00 %)</option>
                         </select>
                     </div>
                     <div class="field-input">
-                        <label for="in_dec">Decimales al calificar</label>
+                        <div class="dyn-campo-cab">
+                            <label for="in_dec">Decimales al calificar</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'decimales'"
+                                [attr.aria-expanded]="ayudaCampo() === 'decimales'" aria-label="Qué hace: Decimales al calificar" (click)="alternarAyuda('decimales', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'decimales') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.decimales }}</div>
+                        }
                         <input id="in_dec" type="number" formControlName="decimales" placeholder="Sin redondeo" />
                     </div>
                     <div class="field-input">
-                        <label for="in_logro">Valor 0</label>
+                        <div class="dyn-campo-cab">
+                            <label for="in_logro">Valor 0</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'cero_es_logro'"
+                                [attr.aria-expanded]="ayudaCampo() === 'cero_es_logro'" aria-label="Qué hace: Valor 0" (click)="alternarAyuda('cero_es_logro', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'cero_es_logro') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.cero_es_logro }}</div>
+                        }
                         <select id="in_logro" formControlName="cero_es_logro">
                             <option [ngValue]="false">Sin producción (puntaje 0)</option>
                             <option [ngValue]="true">Es un buen resultado</option>
                         </select>
                     </div>
                     <div class="field-input">
-                        <label for="in_na">Centros sin estándar</label>
+                        <div class="dyn-campo-cab">
+                            <label for="in_na">Centros sin estándar</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'mostrar_no_aplica'"
+                                [attr.aria-expanded]="ayudaCampo() === 'mostrar_no_aplica'" aria-label="Qué hace: Centros sin estándar" (click)="alternarAyuda('mostrar_no_aplica', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'mostrar_no_aplica') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.mostrar_no_aplica }}</div>
+                        }
                         <select id="in_na" formControlName="mostrar_no_aplica">
                             <option [ngValue]="true">Listar como NA</option>
                             <option [ngValue]="false">No listar</option>
                         </select>
                     </div>
                     <div class="field-input">
-                        <label for="in_activo">Estado</label>
+                        <div class="dyn-campo-cab">
+                            <label for="in_activo">Estado</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'activo'"
+                                [attr.aria-expanded]="ayudaCampo() === 'activo'" aria-label="Qué hace: Estado" (click)="alternarAyuda('activo', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'activo') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.activo }}</div>
+                        }
                         <select id="in_activo" formControlName="activo">
                             <option [ngValue]="true">Activo</option>
                             <option [ngValue]="false">Inactivo</option>

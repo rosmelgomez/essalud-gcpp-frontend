@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { TmiDinamicoService, TmiGrupoActividadServicio } from '../../services/tmi-dinamico-service';
+import { TmiCatalogoService, TmiGrupoActividadServicio } from '../../services/tmi';
 
 export interface OpcionGas {
   id: number;
@@ -15,7 +15,7 @@ export class CatalogoGas {
   readonly cargando = signal(true);
   readonly error = signal('');
 
-  constructor(srv: TmiDinamicoService) {
+  constructor(srv: TmiCatalogoService) {
     srv.getGrupoActividadServicio().subscribe({
       next: (f) => {
         this.filas.set(f);

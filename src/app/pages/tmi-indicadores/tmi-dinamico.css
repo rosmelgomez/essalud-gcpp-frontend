@@ -134,6 +134,114 @@
     margin-bottom: 6px;
 }
 
+/* Buscador con lupa, botón para limpiar y conteo de resultados (pestaña % Acept) */
+.dyn-buscar-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin-bottom: 14px;
+}
+
+.dyn-buscar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 280px;
+    max-width: 420px;
+}
+
+.dyn-buscar input {
+    box-sizing: border-box;
+    width: 100%;
+    height: var(--rpt-control-h);
+    padding: 0 38px 0 38px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--rpt-ink);
+    background: var(--rpt-surface);
+    border: 1px solid var(--rpt-line-strong);
+    border-radius: var(--rpt-radius-sm);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dyn-buscar input::placeholder {
+    color: var(--rpt-muted);
+    opacity: 0.85;
+}
+
+.dyn-buscar input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+}
+
+.dyn-buscar input:hover {
+    border-color: #9fb2c5;
+}
+
+.dyn-buscar input:focus {
+    outline: none;
+    border-color: var(--rpt-brand);
+    box-shadow: 0 0 0 3px rgba(0, 100, 175, 0.16);
+}
+
+.dyn-buscar-icono {
+    position: absolute;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    color: var(--rpt-muted);
+    pointer-events: none;
+}
+
+.dyn-buscar:focus-within .dyn-buscar-icono {
+    color: var(--rpt-brand);
+}
+
+.dyn-buscar-limpiar {
+    position: absolute;
+    right: 5px;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    color: var(--rpt-muted);
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.dyn-buscar-limpiar:hover {
+    color: var(--rpt-ink);
+    background: var(--rpt-surface-2);
+}
+
+.dyn-buscar-limpiar:focus-visible {
+    outline: 2px solid var(--rpt-brand);
+    outline-offset: 1px;
+}
+
+.dyn-buscar-limpiar mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}
+
+.dyn-buscar-total {
+    font-size: 13px;
+    color: var(--rpt-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+    .dyn-buscar {
+        flex-basis: 100%;
+        max-width: none;
+    }
+}
+
 @media (max-width: 1100px) {
     .dyn-split {
         grid-template-columns: 1fr;
@@ -198,6 +306,11 @@
     width: 130px;
 }
 
+/* "Se mide en": cabe "% del estándar" completo */
+.dyn-acept-edicion > .field-input:first-child {
+    width: 168px;
+}
+
 .dyn-acept-grupo {
     display: flex;
     gap: 8px;
@@ -219,15 +332,67 @@
     align-self: center;
 }
 
+/* % Acept: un solo control con la unidad (% o pts) dentro, mismo borde y foco que los demás campos */
 .dyn-pct {
     display: flex;
-    align-items: center;
-    gap: 4px;
+    align-items: stretch;
+    box-sizing: border-box;
+    height: var(--rpt-control-h);
+    overflow: hidden;
+    background: var(--rpt-surface);
+    border: 1px solid var(--rpt-line-strong);
+    border-radius: var(--rpt-radius-sm);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.dyn-pct input {
-    width: 80px;
+.dyn-pct:hover {
+    border-color: #9fb2c5;
+}
+
+.dyn-pct:focus-within {
+    border-color: var(--rpt-brand);
+    box-shadow: 0 0 0 3px rgba(0, 100, 175, 0.16);
+}
+
+.field-input .dyn-pct input,
+.field-input .dyn-pct input:focus {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    padding: 0 6px 0 10px;
     text-align: right;
+    font-variant-numeric: tabular-nums;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.dyn-pct input::-webkit-outer-spin-button,
+.dyn-pct input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.dyn-pct input::placeholder {
+    color: var(--rpt-muted);
+    opacity: 0.7;
+}
+
+.dyn-pct span {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--rpt-muted);
+    background: var(--rpt-surface-2);
+    border-left: 1px solid var(--rpt-line-strong);
 }
 
 .dyn-acept-tabla {
@@ -322,10 +487,55 @@
 }
 
 /* Fórmula con bloques: variables (A, B, C…), operaciones y números */
-.dyn-calc-select {
-    flex: 1;
-    min-width: 220px;
+.dyn-calc-agregar {
+    align-items: center;
+}
+
+/* Variables: "Sumar variable" es lo último de la tarjeta; deja aire con la lista y con el borde inferior */
+.dyn-componente-agregar {
+    margin: 12px 0 20px;
+}
+
+.dyn-empty + .dyn-componente-agregar {
+    margin-top: 0;
+}
+
+/* Hereda el select del sistema (.rpt .style-select): altura, flecha, borde y foco */
+.style-select.dyn-calc-select {
+    flex: 1 1 280px;
+    min-width: 0;
     max-width: 480px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.style-select.dyn-calc-select.is-vacio {
+    font-weight: 400;
+    color: var(--rpt-muted);
+}
+
+.style-select.dyn-calc-select option {
+    font-weight: 400;
+    color: var(--rpt-ink);
+}
+
+.style-select.dyn-calc-select:disabled {
+    color: var(--rpt-muted);
+    background-color: var(--rpt-surface-2);
+    border-color: var(--rpt-line);
+    cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .style-select.dyn-calc-select {
+        flex-basis: 100%;
+        max-width: none;
+    }
+
+    .dyn-calc-agregar .btn-download {
+        flex: 1 1 100%;
+    }
 }
 
 .dyn-calc-vars {
@@ -470,14 +680,6 @@
     text-align: center;
     font-size: 17px;
     font-weight: 600;
-}
-
-.dyn-bloque-nombre {
-    max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 13px;
 }
 
 .dyn-bloque.cdk-drag-preview {
@@ -625,52 +827,64 @@
     font-style: italic;
 }
 
-/* Ayuda de cada pestaña: plegada dentro de la cabecera, se abre cuando se necesita */
-.dyn-ayuda {
-    flex: 1 0 100%;
-    margin: -6px 0 0;
-    font-size: 13px;
-    color: var(--rpt-ink-2);
+/* Formulario del indicador: "?" junto al nombre del campo que abre una ayuda flotante */
+.field-input:has(> .dyn-campo-cab) {
+    position: relative;
 }
 
-.dyn-ayuda summary {
-    display: inline-flex;
+.dyn-campo-cab {
+    display: flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 6px 2px 2px;
-    border-radius: var(--rpt-radius-sm);
-    font-weight: 600;
-    color: var(--rpt-brand);
+    min-width: 0;
+}
+
+.dyn-ayuda-btn {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    color: var(--rpt-muted);
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
     cursor: pointer;
-    list-style: none;
-    transition: background-color 0.15s ease;
+    transition: color 0.15s ease, background-color 0.15s ease;
 }
 
-.dyn-ayuda summary::-webkit-details-marker {
-    display: none;
+.dyn-ayuda-btn mat-icon {
+    width: 17px;
+    height: 17px;
+    font-size: 17px;
 }
 
-.dyn-ayuda summary:hover {
+.dyn-ayuda-btn:hover,
+.dyn-ayuda-btn.activo {
+    color: var(--rpt-brand);
     background: var(--rpt-brand-tint);
 }
 
-.dyn-ayuda summary:focus-visible {
+.dyn-ayuda-btn:focus-visible {
     outline: 2px solid var(--rpt-brand);
     outline-offset: 1px;
 }
 
-.dyn-ayuda summary mat-icon {
-    width: 18px;
-    height: 18px;
-    font-size: 18px;
+.dyn-ayuda-pop {
+    position: absolute;
+    top: 28px;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--rpt-ink-2);
+    background: var(--rpt-surface);
+    border: 1px solid var(--rpt-line-strong);
+    border-radius: var(--rpt-radius-sm);
+    box-shadow: 0 6px 20px rgba(15, 45, 75, 0.14);
+    animation: dyn-ayuda-entra 0.14s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dyn-ayuda p {
-    max-width: 110ch;
-    margin: 8px 0 2px;
-    line-height: 1.55;
-}
-
-.dyn-ayuda[open] summary {
-    background: var(--rpt-brand-tint);
-}

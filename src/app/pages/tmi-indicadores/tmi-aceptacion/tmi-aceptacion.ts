@@ -3,7 +3,8 @@ import { DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { TmiAceptacionIndicador, TmiDinamicoService, TmiTipoEstandar, mensajeError } from '../../../services/tmi-dinamico-service';
+import { TmiEstandarService, TmiAceptacionIndicador, TmiTipoEstandar, mensajeError } from '../../../services/tmi';
+import { AyudaFlotante } from '../ayuda-flotante';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
@@ -27,12 +28,12 @@ interface Edicion {
  *  del año, que cada mes toma al llegar su fecha de cierre, y luego el valor del mes se puede modificar. */
 @Component({
   selector: 'app-tmi-aceptacion',
-  imports: [FormsModule, MatCardModule, MatIconModule, DecimalPipe, PercentPipe],
+  imports: [AyudaFlotante, FormsModule, MatCardModule, MatIconModule, DecimalPipe, PercentPipe],
   templateUrl: './tmi-aceptacion.html',
-  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css'],
+  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css'],
 })
 export class TmiAceptacion implements OnInit {
-  private srv = inject(TmiDinamicoService);
+  private estandarSrv = inject(TmiEstandarService);
 
   readonly meses = MESES.map((label, i) => ({ value: i + 1, label }));
   readonly anios = Array.from({ length: 4 }, (_, i) => new Date().getFullYear() + 1 - i);
@@ -55,14 +56,14 @@ export class TmiAceptacion implements OnInit {
   mensaje = signal('');
 
   ngOnInit(): void {
-    this.srv.getTiposEstandar().subscribe({ next: (t) => this.tipos.set(t) });
+    this.estandarSrv.getTiposEstandar().subscribe({ next: (t) => this.tipos.set(t) });
     this.cargar();
   }
 
   cargar(): void {
     this.cargando.set(true);
     this.error.set('');
-    this.srv.getAceptacion(this.anio(), this.mes()).subscribe({
+    this.estandarSrv.getAceptacion(this.anio(), this.mes()).subscribe({
       next: (lista) => {
         this.indicadores.set(lista);
         const ed: Record<number, Edicion> = {};
@@ -145,7 +146,7 @@ export class TmiAceptacion implements OnInit {
     this.guardando.set(i.id);
     this.error.set('');
     this.mensaje.set('');
-    this.srv.putTolerancia(i.id, dto).subscribe({
+    this.estandarSrv.putTolerancia(i.id, dto).subscribe({
       next: () => {
         this.guardando.set(null);
         this.mensaje.set(`% Acept de ${i.indicador} guardado para ${alcance}. Se aplica desde el próximo cálculo.`);

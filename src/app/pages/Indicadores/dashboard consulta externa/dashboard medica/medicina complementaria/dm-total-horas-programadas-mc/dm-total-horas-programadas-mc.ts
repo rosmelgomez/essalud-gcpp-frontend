@@ -46,7 +46,7 @@ interface PivotRow {
     ScrollingModule,
   ],
   templateUrl: './dm-total-horas-programadas-mc.html',
-  styleUrl: './dm-total-horas-programadas-mc.css',
+  styleUrl: '../../estilos-dashboard-medica.css',
 })
 export class DmTotalHorasProgramadasMc implements OnInit, AfterViewInit, OnDestroy {
   nameCentro: String = '';

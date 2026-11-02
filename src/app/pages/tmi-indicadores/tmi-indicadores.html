@@ -37,6 +37,9 @@
     @if (activeTab === 'Estandar Centro') {
     <div class="tab-content"><app-tmi-centro-estandar /></div>
     }
+    @if (activeTab === 'Fecha Cierre') {
+    <div class="tab-content"><app-tmi-cierre /></div>
+    }
     @if (activeTab === 'Calcular') {
     <div class="tab-content"><app-tmi-calculo /></div>
     }
@@ -47,19 +50,14 @@
             <h2 class="bar-title">Tabla de Estándares TMI por Tipo de Centro</h2>
             <div class="header-actions">
                 <div class="buscar-group">
-                    <select [(ngModel)]="anioEstandarTipo" class="anio-select">
-                        <option value="">Seleccione un Año</option>
+                    <select [(ngModel)]="anioEstandarTipo" (ngModelChange)="onBuscarEstandarTipo()" class="anio-select" aria-label="Año">
                         <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
                     </select>
-                    <button (click)="onBuscarEstandarTipo()" class="btn-search">Buscar</button>
+                    <button (click)="onBuscarEstandarTipo()" class="btn-download" [disabled]="loadingEstandarTipo">
+                        <mat-icon>refresh</mat-icon> Actualizar
+                    </button>
                 </div>
             </div>
-        </div>
-
-        <!-- Selecciona Año -->
-        <div *ngIf="selectPeriodoEstandarTipo && !loadingEstandarTipo" class="select-periodo">
-            <p>Por favor, seleccione un año y haga clic en Buscar para ver la información de Estándares por
-                Tipo</p>
         </div>
 
         <div *ngIf="loadingEstandarTipo" class="loading">
@@ -292,19 +290,14 @@
             <h2 class="bar-title">Tabla de Estándares TMI por Nivel de Centro</h2>
             <div class="header-actions">
                 <div class="buscar-group">
-                    <select [(ngModel)]="anioEstandarNivel" class="anio-select">
-                        <option value="">Seleccione un Año</option>
+                    <select [(ngModel)]="anioEstandarNivel" (ngModelChange)="onBuscarEstandarNivel()" class="anio-select" aria-label="Año">
                         <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
                     </select>
-                    <button (click)="onBuscarEstandarNivel()" class="btn-search">Buscar</button>
+                    <button (click)="onBuscarEstandarNivel()" class="btn-download" [disabled]="loadingEstandarNivel">
+                        <mat-icon>refresh</mat-icon> Actualizar
+                    </button>
                 </div>
             </div>
-        </div>
-
-        <!-- Selecciona Año -->
-        <div *ngIf="selectPeriodoEstandarNivel && !loadingEstandarNivel" class="select-periodo">
-            <p>Por favor, seleccione un año y haga clic en Buscar para ver la información de Estándares por
-                Nivel</p>
         </div>
 
         <div *ngIf="loadingEstandarNivel" class="loading">
@@ -536,19 +529,14 @@
             <h2 class="bar-title">Tabla de Estándares TMI por Categoría de Centro</h2>
             <div class="header-actions">
                 <div class="buscar-group">
-                    <select [(ngModel)]="anioEstandarCategoria" class="anio-select">
-                        <option value="">Seleccione un Año</option>
+                    <select [(ngModel)]="anioEstandarCategoria" (ngModelChange)="onBuscarEstandarCategoria()" class="anio-select" aria-label="Año">
                         <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
                     </select>
-                    <button (click)="onBuscarEstandarCategoria()" class="btn-search">Buscar</button>
+                    <button (click)="onBuscarEstandarCategoria()" class="btn-download" [disabled]="loadingEstandarCategoria">
+                        <mat-icon>refresh</mat-icon> Actualizar
+                    </button>
                 </div>
             </div>
-        </div>
-
-        <!-- Selecciona Año -->
-        <div *ngIf="selectPeriodoEstandarCategoria && !loadingEstandarCategoria" class="select-periodo">
-            <p>Por favor, seleccione un año y haga clic en Buscar para ver la información de Estándares por
-                Categoría</p>
         </div>
 
         <div *ngIf="loadingEstandarCategoria" class="loading">
@@ -994,18 +982,14 @@
             <h2 class="bar-title">Exclusión de Centros por Indicador</h2>
             <div class="header-actions">
                 <div class="buscar-group">
-                    <select [(ngModel)]="anioExclusion" class="anio-select">
-                        <option value="">Seleccione un Año</option>
+                    <select [(ngModel)]="anioExclusion" (ngModelChange)="onBuscarExclusion()" class="anio-select" aria-label="Año">
                         <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
                     </select>
-                    <button (click)="onBuscarExclusion()" class="btn-search">Buscar</button>
+                    <button (click)="onBuscarExclusion()" class="btn-download" [disabled]="loadingExclusion">
+                        <mat-icon>refresh</mat-icon> Actualizar
+                    </button>
                 </div>
             </div>
-        </div>
-
-        <!-- Selecciona Año -->
-        <div *ngIf="selectPeriodoExclusion && !loadingExclusion" class="select-periodo">
-            <p>Por favor, seleccione un año y haga clic en Buscar para ver las exclusiones de centros y estándares</p>
         </div>
 
         <div *ngIf="loadingExclusion" class="loading">
@@ -1270,165 +1254,6 @@
                                 exclusionForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Exclusión' }}</span>
                             <span *ngIf="savingExclusion" class="spinner-btn"></span><span
                                 *ngIf="savingExclusion">Guardando…</span>
-                        </button>
-                    </footer>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- tap 5: cierre -->
-    <div class="tab-content" *ngIf="activeTab === 'Fecha Cierre'">
-        <div class="header">
-            <h2 class="bar-title">Calendario de Cierre Mensual TMI</h2>
-            <div class="header-actions">
-                <div class="buscar-group">
-                    <button (click)="getQueryCierres()" class="btn-download" [disabled]="loadingCierre">
-                        <mat-icon>refresh</mat-icon> Actualizar
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div *ngIf="loadingCierre" class="loading">
-            <p>Cargando fechas de cierre...</p>
-        </div>
-
-        <div *ngIf="errorCierre" class="alert alert-danger">
-            {{ errorCierre }}
-        </div>
-
-        <div *ngIf="!loadingCierre && !errorCierre" class="dashboard-content cierre-content">
-            <mat-card class="table cierre-card">
-                <h3>Fechas de Cierre</h3>
-                <p class="cierre-ayuda">
-                    En la fecha de cierre se copian los centros y estándares del periodo anterior al periodo indicado.
-                    Los periodos que falten se completan en orden desde el primer periodo con datos.
-                    "Filas" es el total de filas del periodo en centros y estándares.
-                    Solo se pueden editar los cierres pendientes o con error.
-                </p>
-
-                <div *ngIf="cierresConError > 0" class="cierre-alerta cierre-alerta-error">
-                    <mat-icon>error_outline</mat-icon>
-                    <span>{{ cierresConError === 1 ? 'Hay 1 cierre con error' : 'Hay ' + cierresConError + ' cierres con
-                        error' }}.
-                        Un cierre con error se reintenta automáticamente el mismo día en que falló, o cuando se
-                        carguen los datos que le faltan; también puede editar la fecha de cierre para volver a
-                        programarlo.</span>
-                </div>
-
-                <div *ngIf="cierresAtrasados > 0" class="cierre-alerta cierre-alerta-atrasado">
-                    <mat-icon>schedule</mat-icon>
-                    <span>{{ cierresAtrasados === 1 ? 'Hay 1 cierre pendiente atrasado' : 'Hay ' + cierresAtrasados + '
-                        cierres pendientes atrasados' }}
-                        (su fecha de cierre ya pasó). Se ejecutarán en la próxima revisión automática,
-                        del periodo más antiguo al más reciente.</span>
-                </div>
-
-                <div class="cierre-table-wrapper">
-                    <table class="cierre-table">
-                        <thead>
-                            <tr>
-                                <th>Periodo</th>
-                                <th>Fecha de cierre</th>
-                                <th>Estado</th>
-                                <th>Ejecución</th>
-                                <th>Filas</th>
-                                <th>Modificado por</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let row of dataCierre" [class.cierre-hoy]="esCierreHoy(row)"
-                                [class.cierre-fila-error]="row.estado === 'ERROR'"
-                                [class.cierre-fila-atrasado]="esCierreAtrasado(row)">
-                                <td>
-                                    <div class="cierre-periodo">{{ nombrePeriodo(row.periodo) || '—' }}</div>
-                                    <div class="cierre-sub">{{ row.periodo }}</div>
-                                </td>
-                                <td>
-                                    {{ formatoFecha(row.fecha_cierre) }}
-                                    <span *ngIf="esCierreHoy(row)" class="cierre-hoy-tag">Hoy</span>
-                                    <span *ngIf="esCierreAtrasado(row)" class="cierre-atrasado-tag">Atrasado</span>
-                                </td>
-                                <td>
-                                    <span class="estado-badge" [ngClass]="'estado-' + (row.estado | lowercase)"
-                                        [title]="row.mensaje || ''">
-                                        {{ etiquetaEstadoCierre(row.estado) }}
-                                    </span>
-                                    <div *ngIf="row.estado === 'ERROR' && row.mensaje" class="cierre-error">
-                                        {{ row.mensaje }}
-                                    </div>
-                                    <div *ngIf="row.estado === 'ERROR'" class="cierre-reintento">
-                                        {{ errorSeReintentaHoy(row)
-                                        ? 'Se reintentará automáticamente hoy'
-                                        : 'Se reintentará al cargar los datos que faltan o al editar la fecha' }}
-                                    </div>
-                                    <div *ngIf="esCierreAtrasado(row)"
-                                        class="cierre-reintento cierre-reintento-atrasado">
-                                        Se ejecutará en la próxima revisión automática
-                                    </div>
-                                </td>
-                                <td>{{ formatoFecha(row.fecha_ejecucion) }}</td>
-                                <td>{{ row.filas_insertadas ?? '—' }}</td>
-                                <td>{{ row.usuario_modifica || '—' }}</td>
-                                <td>
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionCierre(row)"
-                                        [disabled]="!esCierreEditable(row)"
-                                        [title]="esCierreEditable(row) ? 'Editar fecha de cierre' : 'El cierre ya no se puede editar'">
-                                        <mat-icon>edit</mat-icon>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr *ngIf="dataCierre.length === 0">
-                                <td colspan="7" class="cierre-vacio">No hay fechas de cierre registradas.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="footer-table">
-                    <div class="footer-left"><strong>Total de cierres:</strong></div>
-                    <div class="footer-right num"><strong>{{ dataCierre.length }}</strong></div>
-                </div>
-            </mat-card>
-        </div>
-
-        <!-- MODAL EDITAR FECHA DE CIERRE -->
-        <div class="modal-overlay" *ngIf="cierreSeleccionado" (click)="cancelarEdicionCierre()">
-            <div class="modal-card cierre-modal" (click)="$event.stopPropagation()">
-                <header class="modal-header">
-                    <div class="modal-header-info">
-                        <h2>Fecha de Cierre</h2>
-                        <p class="modal-subtitle">
-                            Periodo {{ nombrePeriodo(cierreSeleccionado.periodo) }} ({{ cierreSeleccionado.periodo }})
-                        </p>
-                    </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionCierre()"
-                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
-                </header>
-
-                <form (ngSubmit)="updateQueryFechaCierre()" class="modal-form-container">
-                    <div class="modal-body">
-                        <div class="field-input">
-                            <label for="cierre_fecha">Fecha de cierre <span class="required">*</span></label>
-                            <input type="date" id="cierre_fecha" name="fecha_cierre" [(ngModel)]="fechaCierreEdit"
-                                [min]="hoyISO" required />
-                        </div>
-
-                        <div class="validation-message-banner" *ngIf="errorCierreForm">
-                            <mat-icon>error_outline</mat-icon><span>{{ errorCierreForm }}</span>
-                        </div>
-                    </div>
-
-                    <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionCierre()"
-                            [disabled]="savingCierre">Cancelar</button>
-                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingCierre">
-                            <mat-icon *ngIf="!savingCierre">save</mat-icon><span *ngIf="!savingCierre">Guardar
-                                Cambios</span>
-                            <span *ngIf="savingCierre" class="spinner-btn"></span><span
-                                *ngIf="savingCierre">Guardando…</span>
                         </button>
                     </footer>
                 </form>

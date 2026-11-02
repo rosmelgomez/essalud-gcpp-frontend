@@ -31,7 +31,7 @@ import { LocalStorageService } from '../../../../../../services/local-storage-se
     ScrollingModule,
   ],
   templateUrl: './dm-total-atenciones-mp.html',
-  styleUrl: './dm-total-atenciones-mp.css',
+  styleUrl: '../../../estilos-dashboard-consulta-externa.css',
 })
 export class DmTotalAtencionesMp implements OnInit, OnDestroy {
   nameCentro: string = '';

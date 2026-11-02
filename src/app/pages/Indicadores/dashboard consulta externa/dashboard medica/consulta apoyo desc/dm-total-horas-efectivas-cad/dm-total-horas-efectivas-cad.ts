@@ -45,7 +45,7 @@ interface PivotRow {
     ScrollingModule,
   ],
   templateUrl: './dm-total-horas-efectivas-cad.html',
-  styleUrl: './dm-total-horas-efectivas-cad.css',
+  styleUrl: '../../estilos-dashboard-medica-2.css',
 })
 export class DmTotalHorasEfectivasCad implements OnInit, AfterViewInit, OnDestroy {
   nameCentro: String = '';

@@ -5,21 +5,23 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { CatalogoGas } from '../catalogo-gas';
 import {
-  TmiDinamicoService,
+  TmiCatalogoService,
+  TmiVariableService,
   TmiVariable,
   TmiVariableComponente,
   TmiVariableLogica,
   mensajeError,
-} from '../../../services/tmi-dinamico-service';
+} from '../../../services/tmi';
+import { AyudaFlotante } from '../ayuda-flotante';
 
 @Component({
   selector: 'app-tmi-variables',
-  imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule],
+  imports: [AyudaFlotante, ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule],
   templateUrl: './tmi-variables.html',
-  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css'],
+  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css'],
 })
 export class TmiVariables implements OnInit {
-  private srv = inject(TmiDinamicoService);
+  private variableSrv = inject(TmiVariableService);
   private fb = inject(FormBuilder);
 
   variables = signal<TmiVariable[]>([]);
@@ -43,7 +45,7 @@ export class TmiVariables implements OnInit {
   serviciosMarcados = signal<number[]>([]);
 
   /** Grupo -> actividad -> servicio en cascada (DIM_GRUPOACTIVIDADSERVICIO). */
-  readonly gas = new CatalogoGas(this.srv);
+  readonly gas = new CatalogoGas(inject(TmiCatalogoService));
 
   loading = signal(false);
   loadingLogica = signal(false);
@@ -83,7 +85,7 @@ export class TmiVariables implements OnInit {
   cargar(): void {
     this.loading.set(true);
     this.error.set('');
-    this.srv.getVariables().subscribe({
+    this.variableSrv.getVariables().subscribe({
       next: (v) => {
         this.variables.set(v);
         const sel = this.seleccionada();
@@ -108,7 +110,7 @@ export class TmiVariables implements OnInit {
     this.cargarComponentes();
     this.loadingLogica.set(true);
     this.errorLogica.set('');
-    this.srv.getLogica(v.id).subscribe({
+    this.variableSrv.getLogica(v.id).subscribe({
       next: (l) => {
         this.logica.set(l);
         this.loadingLogica.set(false);
@@ -161,7 +163,7 @@ export class TmiVariables implements OnInit {
       total_anual: dto.agregacion === 'SUMA' ? 'SUMA_MESES' : dto.total_anual,
     };
     this.guardando.set(true);
-    const req = id ? this.srv.putVariable(id, datos) : this.srv.postVariable(datos);
+    const req = id ? this.variableSrv.putVariable(id, datos) : this.variableSrv.postVariable(datos);
     req.subscribe({
       next: () => {
         this.guardando.set(false);
@@ -179,7 +181,7 @@ export class TmiVariables implements OnInit {
     ev?.stopPropagation();
     if (!v.id || !confirm(`¿Eliminar la variable "${v.nombre}" y su lógica?`)) return;
     this.eliminandoId.set(v.id);
-    this.srv.deleteVariable(v.id).subscribe({
+    this.variableSrv.deleteVariable(v.id).subscribe({
       next: () => {
         this.eliminandoId.set(null);
         if (this.seleccionada()?.id === v.id) {
@@ -197,15 +199,17 @@ export class TmiVariables implements OnInit {
 
   /** Texto del cálculo de la variable para la lista y el panel. */
   textoCalculo(v: TmiVariable): string {
-    if (v.agregacion === 'SUMA') return 'Suma';
-    return v.total_anual === 'MEDIANA_PERIODO' ? 'Mediana (total: mediana del periodo)' : 'Mediana (total: suma de meses)';
+    if (v.agregacion === 'SUMA') return 'suma las cantidades';
+    return v.total_anual === 'MEDIANA_PERIODO'
+      ? 'mediana de cada servicio en el mes; el total anual es la mediana del periodo'
+      : 'mediana de cada servicio en el mes; el total anual es la suma de los meses';
   }
 
   // componentes (variable compuesta)
   cargarComponentes(): void {
     const v = this.seleccionada();
     if (!v?.id) return;
-    this.srv.getComponentes(v.id).subscribe({
+    this.variableSrv.getComponentes(v.id).subscribe({
       next: (c) => this.componentes.set(c),
       error: (e) => this.errorLogica.set(mensajeError(e, 'No se pudo cargar los componentes de la variable.')),
     });
@@ -215,7 +219,7 @@ export class TmiVariables implements OnInit {
     const v = this.seleccionada();
     if (!v?.id || this.nuevoComponente == null) return;
     this.errorLogica.set('');
-    this.srv.postComponente({ id_variable: v.id, id_variable_componente: Number(this.nuevoComponente) }).subscribe({
+    this.variableSrv.postComponente({ id_variable: v.id, id_variable_componente: Number(this.nuevoComponente) }).subscribe({
       next: () => {
         this.nuevoComponente = null;
         this.cargarComponentes();
@@ -227,7 +231,7 @@ export class TmiVariables implements OnInit {
 
   quitarComponente(c: TmiVariableComponente): void {
     if (!c.id || !confirm(`¿Quitar "${c.componente}" de la variable?`)) return;
-    this.srv.deleteComponente(c.id).subscribe({
+    this.variableSrv.deleteComponente(c.id).subscribe({
       next: () => {
         this.cargarComponentes();
         this.cargar();
@@ -304,10 +308,10 @@ export class TmiVariables implements OnInit {
     // alta con varios servicios marcados: una fila por servicio (como "servicio IN (...)" en Generar_pivot.sql)
     const marcados = f.id ? [] : this.serviciosMarcados();
     const req = f.id
-      ? this.srv.putLogica(f.id, dto)
+      ? this.variableSrv.putLogica(f.id, dto)
       : marcados.length
-        ? forkJoin(marcados.map((s) => this.srv.postLogica({ ...dto, servicio: s })))
-        : this.srv.postLogica(dto);
+        ? forkJoin(marcados.map((s) => this.variableSrv.postLogica({ ...dto, servicio: s })))
+        : this.variableSrv.postLogica(dto);
     req.subscribe({
       next: () => {
         this.guardando.set(false);
@@ -325,7 +329,7 @@ export class TmiVariables implements OnInit {
   eliminarLogica(l: TmiVariableLogica): void {
     if (!l.id || !confirm(`¿Quitar ${l.desctipgrupo ?? l.tipgrupo} / ${l.descactividad ?? l.actividad} de la variable?`)) return;
     this.eliminandoId.set(l.id);
-    this.srv.deleteLogica(l.id).subscribe({
+    this.variableSrv.deleteLogica(l.id).subscribe({
       next: () => {
         this.eliminandoId.set(null);
         this.cargarLogica();

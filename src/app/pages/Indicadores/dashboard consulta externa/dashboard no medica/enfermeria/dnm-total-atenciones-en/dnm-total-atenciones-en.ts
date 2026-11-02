@@ -33,7 +33,7 @@ import { NoMedicasService } from '../../../../../../services/reportes/no-medicas
     MatSortModule,
     ScrollingModule,],
   templateUrl: './dnm-total-atenciones-en.html',
-  styleUrl: './dnm-total-atenciones-en.css',
+  styleUrl: '../../estilos-dashboard-no-medica.css',
 })
 export class DnmTotalAtencionesEn implements OnInit, OnDestroy {
   nameCentro: string = '';

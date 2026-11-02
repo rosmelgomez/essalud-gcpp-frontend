@@ -647,14 +647,6 @@
     margin-bottom: 6px;
 }
 
-.cierre-ayuda {
-    max-width: 75ch;
-    margin: 0 0 14px;
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--rpt-muted);
-}
-
 .cierre-alerta {
     display: flex;
     align-items: flex-start;

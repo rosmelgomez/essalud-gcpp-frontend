@@ -31,7 +31,7 @@ import { IntervencionesQuirurgicasService } from '../../../../../../services/rep
     ScrollingModule,
   ],
   templateUrl: './diq-complejidad-b-gc.html',
-  styleUrl: './diq-complejidad-b-gc.css',
+  styleUrl: '../estilos-grado-complejidad.css',
 })
 export class DiqComplejidadBGc implements OnInit, AfterViewInit, OnDestroy {
   loading: boolean = false;

@@ -32,7 +32,7 @@ import { NoMedicasService } from '../../../../../../services/reportes/no-medicas
     ScrollingModule,
   ],
   templateUrl: './dnm-total-atenciones-nu.html',
-  styleUrl: './dnm-total-atenciones-nu.css',
+  styleUrl: '../../estilos-dashboard-no-medica.css',
 })
 export class DnmTotalAtencionesNu implements OnInit, OnDestroy {
   nameCentro: string = '';

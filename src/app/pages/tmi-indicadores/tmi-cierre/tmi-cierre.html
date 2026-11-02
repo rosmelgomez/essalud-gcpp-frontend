@@ -1,0 +1,243 @@
+<div class="header">
+    <h2 class="bar-title">Cierre mensual TMI</h2>
+    <div class="header-actions">
+        <div class="buscar-group">
+            <button (click)="cargar()" class="btn-download" [disabled]="cargando()">
+                <mat-icon>refresh</mat-icon> Actualizar
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (error()) {
+<div class="alert alert-danger">{{ error() }}</div>
+}
+@if (mensaje()) {
+<div class="dyn-ok cal-mensaje">
+    @if (ejecutando()) {<span class="spinner-btn"></span>} @else {<mat-icon>check_circle</mat-icon>}
+    {{ mensaje() }}
+</div>
+}
+@if (cargando() && !calendarios().length) {
+<div class="loading"><p>Cargando el calendario de cierre...</p></div>
+}
+
+<!-- 1. Calendario: el usuario define el día de cierre de cada año -->
+<mat-card class="table cierre-card">
+    <div class="table-title-row">
+        <h3>1. Calendario de cierre</h3>
+        <button type="button" class="btn-download" (click)="agregarAnio()">
+            <mat-icon>add</mat-icon> Agregar año
+        </button>
+    </div>
+    <details class="dyn-ayuda dyn-ayuda-seccion">
+        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
+        <div class="dyn-ayuda-panel" role="note">
+            <p>
+            Cada año tiene un <strong>día general</strong> de cierre. Si un periodo se cierra otro día, póngale su
+            propio día; si no, usa el general. Cada periodo se cierra en el mes siguiente: el día 7 de Octubre
+            es el 7 de noviembre. Si el mes no tiene ese día, se usa su último día.
+            </p>
+            <p>
+            Un año nuevo toma el día general del año anterior. Los periodos que ya se cerraron no cambian. Si al
+            guardar un cierre queda con la fecha de hoy, se ejecuta en ese momento.
+            </p>
+        </div>
+    </details>
+
+    <div class="cierre-table-wrapper">
+        <table class="cierre-table cal-table">
+            <thead>
+                <tr>
+                    <th>Año</th>
+                    <th>General</th>
+                    @for (m of mesesCortos; track m) {<th class="cal-mes">{{ m }}</th>}
+                    <th class="cal-acciones" aria-label="Acciones"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (cal of calendarios(); track cal.anio) {
+                <tr>
+                    <td class="cierre-periodo">{{ cal.anio }}</td>
+                    <td><span class="cal-dia cal-dia-general">{{ cal.dia_fijo }}</span></td>
+                    @for (m of cal.meses; track m.mes) {
+                    <td class="cal-mes">
+                        <span class="cal-dia" [class.cal-dia-propio]="m.dia" [class.cal-dia-ejecutado]="m.bloqueado"
+                            [title]="nombrePeriodo(m.periodo) + ' · cierra el ' + formatoFecha(m.fecha_cierre)
+                                + (m.estado ? ' · ' + etiquetaEstado(m.estado) : '')">
+                            {{ diaDe(m.fecha_cierre) }}
+                        </span>
+                    </td>
+                    }
+                    <td class="cal-acciones">
+                        <button type="button" class="btn-icon-edit" (click)="editar(cal)"
+                            [attr.aria-label]="'Editar el calendario ' + cal.anio" title="Editar">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                    </td>
+                </tr>
+                } @empty {
+                <tr><td colspan="15" class="cierre-vacio">Todavía no hay calendario de cierre.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="cal-leyenda">
+        <span><span class="cal-dia cal-dia-propio">10</span> Día propio del periodo</span>
+        <span><span class="cal-dia">7</span> Día general</span>
+        <span><span class="cal-dia cal-dia-ejecutado">7</span> Ya se cerró</span>
+    </div>
+</mat-card>
+
+<!-- 2. Ejecución de cada cierre -->
+<mat-card class="table cierre-card cal-ejecucion">
+    <h3>2. Ejecución de cada cierre</h3>
+    <details class="dyn-ayuda dyn-ayuda-seccion">
+        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
+        <div class="dyn-ayuda-panel" role="note">
+            <p>
+            En la fecha de cierre, el mes toma el estándar fijo del año donde no tenga uno propio, y también el
+            % Acept fijo. Desde ese día, el valor del mes se puede cambiar solo para ese mes. Después calcula el
+            TMI del mes y guarda el resultado final para el Excel; si la configuración tiene errores, el cierre
+            queda con error y no calcula.
+            </p>
+            <p>
+            "Filas" cuenta los estándares y los % Acept que quedaron con valor en el mes. La fecha de cada cierre
+            sale del calendario de arriba.
+            </p>
+        </div>
+    </details>
+
+    @if (cierresConError() > 0) {
+    <div class="cierre-alerta cierre-alerta-error">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ cierresConError() === 1 ? 'Hay 1 cierre con error' : 'Hay ' + cierresConError() + ' cierres con error' }}.
+            Se reintenta solo el mismo día en que falló. Para volver a programarlo, cambie su día en el calendario.</span>
+    </div>
+    }
+    @if (cierresAtrasados() > 0) {
+    <div class="cierre-alerta cierre-alerta-atrasado">
+        <mat-icon>schedule</mat-icon>
+        <span>{{ cierresAtrasados() === 1 ? 'Hay 1 cierre pendiente atrasado' : 'Hay ' + cierresAtrasados() + ' cierres pendientes atrasados' }}
+            (su fecha ya pasó). Se ejecutarán en la próxima revisión automática, del periodo más antiguo al más
+            reciente.</span>
+    </div>
+    }
+
+    <div class="cierre-table-wrapper">
+        <table class="cierre-table">
+            <thead>
+                <tr>
+                    <th>Periodo</th>
+                    <th>Fecha de cierre</th>
+                    <th>Estado</th>
+                    <th>Ejecución</th>
+                    <th>Filas</th>
+                    <th>Cálculo TMI</th>
+                    <th>Modificado por</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (row of cierres(); track row.periodo) {
+                <tr [class.cierre-hoy]="esHoy(row)" [class.cierre-fila-error]="row.estado === 'ERROR'"
+                    [class.cierre-fila-atrasado]="esAtrasado(row)">
+                    <td>
+                        <div class="cierre-periodo">{{ nombrePeriodo(row.periodo) }}</div>
+                        <div class="cierre-sub">{{ row.periodo }}</div>
+                    </td>
+                    <td>
+                        {{ formatoFecha(row.fecha_cierre) }}
+                        @if (esHoy(row)) {<span class="cierre-hoy-tag">Hoy</span>}
+                        @if (esAtrasado(row)) {<span class="cierre-atrasado-tag">Atrasado</span>}
+                    </td>
+                    <td>
+                        <span [class]="'estado-badge estado-' + row.estado.toLowerCase()"
+                            [title]="row.mensaje || ''">{{ etiquetaEstado(row.estado) }}</span>
+                        @if (row.estado === 'ERROR' && row.mensaje) {<div class="cierre-error">{{ row.mensaje }}</div>}
+                        @if (row.estado === 'ERROR') {
+                        <div class="cierre-reintento">
+                            {{ seReintentaHoy(row) ? 'Se reintentará automáticamente hoy' : 'Cambie su día en el calendario para volver a programarlo' }}
+                        </div>
+                        }
+                        @if (esAtrasado(row)) {
+                        <div class="cierre-reintento cierre-reintento-atrasado">Se ejecutará en la próxima revisión automática</div>
+                        }
+                    </td>
+                    <td>{{ formatoFecha(row.fecha_ejecucion) }}</td>
+                    <td>{{ row.filas_insertadas ?? '—' }}</td>
+                    <td>
+                        @if (row.fecha_calculo) {
+                        {{ formatoFecha(row.fecha_calculo) }}
+                        <div class="cierre-sub">{{ row.indicadores_calculados }} indicadores · {{ row.centros_calculados }} centros</div>
+                        } @else {
+                        <span class="cierre-sub">Sin calcular</span>
+                        }
+                    </td>
+                    <td>{{ row.usuario_modifica || '—' }}</td>
+                </tr>
+                } @empty {
+                <tr><td colspan="7" class="cierre-vacio">Todavía no hay cierres.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-table">
+        <div class="footer-left"><strong>Total de cierres:</strong></div>
+        <div class="footer-right num"><strong>{{ cierres().length }}</strong></div>
+    </div>
+</mat-card>
+
+<!-- MODAL CALENDARIO DEL AÑO -->
+@if (edicion(); as e) {
+<div class="modal-overlay" (click)="cerrarEdicion()">
+    <div class="modal-card cal-modal" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+            <div class="modal-header-info">
+                <h2>{{ e.nuevo ? 'Nuevo calendario' : 'Calendario de cierre' }} {{ e.anio }}</h2>
+                <p class="modal-subtitle">Deje un periodo vacío para que use el día general.</p>
+            </div>
+            <button type="button" class="close-modal-btn" (click)="cerrarEdicion()" aria-label="Cerrar">
+                <mat-icon>close</mat-icon>
+            </button>
+        </header>
+
+        <form (ngSubmit)="guardar()" class="modal-form-container">
+            <div class="modal-body">
+                <div class="field-input cal-general">
+                    <label for="cal_fijo">Día general <span class="required">*</span></label>
+                    <input id="cal_fijo" type="number" name="dia_fijo" min="1" max="31" step="1" required
+                        [(ngModel)]="e.dia_fijo" />
+                </div>
+
+                <div class="cal-grid">
+                    @for (m of mesesCortos; track $index; let i = $index) {
+                    <div class="field-input">
+                        <label [for]="'cal_' + i">{{ m }} {{ e.anio }}</label>
+                        <input [id]="'cal_' + i" type="number" [name]="'dia_' + i" min="1" max="31" step="1"
+                            [placeholder]="e.dia_fijo ?? ''" [disabled]="e.bloqueado[i]" [(ngModel)]="e.dias[i]" />
+                        <span class="cal-fecha">
+                            {{ e.bloqueado[i] ? 'Ya se cerró' : 'Cierra el ' + fechaCierre(e.anio, i + 1, diaEfectivo(e, i)) }}
+                        </span>
+                    </div>
+                    }
+                </div>
+
+                @if (errorForm()) {
+                <div class="validation-message-banner">
+                    <mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span>
+                </div>
+                }
+            </div>
+
+            <footer class="modal-footer">
+                <button type="button" class="btn-modal-action btn-cancel" (click)="cerrarEdicion()"
+                    [disabled]="guardando()">Cancelar</button>
+                <button type="submit" class="btn-modal-action btn-save" [disabled]="guardando()">
+                    @if (guardando()) {<span class="spinner-btn"></span> Guardando…} @else {<mat-icon>save</mat-icon> Guardar}
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>
+}

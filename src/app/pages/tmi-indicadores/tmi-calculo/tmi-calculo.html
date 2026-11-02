@@ -43,8 +43,8 @@
         </div>
     </div>
     <p class="dyn-hint">
-        Elija el año y el mes: calcula los indicadores activos desde TOTALIZADO3 y guarda el resultado final. Se puede
-        calcular hasta el mes anterior al actual; si el periodo ya tenía un resultado guardado, se reemplaza.
+        Elija el año y el mes para calcular los indicadores activos y guardar el resultado final. Se puede calcular
+        hasta el mes anterior al actual. Si el periodo ya tenía un resultado guardado, se reemplaza.
     </p>
     @if (ocupado() === 'calcular') {
     <div class="loading loading-excel">
@@ -126,13 +126,10 @@
     <div class="table-title-row dyn-sub">
         <h4>Resultado final por indicador</h4>
         <div class="dyn-inline">
-            <select class="periodo-select" [ngModel]="idIndicador()" (ngModelChange)="idIndicador.set($event); verResultado()"
-                [disabled]="!!ocupado()">
+            <select class="periodo-select" aria-label="Indicador" [ngModel]="idIndicador()"
+                (ngModelChange)="idIndicador.set($event); verResultado()" [disabled]="!!ocupado()">
                 @for (i of indicadores(); track i.id) {<option [ngValue]="i.id">{{ i.orden }}. {{ i.indicador }}</option>}
             </select>
-            <button type="button" class="btn-download" (click)="verResultado()" [disabled]="!!ocupado()">
-                <mat-icon>visibility</mat-icon> Ver
-            </button>
         </div>
     </div>
     <div class="filters-bar">

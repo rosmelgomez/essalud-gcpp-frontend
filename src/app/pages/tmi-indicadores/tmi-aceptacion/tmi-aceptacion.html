@@ -15,15 +15,17 @@
     </div>
     <details class="dyn-ayuda">
         <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
-        <p>
-        El <strong>% Acept</strong> se calcula: el estándar más (menor es mejor) o menos (mayor es mejor) el porcentaje del
-        indicador; en banda, un porcentaje hacia arriba y otro hacia abajo. Solo se define el <strong>porcentaje</strong>
-        (o puntos, en indicadores que ya son porcentajes, como el 5 de la ocupación de cama). Cada tabla muestra el estándar
-        del mes elegido y el % Acept que resulta. Igual que el estándar fijo, cada indicador tiene un porcentaje
-        <strong>fijo del año</strong>: cuando un mes llega a su fecha de cierre (el de octubre, en el cierre de noviembre),
-        ese mes toma el fijo y desde ahí se puede modificar solo para ese mes. Mientras no llega, el mes usa el fijo.
-        El % Acept propio de un centro (pestaña Estándar por Centro) gana sobre este.
-        </p>
+        <div class="dyn-ayuda-panel" role="note">
+            <p>
+            El <strong>% Acept</strong> se calcula: el estándar más (menor es mejor) o menos (mayor es mejor) el porcentaje del
+            indicador; en banda, un porcentaje hacia arriba y otro hacia abajo. Solo se define el <strong>porcentaje</strong>
+            (o puntos, en indicadores que ya son porcentajes, como el 5 de la ocupación de cama). Cada tabla muestra el estándar
+            del mes elegido y el % Acept que resulta. Igual que el estándar fijo, cada indicador tiene un porcentaje
+            <strong>fijo del año</strong>: cuando un mes llega a su fecha de cierre (el de octubre, en el cierre de noviembre),
+            ese mes toma el fijo y desde ahí se puede modificar solo para ese mes. Mientras no llega, el mes usa el fijo.
+            El % Acept propio de un centro (pestaña Estándar por Centro) gana sobre este.
+            </p>
+        </div>
     </details>
 </div>
 
@@ -34,8 +36,20 @@
 <div class="dyn-ok" style="margin-bottom: 12px;"><mat-icon>check_circle</mat-icon> {{ mensaje() }}</div>
 }
 
-<input type="text" class="dyn-search" style="margin-bottom: 12px; max-width: 420px;" placeholder="Buscar indicador..."
-    [ngModel]="filtro()" (ngModelChange)="filtro.set($event)" aria-label="Buscar indicador" />
+<div class="dyn-buscar-fila">
+    <div class="dyn-buscar">
+        <mat-icon class="dyn-buscar-icono" aria-hidden="true">search</mat-icon>
+        <input type="search" placeholder="Buscar indicador o grupo…" aria-label="Buscar indicador"
+            [ngModel]="filtro()" (ngModelChange)="filtro.set($event)" (keydown.escape)="filtro.set('')" />
+        @if (filtro()) {
+        <button type="button" class="dyn-buscar-limpiar" (click)="filtro.set('')" title="Limpiar búsqueda"
+            aria-label="Limpiar búsqueda"><mat-icon>close</mat-icon></button>
+        }
+    </div>
+    @if (filtro() && !cargando()) {
+    <span class="dyn-buscar-total" aria-live="polite">{{ visibles().length }} de {{ indicadores().length }} indicadores</span>
+    }
+</div>
 
 @if (cargando()) {<div class="dyn-empty">Cargando...</div>}
 @for (i of visibles(); track i.id) {
@@ -122,5 +136,5 @@
 </mat-card>
 }
 } @empty {
-@if (!cargando()) {<div class="dyn-empty">No hay indicadores activos.</div>}
+@if (!cargando()) {<div class="dyn-empty">{{ filtro() && indicadores().length ? 'Ningún indicador coincide con «' + filtro() + '».' : 'No hay indicadores activos.' }}</div>}
 }

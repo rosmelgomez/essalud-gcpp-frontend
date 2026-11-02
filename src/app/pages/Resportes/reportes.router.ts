@@ -1,19 +1,4 @@
 import { Routes } from '@angular/router';
-import { DashboardMedicas } from './dashboard-medicas/dashboard-medicas';
-import { DashboardNoMedicas } from './dashboard-no-medicas/dashboard-no-medicas';
-import { DashboardEmergencia } from './dashboard-emergencia/dashboard-emergencia';
-import { DashboardTransplante } from './dashboard-transplante/dashboard-transplante';
-import { DashboardTramas } from './dashboard-tramas/dashboard-tramas';
-import { DashboardProcedimientos } from './dashboard-procedimientos/dashboard-procedimientos';
-import { DashboardHospitalizacion } from './dashboard-hospitalizacion/dashboard-hospitalizacion';
-import { DashboardGerenciales } from './dashboard-gerenciales/dashboard-gerenciales';
-import { DashboardOdontologicas } from './dashboard-odontologicas/dashboard-odontologicas';
-import { DashboardReporteador } from './dashboard-reporteador/dashboard-reporteador';
-import { DashboardIntervencionesQuirurgicas } from './dashboard-intervenciones-quirurgicas/dashboard-intervenciones-quirurgicas';
-import { DashboardTablasHomologadas } from './dashboard-tablas-homologadas/dashboard-tablas-homologadas';
-import { DashboardPatologia } from './dashboard-patologia/dashboard-patologia';
-import { DashboardSeguimientoPaciente } from './dashboard-seguimiento-paciente/dashboard-seguimiento-paciente';
-import { DashboardFarmacia } from './dashboard-farmacia/dashboard-farmacia';
 
 
 export const reportesRoutes: Routes = [
@@ -21,48 +6,48 @@ export const reportesRoutes: Routes = [
     ///ruta padre /reporte/...
 
     ///dashboard-medicas
-    { path: 'dashboard-medicas', component: DashboardMedicas },
+    { path: 'dashboard-medicas', loadComponent: () => import('./dashboard-medicas/dashboard-medicas').then((m) => m.DashboardMedicas) },
 
     ///dashboard-no-medicas
-    { path: 'dashboard-no-medicas', component: DashboardNoMedicas },
+    { path: 'dashboard-no-medicas', loadComponent: () => import('./dashboard-no-medicas/dashboard-no-medicas').then((m) => m.DashboardNoMedicas) },
 
     ///dashboard-odontologicas
-    { path: 'dashboard-odontologicas', component: DashboardOdontologicas },
+    { path: 'dashboard-odontologicas', loadComponent: () => import('./dashboard-odontologicas/dashboard-odontologicas').then((m) => m.DashboardOdontologicas) },
 
     ///dashboard-emergencia
-    { path: 'dashboard-emergencia', component: DashboardEmergencia },
+    { path: 'dashboard-emergencia', loadComponent: () => import('./dashboard-emergencia/dashboard-emergencia').then((m) => m.DashboardEmergencia) },
 
     ///Dashboard de intervenciones quirurgicas
-    { path: 'dashboard-intervenciones-quirurgicas', component: DashboardIntervencionesQuirurgicas },
+    { path: 'dashboard-intervenciones-quirurgicas', loadComponent: () => import('./dashboard-intervenciones-quirurgicas/dashboard-intervenciones-quirurgicas').then((m) => m.DashboardIntervencionesQuirurgicas) },
 
     ///dashboard- transplante
-    { path: 'dashboard-transplante', component: DashboardTransplante },
+    { path: 'dashboard-transplante', loadComponent: () => import('./dashboard-transplante/dashboard-transplante').then((m) => m.DashboardTransplante) },
 
     ///dashboard-tramas
-    { path: 'dashboard-tramas', component: DashboardTramas },
+    { path: 'dashboard-tramas', loadComponent: () => import('./dashboard-tramas/dashboard-tramas').then((m) => m.DashboardTramas) },
 
     //Hospitalizacion
-    { path: 'dashboard-hospitalizacion', component: DashboardHospitalizacion },
+    { path: 'dashboard-hospitalizacion', loadComponent: () => import('./dashboard-hospitalizacion/dashboard-hospitalizacion').then((m) => m.DashboardHospitalizacion) },
 
     ///dashboard-procedimientos
-    { path: 'dashboard-procedimientos', component: DashboardProcedimientos },
+    { path: 'dashboard-procedimientos', loadComponent: () => import('./dashboard-procedimientos/dashboard-procedimientos').then((m) => m.DashboardProcedimientos) },
 
     ///dashboard-gerenciales
-    { path: 'dashboard-gerenciales', component: DashboardGerenciales },
+    { path: 'dashboard-gerenciales', loadComponent: () => import('./dashboard-gerenciales/dashboard-gerenciales').then((m) => m.DashboardGerenciales) },
 
     ///dashboard-reporteador
-    { path: 'dashboard-reporteador', component: DashboardReporteador },
+    { path: 'dashboard-reporteador', loadComponent: () => import('./dashboard-reporteador/dashboard-reporteador').then((m) => m.DashboardReporteador) },
 
     ///dashboard-tablas-homologadas
-    { path: 'dashboard-tablas-homologadas', component: DashboardTablasHomologadas },
+    { path: 'dashboard-tablas-homologadas', loadComponent: () => import('./dashboard-tablas-homologadas/dashboard-tablas-homologadas').then((m) => m.DashboardTablasHomologadas) },
 
 
     ///dashboard-patologia
-    { path: 'dashboard-patologia', component: DashboardPatologia },
+    { path: 'dashboard-patologia', loadComponent: () => import('./dashboard-patologia/dashboard-patologia').then((m) => m.DashboardPatologia) },
 
     ///dashboard-seguimiento-paciente
-    { path: 'dashboard-seguimiento-paciente', component: DashboardSeguimientoPaciente },
+    { path: 'dashboard-seguimiento-paciente', loadComponent: () => import('./dashboard-seguimiento-paciente/dashboard-seguimiento-paciente').then((m) => m.DashboardSeguimientoPaciente) },
 
     ///dashboard-farmacia
-    { path: 'dashboard-farmacia', component: DashboardFarmacia },
+    { path: 'dashboard-farmacia', loadComponent: () => import('./dashboard-farmacia/dashboard-farmacia').then((m) => m.DashboardFarmacia) },
 ];
