@@ -110,9 +110,9 @@ export class TmiCalculo implements OnInit {
     return r[`periodo_${String(i + 1).padStart(2, '0')}` as keyof TmiResultadoFinal] as number | null;
   }
 
-  /** Encabezado de la columna de un mes: 202601, 202602... (como en la hoja del Excel). */
+  /** Encabezado de la columna de un mes: Enero, Febrero... Diciembre. */
   encabezadoMes(i: number): string {
-    return `${this.periodoSel().slice(0, 4)}${String(i + 1).padStart(2, '0')}`;
+    return MESES[i].label;
   }
 
   ngOnInit(): void {
