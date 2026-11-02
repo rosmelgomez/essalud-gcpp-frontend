@@ -49,7 +49,7 @@ export class Login implements OnInit {
     // Si la sesión de api_token sigue activa, redirigir al home.
     this.authloginService.apiToken().subscribe({
       next: () => {
-        this.router.navigate(['/home']);
+        this.router.navigate(['/tmi']);
       },
       // sin sesión válida: borrar cualquier dato que haya quedado de una sesión anterior
       error: () => this.authService.clearSession(),
@@ -153,7 +153,7 @@ export class Login implements OnInit {
               } else {
                 this.authService.setCurrentUser(data);
                 this.loginForm.reset();
-                this.router.navigate(['/home'], {
+                this.router.navigate(['/tmi'], {
                   state: { surveyReminder: '1' },
                 });
               }
@@ -161,7 +161,7 @@ export class Login implements OnInit {
             error: () => {
               this.isLoggingIn = false;
               this.loginForm.reset();
-              this.router.navigate(['/home'], {
+              this.router.navigate(['/tmi'], {
                 state: { surveyReminder: '1' },
               });
             },
@@ -208,7 +208,7 @@ export class Login implements OnInit {
           this.showChangePassword = false;
           this.tempUserDto = null;
 
-          this.router.navigate(['/home'], {
+          this.router.navigate(['/tmi'], {
             state: { surveyReminder: '1' },
           });
         },
