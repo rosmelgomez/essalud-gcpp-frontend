@@ -44,8 +44,16 @@ export class TmiCentroService {
   }
 
   // estándares específicos de centro
-  getCentroEstandar(anio: number) { return this.http.get<TmiCentroEstandar[]>(`${dinamico_url}/centro-estandar/${anio}`); }
-  postCentroEstandar(dto: TmiCentroEstandar) { return this.http.post(`${dinamico_url}/centro-estandar`, dto); }
-  putCentroEstandar(id: number, dto: TmiCentroEstandar) { return this.http.put(`${dinamico_url}/centro-estandar/${id}`, dto); }
-  deleteCentroEstandar(id: number) { return this.http.delete(`${dinamico_url}/centro-estandar/${id}`); }
+  getCentroEstandar(anio: number) { 
+    return this.http.get<TmiCentroEstandar[]>(`${dinamico_url}/centro-estandar/${anio}`); 
+  }
+  postCentroEstandar(dto: TmiCentroEstandar) { 
+    return this.http.post(`${dinamico_url}/centro-estandar`, dto); 
+  }
+  putCentroEstandar(id: number, dto: TmiCentroEstandar) { 
+    return this.http.put(`${dinamico_url}/centro-estandar/${id}`, dto); 
+  }
+  deleteCentroEstandar(id: number) { 
+    return this.http.delete(`${dinamico_url}/centro-estandar/${id}`); 
+  }
 }
