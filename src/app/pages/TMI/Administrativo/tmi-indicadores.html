@@ -84,17 +84,17 @@
                     <label class="filter-field">
                         <span>Tipo</span>
                         <input type="text" class="filter-input" placeholder="Buscar tipo..."
-                            (keyup)="filterDataEstandarTipo('tipo', $event)" />
+                            [value]="filtersEstandarTipo.tipo" (input)="filterDataEstandarTipo('tipo', $event)" />
                     </label>
                     <label class="filter-field filter-field-wide">
                         <span>Indicador</span>
                         <input type="text" class="filter-input" placeholder="Buscar indicador..."
-                            (keyup)="filterDataEstandarTipo('indicador', $event)" />
+                            [value]="filtersEstandarTipo.indicador" (input)="filterDataEstandarTipo('indicador', $event)" />
                     </label>
                     <label class="filter-field">
                         <span>Tipo de centro</span>
                         <input type="text" class="filter-input" placeholder="Buscar tipo de centro..."
-                            (keyup)="filterDataEstandarTipo('tipo_centro', $event)" />
+                            [value]="filtersEstandarTipo.tipo_centro" (input)="filterDataEstandarTipo('tipo_centro', $event)" />
                     </label>
                 </div>
                 <div class="wrapper-table">
@@ -325,17 +325,17 @@
                     <label class="filter-field">
                         <span>Tipo</span>
                         <input type="text" class="filter-input" placeholder="Buscar tipo..."
-                            (keyup)="filterDataEstandarNivel('tipo', $event)" />
+                            [value]="filtersEstandarNivel.tipo" (input)="filterDataEstandarNivel('tipo', $event)" />
                     </label>
                     <label class="filter-field filter-field-wide">
                         <span>Indicador</span>
                         <input type="text" class="filter-input" placeholder="Buscar indicador..."
-                            (keyup)="filterDataEstandarNivel('indicador', $event)" />
+                            [value]="filtersEstandarNivel.indicador" (input)="filterDataEstandarNivel('indicador', $event)" />
                     </label>
                     <label class="filter-field">
                         <span>Nivel de centro</span>
                         <input type="text" class="filter-input" placeholder="Buscar nivel de centro..."
-                            (keyup)="filterDataEstandarNivel('nivel_centro', $event)" />
+                            [value]="filtersEstandarNivel.nivel_centro" (input)="filterDataEstandarNivel('nivel_centro', $event)" />
                     </label>
                 </div>
                 <div class="wrapper-table">
@@ -564,17 +564,17 @@
                     <label class="filter-field">
                         <span>Tipo</span>
                         <input type="text" class="filter-input" placeholder="Buscar tipo..."
-                            (keyup)="filterDataEstandarCategoria('tipo', $event)" />
+                            [value]="filtersEstandarCategoria.tipo" (input)="filterDataEstandarCategoria('tipo', $event)" />
                     </label>
                     <label class="filter-field filter-field-wide">
                         <span>Indicador</span>
                         <input type="text" class="filter-input" placeholder="Buscar indicador..."
-                            (keyup)="filterDataEstandarCategoria('indicador', $event)" />
+                            [value]="filtersEstandarCategoria.indicador" (input)="filterDataEstandarCategoria('indicador', $event)" />
                     </label>
                     <label class="filter-field">
                         <span>Categoría de centro</span>
                         <input type="text" class="filter-input" placeholder="Buscar categoría de centro..."
-                            (keyup)="filterDataEstandarCategoria('categoria_centro', $event)" />
+                            [value]="filtersEstandarCategoria.categoria_centro" (input)="filterDataEstandarCategoria('categoria_centro', $event)" />
                     </label>
                 </div>
                 <div class="wrapper-table">
@@ -1002,116 +1002,113 @@
         </div>
 
         <div *ngIf="!loadingExclusion && !errorExclusion && !selectPeriodoExclusion" class="dashboard-content">
-            <mat-card class="table"
-                style="--cols-table: minmax(90px, 0.8fr) minmax(180px, 1.8fr) minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(60px, 0.5fr) repeat(12, minmax(95px, 0.8fr)) minmax(110px, 0.8fr) minmax(80px, 0.65fr);">
+            <mat-card class="table exg">
                 <div class="table-title-row">
-                    <h3>Detalle de Exclusiones por Centro e Indicador</h3>
+                    <h3>Exclusiones por centro</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaExclusion()"
                         title="Agregar nueva exclusión">
                         <mat-icon>add</mat-icon> Agregar exclusión
                     </button>
                 </div>
                 <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
-                <div class="filters-bar">
-                    <label class="filter-field">
-                        <span>Código</span>
-                        <input type="text" class="filter-input" placeholder="Buscar código..."
-                            (keyup)="filterDataExclusion('codcentro', $event)" />
-                    </label>
-                    <label class="filter-field filter-field-wide">
-                        <span>Centro</span>
-                        <input type="text" class="filter-input" placeholder="Buscar centro..."
-                            (keyup)="filterDataExclusion('centro', $event)" />
-                    </label>
-                    <label class="filter-field">
-                        <span>Tipo</span>
-                        <input type="text" class="filter-input" placeholder="Buscar tipo..."
-                            (keyup)="filterDataExclusion('tipo', $event)" />
-                    </label>
-                    <label class="filter-field filter-field-wide">
-                        <span>Indicador</span>
-                        <input type="text" class="filter-input" placeholder="Buscar indicador..."
-                            (keyup)="filterDataExclusion('indicador', $event)" />
-                    </label>
+
+                <div class="exg-toolbar">
+                    <div class="exc-buscar exg-buscar">
+                        <mat-icon aria-hidden="true">search</mat-icon>
+                        <input type="search" placeholder="Buscar por código, centro, tipo o indicador"
+                            aria-label="Buscar exclusiones" [value]="busquedaExclusion"
+                            (input)="buscarExclusion($any($event.target).value)" />
+                    </div>
+                    <span class="exg-resumen">
+                        <strong>{{ gruposExclusion.length }}</strong> {{ gruposExclusion.length === 1 ? 'centro' : 'centros' }}
+                        · <strong>{{ dataExclusion.length }}</strong> {{ dataExclusion.length === 1 ? 'exclusión' : 'exclusiones' }}
+                    </span>
+                    <span class="exg-toolbar-acciones" *ngIf="gruposExclusion.length > 1">
+                        <button type="button" class="exc-accion" (click)="abrirTodosCentrosExclusion(true)">Expandir todo</button>
+                        <button type="button" class="exc-accion" (click)="abrirTodosCentrosExclusion(false)">Contraer todo</button>
+                    </span>
                 </div>
-                <div class="wrapper-table">
-                    <div class="grid-table">
-                        <div class="header-table">
-                            <div class="cell codcentro">CODCENTRO</div>
-                            <div class="cell centro">CENTRO</div>
-                            <div class="cell tipo">TIPO</div>
-                            <div class="cell indicador">INDICADOR</div>
-                            <div class="cell anio">AÑO</div>
-                            <div class="cell excl_01">ENERO</div>
-                            <div class="cell excl_02">FEBRERO</div>
-                            <div class="cell excl_03">MARZO</div>
-                            <div class="cell excl_04">ABRIL</div>
-                            <div class="cell excl_05">MAYO</div>
-                            <div class="cell excl_06">JUNIO</div>
-                            <div class="cell excl_07">JULIO</div>
-                            <div class="cell excl_08">AGOSTO</div>
-                            <div class="cell excl_09">SEPTIEMBRE</div>
-                            <div class="cell excl_10">OCTUBRE</div>
-                            <div class="cell excl_11">NOVIEMBRE</div>
-                            <div class="cell excl_12">DICIEMBRE</div>
-                            <div class="cell resultado" title="Cómo queda el mes excluido en el resultado final">RESULTADO</div>
-                            <div class="cell acciones">ACCIONES</div>
+
+                <div class="exg-lista">
+                    <section class="exg-centro" *ngFor="let g of gruposExclusion"
+                        [class.exg-centro-abierto]="centrosExclusionAbiertos.has(g.clave)">
+                        <div class="exg-centro-cabecera">
+                            <button type="button" class="exg-centro-toggle" (click)="toggleCentroExclusion(g.clave)"
+                                [attr.aria-expanded]="centrosExclusionAbiertos.has(g.clave)"
+                                [attr.aria-controls]="'exg-' + g.clave">
+                                <mat-icon class="exg-chevron" aria-hidden="true">chevron_right</mat-icon>
+                                <span class="exg-cod">{{ g.codcentro }}</span>
+                                <span class="exg-nombre">{{ g.centro }}</span>
+                                <span class="exc-contador">{{ g.filas.length }} {{ g.filas.length === 1 ? 'indicador' : 'indicadores' }}</span>
+                            </button>
+                            <button type="button" class="exc-accion exg-agregar" (click)="iniciarAltaExclusion(g.id_centro)"
+                                [attr.aria-label]="'Agregar exclusión a ' + g.centro" title="Agregar exclusión a este centro">
+                                <mat-icon aria-hidden="true">add</mat-icon><span>Agregar</span>
+                            </button>
                         </div>
 
-                        <cdk-virtual-scroll-viewport #viewportExclusion class="viewport-table" [itemSize]="44">
-                            <div *cdkVirtualFor="let row of dataExclusion" class="row-table">
-                                <div class="cell codcentro">{{ row.codcentro ?? '—' }}</div>
-                                <div class="cell centro">{{ row.centro ?? '—' }}</div>
-                                <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
-                                <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
-                                <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell excl_01">{{ row.excl_01 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_02">{{ row.excl_02 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_03">{{ row.excl_03 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_04">{{ row.excl_04 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_05">{{ row.excl_05 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_06">{{ row.excl_06 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_07">{{ row.excl_07 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_08">{{ row.excl_08 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_09">{{ row.excl_09 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_10">{{ row.excl_10 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_11">{{ row.excl_11 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell excl_12">{{ row.excl_12 ? 'Excluido' : 'No excluido' }}</div>
-                                <div class="cell resultado">{{ row.resultado === '0' ? '0' : 'NA' }}</div>
-                                <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionExclusion(row)"
-                                        title="Editar exclusión">
+                        <ul class="exg-filas" [id]="'exg-' + g.clave" *ngIf="centrosExclusionAbiertos.has(g.clave)">
+                            <li class="exg-fila" *ngFor="let f of g.filas" [class.exg-fila-todos]="f.todos">
+                                <div class="exg-indicador">
+                                    <ng-container *ngIf="!f.todos">
+                                        <span class="exg-tipo">{{ f.row.tipo ?? '—' }}</span>
+                                        <span class="exg-ind-nombre">{{ f.row.indicador ?? '—' }}</span>
+                                    </ng-container>
+                                    <ng-container *ngIf="f.todos">
+                                        <span class="exg-tipo">Aplica a cualquier indicador</span>
+                                        <span class="exg-ind-nombre">Todos los indicadores</span>
+                                    </ng-container>
+                                </div>
+
+                                <div class="exg-meses-col">
+                                    <div class="exg-meses" role="img"
+                                        [attr.aria-label]="'Meses excluidos: ' + f.rango">
+                                        <span class="exg-mes" *ngFor="let m of mesesCortosExclusion; let i = index"
+                                            [class.exg-mes-on]="f.meses[i]" [title]="m + (f.meses[i] ? ': excluido' : ': no excluido')">{{ m.charAt(0) }}</span>
+                                    </div>
+                                    <span class="exg-rango">{{ f.rango }}</span>
+                                </div>
+
+                                <span class="exg-resultado" [class.exg-resultado-cero]="f.row.resultado === '0'"
+                                    [title]="f.row.resultado === '0' ? 'El mes excluido queda con puntaje 0' : 'El mes excluido queda como No aplica'">
+                                    {{ f.row.resultado === '0' ? '0' : 'NA' }}
+                                </span>
+
+                                <div class="exg-acciones">
+                                    <button type="button" class="btn-icon-edit" (click)="iniciarEdicionExclusion(f.row)"
+                                        [attr.aria-label]="'Editar exclusión de ' + (f.todos ? 'todos los indicadores' : f.row.indicador)" title="Editar exclusión">
                                         <mat-icon>edit</mat-icon>
                                     </button>
-                                    <button type="button" class="btn-icon-delete" (click)="eliminarExclusion(row)"
-                                        [disabled]="eliminandoId === row.id"
-                                        title="Eliminar exclusión">
-                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+                                    <button type="button" class="btn-icon-delete" (click)="eliminarExclusion(f.row)"
+                                        [disabled]="eliminandoId === f.row.id"
+                                        [attr.aria-label]="'Eliminar exclusión de ' + (f.todos ? 'todos los indicadores' : f.row.indicador)" title="Eliminar exclusión">
+                                        <mat-icon>{{ eliminandoId === f.row.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
                                     </button>
                                 </div>
-                            </div>
-                        </cdk-virtual-scroll-viewport>
-                    </div>
-                </div>
+                            </li>
+                        </ul>
+                    </section>
 
-                <div class="footer-table">
-                    <div class="footer-left"><strong>Total de filas:</strong></div>
-                    <div class="footer-right num"><strong>{{ dataExclusion.length }}</strong></div>
+                    <div class="exg-vacio" *ngIf="!gruposExclusion.length">
+                        <mat-icon aria-hidden="true">{{ busquedaExclusion ? 'search_off' : 'event_available' }}</mat-icon>
+                        <p *ngIf="busquedaExclusion">Ninguna exclusión coincide con «{{ busquedaExclusion }}».</p>
+                        <p *ngIf="!busquedaExclusion">No hay centros excluidos en {{ anioExclusion }}.</p>
+                        <button type="button" class="exc-accion" *ngIf="busquedaExclusion" (click)="buscarExclusion('')">Limpiar búsqueda</button>
+                    </div>
                 </div>
             </mat-card>
         </div>
 
         <!-- MODAL EDITAR / CREAR EXCLUSIÓN CENTRO INDICADOR -->
         <div class="modal-overlay" *ngIf="mostrarFormularioExclusion" (click)="cancelarEdicionExclusion()">
-            <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-card modal-exclusion" role="dialog" aria-modal="true" aria-labelledby="exc_titulo"
+                (click)="$event.stopPropagation()">
                 <header class="modal-header">
                     <div class="modal-header-info">
-                        <h2>Formulario de Exclusión Centro Indicador</h2>
-                        <p class="modal-subtitle" *ngIf="exclusionForm.get('id')?.value">
-                            Edición del registro ID: {{ exclusionForm.get('id')?.value }}
-                        </p>
-                        <p class="modal-subtitle" *ngIf="!exclusionForm.get('id')?.value">
-                            Nueva exclusión de centro y estándar para el año {{ exclusionForm.get('anio')?.value }}
+                        <h2 id="exc_titulo">{{ exclusionForm.get('id')?.value ? 'Editar exclusión de centro' : 'Nueva exclusión de centro' }}</h2>
+                        <p class="modal-subtitle">
+                            Año {{ exclusionForm.get('anio')?.value }}
+                            <ng-container *ngIf="exclusionForm.get('id')?.value"> · Registro {{ exclusionForm.get('id')?.value }}</ng-container>
                         </p>
                     </div>
                     <button type="button" class="close-modal-btn" (click)="cancelarEdicionExclusion()"
@@ -1119,140 +1116,164 @@
                 </header>
 
                 <form [formGroup]="exclusionForm" (ngSubmit)="updateQueryExclusion()" class="modal-form-container">
-                    <div class="modal-body">
-                        <div class="form-grid">
-                            <input type="hidden" formControlName="id" />
+                    <div class="modal-body exc-body">
+                        <input type="hidden" formControlName="id" />
+                        <input type="hidden" formControlName="anio" />
 
-                            <div class="field-input full-width">
-                                <label for="exc_id_centro">Centro Asistencial <span class="required">*</span></label>
-                                <select id="exc_id_centro" formControlName="id_centro">
-                                    <option [ngValue]="null" disabled>Seleccione un centro...</option>
-                                    <option *ngFor="let cen of listaCentros" [ngValue]="cen.id">
-                                        {{ cen.codcentro }} - {{ cen.centro }} ({{ cen.red }})
-                                    </option>
-                                </select>
+                        <!-- 1. Red y centro: la red filtra los centros del select -->
+                        <section class="exc-seccion exc-red-centro">
+                            <div class="exc-campo">
+                                <label class="exc-seccion-titulo" for="exc_red">Red</label>
+                                <div class="field-input">
+                                    <select id="exc_red" [value]="redExclusion"
+                                        (change)="cambiarRedExclusion($any($event.target).value)">
+                                        <option value="">Todas las redes</option>
+                                        <option *ngFor="let red of redesExclusion" [value]="red"
+                                            [selected]="red === redExclusion">{{ red }}</option>
+                                    </select>
+                                </div>
                             </div>
+                            <div class="exc-campo">
+                                <label class="exc-seccion-titulo" for="exc_id_centro">Centro asistencial <span class="required">*</span>
+                                    <span class="exc-campo-ayuda" *ngIf="redExclusion">{{ centrosExclusionPorRed.length }} en la red</span>
+                                </label>
+                                <div class="field-input">
+                                    <select id="exc_id_centro" formControlName="id_centro" (change)="cambiarCentroExclusion()">
+                                        <option [ngValue]="null" disabled>{{ listaCentros.length ? 'Seleccione un centro…' : 'Cargando centros…' }}</option>
+                                        <option *ngFor="let cen of centrosExclusionPorRed" [ngValue]="cen.id">
+                                            {{ cen.codcentro }} - {{ cen.centro }}<ng-container *ngIf="!redExclusion"> ({{ cen.red }})</ng-container>
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </section>
 
-                            <div class="field-input full-width">
-                                <label for="exc_id_estandar">Indicador <span class="required">*</span></label>
+                        <!-- 2. Indicadores. Edición: el registro es de un solo indicador (o de todos) -->
+                        <section class="exc-seccion" *ngIf="exclusionForm.get('id')?.value">
+                            <label class="exc-seccion-titulo" for="exc_id_estandar">Indicador <span class="required">*</span></label>
+                            <div class="field-input">
                                 <select id="exc_id_estandar" formControlName="id_estandar">
-                                    <option [ngValue]="null" disabled>Seleccione un estándar...</option>
+                                    <option [ngValue]="null">Todos los indicadores</option>
                                     <option *ngFor="let est of listaEstandares" [ngValue]="est.id">
                                         {{ est.tipo }} - {{ est.indicador }}
                                     </option>
                                 </select>
                             </div>
+                        </section>
 
-                            <div class="field-input">
-                                <label for="exc_anio">Año <span class="required">*</span></label>
-                                <input type="number" id="exc_anio" formControlName="anio" readonly placeholder="Año" />
-                            </div>
-
-                            <div class="field-input">
-                                <label for="exc_resultado">Resultado del mes excluido <span class="required">*</span></label>
-                                <select id="exc_resultado" formControlName="resultado">
-                                    <option value="NA">NA (no aplica)</option>
-                                    <option value="0">0 (puntaje 0)</option>
-                                </select>
+                        <!-- Alta: el usuario marca los indicadores a excluir; se guarda un registro por indicador -->
+                        <section class="exc-seccion" *ngIf="!exclusionForm.get('id')?.value">
+                            <div class="exc-seccion-cabecera">
+                                <span class="exc-seccion-titulo" id="exc_ind_titulo">Indicadores a excluir <span class="required">*</span></span>
+                                <span class="exc-contador" *ngIf="!todosIndicadoresExclusion"
+                                    [class.exc-contador-activo]="indicadoresExclusion.size > 0">
+                                    {{ indicadoresExclusion.size }} de {{ listaEstandares.length }}
+                                </span>
                             </div>
 
-                            <div class="field-input">
-                                <label for="exc_01">Enero</label>
-                                <select id="exc_01" formControlName="excl_01">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_02">Febrero</label>
-                                <select id="exc_02" formControlName="excl_02">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_03">Marzo</label>
-                                <select id="exc_03" formControlName="excl_03">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_04">Abril</label>
-                                <select id="exc_04" formControlName="excl_04">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_05">Mayo</label>
-                                <select id="exc_05" formControlName="excl_05">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_06">Junio</label>
-                                <select id="exc_06" formControlName="excl_06">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_07">Julio</label>
-                                <select id="exc_07" formControlName="excl_07">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_08">Agosto</label>
-                                <select id="exc_08" formControlName="excl_08">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_09">Septiembre</label>
-                                <select id="exc_09" formControlName="excl_09">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_10">Octubre</label>
-                                <select id="exc_10" formControlName="excl_10">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_11">Noviembre</label>
-                                <select id="exc_11" formControlName="excl_11">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                            <div class="field-input">
-                                <label for="exc_12">Diciembre</label>
-                                <select id="exc_12" formControlName="excl_12">
-                                    <option [ngValue]="false">No excluido</option>
-                                    <option [ngValue]="true">Excluido</option>
-                                </select>
-                            </div>
-                        </div>
+                            <label class="exc-todos">
+                                <input type="checkbox" [checked]="todosIndicadoresExclusion"
+                                    (change)="todosIndicadoresExclusion = $any($event.target).checked" />
+                                <span>
+                                    <strong>Todos los indicadores del centro</strong>
+                                    <small>Un solo registro que aplica a cualquier indicador, incluidos los que se creen después.</small>
+                                </span>
+                            </label>
 
-                        <div class="validation-message-banner" *ngIf="errorExclusionForm">
+                            <div class="exc-picker" *ngIf="!todosIndicadoresExclusion" role="group" aria-labelledby="exc_ind_titulo">
+                                <div class="exc-picker-toolbar">
+                                    <div class="exc-buscar">
+                                        <mat-icon aria-hidden="true">search</mat-icon>
+                                        <input type="search" placeholder="Buscar por tipo o indicador" aria-label="Buscar indicador"
+                                            [value]="filtroIndicadorExclusion"
+                                            (input)="filtroIndicadorExclusion = $any($event.target).value" />
+                                    </div>
+                                    <button type="button" class="exc-accion" (click)="marcarIndicadoresExclusion(true)"
+                                        [disabled]="!indicadoresExclusionVisibles.length">Marcar {{ filtroIndicadorExclusion ? 'resultados' : 'todos' }}</button>
+                                    <button type="button" class="exc-accion" (click)="marcarIndicadoresExclusion(false)"
+                                        [disabled]="!indicadoresExclusion.size">Limpiar</button>
+                                </div>
+                                <div class="exc-lista">
+                                    <label class="exc-item" *ngFor="let est of indicadoresExclusionVisibles"
+                                        [class.exc-item-activo]="indicadoresExclusion.has(est.id)">
+                                        <input type="checkbox" [checked]="indicadoresExclusion.has(est.id)"
+                                            (change)="toggleIndicadorExclusion(est.id)" />
+                                        <span class="exc-item-texto">
+                                            <span class="exc-item-tipo">{{ est.tipo }}</span>
+                                            <span class="exc-item-nombre">{{ est.indicador }}</span>
+                                        </span>
+                                    </label>
+                                    <p class="exc-vacio" *ngIf="!indicadoresExclusionVisibles.length">
+                                        {{ listaEstandares.length ? 'Ningún indicador coincide con «' + filtroIndicadorExclusion + '».' : 'Cargando indicadores…' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 3. Meses -->
+                        <section class="exc-seccion">
+                            <div class="exc-seccion-cabecera">
+                                <span class="exc-seccion-titulo" id="exc_meses_titulo">Meses excluidos</span>
+                                <span class="exc-contador" [class.exc-contador-activo]="mesesExcluidosCount > 0">
+                                    {{ mesesExcluidosCount === 12 ? 'Todo el año' : mesesExcluidosCount + ' de 12' }}
+                                </span>
+                                <span class="exc-cabecera-acciones">
+                                    <button type="button" class="exc-accion" (click)="marcarMesesExclusion(true)"
+                                        [disabled]="mesesExcluidosCount === 12">Todo el año</button>
+                                    <button type="button" class="exc-accion" (click)="marcarMesesExclusion(false)"
+                                        [disabled]="!mesesExcluidosCount">Limpiar</button>
+                                </span>
+                            </div>
+                            <div class="exc-meses" role="group" aria-labelledby="exc_meses_titulo">
+                                <button type="button" class="exc-mes" *ngFor="let m of mesesExclusion"
+                                    [class.exc-mes-activo]="exclusionForm.get(m.key)?.value"
+                                    [attr.aria-pressed]="!!exclusionForm.get(m.key)?.value"
+                                    [attr.aria-label]="m.nombre"
+                                    (click)="toggleMesExclusion(m.key)">
+                                    <mat-icon aria-hidden="true">{{ exclusionForm.get(m.key)?.value ? 'block' : 'radio_button_unchecked' }}</mat-icon>
+                                    {{ m.corto }}
+                                </button>
+                            </div>
+                        </section>
+
+                        <!-- 4. Resultado -->
+                        <section class="exc-seccion">
+                            <span class="exc-seccion-titulo" id="exc_res_titulo">En el resultado final, el mes excluido queda como</span>
+                            <div class="exc-resultado" role="radiogroup" aria-labelledby="exc_res_titulo">
+                                <label class="exc-opcion" [class.exc-opcion-activa]="exclusionForm.get('resultado')?.value !== '0'">
+                                    <input type="radio" formControlName="resultado" value="NA" />
+                                    <span class="exc-opcion-valor">NA</span>
+                                    <span class="exc-opcion-texto">
+                                        <strong>No aplica</strong>
+                                        <small>El mes no se evalúa ni cuenta en el puntaje.</small>
+                                    </span>
+                                </label>
+                                <label class="exc-opcion" [class.exc-opcion-activa]="exclusionForm.get('resultado')?.value === '0'">
+                                    <input type="radio" formControlName="resultado" value="0" />
+                                    <span class="exc-opcion-valor">0</span>
+                                    <span class="exc-opcion-texto">
+                                        <strong>Puntaje 0</strong>
+                                        <small>El mes se evalúa con valor 0 y puntaje 0.</small>
+                                    </span>
+                                </label>
+                            </div>
+                        </section>
+
+                        <div class="validation-message-banner" *ngIf="errorExclusionForm" role="alert">
                             <mat-icon>error_outline</mat-icon><span>{{ errorExclusionForm }}</span>
                         </div>
                     </div>
 
                     <footer class="modal-footer">
+                        <span class="exc-resumen" *ngIf="!exclusionForm.get('id')?.value">
+                            {{ todosIndicadoresExclusion ? 'Todos los indicadores' : indicadoresExclusion.size + ' indicador' + (indicadoresExclusion.size === 1 ? '' : 'es') }}
+                            · {{ mesesExcluidosCount }} {{ mesesExcluidosCount === 1 ? 'mes' : 'meses' }}
+                        </span>
                         <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionExclusion()"
                             [disabled]="savingExclusion">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingExclusion">
                             <mat-icon *ngIf="!savingExclusion">save</mat-icon><span *ngIf="!savingExclusion">{{
-                                exclusionForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Exclusión' }}</span>
+                                exclusionForm.get('id')?.value ? 'Guardar cambios' : 'Agregar exclusión' }}</span>
                             <span *ngIf="savingExclusion" class="spinner-btn"></span><span
                                 *ngIf="savingExclusion">Guardando…</span>
                         </button>

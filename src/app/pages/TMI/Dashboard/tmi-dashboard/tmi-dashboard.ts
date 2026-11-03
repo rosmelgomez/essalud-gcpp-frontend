@@ -384,9 +384,9 @@ export class TmiDashboard implements OnInit {
     this.centro.set(qp.get('centro') ? Number(qp.get('centro')) : null);
     this.ind.set(qp.get('ind') ? Number(qp.get('ind')) : null);
     this.cargando.set(true);
-    this.calculoSrv.getPeriodoCalculo().subscribe({
+    this.calculoSrv.getPeriodosDashboard().subscribe({
       next: (r) => {
-        const ps = (r.periodos ?? []).map((p) => String(p.periodo)).sort().reverse()
+        const ps = (r ?? []).map((p) => String(p.periodo)).sort().reverse()
           .map((p) => ({ periodo: p, label: `${MESES_L[+p.slice(4) - 1]} ${p.slice(0, 4)}` }));
         this.periodos.set(ps);
         const pedido = qp.get('periodo');

@@ -43,5 +43,5 @@ export const routes: Routes = [
     { path: 'documento', children: documentoRoutes, canActivate: [authenticateGuard] },
 
     //tmi
-    { path: 'tmi', children: TmiRoutes, canActivate: [authenticateGuard] },
+    { path: 'tmi', children: TmiRoutes },
 ];

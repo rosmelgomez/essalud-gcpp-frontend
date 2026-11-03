@@ -2,7 +2,10 @@
   <header class="head">
     <div class="head-top">
       <p class="eyebrow">EsSalud · Sub Gerencia de Estadística @if (data()) { · Cifras preliminares a {{ mesTxt() }} {{ data()!.anio }} }</p>
-      <a class="btn" routerLink="/tmi/administrativo"><mat-icon>settings</mat-icon> Administración TMI</a>
+      <span class="head-links">
+        <a class="btn" routerLink="/tmi/dashboard-estandar" [queryParams]="{ periodo: periodo() || null }"><mat-icon>rule</mat-icon> Estándar vs. valor real</a>
+        <a class="btn" routerLink="/tmi/administrativo"><mat-icon>settings</mat-icon> Administración TMI</a>
+      </span>
     </div>
     <h1>Tablero de monitoreo de gestión de los establecimientos de salud</h1>
     @if (data()) {

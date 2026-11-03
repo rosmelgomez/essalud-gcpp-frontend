@@ -1,0 +1,231 @@
+<div class="dash">
+  <header class="head">
+    <div class="head-top">
+      <p class="eyebrow">EsSalud · Sub Gerencia de Estadística @if (data()) { · Cifras preliminares a {{ mesTxt() }} {{ data()!.anio }} }</p>
+      <a class="btn" routerLink="/tmi/dashboard" [queryParams]="{ periodo: periodo() || null }"><mat-icon>insights</mat-icon> Tablero de puntajes</a>
+    </div>
+    <h1>Indicadores frente a su estándar</h1>
+    @if (data()) { <p class="lead">{{ lead() }}</p> }
+  </header>
+
+  <nav class="filters" aria-label="Filtros">
+    <div class="f">
+      <label for="e-per">Periodo</label>
+      <select id="e-per" [ngModel]="periodo()" (ngModelChange)="cargar($event)" [disabled]="!periodos().length">
+        @for (p of periodos(); track p.periodo) { <option [value]="p.periodo">{{ p.label }}</option> }
+      </select>
+    </div>
+    <div class="f">
+      <label for="e-red">Red asistencial</label>
+      <select id="e-red" [ngModel]="red()" (ngModelChange)="setRed($event)">
+        <option value="">Todas las redes (nacional)</option>
+        @for (o of opcionesRed(); track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+      </select>
+    </div>
+    <div class="f">
+      <label for="e-cen">Establecimiento</label>
+      <select id="e-cen" [ngModel]="centro() ?? ''" (ngModelChange)="setCentro($event === '' ? null : +$event)">
+        <option value="">{{ red() ? 'Toda la red' : 'Todos los establecimientos' }}</option>
+        @for (g of opcionesCentro(); track g.grupo) {
+          @if (g.grupo) {
+          <optgroup [label]="g.grupo">
+            @for (o of g.items; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+          </optgroup>
+          } @else {
+            @for (o of g.items; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+          }
+        }
+      </select>
+    </div>
+    <div class="f">
+      <label for="e-serv">Servicio</label>
+      <select id="e-serv" [ngModel]="serv()" (ngModelChange)="setServ($event)">
+        <option value="">Todos los servicios</option>
+        @for (s of servicios(); track s.value) { <option [value]="s.value">{{ s.nombre }}</option> }
+      </select>
+    </div>
+    <div class="f">
+      <label for="e-ind">Indicador</label>
+      <select id="e-ind" [ngModel]="ind() ?? ''" (ngModelChange)="setInd($event === '' ? null : +$event)">
+        <option value="">Todos los indicadores</option>
+        @for (sv of opcionesInd(); track sv.value) {
+        <optgroup [label]="sv.nombre">
+          @for (x of sv.inds; track x.id) { <option [value]="x.i">{{ x.nombre }}</option> }
+        </optgroup>
+        }
+      </select>
+    </div>
+    <button class="btn" type="button" (click)="limpiar()">Limpiar filtros</button>
+  </nav>
+
+  @if (cargando()) {
+  <div class="card estado">Cargando el resultado del periodo…</div>
+  } @else if (error()) {
+  <div class="card estado error">{{ error() }}</div>
+  } @else if (data()) {
+
+  <!-- resumen -->
+  <section class="tiles" aria-label="Resumen">
+    @for (t of tiles(); track t.label) {
+    @if (t.estado) {
+    <button type="button" class="card tile sel-tile" [class]="'card tile sel-tile ' + t.cls" [class.on]="estado() === t.estado"
+      [attr.aria-pressed]="estado() === t.estado" (click)="setEstado(t.estado)">
+      <span class="tile-label">{{ t.label }}</span>
+      <span class="big" [style.color]="color(t.cls)">{{ t.value }}</span>
+      <span class="note">{{ t.note }} {{ estado() === t.estado ? 'Clic para quitar el filtro.' : 'Clic para filtrar.' }}</span>
+    </button>
+    } @else {
+    <div class="card tile">
+      <span class="tile-label">{{ t.label }}</span>
+      <span class="big">{{ t.value }}</span>
+      <span class="note">{{ t.note }}</span>
+    </div>
+    }
+    }
+  </section>
+
+  <!-- ficha del indicador elegido -->
+  @if (indSel(); as x) {
+  <section class="card ficha" [style.border-left-color]="x.color">
+    <div>
+      <span class="eyebrow">{{ x.serv }} · {{ x.codigo }}</span>
+      <h2>{{ x.nombre }}</h2>
+    </div>
+    <dl class="kv">
+      <dt>Sentido</dt><dd>{{ sentidoTxt(x) || '—' }}</dd>
+      <dt>Formato</dt><dd>{{ x.pct ? 'Porcentaje' : 'Número' }}</dd>
+      <dt>Puntaje nacional</dt><dd>{{ x.nacional == null ? '—' : x.nacional.toFixed(2) }} de 5</dd>
+    </dl>
+    <button class="btn" type="button" (click)="setInd(null)">Quitar filtro de indicador</button>
+  </section>
+  }
+
+  <!-- resumen por indicador -->
+  @if (resumenInds().length) {
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Cumplimiento por indicador</h2>
+      <p>{{ ambito() }}. Proporción de establecimientos que cumplen, quedan en el rango aceptable o no cumplen el estándar de cada indicador;
+        primero los de mayor incumplimiento. Clic en un indicador para ver su detalle.</p>
+    </div>
+    <div class="card">
+      <div class="legend">
+        <span><i class="sw f-ok"></i>Cumple (5)</span><span><i class="sw f-warn"></i>Aceptable (3)</span><span><i class="sw f-bad"></i>No cumple (1)</span>
+      </div>
+      <div class="res">
+        @for (r of resumenInds(); track r.x.id) {
+        <div class="res-row" role="button" tabindex="0" (click)="setInd(r.x.i)" (keydown.enter)="setInd(r.x.i)">
+          <span class="res-name"><i class="dot" [style.background]="r.x.color"></i>{{ r.x.nombre }}</span>
+          <span class="stack">
+            <i class="f-ok" [style.width.%]="r.ok / r.n * 100"></i>
+            <i class="f-warn" [style.width.%]="r.warn / r.n * 100"></i>
+            <i class="f-bad" [style.width.%]="r.bad / r.n * 100"></i>
+          </span>
+          <span class="res-val">{{ r.ok }}/{{ r.n }}</span>
+        </div>
+        }
+      </div>
+    </div>
+  </section>
+  }
+
+  <!-- tabla -->
+  <section class="sec">
+    <div class="sec-head">
+      <h2>{{ cen() ? 'Indicadores de ' + ambito() : indSel() ? 'Establecimientos · ' + ambito() : 'Evaluaciones indicador–establecimiento · ' + ambito() }}</h2>
+      <p>Estándar, rango aceptable y valor real acumulado a {{ mesTxt() }}. La barra muestra el valor real (punto) frente al estándar (marca)
+        y al rango aceptable (franja). {{ cen() ? (indSel() ? '' : 'Clic en una fila para filtrar por el indicador.') : 'Clic en una fila para ver el establecimiento.' }}</p>
+    </div>
+    <div class="card">
+      <div class="tools">
+        <input type="search" placeholder="Buscar establecimiento, red o indicador…" aria-label="Buscar"
+          [ngModel]="q()" (ngModelChange)="q.set($event); limite.set(100)">
+        <div class="chips" role="group" aria-label="Filtrar por estado">
+          @for (e of estadosFiltro; track e) {
+          <button type="button" class="pill" [class]="'pill ' + e" [class.on]="estado() === e" [attr.aria-pressed]="estado() === e"
+            (click)="setEstado(e)">{{ estadoTxt[e] }}</button>
+          }
+        </div>
+        <span class="note">{{ filas().length.toLocaleString('es-PE') }} filas</span>
+        <button class="btn" type="button" (click)="descargarCsv()"><mat-icon>download</mat-icon> Descargar CSV</button>
+      </div>
+      <div class="tablebox">
+        <table class="t">
+          <thead>
+            <tr>
+              @for (c of columnas(); track c.k) {
+              <th [class.num]="c.num" [class.sm]="c.sm" [attr.aria-sort]="sortKey() === c.k ? (sortDir() > 0 ? 'ascending' : 'descending') : null">
+                <button type="button" (click)="ordenar(c.k, !!c.num)">{{ c.t }}</button>
+              </th>
+              }
+              <th class="cmp">Comparación</th>
+              @if (cen()) { <th class="sm">Ene–{{ mesTxt().slice(0, 3) }}</th> }
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of visibles(); track f.key) {
+            <tr [class.na]="f.estado === 'na'" (click)="irFila(f)" (mousemove)="tipFila($event, f)" (mouseleave)="ocultarTip()">
+              @if (!cen()) {
+              <td class="name">{{ nombreCentro(f.c) }}</td>
+              <td class="sm">{{ redCorta(f.c.red) }}</td>
+              }
+              @if (!indSel()) {
+              <td class="sm"><i class="dot" [style.background]="f.x.color"></i>{{ f.x.serv }}</td>
+              <td class="name">{{ f.x.nombre }}<span class="sub">{{ sentidoTxt(f.x) }}</span></td>
+              }
+              <td class="num">{{ fmtV(f.d?.e, f.x) }}</td>
+              <td class="num">{{ aceptTxt(f) }}</td>
+              <td class="num strong">{{ f.d ? fmtV(f.d.v, f.x) : 'NA' }}</td>
+              <td class="num sm" [style.color]="f.estado === 'na' ? null : color(f.estado)">{{ fmtBrecha(f) }}</td>
+              <td><span class="pill" [class]="'pill ' + f.estado">{{ estadoTxt[f.estado] }}</span></td>
+              <td class="cmp">
+                @if (f.bar; as b) {
+                <span class="track">
+                  @if (b.a0 != null) { <s [style.left.%]="b.a0" [style.width.%]="b.a1! - b.a0"></s> }
+                  @if (b.e != null) { <u [style.left.%]="b.e"></u> }
+                  <i [style.left]="'calc(' + b.v + '% - 5px)'" [style.background]="color(f.estado)"></i>
+                </span>
+                }
+              </td>
+              @if (cen()) {
+              <td class="sm">
+                @if (f.spark) {
+                <svg class="spark" viewBox="0 0 80 22" width="80" height="22" aria-hidden="true">
+                  <polyline [attr.points]="f.spark" fill="none" stroke="var(--d-accent)" stroke-width="1.6" />
+                </svg>
+                }
+              </td>
+              }
+            </tr>
+            } @empty {
+            <tr><td [attr.colspan]="columnas().length + (cen() ? 2 : 1)" class="vacio">Sin evaluaciones para estos filtros.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (filas().length > visibles().length) {
+      <button class="btn mas" type="button" (click)="verMas()">
+        Mostrar más ({{ visibles().length.toLocaleString('es-PE') }} de {{ filas().length.toLocaleString('es-PE') }})
+      </button>
+      }
+    </div>
+  </section>
+
+  <section class="method">
+    <p><b>Cómo leer este tablero.</b> Para cada indicador y establecimiento se compara el valor real acumulado del año con su estándar.
+      Si el valor alcanza el estándar el indicador <b>cumple</b> (5 puntos); si no lo alcanza pero queda dentro del rango aceptable es
+      <b>aceptable</b> (3 puntos); fuera de ese rango, o sin producción, <b>no cumple</b> (1 punto). En los indicadores de incremento mayor es mejor,
+      en los de decremento menor es mejor y en los de banda el valor debe quedar dentro del rango.</p>
+    <p>Brecha: valor real menos estándar (en puntos porcentuales si el indicador es un porcentaje).</p>
+    <p>Fuente: resultado final del TMI guardado para {{ mesTxt() }} {{ data()!.anio }}@if (data()!.fecha_calculo) { (calculado el {{ data()!.fecha_calculo!.slice(0, 10) }})}.
+      Cifras preliminares: podrían modificarse por omisiones o correcciones propias del proceso estadístico.</p>
+  </section>
+  }
+</div>
+
+@if (tip(); as t) {
+<div class="tip" role="tooltip" [style.left.px]="t.x" [style.top.px]="t.y">
+  <b>{{ t.title }}</b>
+  @for (l of t.lines; track $index) { <span>{{ l }}</span> }
+</div>
+}

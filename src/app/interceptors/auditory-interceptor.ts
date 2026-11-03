@@ -21,7 +21,7 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
       // ya hay un ciclo en curso: ese mismo ciclo pinta los cambios
     }
   };
-  const publicRoutes = ['/login', '/solicitar-acceso-registro'];
+  const publicRoutes = ['/login', '/solicitar-acceso-registro', '/tmi/dashboard', '/tmi/dashboard-estandar'];
   // peticiones que forman parte del propio manejo de sesión: nunca disparan un cierre
   const esPeticionDeSesion = ['/login', '/api-token', '/logout', '/log/register'].some((r) => req.url.includes(r));
   const currentPath = router.url.split('?')[0];

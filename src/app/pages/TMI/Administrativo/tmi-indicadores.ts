@@ -23,7 +23,26 @@ import { TmiEstandarService } from '../../../services/tmi/tmi-estandar-service';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
 import { TmiCentroService } from '../../../services/tmi';
 
-export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre'
+/** Exclusión (fila de tmi_exclusion_centro_indicador) con sus meses listos para pintar. */
+interface FilaExclusion {
+  row: any;
+  todos: boolean;
+  meses: boolean[];
+  rango: string;
+}
+
+/** Exclusiones de un centro: el centro se muestra una vez y debajo sus indicadores. */
+interface GrupoExclusion {
+  clave: string;
+  id_centro: number | null;
+  codcentro: string;
+  centro: string;
+  filas: FilaExclusion[];
+}
+
+const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+export type TabType ='Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre'
   | 'Aceptacion' | 'Variables' | 'Indicadores' | 'Estandar Centro' | 'Calcular';
 
 @Component({
@@ -56,7 +75,6 @@ export class TmiIndicadores implements OnInit {
   @ViewChild('viewportNivel') viewportNivel?: CdkVirtualScrollViewport;
   @ViewChild('viewportCategoria') viewportCategoria?: CdkVirtualScrollViewport;
   @ViewChild('viewportCentros') viewportCentros?: CdkVirtualScrollViewport;
-  @ViewChild('viewportExclusion') viewportExclusion?: CdkVirtualScrollViewport;
 
   currentDate: string = '';
 
@@ -317,27 +335,10 @@ export class TmiIndicadores implements OnInit {
   public errorExclusionForm: string = '';
   public exclusionForm!: FormGroup;
 
-  filtersExclusion = {
-    id: "",
-    red: "",
-    codcentro: "",
-    centro: "",
-    tipo: "",
-    indicador: "",
-    anio: "",
-    excl_01: "",
-    excl_02: "",
-    excl_03: "",
-    excl_04: "",
-    excl_05: "",
-    excl_06: "",
-    excl_07: "",
-    excl_08: "",
-    excl_09: "",
-    excl_10: "",
-    excl_11: "",
-    excl_12: ""
-  };
+  // Vista agrupada: un bloque por centro con sus indicadores excluidos
+  public gruposExclusion: GrupoExclusion[] = [];
+  public busquedaExclusion: string = '';
+  public centrosExclusionAbiertos = new Set<string>();
 
   constructor(
     private estandarSrv: TmiEstandarService,
@@ -489,7 +490,7 @@ export class TmiIndicadores implements OnInit {
     this.exclusionForm = this.formBuilder.group({
       id: [null, []],
       id_centro: [null, [Validators.required]],
-      id_estandar: [null, [Validators.required]],
+      id_estandar: [null, []],
       anio: [null, [Validators.required]],
       resultado: ['NA', [Validators.required]],
       excl_01: [false, []],
@@ -547,8 +548,8 @@ export class TmiIndicadores implements OnInit {
 
     this.estandarSrv.getQueryEstandarTipo(this.anioEstandarTipo).subscribe({
       next: (res: any) => {
-        this.dataEstandarTipo = res || [];
         this.dataEstandarTipoFilter = res || [];
+        this.dataEstandarTipo = this.filtrarEstandar(this.dataEstandarTipoFilter, this.filtersEstandarTipo);
         this.loadingEstandarTipo = false;
         this.cdr.markForCheck();
         setTimeout(() => {
@@ -661,28 +662,21 @@ export class TmiIndicadores implements OnInit {
   }
 
   filterDataEstandarTipo(column: keyof typeof this.filtersEstandarTipo, event: any): void {
-    const filterValue = event.target.value.toLowerCase().trim();
-    this.filtersEstandarTipo[column] = filterValue;
-    const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
-    this.dataEstandarTipo = this.dataEstandarTipoFilter.filter(row =>
-      check(row.tipo, this.filtersEstandarTipo.tipo) &&
-      check(row.indicador, this.filtersEstandarTipo.indicador) &&
-      check(row.tipo_centro, this.filtersEstandarTipo.tipo_centro) &&
-      check(row.anio, this.filtersEstandarTipo.anio) &&
-      check(row.est_fijo, this.filtersEstandarTipo.est_fijo) &&
-      check(row.est_01, this.filtersEstandarTipo.est_01) &&
-      check(row.est_02, this.filtersEstandarTipo.est_02) &&
-      check(row.est_03, this.filtersEstandarTipo.est_03) &&
-      check(row.est_04, this.filtersEstandarTipo.est_04) &&
-      check(row.est_05, this.filtersEstandarTipo.est_05) &&
-      check(row.est_06, this.filtersEstandarTipo.est_06) &&
-      check(row.est_07, this.filtersEstandarTipo.est_07) &&
-      check(row.est_08, this.filtersEstandarTipo.est_08) &&
-      check(row.est_09, this.filtersEstandarTipo.est_09) &&
-      check(row.est_10, this.filtersEstandarTipo.est_10) &&
-      check(row.est_11, this.filtersEstandarTipo.est_11) &&
-      check(row.est_12, this.filtersEstandarTipo.est_12)
-    );
+    this.filtersEstandarTipo[column] = event.target.value;
+    this.aplicarFiltrosEstandarTipo();
+  }
+
+  private aplicarFiltrosEstandarTipo(): void {
+    this.dataEstandarTipo = this.filtrarEstandar(this.dataEstandarTipoFilter, this.filtersEstandarTipo);
+    this.viewportTipo?.scrollToIndex(0);
+    this.cdr.markForCheck();
+  }
+
+  /** Filas que contienen el texto de cada filtro con valor, sin distinguir mayúsculas ni tildes. */
+  private filtrarEstandar(datos: any[], filtros: Record<string, string>): any[] {
+    const norm = (v: any) => String(v ?? '').toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').trim();
+    const activos = Object.entries(filtros).map(([k, f]) => [k, norm(f)]).filter(([, f]) => f);
+    return datos.filter(row => activos.every(([k, f]) => norm(row[k]).includes(f)));
   }
 
   // tmi_estandar_nivel
@@ -692,8 +686,8 @@ export class TmiIndicadores implements OnInit {
 
     this.estandarSrv.getQueryEstandarNivel(this.anioEstandarNivel).subscribe({
       next: (res: any) => {
-        this.dataEstandarNivel = res || [];
         this.dataEstandarNivelFilter = res || [];
+        this.dataEstandarNivel = this.filtrarEstandar(this.dataEstandarNivelFilter, this.filtersEstandarNivel);
         this.loadingEstandarNivel = false;
         this.cdr.markForCheck();
         setTimeout(() => {
@@ -806,28 +800,14 @@ export class TmiIndicadores implements OnInit {
   }
 
   filterDataEstandarNivel(column: keyof typeof this.filtersEstandarNivel, event: any): void {
-    const filterValue = event.target.value.toLowerCase().trim();
-    this.filtersEstandarNivel[column] = filterValue;
-    const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
-    this.dataEstandarNivel = this.dataEstandarNivelFilter.filter(row =>
-      check(row.tipo, this.filtersEstandarNivel.tipo) &&
-      check(row.indicador, this.filtersEstandarNivel.indicador) &&
-      check(row.nivel_centro, this.filtersEstandarNivel.nivel_centro) &&
-      check(row.anio, this.filtersEstandarNivel.anio) &&
-      check(row.est_fijo, this.filtersEstandarNivel.est_fijo) &&
-      check(row.est_01, this.filtersEstandarNivel.est_01) &&
-      check(row.est_02, this.filtersEstandarNivel.est_02) &&
-      check(row.est_03, this.filtersEstandarNivel.est_03) &&
-      check(row.est_04, this.filtersEstandarNivel.est_04) &&
-      check(row.est_05, this.filtersEstandarNivel.est_05) &&
-      check(row.est_06, this.filtersEstandarNivel.est_06) &&
-      check(row.est_07, this.filtersEstandarNivel.est_07) &&
-      check(row.est_08, this.filtersEstandarNivel.est_08) &&
-      check(row.est_09, this.filtersEstandarNivel.est_09) &&
-      check(row.est_10, this.filtersEstandarNivel.est_10) &&
-      check(row.est_11, this.filtersEstandarNivel.est_11) &&
-      check(row.est_12, this.filtersEstandarNivel.est_12)
-    );
+    this.filtersEstandarNivel[column] = event.target.value;
+    this.aplicarFiltrosEstandarNivel();
+  }
+
+  private aplicarFiltrosEstandarNivel(): void {
+    this.dataEstandarNivel = this.filtrarEstandar(this.dataEstandarNivelFilter, this.filtersEstandarNivel);
+    this.viewportNivel?.scrollToIndex(0);
+    this.cdr.markForCheck();
   }
 
   // tmi_estandar_categoria
@@ -837,8 +817,8 @@ export class TmiIndicadores implements OnInit {
 
     this.estandarSrv.getQueryEstandarCategoria(this.anioEstandarCategoria).subscribe({
       next: (res: any) => {
-        this.dataEstandarCategoria = res || [];
         this.dataEstandarCategoriaFilter = res || [];
+        this.dataEstandarCategoria = this.filtrarEstandar(this.dataEstandarCategoriaFilter, this.filtersEstandarCategoria);
         this.loadingEstandarCategoria = false;
         this.cdr.markForCheck();
         setTimeout(() => {
@@ -951,28 +931,14 @@ export class TmiIndicadores implements OnInit {
   }
 
   filterDataEstandarCategoria(column: keyof typeof this.filtersEstandarCategoria, event: any): void {
-    const filterValue = event.target.value.toLowerCase().trim();
-    this.filtersEstandarCategoria[column] = filterValue;
-    const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
-    this.dataEstandarCategoria = this.dataEstandarCategoriaFilter.filter(row =>
-      check(row.tipo, this.filtersEstandarCategoria.tipo) &&
-      check(row.indicador, this.filtersEstandarCategoria.indicador) &&
-      check(row.categoria_centro, this.filtersEstandarCategoria.categoria_centro) &&
-      check(row.anio, this.filtersEstandarCategoria.anio) &&
-      check(row.est_fijo, this.filtersEstandarCategoria.est_fijo) &&
-      check(row.est_01, this.filtersEstandarCategoria.est_01) &&
-      check(row.est_02, this.filtersEstandarCategoria.est_02) &&
-      check(row.est_03, this.filtersEstandarCategoria.est_03) &&
-      check(row.est_04, this.filtersEstandarCategoria.est_04) &&
-      check(row.est_05, this.filtersEstandarCategoria.est_05) &&
-      check(row.est_06, this.filtersEstandarCategoria.est_06) &&
-      check(row.est_07, this.filtersEstandarCategoria.est_07) &&
-      check(row.est_08, this.filtersEstandarCategoria.est_08) &&
-      check(row.est_09, this.filtersEstandarCategoria.est_09) &&
-      check(row.est_10, this.filtersEstandarCategoria.est_10) &&
-      check(row.est_11, this.filtersEstandarCategoria.est_11) &&
-      check(row.est_12, this.filtersEstandarCategoria.est_12)
-    );
+    this.filtersEstandarCategoria[column] = event.target.value;
+    this.aplicarFiltrosEstandarCategoria();
+  }
+
+  private aplicarFiltrosEstandarCategoria(): void {
+    this.dataEstandarCategoria = this.filtrarEstandar(this.dataEstandarCategoriaFilter, this.filtersEstandarCategoria);
+    this.viewportCategoria?.scrollToIndex(0);
+    this.cdr.markForCheck();
   }
 
   /// tmi_centro
@@ -983,6 +949,10 @@ export class TmiIndicadores implements OnInit {
     this.centroSrv.getQueryCentrosTMI().subscribe({
       next: (res: any) => {
         this.listaCentros = res || [];
+        // el formulario de exclusión se abrió antes de tener los centros: su red se completa ahora
+        if (this.mostrarFormularioExclusion && !this.redExclusion) {
+          this.redExclusion = this.redDeCentro(this.exclusionForm?.get('id_centro')?.value);
+        }
         this.dataCentrosTMI = res || [];
         this.dataCentrosTMIFilter = res || [];
         this.loadingCentrosTMI = false;
@@ -1122,14 +1092,10 @@ export class TmiIndicadores implements OnInit {
 
     this.centroSrv.getQueryExclusionCentroEstandar(this.anioExclusion).subscribe({
       next: (res: any) => {
-        this.dataExclusion = res || [];
         this.dataExclusionFilter = res || [];
+        this.agruparExclusion();
         this.loadingExclusion = false;
         this.cdr.markForCheck();
-        setTimeout(() => {
-          this.viewportExclusion?.checkViewportSize();
-          this.cdr.markForCheck();
-        }, 0);
       },
       error: (error: any) => {
         console.error(error);
@@ -1140,13 +1106,14 @@ export class TmiIndicadores implements OnInit {
     });
   }
 
-  iniciarAltaExclusion(): void {
+  /** idCentro: alta desde el bloque de un centro (el centro queda elegido). */
+  iniciarAltaExclusion(idCentro: number | null = null): void {
     if (!this.listaEstandares.length) this.getQueryEstandar();
     if (!this.listaCentros.length) this.getQueryCentrosTMI();
     if (!this.exclusionForm) this.reactiveForm();
     this.exclusionForm.reset({
       id: null,
-      id_centro: null,
+      id_centro: idCentro != null ? Number(idCentro) : null,
       id_estandar: null,
       anio: Number(this.anioExclusion),
       resultado: 'NA',
@@ -1163,9 +1130,91 @@ export class TmiIndicadores implements OnInit {
       excl_11: false,
       excl_12: false
     });
+    this.indicadoresExclusion = new Set<number>();
+    this.todosIndicadoresExclusion = false;
+    this.filtroIndicadorExclusion = '';
+    this.redExclusion = this.redDeCentro(idCentro);
     this.errorExclusionForm = '';
     this.mostrarFormularioExclusion = true;
     this.cdr.markForCheck();
+  }
+
+  // Red del formulario de exclusión: filtra el select de centros ('' = todas las redes)
+  public redExclusion: string = '';
+
+  get redesExclusion(): string[] {
+    return [...new Set(this.listaCentros.map(c => String(c.red ?? '').trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b));
+  }
+
+  get centrosExclusionPorRed(): any[] {
+    return this.redExclusion
+      ? this.listaCentros.filter(c => String(c.red ?? '').trim() === this.redExclusion)
+      : this.listaCentros;
+  }
+
+  private redDeCentro(idCentro: any): string {
+    if (idCentro == null) return '';
+    const centro = this.listaCentros.find(c => Number(c.id) === Number(idCentro));
+    return centro ? String(centro.red ?? '').trim() : '';
+  }
+
+  /** Al cambiar la red, el centro elegido se limpia si no pertenece a ella. */
+  cambiarRedExclusion(red: string): void {
+    this.redExclusion = red;
+    const control = this.exclusionForm.get('id_centro');
+    if (red && control?.value != null && this.redDeCentro(control.value) !== red) control.setValue(null);
+  }
+
+  /** Al elegir un centro con "Todas las redes", la red se ajusta a la del centro. */
+  cambiarCentroExclusion(): void {
+    if (!this.redExclusion) this.redExclusion = this.redDeCentro(this.exclusionForm.get('id_centro')?.value);
+  }
+
+  // Alta de exclusión: indicadores marcados (un registro por indicador)
+  public indicadoresExclusion = new Set<number>();
+  public todosIndicadoresExclusion: boolean = false;
+  public filtroIndicadorExclusion: string = '';
+
+  get indicadoresExclusionVisibles(): any[] {
+    const filtro = this.filtroIndicadorExclusion.trim().toLowerCase();
+    if (!filtro) return this.listaEstandares;
+    return this.listaEstandares.filter(e => `${e.tipo ?? ''} ${e.indicador ?? ''}`.toLowerCase().includes(filtro));
+  }
+
+  toggleIndicadorExclusion(id: number): void {
+    if (this.indicadoresExclusion.has(id)) this.indicadoresExclusion.delete(id);
+    else this.indicadoresExclusion.add(id);
+  }
+
+  marcarIndicadoresExclusion(marcar: boolean): void {
+    for (const est of this.indicadoresExclusionVisibles) {
+      if (marcar) this.indicadoresExclusion.add(Number(est.id));
+      else this.indicadoresExclusion.delete(Number(est.id));
+    }
+  }
+
+  // Meses del formulario de exclusión (controles excl_01..excl_12)
+  public readonly mesesExclusion = [
+    { key: 'excl_01', corto: 'Ene', nombre: 'Enero' }, { key: 'excl_02', corto: 'Feb', nombre: 'Febrero' },
+    { key: 'excl_03', corto: 'Mar', nombre: 'Marzo' }, { key: 'excl_04', corto: 'Abr', nombre: 'Abril' },
+    { key: 'excl_05', corto: 'May', nombre: 'Mayo' }, { key: 'excl_06', corto: 'Jun', nombre: 'Junio' },
+    { key: 'excl_07', corto: 'Jul', nombre: 'Julio' }, { key: 'excl_08', corto: 'Ago', nombre: 'Agosto' },
+    { key: 'excl_09', corto: 'Sep', nombre: 'Septiembre' }, { key: 'excl_10', corto: 'Oct', nombre: 'Octubre' },
+    { key: 'excl_11', corto: 'Nov', nombre: 'Noviembre' }, { key: 'excl_12', corto: 'Dic', nombre: 'Diciembre' },
+  ];
+
+  get mesesExcluidosCount(): number {
+    return this.mesesExclusion.filter(m => this.exclusionForm?.get(m.key)?.value).length;
+  }
+
+  toggleMesExclusion(key: string): void {
+    const control = this.exclusionForm.get(key);
+    control?.setValue(!control.value);
+  }
+
+  marcarMesesExclusion(marcar: boolean): void {
+    this.exclusionForm.patchValue(Object.fromEntries(this.mesesExclusion.map(m => [m.key, marcar])));
   }
 
   iniciarEdicionExclusion(row: any): void {
@@ -1192,6 +1241,7 @@ export class TmiIndicadores implements OnInit {
       excl_11: Boolean(row.excl_11),
       excl_12: Boolean(row.excl_12)
     });
+    this.redExclusion = this.redDeCentro(row.id_centro);
     this.errorExclusionForm = '';
     this.mostrarFormularioExclusion = true;
     this.cdr.markForCheck();
@@ -1210,14 +1260,28 @@ export class TmiIndicadores implements OnInit {
       this.errorExclusionForm = 'Por favor, seleccione el centro, el estándar y el año.';
       return;
     }
+    const valor = this.exclusionForm.getRawValue();
+    const esAlta = !valor.id;
+    // alta: los indicadores marcados (vacío con "Todos" marcado = un registro para todos los indicadores)
+    const ids = esAlta && !this.todosIndicadoresExclusion ? Array.from(this.indicadoresExclusion) : [];
+    if (esAlta && !this.todosIndicadoresExclusion && !ids.length) {
+      this.errorExclusionForm = 'Marque al menos un indicador o "Todos los indicadores del centro".';
+      return;
+    }
+    if (!this.mesesExcluidosCount) {
+      this.errorExclusionForm = 'Marque al menos un mes excluido.';
+      return;
+    }
     this.savingExclusion = true;
     this.errorExclusionForm = '';
 
-    const valor = this.exclusionForm.getRawValue();
+    const idEstandar = esAlta ? null : (valor.id_estandar != null ? Number(valor.id_estandar) : null);
     const dto = {
       id: valor.id ? Number(valor.id) : null,
       id_centro: Number(valor.id_centro),
-      id_estandar: Number(valor.id_estandar),
+      id_estandar: idEstandar,
+      id_indicador: idEstandar,
+      ids_indicador: ids.length ? ids : null,
       anio: Number(valor.anio),
       resultado: valor.resultado === '0' ? '0' : 'NA',
       excl_01: Boolean(valor.excl_01),
@@ -1257,36 +1321,75 @@ export class TmiIndicadores implements OnInit {
     this.eliminarFila(row, this.centroSrv.deleteQueryExclusionCentroEstandar(row.id), () => this.getQueryExclusion());
   }
 
-  filterDataExclusion(column: keyof typeof this.filtersExclusion, event: any): void {
-    const filterValue = event.target.value.toLowerCase().trim();
-    this.filtersExclusion[column] = filterValue;
-    const check = (val: any, filter: string) => !filter || String(val ?? '').toLowerCase().includes(filter);
-    const checkExcl = (val: any, filter: string) => {
-      if (!filter) return true;
-      const etiqueta = val ? 'excluido' : 'no excluido';
-      return etiqueta.includes(filter);
-    };
-    this.dataExclusion = this.dataExclusionFilter.filter(row =>
-      check(row.id, this.filtersExclusion.id) &&
-      check(row.red, this.filtersExclusion.red) &&
-      check(row.codcentro, this.filtersExclusion.codcentro) &&
-      check(row.centro, this.filtersExclusion.centro) &&
-      check(row.tipo, this.filtersExclusion.tipo) &&
-      check(row.indicador, this.filtersExclusion.indicador) &&
-      check(row.anio, this.filtersExclusion.anio) &&
-      checkExcl(row.excl_01, this.filtersExclusion.excl_01) &&
-      checkExcl(row.excl_02, this.filtersExclusion.excl_02) &&
-      checkExcl(row.excl_03, this.filtersExclusion.excl_03) &&
-      checkExcl(row.excl_04, this.filtersExclusion.excl_04) &&
-      checkExcl(row.excl_05, this.filtersExclusion.excl_05) &&
-      checkExcl(row.excl_06, this.filtersExclusion.excl_06) &&
-      checkExcl(row.excl_07, this.filtersExclusion.excl_07) &&
-      checkExcl(row.excl_08, this.filtersExclusion.excl_08) &&
-      checkExcl(row.excl_09, this.filtersExclusion.excl_09) &&
-      checkExcl(row.excl_10, this.filtersExclusion.excl_10) &&
-      checkExcl(row.excl_11, this.filtersExclusion.excl_11) &&
-      checkExcl(row.excl_12, this.filtersExclusion.excl_12)
-    );
+  buscarExclusion(valor: string): void {
+    this.busquedaExclusion = valor;
+    this.agruparExclusion();
+  }
+
+  /** Agrupa las exclusiones por centro. La búsqueda (código, centro, tipo o indicador) filtra los indicadores; si
+   *  coincide con el centro, se muestran todos sus indicadores. Con búsqueda los bloques se abren. */
+  private agruparExclusion(): void {
+    const texto = this.busquedaExclusion.trim().toLowerCase();
+    const contiene = (...vals: any[]) => vals.some(v => String(v ?? '').toLowerCase().includes(texto));
+    const grupos = new Map<string, GrupoExclusion>();
+
+    for (const row of this.dataExclusionFilter) {
+      const clave = String(row.codcentro ?? row.id_centro ?? '—');
+      let grupo = grupos.get(clave);
+      if (!grupo) {
+        grupo = { clave, id_centro: row.id_centro ?? null, codcentro: String(row.codcentro ?? '—'), centro: row.centro ?? 'Centro sin nombre', filas: [] };
+        grupos.set(clave, grupo);
+      }
+      const meses = Array.from({ length: 12 }, (_, i) => Boolean(row[`excl_${String(i + 1).padStart(2, '0')}`]));
+      grupo.filas.push({ row, todos: row.id_indicador == null && row.id_estandar == null, meses, rango: this.rangoMeses(meses) });
+    }
+
+    const resultado: GrupoExclusion[] = [];
+    for (const grupo of grupos.values()) {
+      if (texto && !contiene(grupo.codcentro, grupo.centro)) {
+        grupo.filas = grupo.filas.filter(f => contiene(f.row.tipo, f.row.indicador));
+        if (!grupo.filas.length) continue;
+      }
+      grupo.filas.sort((a, b) => Number(b.todos) - Number(a.todos)
+        || String(a.row.tipo ?? '').localeCompare(String(b.row.tipo ?? ''))
+        || String(a.row.indicador ?? '').localeCompare(String(b.row.indicador ?? '')));
+      resultado.push(grupo);
+    }
+    resultado.sort((a, b) => a.codcentro.localeCompare(b.codcentro, undefined, { numeric: true }));
+
+    // Sin búsqueda: abiertos si son pocos centros; con búsqueda: todos abiertos
+    if (texto || resultado.length <= 8) this.centrosExclusionAbiertos = new Set(resultado.map(g => g.clave));
+    this.gruposExclusion = resultado;
+    this.dataExclusion = resultado.flatMap(g => g.filas.map(f => f.row));
+  }
+
+  /** Meses excluidos como texto corto: "Todo el año", "Abr – Jun", "Ene, Mar – May". */
+  private rangoMeses(meses: boolean[]): string {
+    const n = meses.filter(Boolean).length;
+    if (n === 12) return 'Todo el año';
+    if (!n) return 'Sin meses';
+    const tramos: string[] = [];
+    for (let i = 0; i < 12; i++) {
+      if (!meses[i]) continue;
+      let j = i;
+      while (j + 1 < 12 && meses[j + 1]) j++;
+      tramos.push(i === j ? MESES_CORTOS[i] : `${MESES_CORTOS[i]} – ${MESES_CORTOS[j]}`);
+      i = j;
+    }
+    return tramos.join(', ');
+  }
+
+  get mesesCortosExclusion(): string[] {
+    return MESES_CORTOS;
+  }
+
+  toggleCentroExclusion(clave: string): void {
+    if (this.centrosExclusionAbiertos.has(clave)) this.centrosExclusionAbiertos.delete(clave);
+    else this.centrosExclusionAbiertos.add(clave);
+  }
+
+  abrirTodosCentrosExclusion(abrir: boolean): void {
+    this.centrosExclusionAbiertos = abrir ? new Set(this.gruposExclusion.map(g => g.clave)) : new Set<string>();
   }
 
   downloadCSV(): void {

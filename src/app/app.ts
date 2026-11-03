@@ -21,7 +21,7 @@ export class App implements OnInit {
   title = 'Essalud_GCPP_Frontend';
 
   currentNavbar: string = 'login';
-  private readonly publicRoutesWithoutNavbar = ['/login', '/solicitud-acceso/registro'];
+  private readonly publicRoutesWithoutNavbar = ['/login', '/solicitud-acceso/registro', '/tmi/dashboard', '/tmi/dashboard-estandar'];
 
   constructor(
     private router: Router,

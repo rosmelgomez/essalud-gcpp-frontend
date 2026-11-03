@@ -18,6 +18,8 @@ export class TmiCalculoService {
   getResultado(periodo: string, idIndicador: number) {
     return this.http.get<TmiResultadoFinal[]>(`${base_url}/resultado/${periodo}/${idIndicador}`);
   }
+  /** Periodos con resultado guardado para el dashboard (ruta pública, sin sesión). */
+  getPeriodosDashboard() { return this.http.get<TmiPeriodoCalculo['periodos']>(`${base_url}/dashboard/periodos`); }
   /** Datos del dashboard: resultado final guardado del periodo (AAAAMM). */
   getDashboard(periodo: string) { return this.http.get<TmiDashboardDatos>(`${base_url}/dashboard/${periodo}`); }
   /** ids: indicadores que lleva el Excel; sin ids, todos. */
