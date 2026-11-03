@@ -1,0 +1,368 @@
+<div class="dash">
+  <header class="head">
+    <div class="head-top">
+      <p class="eyebrow">EsSalud · Sub Gerencia de Estadística @if (data()) { · Cifras preliminares a {{ mesTxt() }} {{ data()!.anio }} }</p>
+      <a class="btn" routerLink="/tmi/administrativo"><mat-icon>settings</mat-icon> Administración TMI</a>
+    </div>
+    <h1>Tablero de monitoreo de gestión de los establecimientos de salud</h1>
+    @if (data()) {
+    <p class="lead">@for (s of lead(); track $index) { @if (s.b) { <b>{{ s.t }}</b> } @else { {{ s.t }} } }</p>
+    }
+  </header>
+
+  <nav class="filters" aria-label="Filtros">
+    <div class="f">
+      <label for="f-per">Periodo</label>
+      <select id="f-per" [ngModel]="periodo()" (ngModelChange)="cargar($event)" [disabled]="!periodos().length">
+        @for (p of periodos(); track p.periodo) { <option [value]="p.periodo">{{ p.label }}</option> }
+      </select>
+    </div>
+    <div class="f">
+      <label for="f-red">Red asistencial</label>
+      <select id="f-red" [ngModel]="red()" (ngModelChange)="setRed($event)">
+        <option value="">Todas las redes (nacional)</option>
+        @for (o of opcionesRed(); track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+      </select>
+    </div>
+    <div class="f">
+      <label for="f-cen">Establecimiento</label>
+      <select id="f-cen" [ngModel]="centro() ?? ''" (ngModelChange)="setCentro($event === '' ? null : +$event)">
+        <option value="">{{ red() ? 'Toda la red' : 'Todos los establecimientos' }}</option>
+        @for (g of opcionesCentro(); track g.grupo) {
+          @if (g.grupo) {
+          <optgroup [label]="g.grupo">
+            @for (o of g.items; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+          </optgroup>
+          } @else {
+            @for (o of g.items; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+          }
+        }
+      </select>
+    </div>
+    <div class="f">
+      <label for="f-ind">Indicador</label>
+      <select id="f-ind" [ngModel]="ind() ?? ''" (ngModelChange)="elegirInd($event)">
+        <option value="">Todos los indicadores</option>
+        @for (sv of servicios(); track sv.nombre) {
+        <optgroup [label]="sv.nombre">
+          @for (x of sv.inds; track x.id) { <option [value]="x.i">{{ x.nombre }}</option> }
+        </optgroup>
+        }
+      </select>
+    </div>
+    <button class="btn" type="button" (click)="limpiar()">Limpiar filtros</button>
+  </nav>
+
+  @if (cargando()) {
+  <div class="card estado">Cargando el resultado del periodo…</div>
+  } @else if (error()) {
+  <div class="card estado error">{{ error() }}</div>
+  } @else if (data()) {
+
+  <!-- resumen -->
+  <section class="hero" aria-label="Resumen">
+    <div class="card gauge-card">
+      <h3>{{ gauge().titulo }}</h3>
+      <svg class="gauge" viewBox="0 0 300 170" width="100%" role="img" [attr.aria-label]="'Puntaje ' + gauge().texto + ' de ' + gauge().max">
+        <path [attr.d]="gauge().fondo" stroke="var(--d-grid)" stroke-width="20" fill="none" stroke-linecap="round" />
+        @if (gauge().valor) { <path [attr.d]="gauge().valor" [attr.stroke]="gauge().color" stroke-width="20" fill="none" stroke-linecap="round" /> }
+        @for (mk of gauge().marcas; track $index) {
+        <line [attr.x1]="mk.x1" [attr.y1]="mk.y1" [attr.x2]="mk.x2" [attr.y2]="mk.y2" stroke="var(--d-fg)" stroke-width="1.5" opacity=".45" />
+        }
+        <text x="30" y="168" text-anchor="middle" class="svg-t">{{ gauge().min }}</text>
+        <text x="270" y="168" text-anchor="middle" class="svg-t">{{ gauge().max }}</text>
+      </svg>
+      <div class="gauge-num"><span class="big">{{ gauge().texto }}</span><span class="of">/ {{ gauge().max }}</span></div>
+      <span class="band" [class]="'band ' + gauge().b">{{ bandWord[gauge().b] }}</span>
+      <p class="note">{{ gauge().nota }}</p>
+    </div>
+    <div class="tiles">
+      @for (t of tiles(); track t.label) {
+      <div class="card tile">
+        <span class="tile-label">{{ t.label }}</span>
+        <span class="big" [style.color]="t.cls ? color(t.cls) : null">{{ t.value }}</span>
+        @if (t.note) { <p class="note">{{ t.note }}</p> }
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- detalle del indicador -->
+  @if (detalle(); as det) {
+  <section class="sec">
+    <div class="sec-head">
+      <h2>{{ S().ind!.nombre }}</h2>
+      <p>{{ S().nombre }}. {{ det.cen ? 'Valor acumulado mes a mes frente al estándar.' : 'Valor real de cada establecimiento frente a su estándar.' }}</p>
+    </div>
+    <div class="two">
+      <div class="card">
+        @if (det.cen) {
+          <h3>Valor acumulado frente al estándar</h3>
+          @if (det.g) {
+          <div class="legend">
+            <span><i class="sw-line" style="border-color:#007AC9"></i>Valor real acumulado</span>
+            <span><i class="sw-dash" style="border-color:var(--d-ok)"></i>Estándar</span>
+          </div>
+          <ng-container *ngTemplateOutlet="grafico; context: { $implicit: det.g }" />
+          <p class="note">{{ det.nota }}</p>
+          } @else {
+          <p class="note">El indicador no aplica a este establecimiento.</p>
+          }
+        } @else {
+          <h3>Distribución de establecimientos</h3>
+          <div class="dist">
+            @if (det.dist!['5']) { <i class="f-ok" [style.flex]="det.dist!['5']">{{ det.dist!['5'] }}</i> }
+            @if (det.dist!['3']) { <i class="f-warn" [style.flex]="det.dist!['3']">{{ det.dist!['3'] }}</i> }
+            @if (det.dist!['1']) { <i class="f-bad" [style.flex]="det.dist!['1']">{{ det.dist!['1'] }}</i> }
+          </div>
+          <p class="note">{{ det.dist!.n }} establecimientos con el indicador aplicable: {{ det.dist!['5'] }} con 5, {{ det.dist!['3'] }} con 3 y {{ det.dist!['1'] }} con 1 punto.</p>
+          <h3>Valor real frente al estándar</h3>
+          <p class="note">Cada fila es un establecimiento: el punto es su valor real y la marca vertical su estándar. Primero los que no cumplen.</p>
+          <div class="legend">
+            <span><i class="sw dot f-ok"></i>5</span><span><i class="sw dot f-warn"></i>3</span><span><i class="sw dot f-bad"></i>1</span>
+            <span><i class="sw-tick"></i>Estándar</span>
+          </div>
+          <div class="rank" style="max-height:520px">
+            @if (det.escala) {
+            <div class="rank-row dots axis"><span></span><span class="scale"><span>{{ det.escala[0] }}</span><span>{{ det.escala[1] }}</span></span><span></span></div>
+            }
+            @for (f of det.filas; track f.c.cod) {
+            <div class="rank-row dots" role="button" tabindex="0" (click)="setCentro(f.c.cod)" (keydown.enter)="setCentro(f.c.cod)"
+              (mousemove)="tipPunto($event, f)" (mouseleave)="ocultarTip()">
+              <span class="rank-name">{{ f.nombre }}</span>
+              <span class="track">
+                @if (f.xe != null) { <u [style.left.%]="f.xe"></u> }
+                <i [style.left]="'calc(' + f.xv + '% - 5px)'" [style.background]="color(f.b)"></i>
+              </span>
+              <span class="rank-val">{{ f.txt }}</span>
+            </div>
+            } @empty { <p class="note">Ningún establecimiento tiene este indicador aplicable.</p> }
+          </div>
+        }
+      </div>
+      <div class="card">
+        <h3>Ficha del indicador</h3>
+        <dl class="kv">
+          @for (p of det.ficha; track p[0]) { <dt>{{ p[0] }}</dt><dd>{{ p[1] }}</dd> }
+        </dl>
+        <button class="btn" type="button" style="align-self:flex-start" (click)="setInd(null)">Quitar filtro de indicador</button>
+      </div>
+    </div>
+  </section>
+  }
+
+  <!-- servicios -->
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Desempeño por servicio</h2>
+      <p>{{ S().cen ? 'Puntaje del establecimiento en cada indicador (5, 3 o 1) y su valor real frente al estándar.'
+        : 'Puntaje promedio de cada servicio (1 a 5) y cómo se reparten los establecimientos en cada indicador.' }}</p>
+    </div>
+    <div class="legend">
+      <span><i class="sw f-ok"></i>Cumple el estándar (5)</span>
+      <span><i class="sw f-warn"></i>Cerca del estándar (3)</span>
+      <span><i class="sw f-bad"></i>No cumple (1 o sin producción)</span>
+      <span>Clic en un indicador para filtrarlo</span>
+    </div>
+    <div class="areas">
+      @for (a of areas(); track a.nombre) {
+      <div class="card area" [style.border-top-color]="a.color">
+        <div class="area-top">
+          <span class="area-name">{{ a.nombre }}</span>
+          <span><span class="big sm">{{ a.score == null ? 'NA' : a.score.toFixed(2) }}</span><span class="of"> / 5</span></span>
+        </div>
+        @for (f of a.filas; track f.x.id) {
+        <div class="ind" [class.on]="ind() === f.x.i" role="button" tabindex="0" [attr.aria-pressed]="ind() === f.x.i"
+          (click)="setInd(f.x.i)" (keydown.enter)="setInd(f.x.i)" (mousemove)="tipIndicador($event, f)" (mouseleave)="ocultarTip()">
+          <span class="ind-name">{{ f.x.nombre }}</span>
+          <span class="pill" [class]="'pill ' + (f.v == null ? 'na' : f.b)">{{ f.txt }}</span>
+          @if (f.sub) { <span class="ind-sub">{{ f.sub }}</span> }
+          @if (f.d?.n) {
+          <div class="stack">
+            <i class="f-ok" [style.width.%]="f.d!['5'] / f.d!.n * 100"></i>
+            <i class="f-warn" [style.width.%]="f.d!['3'] / f.d!.n * 100"></i>
+            <i class="f-bad" [style.width.%]="f.d!['1'] / f.d!.n * 100"></i>
+          </div>
+          }
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- ranking y evolución -->
+  <section class="sec">
+    <div class="sec-head"><h2>{{ ranking().titulo }}</h2><p>{{ ranking().sub }}</p></div>
+    <div class="two">
+      <div class="card">
+        <div class="legend">
+          @for (l of ranking().leyenda; track l.cls) { <span class="pill" [class]="'pill ' + l.cls"><b>{{ l.n }}</b>&nbsp;{{ l.t }}</span> }
+        </div>
+        <div class="rank">
+          @for (x of ranking().filas; track x.key) {
+          <div class="rank-row" [class.on]="x.on" role="button" tabindex="0" (click)="irFila(x)" (keydown.enter)="irFila(x)"
+            (mousemove)="tipRanking($event, x)" (mouseleave)="ocultarTip()">
+            <span class="rank-pos">{{ x.pos }}</span>
+            <span class="rank-name">{{ x.name }}</span>
+            <span class="rank-bar"><i [style.width.%]="x.w" [style.background]="color(x.b)"></i>
+              @if (ranking().ref != null) { <u [style.left.%]="ranking().ref"></u> }</span>
+            <span class="rank-val">{{ x.txt }}</span>
+          </div>
+          } @empty { <p class="note">Sin datos para este filtro.</p> }
+        </div>
+      </div>
+      <div class="card">
+        <h3>Evolución enero–{{ mesTxt() }}</h3>
+        <p class="note">{{ tendencia().sub }}</p>
+        <div class="legend">
+          @for (s of tendencia().g.series; track s.name) {
+          <span><i [class]="s.dash ? 'sw-dash' : 'sw-line'" [style.border-color]="s.color"></i>{{ s.name }}</span>
+          }
+        </div>
+        <ng-container *ngTemplateOutlet="grafico; context: { $implicit: tendencia().g }" />
+      </div>
+    </div>
+  </section>
+
+  <!-- mapa de calor -->
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Mapa de calor por indicador</h2>
+      <p>{{ porRed() ? 'Puntaje de cada red' : 'Puntaje de cada establecimiento' }} en cada indicador (1 a 5), ordenado por el puntaje total.
+        Pase el cursor por un código para ver el nombre del indicador; clic en una fila para filtrar.</p>
+    </div>
+    <div class="card">
+      <div class="legend">
+        <span><i class="sw f-ok"></i>Alto (4 a 5)</span><span><i class="sw f-warn"></i>Medio (3 a 4)</span>
+        <span><i class="sw f-bad"></i>Bajo (menos de 3)</span><span>· NA: no aplica</span>
+      </div>
+      <div class="heatbox">
+        <table class="heat">
+          <thead>
+            <tr>
+              <th class="name"></th>
+              @for (a of servicios(); track a.nombre) {
+              <th class="grp" [attr.colspan]="a.inds.length" [style.border-bottom-color]="a.color">{{ a.nombre.split(' ')[0] }}</th>
+              }
+              <th></th>
+            </tr>
+            <tr>
+              <th class="name">{{ porRed() ? 'Red' : 'Establecimiento' }}</th>
+              @for (x of inds(); track x.id) {
+              <th class="cod" [class.sel]="ind() === x.i" [title]="x.nombre" (click)="setInd(x.i)">{{ x.ab }}</th>
+              }
+              <th>/20</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of mapa(); track r.name + r.cod) {
+            <tr [class.on]="r.on" (click)="irFila(r)">
+              <td class="name" [title]="r.name">{{ r.name }}</td>
+              @for (c of r.celdas; track $index) {
+              <td [class]="c.b" [class.colon]="ind() === $index" (mousemove)="tipCelda($event, r.name, $index, c.v)" (mouseleave)="ocultarTip()">{{ c.txt }}</td>
+              }
+              <td [class]="r.b" class="tot">{{ r.nota.toFixed(1) }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="heat-ley" aria-label="Leyenda de indicadores">
+        @for (a of servicios(); track a.nombre) {
+        <div class="heat-ley-grupo" [style.border-top-color]="a.color">
+          <span class="heat-ley-titulo">{{ a.nombre }}</span>
+          @for (x of a.inds; track x.id) {
+          <button type="button" class="heat-ley-item" [class.sel]="ind() === x.i" (click)="setInd(x.i)">
+            <b>{{ x.ab }}</b><span>{{ x.nombre }}</span>
+          </button>
+          }
+        </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- tabla -->
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Establecimientos</h2>
+      <p>{{ S().cen ? 'Establecimientos de su red' : S().kind === 'nacional' ? 'Establecimientos de todas las redes' : 'Establecimientos de ' + S().nombre }}.
+        Clic en un encabezado para ordenar y en una fila para filtrar por el establecimiento.</p>
+    </div>
+    <div class="card">
+      <div class="tools">
+        <input type="search" placeholder="Buscar establecimiento, red o tipo…" aria-label="Buscar establecimiento"
+          [ngModel]="q()" (ngModelChange)="q.set($event)">
+        <span class="note">{{ filasTabla().length }} de {{ lista().length }} establecimientos</span>
+        <button class="btn" type="button" (click)="descargarCsv()"><mat-icon>download</mat-icon> Descargar CSV</button>
+      </div>
+      <div class="tablebox">
+        <table class="t">
+          <thead>
+            <tr>
+              @for (c of columnas(); track c.k) {
+              <th [class.num]="c.num" [class.sm]="c.sm" [attr.aria-sort]="sortKey() === c.k ? (sortDir() > 0 ? 'ascending' : 'descending') : null">
+                <button type="button" (click)="ordenar(c.k, !!c.num)">{{ c.t }}</button>
+              </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of filasTabla(); track r.c.cod) {
+            <tr [class.on]="S().cen === r.c" (click)="setCentro(r.c.cod)">
+              @for (x of r.celdas; track $index) {
+              <td [class.num]="x.num" [class.sm]="x.sm">
+                @if (x.pill) { <span class="pill" [class]="'pill ' + x.pill">{{ x.txt }}</span> } @else { {{ x.txt }} }
+              </td>
+              }
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="method">
+    <p><b>Cómo leer este tablero.</b> Cada indicador se califica por establecimiento con 5 puntos si cumple el estándar, 3 si está cerca y 1 si no
+      lo cumple. El puntaje de un establecimiento o red es lo obtenido sobre el máximo posible, llevado a escala de 20. El puntaje de una red por
+      indicador es el promedio de sus establecimientos; el nacional, el promedio de las redes sin las redes APP.</p>
+    <p>Bandas de lectura: nivel alto desde 16 puntos, medio desde 12 y bajo por debajo de 12 (en escala de 1 a 5: alto desde 4, medio desde 3).</p>
+    <p>Fuente: resultado final del TMI guardado para {{ mesTxt() }} {{ data()!.anio }}@if (data()!.fecha_calculo) { (calculado el {{ data()!.fecha_calculo!.slice(0, 10) }})}.
+      Cifras preliminares: podrían modificarse por omisiones o correcciones propias del proceso estadístico.</p>
+  </section>
+  }
+</div>
+
+@if (tip(); as t) {
+<div class="tip" role="tooltip" [style.left.px]="t.x" [style.top.px]="t.y">
+  <b>{{ t.title }}</b>
+  @for (l of t.lines; track $index) { <span>{{ l }}</span> }
+</div>
+}
+
+<ng-template #grafico let-g>
+  <svg #svg class="chart" [attr.viewBox]="'0 0 ' + g.W + ' ' + g.H" width="100%" role="img" aria-label="Evolución mensual">
+    @for (l of g.grid; track $index) {
+    <line [attr.x1]="g.x0" [attr.x2]="g.x1" [attr.y1]="l.y" [attr.y2]="l.y" stroke="var(--d-grid)" />
+    <text [attr.x]="g.x0 - 6" [attr.y]="l.y + 4" text-anchor="end" class="svg-t">{{ l.label }}</text>
+    }
+    @for (l of g.xl; track $index) { <text [attr.x]="l.x" [attr.y]="g.H - 6" text-anchor="middle" class="svg-t">{{ l.label }}</text> }
+    @for (b of g.bandas; track $index) {
+    <line [attr.x1]="g.x0" [attr.x2]="g.x1" [attr.y1]="b" [attr.y2]="b" stroke="var(--d-ref)" stroke-dasharray="2 4" />
+    }
+    @if (g.refY != null) {
+    <line [attr.x1]="g.x0" [attr.x2]="g.x1" [attr.y1]="g.refY" [attr.y2]="g.refY" stroke="var(--d-ok)" stroke-width="2" stroke-dasharray="6 4" />
+    }
+    @for (p of g.paths; track $index) {
+    <path [attr.d]="p.d" fill="none" [attr.stroke]="p.color" [attr.stroke-width]="p.main ? 2.5 : 1.8" [attr.stroke-dasharray]="p.dash || null" />
+    }
+    @for (d of g.dots; track $index) { <circle [attr.cx]="d.cx" [attr.cy]="d.cy" r="3.5" [attr.fill]="d.color" /> }
+    @if (hoverK()?.g === g) {
+    <line [attr.x1]="g.xs[hoverK()!.k]" [attr.x2]="g.xs[hoverK()!.k]" [attr.y1]="g.y0" [attr.y2]="g.y1" stroke="var(--d-muted)" opacity=".5" />
+    }
+    <rect [attr.x]="g.x0" [attr.y]="g.y0" [attr.width]="g.x1 - g.x0" [attr.height]="g.y1 - g.y0" fill="transparent"
+      (mousemove)="tipGrafico($event, g, svg)" (mouseleave)="salirGrafico()" />
+  </svg>
+</ng-template>

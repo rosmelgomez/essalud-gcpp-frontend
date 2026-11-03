@@ -987,3 +987,28 @@
         grid-column: auto;
     }
 }
+
+/* Enlace al dashboard del resultado final */
+.btn-dashboard {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: var(--essalud-blue, #007AC9);
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-dashboard:hover {
+    background: var(--essalud-navy-deep, #0b1a30);
+}
+
+.btn-dashboard mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}

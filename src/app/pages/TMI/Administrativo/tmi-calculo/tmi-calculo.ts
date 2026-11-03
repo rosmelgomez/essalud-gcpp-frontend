@@ -3,15 +3,8 @@ import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import {
-  TmiIndicadorService,
-  TmiCalculoService,
-  TmiIndicador,
-  TmiPeriodoCalculo,
-  TmiProblemaConfig,
-  TmiResultadoFinal,
-  mensajeError,
-} from '../../../services/tmi';
+import { TmiIndicadorService, TmiCalculoService, TmiIndicador, TmiResultadoFinal, TmiPeriodoCalculo, TmiProblemaConfig, mensajeError } from '../../../../services/tmi';
+
 
 const MESES = [
   { value: '01', label: 'Enero' }, { value: '02', label: 'Febrero' }, { value: '03', label: 'Marzo' },

@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
-import { TmiEstandarService, TmiCentroService } from '../../services/tmi';
+
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
@@ -9,7 +9,8 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
-import { FechaActualizacionService } from '../../services/fecha-actualizacion-service';
+import { RouterLink } from '@angular/router';
+
 import { Observable } from 'rxjs';
 import { TmiVariables } from './tmi-variables/tmi-variables';
 import { TmiConfigIndicadores } from './tmi-config-indicadores/tmi-config-indicadores';
@@ -18,6 +19,9 @@ import { TmiCalculo } from './tmi-calculo/tmi-calculo';
 import { TmiCierreComponent } from './tmi-cierre/tmi-cierre';
 
 import { TmiAceptacion } from './tmi-aceptacion/tmi-aceptacion';
+import { TmiEstandarService } from '../../../services/tmi/tmi-estandar-service';
+import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { TmiCentroService } from '../../../services/tmi';
 
 export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre'
   | 'Aceptacion' | 'Variables' | 'Indicadores' | 'Estandar Centro' | 'Calcular';
@@ -35,6 +39,7 @@ export type TabType = 'Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categ
     FormsModule,
     MatIconModule,
     ReactiveFormsModule,
+    RouterLink,
     TmiVariables,
     TmiConfigIndicadores,
     TmiCentroEstandarTab,

@@ -9,7 +9,6 @@ import { LocalStorageService } from '../local-storage-service';
 const base_url = Backend.api;
 
 export const MENSAJE_SESION_EXPIRADA = 'Su sesión ha expirado. Por favor, inicie sesión de nuevo.';
-export const MENSAJE_SIN_SERVIDOR = 'No se pudo comunicar con el servidor. Por seguridad se cerró la sesión; inicie sesión de nuevo.';
 
 @Injectable({
   providedIn: 'root',
@@ -100,13 +99,13 @@ export class AuthService {
       .subscribe();
   }
 
-  /** Cierre de sesión completo cuando el token de larga duración expiró o el backend no responde. */
-  endSession(mensaje: string = MENSAJE_SESION_EXPIRADA): void {
+  /** Cierre de sesión completo cuando el token de larga duración expiró o el backend no responde (sin aviso). */
+  endSession(mensaje: string | null = MENSAJE_SESION_EXPIRADA): void {
     if (this.cerrandoSesion) return;
     this.cerrandoSesion = true;
     this.clearSession();
     this.borrarCookiesSesion();
-    this.router.navigate(['/login'], { queryParams: { message: mensaje } })
+    this.router.navigate(['/login'], mensaje ? { queryParams: { message: mensaje } } : {})
       .finally(() => (this.cerrandoSesion = false));
   }
 

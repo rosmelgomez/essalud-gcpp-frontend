@@ -2,8 +2,8 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { TmiCierreService, TmiCalendarioCierre, TmiCierre, mensajeError } from '../../../services/tmi';
 import { AyudaFlotante } from '../ayuda-flotante';
+import { TmiCierreService, TmiCalendarioCierre, TmiCierre, mensajeError } from '../../../../services/tmi';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre',
   'Noviembre', 'Diciembre'];

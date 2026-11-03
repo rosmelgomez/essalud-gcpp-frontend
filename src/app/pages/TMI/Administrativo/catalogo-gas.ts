@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
-import { TmiCatalogoService, TmiGrupoActividadServicio } from '../../services/tmi';
+import { TmiGrupoActividadServicio, TmiCatalogoService } from '../../../services/tmi';
+
 
 export interface OpcionGas {
   id: number;

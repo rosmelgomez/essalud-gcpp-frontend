@@ -37,9 +37,7 @@
             <mat-icon>person</mat-icon>
             <input id="login-user" type="text" name="username" placeholder="Tu usuario" formControlName="username"
               autocomplete="username" autofocus />
-          </div>
-          <small class="error" *ngIf="loginFieldInvalid('username')">Ingresa tu usuario.</small>
-        </div>
+          </div>        </div>
 
         <div class="field" [class.has-error]="loginFieldInvalid('password')">
           <div class="label-row">
@@ -54,9 +52,7 @@
               [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
               <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
-          </div>
-          <small class="error" *ngIf="loginFieldInvalid('password')">Ingresa tu contraseña.</small>
-        </div>
+          </div>        </div>
 
         <div class="banner-error" *ngIf="loginError" role="alert">
           <mat-icon>error_outline</mat-icon>

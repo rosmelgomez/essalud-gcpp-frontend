@@ -4,7 +4,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthLogin } from '../../services/usuario/auth-login';
-import { AuthService } from '../../services/usuario/auth-service';
+import { AuthService, MENSAJE_SESION_EXPIRADA } from '../../services/usuario/auth-service';
 import { RouteLogger } from '../../services/route-logger';
 import { UsersService } from '../../services/usuario/users-service';
 import { Auth } from '../../model/user';
@@ -49,7 +49,7 @@ export class Login implements OnInit {
     // Si la sesión de api_token sigue activa, redirigir al home.
     this.authloginService.apiToken().subscribe({
       next: () => {
-        this.router.navigate(['/tmi']);
+        this.router.navigate(['/tmi/administrativo']);
       },
       // sin sesión válida: borrar cualquier dato que haya quedado de una sesión anterior
       error: () => this.authService.clearSession(),
@@ -57,10 +57,14 @@ export class Login implements OnInit {
 
     // Capturar el mensaje de sesión expirada desde los parámetros de URL
     this.route.queryParams.subscribe((params) => {
-      if (params['message']) {
-        // Se mantiene visible hasta que el usuario vuelva a intentar ingresar o lo cierre.
-        this.sessionExpiredMessage = params['message'];
+      if (!params['message']) return;
+      // Solo se muestra el aviso de sesión expirada (no cualquier texto que venga en la URL).
+      // Se mantiene visible hasta que el usuario vuelva a intentar ingresar o lo cierre.
+      if (params['message'] === MENSAJE_SESION_EXPIRADA) {
+        this.sessionExpiredMessage = MENSAJE_SESION_EXPIRADA;
       }
+      // se quita el parámetro de la URL para que no reaparezca al recargar
+      this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
     });
 
     this.reactiveForm();
@@ -146,25 +150,16 @@ export class Login implements OnInit {
           this.routeLogger.logLogin();
           this.usersService.getUser(user.username).subscribe({
             next: (data) => {
-              this.isLoggingIn = false;
               if (data && data.firstLogin) {
+                this.isLoggingIn = false;
                 this.tempUserDto = data;
                 this.showChangePassword = true;
               } else {
                 this.authService.setCurrentUser(data);
-                this.loginForm.reset();
-                this.router.navigate(['/tmi'], {
-                  state: { surveyReminder: '1' },
-                });
+                this.irAlInicio();
               }
             },
-            error: () => {
-              this.isLoggingIn = false;
-              this.loginForm.reset();
-              this.router.navigate(['/tmi'], {
-                state: { surveyReminder: '1' },
-              });
-            },
+            error: () => this.irAlInicio(),
           });
         },
         error: (error) => {
@@ -178,6 +173,16 @@ export class Login implements OnInit {
     } else {
       this.loginForm.markAllAsTouched();
     }
+  }
+
+  /**
+   * Navega al inicio sin vaciar el formulario: resetearlo antes de que termine la
+   * navegación (el guard consulta /api-token) dejaba los campos vacíos marcados en rojo.
+   */
+  private irAlInicio(): void {
+    this.router.navigate(['/tmi/administrativo'], { state: { surveyReminder: '1' } })
+      .then((ok) => { if (!ok) this.isLoggingIn = false; })
+      .catch(() => (this.isLoggingIn = false));
   }
 
   changePasswordFirstTime() {
@@ -208,7 +213,7 @@ export class Login implements OnInit {
           this.showChangePassword = false;
           this.tempUserDto = null;
 
-          this.router.navigate(['/tmi'], {
+          this.router.navigate(['/tmi/administrativo'], {
             state: { surveyReminder: '1' },
           });
         },

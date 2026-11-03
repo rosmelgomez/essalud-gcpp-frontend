@@ -8,6 +8,7 @@ import { reportesRoutes } from './pages/Resportes/reportes.router';
 import { indicadoresRoutes } from './pages/Indicadores/indicadores.router';
 import { solicitudAccesoRoutes } from './pages/Solicitud-Acceso/solucitud-acceso.router';
 import { usuarioRoutes } from './pages/Usuarios/usuario.router';
+import { TmiRoutes } from './pages/TMI/tmi.router';
 
 
 export const routes: Routes = [
@@ -42,6 +43,5 @@ export const routes: Routes = [
     { path: 'documento', children: documentoRoutes, canActivate: [authenticateGuard] },
 
     //tmi
-    { path: 'tmi', loadComponent: () => import('./pages/tmi-indicadores/tmi-indicadores').then((m) => m.TmiIndicadores), canActivate: [authenticateGuard] },
-
+    { path: 'tmi', children: TmiRoutes, canActivate: [authenticateGuard] },
 ];

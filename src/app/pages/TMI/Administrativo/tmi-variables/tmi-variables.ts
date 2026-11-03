@@ -4,15 +4,9 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { CatalogoGas } from '../catalogo-gas';
-import {
-  TmiCatalogoService,
-  TmiVariableService,
-  TmiVariable,
-  TmiVariableComponente,
-  TmiVariableLogica,
-  mensajeError,
-} from '../../../services/tmi';
+
 import { AyudaFlotante } from '../ayuda-flotante';
+import { TmiVariableService, TmiVariable, TmiVariableLogica, TmiVariableComponente, TmiCatalogoService, mensajeError } from '../../../../services/tmi';
 
 @Component({
   selector: 'app-tmi-variables',

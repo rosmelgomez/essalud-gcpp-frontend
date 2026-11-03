@@ -3,15 +3,9 @@ import { DecimalPipe } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import {
-  TmiIndicadorService,
-  TmiCentroService,
-  TmiCentroCatalogo,
-  TmiCentroEstandar,
-  TmiIndicador,
-  mensajeError,
-} from '../../../services/tmi';
+
 import { AyudaFlotante } from '../ayuda-flotante';
+import { TmiIndicadorService, TmiCentroService, TmiCentroEstandar, TmiCentroCatalogo, TmiIndicador, mensajeError } from '../../../../services/tmi';
 
 export const MESES = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 export const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];

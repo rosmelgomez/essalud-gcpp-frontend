@@ -5,23 +5,9 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { Subject, catchError, debounceTime, map, of, switchMap } from 'rxjs';
-import {
-  TmiCatalogoService,
-  TmiVariableService,
-  TmiIndicadorService,
-  TmiEstandarService,
-  TmiCalculoService,
-  TmiAnalisisFormula,
-  TmiCatalogo,
-  TmiIndicador,
-  TmiLetra,
-  TmiProblemaConfig,
-  TmiTerminoFormula,
-  TmiTipoEstandar,
-  TmiVariable,
-  mensajeError,
-} from '../../../services/tmi';
+
 import { AyudaFlotante } from '../ayuda-flotante';
+import { TmiCatalogoService, TmiVariableService, TmiIndicadorService, TmiEstandarService, TmiCalculoService, TmiIndicador, TmiCatalogo, TmiProblemaConfig, TmiTipoEstandar, TmiLetra, TmiVariable, TmiAnalisisFormula, mensajeError, TmiTerminoFormula } from '../../../../services/tmi';
 
 const HOJA = /^[^\[\]:*?/\\]+$/;
 const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');

@@ -3,8 +3,9 @@ import { DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { TmiEstandarService, TmiAceptacionIndicador, TmiTipoEstandar, mensajeError } from '../../../services/tmi';
+
 import { AyudaFlotante } from '../ayuda-flotante';
+import { TmiEstandarService, TmiAceptacionIndicador, TmiTipoEstandar, mensajeError } from '../../../../services/tmi';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 

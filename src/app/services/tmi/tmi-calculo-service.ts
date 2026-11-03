@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Backend } from '../../model/api';
-import { TmiPeriodoCalculo, TmiProblemaConfig, TmiResultadoFinal } from './tmi-models';
+import { TmiDashboardDatos, TmiPeriodoCalculo, TmiProblemaConfig, TmiResultadoFinal } from './tmi-models';
 
 const base_url = Backend.apiTmi + '/dinamico';
 
@@ -18,6 +18,8 @@ export class TmiCalculoService {
   getResultado(periodo: string, idIndicador: number) {
     return this.http.get<TmiResultadoFinal[]>(`${base_url}/resultado/${periodo}/${idIndicador}`);
   }
+  /** Datos del dashboard: resultado final guardado del periodo (AAAAMM). */
+  getDashboard(periodo: string) { return this.http.get<TmiDashboardDatos>(`${base_url}/dashboard/${periodo}`); }
   /** ids: indicadores que lleva el Excel; sin ids, todos. */
   getExcel(periodo: string, calcular: boolean, ids?: number[]) {
     const filtro = ids?.length ? `&indicadores=${ids.join(',')}` : '';

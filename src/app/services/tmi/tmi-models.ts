@@ -313,3 +313,51 @@ export interface TmiCalendarioCierre {
   usuario_modifica: string | null;
   meses: TmiCalendarioMes[];
 }
+
+/** Dashboard del TMI (GET /dinamico/dashboard/{periodo}): resultado final del periodo con los puntajes del Excel. */
+export interface TmiDashIndicador {
+  id: number;
+  codigo: string;
+  nombre: string;
+  servicio: string;
+  sentido: 'MENOR' | 'MAYOR' | 'BANDA' | null;
+  formato: 'NUMERO' | 'PORCENTAJE' | null;
+  nacional: number | null;   // promedio de las redes sin las redes APP (1 a 5)
+}
+/** Valor del centro en un indicador (null en el arreglo si el indicador no aplica). */
+export interface TmiDashDetalle {
+  p: number | null;          // puntaje 5, 3, 1 o 0
+  v: number;                 // valor real acumulado
+  e: number | null;          // estándar
+  acept: number | null;
+  aceptmenos: number | null;
+  m: (number | null)[];      // valor acumulado de Ene..mes
+}
+export interface TmiDashRed {
+  nombre: string;
+  instituto: boolean;
+  app: boolean;
+  pts: (number | null)[];    // puntaje por indicador (en el orden de indicadores); null = NA
+  nota: number;              // sobre 20
+  mensual: number[];         // nota de Ene..mes
+}
+export interface TmiDashCentro {
+  cod: number;
+  nombre: string;
+  red: string;
+  nivel: string | null;
+  tipo: string | null;
+  pts: (number | null)[];
+  nota: number;
+  mensual: number[];
+  det: (TmiDashDetalle | null)[];
+}
+export interface TmiDashboardDatos {
+  periodo: string;
+  anio: number;
+  mes: number;
+  fecha_calculo: string | null;
+  indicadores: TmiDashIndicador[];
+  redes: TmiDashRed[];
+  centros: TmiDashCentro[];
+}

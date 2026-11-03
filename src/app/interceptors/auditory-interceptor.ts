@@ -2,7 +2,7 @@ import { HttpContextToken, HttpErrorResponse, HttpInterceptorFn } from '@angular
 import { ApplicationRef, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthLogin } from '../services/usuario/auth-login';
-import { AuthService, MENSAJE_SESION_EXPIRADA, MENSAJE_SIN_SERVIDOR } from '../services/usuario/auth-service';
+import { AuthService, MENSAJE_SESION_EXPIRADA } from '../services/usuario/auth-service';
 import { catchError, finalize, switchMap, throwError } from 'rxjs';
 import { Backend } from '../model/api';
 
@@ -43,7 +43,7 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
     if ((error.status === 401 || error.status === 0) && !esPeticionDeSesion && !isPublicRoute) {
       authService.verificarSesion().subscribe(({ activa, sinServidor }) => {
         if (!activa) {
-          authService.endSession(sinServidor ? MENSAJE_SIN_SERVIDOR : MENSAJE_SESION_EXPIRADA);
+          authService.endSession(sinServidor ? null : MENSAJE_SESION_EXPIRADA);
         }
       });
     }

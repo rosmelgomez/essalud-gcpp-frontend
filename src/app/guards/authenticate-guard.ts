@@ -2,7 +2,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthLogin } from '../services/usuario/auth-login';
 import { inject } from '@angular/core';
 import { LocalStorageService } from '../services/local-storage-service';
-import { AuthService, MENSAJE_SESION_EXPIRADA, MENSAJE_SIN_SERVIDOR } from '../services/usuario/auth-service';
+import { AuthService, MENSAJE_SESION_EXPIRADA } from '../services/usuario/auth-service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, of } from 'rxjs';
 
@@ -44,11 +44,11 @@ export const authenticateGuard: CanActivateFn = (route) => {
     map(() => validateRoles()),
     catchError((err: HttpErrorResponse) => {
       // api_token vencido o backend sin respuesta: se borra todo lo guardado de la sesión
-      const huboSesion = !!dataImport.getUser();
+      // (si el backend no respondió no se muestra aviso)
+      const mostrarAviso = !!dataImport.getUser() && err?.status !== 0;
       sesion.clearSession();
       sesion.borrarCookiesSesion();
-      const message = err?.status === 0 ? MENSAJE_SIN_SERVIDOR : MENSAJE_SESION_EXPIRADA;
-      return of(router.createUrlTree(['/login'], huboSesion ? { queryParams: { message } } : {}));
+      return of(router.createUrlTree(['/login'], mostrarAviso ? { queryParams: { message: MENSAJE_SESION_EXPIRADA } } : {}));
     }),
   );
 
