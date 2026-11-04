@@ -3,10 +3,23 @@
     <div class="head-top">
       <p class="eyebrow">EsSalud · Sub Gerencia de Estadística @if (data()) { · Cifras preliminares a {{ mesTxt() }} {{ data()!.anio }} }</p>
       <span class="head-links">
+        <details class="dyn-ayuda ayuda-guia">
+          <summary><mat-icon>help_outline</mat-icon> ¿Cómo leer este tablero?</summary>
+          <div class="dyn-ayuda-panel" role="note">
+            <p>Cada indicador se califica por establecimiento con 5 puntos si cumple el estándar, 3 si está cerca y 1 si no
+      lo cumple. El puntaje de un establecimiento o red es lo obtenido sobre el máximo posible, llevado a escala de 20. El puntaje de una red por
+      indicador es el promedio de sus establecimientos; el nacional, el promedio de las redes sin las redes APP.</p>
+            <p>Bandas de lectura: nivel alto desde 16 puntos, medio desde 12 y bajo por debajo de 12 (en escala de 1 a 5: alto desde 4, medio desde 3).</p>
+            <p>Cifras preliminares: podrían modificarse por omisiones o correcciones propias del proceso estadístico.</p>
+          </div>
+        </details>
+        <button class="btn" type="button" (click)="descargarExcel()" [disabled]="excelCargando() || !data()"
+        title="Excel del TMI del periodo, el mismo de Administración"><mat-icon>table_view</mat-icon> {{ excelCargando() ? 'Generando Excel…' : 'Descargar Excel' }}</button>
         <a class="btn" routerLink="/tmi/dashboard-estandar" [queryParams]="{ periodo: periodo() || null }"><mat-icon>rule</mat-icon> Estándar vs. valor real</a>
         <a class="btn" routerLink="/tmi/administrativo"><mat-icon>settings</mat-icon> Administración TMI</a>
       </span>
     </div>
+    @if (excelError()) { <p class="excel-err" role="alert">{{ excelError() }}</p> }
     <h1>Tablero de monitoreo de gestión de los establecimientos de salud</h1>
     @if (data()) {
     <p class="lead">@for (s of lead(); track $index) { @if (s.b) { <b>{{ s.t }}</b> } @else { {{ s.t }} } }</p>
@@ -95,15 +108,15 @@
   <section class="sec">
     <div class="sec-head">
       <h2>{{ S().ind!.nombre }}</h2>
-      <p>{{ S().nombre }}. {{ det.cen ? 'Valor acumulado mes a mes frente al estándar.' : 'Valor real de cada establecimiento frente a su estándar.' }}</p>
+      <p>{{ S().nombre }}. {{ det.cen ? (S().ind!.tipo_calculo === 'ACUMULADO' ? 'Valor acumulado (suma de enero a cada mes) frente al estándar.' : 'Valor de cada mes (mensual, sin sumar los anteriores) frente al estándar.') : 'Valor real de cada establecimiento frente a su estándar.' }}</p>
     </div>
     <div class="two">
       <div class="card">
         @if (det.cen) {
-          <h3>Valor acumulado frente al estándar</h3>
+          <h3>{{ S().ind!.tipo_calculo === 'ACUMULADO' ? 'Valor acumulado' : 'Valor mensual' }} frente al estándar</h3>
           @if (det.g) {
           <div class="legend">
-            <span><i class="sw-line" style="border-color:#007AC9"></i>Valor real acumulado</span>
+            <span><i class="sw-line" style="border-color:#007AC9"></i>{{ S().ind!.tipo_calculo === 'ACUMULADO' ? 'Valor real acumulado' : 'Valor real del mes' }}</span>
             <span><i class="sw-dash" style="border-color:var(--d-ok)"></i>Estándar</span>
           </div>
           <ng-container *ngTemplateOutlet="grafico; context: { $implicit: det.g }" />
@@ -327,14 +340,6 @@
     </div>
   </section>
 
-  <section class="method">
-    <p><b>Cómo leer este tablero.</b> Cada indicador se califica por establecimiento con 5 puntos si cumple el estándar, 3 si está cerca y 1 si no
-      lo cumple. El puntaje de un establecimiento o red es lo obtenido sobre el máximo posible, llevado a escala de 20. El puntaje de una red por
-      indicador es el promedio de sus establecimientos; el nacional, el promedio de las redes sin las redes APP.</p>
-    <p>Bandas de lectura: nivel alto desde 16 puntos, medio desde 12 y bajo por debajo de 12 (en escala de 1 a 5: alto desde 4, medio desde 3).</p>
-    <p>Fuente: resultado final del TMI guardado para {{ mesTxt() }} {{ data()!.anio }}@if (data()!.fecha_calculo) { (calculado el {{ data()!.fecha_calculo!.slice(0, 10) }})}.
-      Cifras preliminares: podrían modificarse por omisiones o correcciones propias del proceso estadístico.</p>
-  </section>
   }
 </div>
 

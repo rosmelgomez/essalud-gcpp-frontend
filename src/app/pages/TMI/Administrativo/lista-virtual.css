@@ -1,0 +1,96 @@
+/* Lista virtual de las pestañas del TMI (Estándares, Por centro, % Acept, Exclusiones) y carga suave.
+   Todas las filas miden lo mismo (--lv-alto): solo se dibujan las que se ven. */
+.lv-lista {
+    position: relative;
+    transition: opacity 0.25s ease;
+}
+
+.lv-viewport {
+    contain: strict;
+}
+
+.lv-fila {
+    height: var(--lv-alto, 52px);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.lv-cab {
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.lv-cab .exg-centro-toggle {
+    min-height: 0;
+    height: calc(var(--lv-alto, 52px) - 1px);
+}
+
+.lv-fila .exg-fila {
+    height: 100%;
+    box-sizing: border-box;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Al cambiar de mes o año la lista se atenúa en vez de desaparecer */
+.lv-actualizando {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.lv-progreso {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 2;
+    height: 3px;
+    overflow: hidden;
+    background: var(--rpt-brand-tint);
+}
+
+.lv-progreso::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 35%;
+    background: var(--rpt-brand);
+    border-radius: 2px;
+    animation: lv-progreso 1.1s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes lv-progreso {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(300%); }
+}
+
+/* Primera carga: filas de muestra en vez de "Cargando..." */
+.lv-esqueleto {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 52px;
+    padding: 0 16px 0 40px;
+    border-bottom: 1px solid var(--rpt-line);
+}
+
+.lv-esqueleto span {
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, var(--rpt-line) 0%, var(--rpt-line-soft) 50%, var(--rpt-line) 100%);
+    background-size: 200% 100%;
+    animation: lv-brillo 1.3s ease-in-out infinite;
+}
+
+.lv-esqueleto span:nth-child(1) { width: 28px; }
+.lv-esqueleto span:nth-child(2) { flex: 1; max-width: 360px; }
+.lv-esqueleto span:nth-child(3) { width: 90px; margin-left: auto; }
+
+@keyframes lv-brillo {
+    from { background-position: 100% 0; }
+    to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lv-lista { transition: none; }
+    .lv-progreso::after,
+    .lv-esqueleto span { animation: none; }
+}

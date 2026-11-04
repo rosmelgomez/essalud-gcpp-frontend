@@ -26,6 +26,9 @@
     </nav>
 
     <!-- TMI dinámico: variables, indicadores, estándar por centro y cálculo -->
+    @if (activeTab === 'Estandares') {
+    <div class="tab-content"><app-tmi-estandares /></div>
+    }
     @if (activeTab === 'Aceptacion') {
     <div class="tab-content"><app-tmi-aceptacion /></div>
     }
@@ -45,729 +48,6 @@
     <div class="tab-content"><app-tmi-calculo /></div>
     }
 
-    <!-- tap 1: tmi_estandar_tipo -->
-    <div class="tab-content" *ngIf="activeTab === 'Estandares Tipo'">
-        <div class="header">
-            <h2 class="bar-title">Tabla de Estándares TMI por Tipo de Centro</h2>
-            <div class="header-actions">
-                <div class="buscar-group">
-                    <select [(ngModel)]="anioEstandarTipo" (ngModelChange)="onBuscarEstandarTipo()" class="anio-select" aria-label="Año">
-                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
-                    </select>
-                    <button (click)="onBuscarEstandarTipo()" class="btn-download" [disabled]="loadingEstandarTipo">
-                        <mat-icon>refresh</mat-icon> Actualizar
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div *ngIf="loadingEstandarTipo" class="loading">
-            <p>Cargando datos de estándares tipo...</p>
-        </div>
-
-        <div *ngIf="errorEstandarTipo" class="alert alert-danger">
-            {{ errorEstandarTipo }}
-        </div>
-
-        <div *ngIf="!loadingEstandarTipo && !errorEstandarTipo && !selectPeriodoEstandarTipo" class="dashboard-content">
-            <mat-card class="table"
-                style="--cols-table: minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(95px, 0.85fr) minmax(60px, 0.5fr) repeat(13, minmax(88px, 0.75fr)) minmax(80px, 0.65fr);">
-                <div class="table-title-row">
-                    <h3>Detalle de Estándares por Tipo</h3>
-                    <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaEstandarTipo()"
-                        title="Agregar nuevo estándar por tipo">
-                        <mat-icon>add</mat-icon> Agregar fila
-                    </button>
-                </div>
-                <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
-                <div class="filters-bar">
-                    <label class="filter-field">
-                        <span>Tipo</span>
-                        <input type="text" class="filter-input" placeholder="Buscar tipo..."
-                            [value]="filtersEstandarTipo.tipo" (input)="filterDataEstandarTipo('tipo', $event)" />
-                    </label>
-                    <label class="filter-field filter-field-wide">
-                        <span>Indicador</span>
-                        <input type="text" class="filter-input" placeholder="Buscar indicador..."
-                            [value]="filtersEstandarTipo.indicador" (input)="filterDataEstandarTipo('indicador', $event)" />
-                    </label>
-                    <label class="filter-field">
-                        <span>Tipo de centro</span>
-                        <input type="text" class="filter-input" placeholder="Buscar tipo de centro..."
-                            [value]="filtersEstandarTipo.tipo_centro" (input)="filterDataEstandarTipo('tipo_centro', $event)" />
-                    </label>
-                </div>
-                <div class="wrapper-table">
-                    <div class="grid-table">
-                        <!-- HEADER -->
-                        <div class="header-table">
-                            <div class="cell tipo">TIPO</div>
-                            <div class="cell indicador">INDICADOR</div>
-                            <div class="cell tipo_centro">TIPO_CENTRO</div>
-                            <div class="cell anio">AÑO</div>
-                            <div class="cell est_fijo">EST_FIJO</div>
-                            <div class="cell est_01">ENERO</div>
-                            <div class="cell est_02">FEBRERO</div>
-                            <div class="cell est_03">MARZO</div>
-                            <div class="cell est_04">ABRIL</div>
-                            <div class="cell est_05">MAYO</div>
-                            <div class="cell est_06">JUNIO</div>
-                            <div class="cell est_07">JULIO</div>
-                            <div class="cell est_08">AGOSTO</div>
-                            <div class="cell est_09">SEPTIEMBRE</div>
-                            <div class="cell est_10">OCTUBRE</div>
-                            <div class="cell est_11">NOVIEMBRE</div>
-                            <div class="cell est_12">DICIEMBRE</div>
-                            <div class="cell acciones">ACCIONES</div>
-                        </div>
-
-                        <!-- ROWS -->
-                        <cdk-virtual-scroll-viewport #viewportTipo class="viewport-table" [itemSize]="44">
-                            <div *cdkVirtualFor="let row of dataEstandarTipo" class="row-table">
-                                <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
-                                <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
-                                <div class="cell tipo_centro">{{ row.tipo_centro ?? '—' }}</div>
-                                <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell est_fijo">{{ row.est_fijo ?? '—' }}</div>
-                                <div class="cell est_01">{{ row.est_01 ?? '—' }}</div>
-                                <div class="cell est_02">{{ row.est_02 ?? '—' }}</div>
-                                <div class="cell est_03">{{ row.est_03 ?? '—' }}</div>
-                                <div class="cell est_04">{{ row.est_04 ?? '—' }}</div>
-                                <div class="cell est_05">{{ row.est_05 ?? '—' }}</div>
-                                <div class="cell est_06">{{ row.est_06 ?? '—' }}</div>
-                                <div class="cell est_07">{{ row.est_07 ?? '—' }}</div>
-                                <div class="cell est_08">{{ row.est_08 ?? '—' }}</div>
-                                <div class="cell est_09">{{ row.est_09 ?? '—' }}</div>
-                                <div class="cell est_10">{{ row.est_10 ?? '—' }}</div>
-                                <div class="cell est_11">{{ row.est_11 ?? '—' }}</div>
-                                <div class="cell est_12">{{ row.est_12 ?? '—' }}</div>
-                                <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit"
-                                        (click)="iniciarEdicionEstandarTipo(row)"
-                                        title="Editar registro">
-                                        <mat-icon>edit</mat-icon>
-                                    </button>
-                                    <button type="button" class="btn-icon-delete" (click)="eliminarEstandarTipo(row)"
-                                        [disabled]="eliminandoId === row.id"
-                                        title="Eliminar registro">
-                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete'
-                                            }}</mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                        </cdk-virtual-scroll-viewport>
-                    </div>
-                </div>
-
-                <div class="footer-table">
-                    <div class="footer-left"><strong>Total de filas:</strong></div>
-                    <div class="footer-right num"><strong>{{ dataEstandarTipo.length }}</strong></div>
-                </div>
-            </mat-card>
-        </div>
-
-        <!-- MODAL EDITAR / CREAR ESTÁNDAR TIPO -->
-        <div class="modal-overlay" *ngIf="mostrarFormularioEstandarTipo" (click)="cancelarEdicionEstandarTipo()">
-            <div class="modal-card" (click)="$event.stopPropagation()">
-                <header class="modal-header">
-                    <div class="modal-header-info">
-                        <h2>Formulario de Estándar Tipo</h2>
-                        <p class="modal-subtitle" *ngIf="estandarTipoForm.get('id')?.value">
-                            Edición del registro ID: {{ estandarTipoForm.get('id')?.value }}
-                        </p>
-                        <p class="modal-subtitle" *ngIf="!estandarTipoForm.get('id')?.value">
-                            Nuevo estándar tipo para el año {{ estandarTipoForm.get('anio')?.value }}
-                        </p>
-                    </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarTipo()"
-                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
-                </header>
-
-                <form [formGroup]="estandarTipoForm" (ngSubmit)="updateQueryEstandarTipo()"
-                    class="modal-form-container">
-                    <div class="modal-body">
-                        <div class="form-grid">
-                            <input type="hidden" formControlName="id" />
-
-                            <div class="field-input full-width">
-                                <label for="st_id_estandar">Estándar (Tipo - Indicador) <span class="required">*</span></label>
-                                <select id="st_id_estandar" formControlName="id_estandar">
-                                    <option [ngValue]="null" disabled>Seleccione un indicador...</option>
-                                    <option *ngFor="let est of listaEstandares" [ngValue]="est.id">
-                                        {{ est.tipo }} - {{ est.indicador }}
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="field-input">
-                                <label for="st_tipo_centro">Tipo Centro <span class="required">*</span></label>
-                                <input type="text" id="st_tipo_centro" formControlName="tipo_centro"
-                                    placeholder="Ej. H. Nacional" />
-                            </div>
-
-                            <div class="field-input">
-                                <label for="st_anio">Año <span class="required">*</span></label>
-                                <input type="number" id="st_anio" formControlName="anio" readonly placeholder="Año" />
-                            </div>
-
-                            <div class="field-input full-width">
-                                <label for="st_est_fijo">Estándar Fijo <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_fijo" formControlName="est_fijo" />
-                            </div>
-
-                            <div class="field-input">
-                                <label for="st_est_01">Enero <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_01" formControlName="est_01" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_02">Febrero <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_02" formControlName="est_02" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_03">Marzo <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_03" formControlName="est_03" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_04">Abril <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_04" formControlName="est_04" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_05">Mayo <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_05" formControlName="est_05" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_06">Junio <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_06" formControlName="est_06" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_07">Julio <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_07" formControlName="est_07" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_08">Agosto <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_08" formControlName="est_08" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_09">Septiembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_09" formControlName="est_09" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_10">Octubre <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_10" formControlName="est_10" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_11">Noviembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_11" formControlName="est_11" />
-                            </div>
-                            <div class="field-input">
-                                <label for="st_est_12">Diciembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="st_est_12" formControlName="est_12" />
-                            </div>
-                        </div>
-
-                        <div class="validation-message-banner" *ngIf="errorEstandarTipoForm">
-                            <mat-icon>error_outline</mat-icon><span>{{ errorEstandarTipoForm }}</span>
-                        </div>
-                    </div>
-
-                    <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel"
-                            (click)="cancelarEdicionEstandarTipo()" [disabled]="savingEstandarTipo">Cancelar</button>
-                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarTipo">
-                            <mat-icon *ngIf="!savingEstandarTipo">save</mat-icon><span *ngIf="!savingEstandarTipo">{{
-                                estandarTipoForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
-                            <span *ngIf="savingEstandarTipo" class="spinner-btn"></span><span
-                                *ngIf="savingEstandarTipo">Guardando…</span>
-                        </button>
-                    </footer>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- tap 2: tmi_estandar_nivel -->
-    <div class="tab-content" *ngIf="activeTab === 'Estandares Nivel'">
-        <div class="header">
-            <h2 class="bar-title">Tabla de Estándares TMI por Nivel de Centro</h2>
-            <div class="header-actions">
-                <div class="buscar-group">
-                    <select [(ngModel)]="anioEstandarNivel" (ngModelChange)="onBuscarEstandarNivel()" class="anio-select" aria-label="Año">
-                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
-                    </select>
-                    <button (click)="onBuscarEstandarNivel()" class="btn-download" [disabled]="loadingEstandarNivel">
-                        <mat-icon>refresh</mat-icon> Actualizar
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div *ngIf="loadingEstandarNivel" class="loading">
-            <p>Cargando datos de estándares nivel...</p>
-        </div>
-
-        <div *ngIf="errorEstandarNivel" class="alert alert-danger">
-            {{ errorEstandarNivel }}
-        </div>
-
-        <div *ngIf="!loadingEstandarNivel && !errorEstandarNivel && !selectPeriodoEstandarNivel"
-            class="dashboard-content">
-            <mat-card class="table"
-                style="--cols-table: minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(105px, 0.9fr) minmax(60px, 0.5fr) repeat(13, minmax(88px, 0.75fr)) minmax(80px, 0.65fr);">
-                <div class="table-title-row">
-                    <h3>Detalle de Estándares por Nivel</h3>
-                    <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaEstandarNivel()"
-                        title="Agregar nuevo estándar por nivel">
-                        <mat-icon>add</mat-icon> Agregar fila
-                    </button>
-                </div>
-                <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
-                <div class="filters-bar">
-                    <label class="filter-field">
-                        <span>Tipo</span>
-                        <input type="text" class="filter-input" placeholder="Buscar tipo..."
-                            [value]="filtersEstandarNivel.tipo" (input)="filterDataEstandarNivel('tipo', $event)" />
-                    </label>
-                    <label class="filter-field filter-field-wide">
-                        <span>Indicador</span>
-                        <input type="text" class="filter-input" placeholder="Buscar indicador..."
-                            [value]="filtersEstandarNivel.indicador" (input)="filterDataEstandarNivel('indicador', $event)" />
-                    </label>
-                    <label class="filter-field">
-                        <span>Nivel de centro</span>
-                        <input type="text" class="filter-input" placeholder="Buscar nivel de centro..."
-                            [value]="filtersEstandarNivel.nivel_centro" (input)="filterDataEstandarNivel('nivel_centro', $event)" />
-                    </label>
-                </div>
-                <div class="wrapper-table">
-                    <div class="grid-table">
-                        <div class="header-table">
-                            <div class="cell tipo">TIPO</div>
-                            <div class="cell indicador">INDICADOR</div>
-                            <div class="cell nivel_centro">NIVEL_CENTRO</div>
-                            <div class="cell anio">AÑO</div>
-                            <div class="cell est_fijo">EST_FIJO</div>
-                            <div class="cell est_01">ENERO</div>
-                            <div class="cell est_02">FEBRERO</div>
-                            <div class="cell est_03">MARZO</div>
-                            <div class="cell est_04">ABRIL</div>
-                            <div class="cell est_05">MAYO</div>
-                            <div class="cell est_06">JUNIO</div>
-                            <div class="cell est_07">JULIO</div>
-                            <div class="cell est_08">AGOSTO</div>
-                            <div class="cell est_09">SEPTIEMBRE</div>
-                            <div class="cell est_10">OCTUBRE</div>
-                            <div class="cell est_11">NOVIEMBRE</div>
-                            <div class="cell est_12">DICIEMBRE</div>
-                            <div class="cell acciones">ACCIONES</div>
-                        </div>
-
-                        <cdk-virtual-scroll-viewport #viewportNivel class="viewport-table" [itemSize]="44">
-                            <div *cdkVirtualFor="let row of dataEstandarNivel" class="row-table">
-                                <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
-                                <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
-                                <div class="cell nivel_centro">{{ row.nivel_centro ?? '—' }}</div>
-                                <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell est_fijo">{{ row.est_fijo ?? '—' }}</div>
-                                <div class="cell est_01">{{ row.est_01 ?? '—' }}</div>
-                                <div class="cell est_02">{{ row.est_02 ?? '—' }}</div>
-                                <div class="cell est_03">{{ row.est_03 ?? '—' }}</div>
-                                <div class="cell est_04">{{ row.est_04 ?? '—' }}</div>
-                                <div class="cell est_05">{{ row.est_05 ?? '—' }}</div>
-                                <div class="cell est_06">{{ row.est_06 ?? '—' }}</div>
-                                <div class="cell est_07">{{ row.est_07 ?? '—' }}</div>
-                                <div class="cell est_08">{{ row.est_08 ?? '—' }}</div>
-                                <div class="cell est_09">{{ row.est_09 ?? '—' }}</div>
-                                <div class="cell est_10">{{ row.est_10 ?? '—' }}</div>
-                                <div class="cell est_11">{{ row.est_11 ?? '—' }}</div>
-                                <div class="cell est_12">{{ row.est_12 ?? '—' }}</div>
-                                <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit"
-                                        (click)="iniciarEdicionEstandarNivel(row)"
-                                        title="Editar registro">
-                                        <mat-icon>edit</mat-icon>
-                                    </button>
-                                    <button type="button" class="btn-icon-delete" (click)="eliminarEstandarNivel(row)"
-                                        [disabled]="eliminandoId === row.id"
-                                        title="Eliminar registro">
-                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete'
-                                            }}</mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                        </cdk-virtual-scroll-viewport>
-                    </div>
-                </div>
-
-                <div class="footer-table">
-                    <div class="footer-left"><strong>Total de filas:</strong></div>
-                    <div class="footer-right num"><strong>{{ dataEstandarNivel.length }}</strong></div>
-                </div>
-            </mat-card>
-        </div>
-
-        <!-- MODAL EDITAR / CREAR ESTÁNDAR NIVEL -->
-        <div class="modal-overlay" *ngIf="mostrarFormularioEstandarNivel" (click)="cancelarEdicionEstandarNivel()">
-            <div class="modal-card" (click)="$event.stopPropagation()">
-                <header class="modal-header">
-                    <div class="modal-header-info">
-                        <h2>Formulario de Estándar Nivel</h2>
-                        <p class="modal-subtitle" *ngIf="estandarNivelForm.get('id')?.value">
-                            Edición del registro ID: {{ estandarNivelForm.get('id')?.value }}
-                        </p>
-                        <p class="modal-subtitle" *ngIf="!estandarNivelForm.get('id')?.value">
-                            Nuevo estándar nivel para el año {{ estandarNivelForm.get('anio')?.value }}
-                        </p>
-                    </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarNivel()"
-                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
-                </header>
-
-                <form [formGroup]="estandarNivelForm" (ngSubmit)="updateQueryEstandarNivel()"
-                    class="modal-form-container">
-                    <div class="modal-body">
-                        <div class="form-grid">
-                            <input type="hidden" formControlName="id" />
-
-                            <div class="field-input full-width">
-                                <label for="sn_id_estandar">Estándar (Tipo - Indicador) <span class="required">*</span></label>
-                                <select id="sn_id_estandar" formControlName="id_estandar">
-                                    <option [ngValue]="null" disabled>Seleccione un estándar...</option>
-                                    <option *ngFor="let est of listaEstandares" [ngValue]="est.id">
-                                        {{ est.tipo }} - {{ est.indicador }}
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="field-input">
-                                <label for="sn_nivel_centro">Nivel Centro <span class="required">*</span></label>
-                                <input type="text" id="sn_nivel_centro" formControlName="nivel_centro"
-                                    placeholder="Ej. Nivel III" />
-                            </div>
-
-                            <div class="field-input">
-                                <label for="sn_anio">Año <span class="required">*</span></label>
-                                <input type="number" id="sn_anio" formControlName="anio" readonly placeholder="Año" />
-                            </div>
-
-                            <div class="field-input full-width">
-                                <label for="sn_est_fijo">Estándar Fijo <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_fijo" formControlName="est_fijo" />
-                            </div>
-
-                            <div class="field-input">
-                                <label for="sn_est_01">Enero <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_01" formControlName="est_01" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_02">Febrero <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_02" formControlName="est_02" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_03">Marzo <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_03" formControlName="est_03" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_04">Abril <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_04" formControlName="est_04" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_05">Mayo <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_05" formControlName="est_05" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_06">Junio <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_06" formControlName="est_06" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_07">Julio <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_07" formControlName="est_07" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_08">Agosto <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_08" formControlName="est_08" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_09">Septiembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_09" formControlName="est_09" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_10">Octubre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_10" formControlName="est_10" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_11">Noviembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_11" formControlName="est_11" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sn_est_12">Diciembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sn_est_12" formControlName="est_12" />
-                            </div>
-                        </div>
-
-                        <div class="validation-message-banner" *ngIf="errorEstandarNivelForm">
-                            <mat-icon>error_outline</mat-icon><span>{{ errorEstandarNivelForm }}</span>
-                        </div>
-                    </div>
-
-                    <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel"
-                            (click)="cancelarEdicionEstandarNivel()" [disabled]="savingEstandarNivel">Cancelar</button>
-                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarNivel">
-                            <mat-icon *ngIf="!savingEstandarNivel">save</mat-icon><span *ngIf="!savingEstandarNivel">{{
-                                estandarNivelForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
-                            <span *ngIf="savingEstandarNivel" class="spinner-btn"></span><span
-                                *ngIf="savingEstandarNivel">Guardando…</span>
-                        </button>
-                    </footer>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- tap 3: tmi_estandar_categoria -->
-    <div class="tab-content" *ngIf="activeTab === 'Estandares Categoria'">
-        <div class="header">
-            <h2 class="bar-title">Tabla de Estándares TMI por Categoría de Centro</h2>
-            <div class="header-actions">
-                <div class="buscar-group">
-                    <select [(ngModel)]="anioEstandarCategoria" (ngModelChange)="onBuscarEstandarCategoria()" class="anio-select" aria-label="Año">
-                        <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
-                    </select>
-                    <button (click)="onBuscarEstandarCategoria()" class="btn-download" [disabled]="loadingEstandarCategoria">
-                        <mat-icon>refresh</mat-icon> Actualizar
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div *ngIf="loadingEstandarCategoria" class="loading">
-            <p>Cargando datos de estándares categoría...</p>
-        </div>
-
-        <div *ngIf="errorEstandarCategoria" class="alert alert-danger">
-            {{ errorEstandarCategoria }}
-        </div>
-
-        <div *ngIf="!loadingEstandarCategoria && !errorEstandarCategoria && !selectPeriodoEstandarCategoria"
-            class="dashboard-content">
-            <mat-card class="table"
-                style="--cols-table: minmax(120px, 1.1fr) minmax(190px, 2fr) minmax(125px, 1fr) minmax(60px, 0.5fr) repeat(13, minmax(88px, 0.75fr)) minmax(80px, 0.65fr);">
-                <div class="table-title-row">
-                    <h3>Detalle de Estándares por Categoría</h3>
-                    <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaEstandarCategoria()"
-                        title="Agregar nuevo estándar por categoría">
-                        <mat-icon>add</mat-icon> Agregar fila
-                    </button>
-                </div>
-                <div class="alert alert-danger" *ngIf="errorEliminarFila">{{ errorEliminarFila }}</div>
-                <div class="filters-bar">
-                    <label class="filter-field">
-                        <span>Tipo</span>
-                        <input type="text" class="filter-input" placeholder="Buscar tipo..."
-                            [value]="filtersEstandarCategoria.tipo" (input)="filterDataEstandarCategoria('tipo', $event)" />
-                    </label>
-                    <label class="filter-field filter-field-wide">
-                        <span>Indicador</span>
-                        <input type="text" class="filter-input" placeholder="Buscar indicador..."
-                            [value]="filtersEstandarCategoria.indicador" (input)="filterDataEstandarCategoria('indicador', $event)" />
-                    </label>
-                    <label class="filter-field">
-                        <span>Categoría de centro</span>
-                        <input type="text" class="filter-input" placeholder="Buscar categoría de centro..."
-                            [value]="filtersEstandarCategoria.categoria_centro" (input)="filterDataEstandarCategoria('categoria_centro', $event)" />
-                    </label>
-                </div>
-                <div class="wrapper-table">
-                    <div class="grid-table">
-                        <div class="header-table">
-                            <div class="cell tipo">TIPO</div>
-                            <div class="cell indicador">INDICADOR</div>
-                            <div class="cell categoria_centro">CATEGORIA_CENTRO</div>
-                            <div class="cell anio">AÑO</div>
-                            <div class="cell est_fijo">EST_FIJO</div>
-                            <div class="cell est_01">ENERO</div>
-                            <div class="cell est_02">FEBRERO</div>
-                            <div class="cell est_03">MARZO</div>
-                            <div class="cell est_04">ABRIL</div>
-                            <div class="cell est_05">MAYO</div>
-                            <div class="cell est_06">JUNIO</div>
-                            <div class="cell est_07">JULIO</div>
-                            <div class="cell est_08">AGOSTO</div>
-                            <div class="cell est_09">SEPTIEMBRE</div>
-                            <div class="cell est_10">OCTUBRE</div>
-                            <div class="cell est_11">NOVIEMBRE</div>
-                            <div class="cell est_12">DICIEMBRE</div>
-                            <div class="cell acciones">ACCIONES</div>
-                        </div>
-
-
-                        <cdk-virtual-scroll-viewport #viewportCategoria class="viewport-table" [itemSize]="44">
-                            <div *cdkVirtualFor="let row of dataEstandarCategoria" class="row-table">
-                                <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
-                                <div class="cell indicador">{{ row.indicador ?? '—' }}</div>
-                                <div class="cell categoria_centro">{{ row.categoria_centro ?? '—' }}</div>
-                                <div class="cell anio">{{ row.anio ?? '—' }}</div>
-                                <div class="cell est_fijo">{{ row.est_fijo ?? '—' }}</div>
-                                <div class="cell est_01">{{ row.est_01 ?? '—' }}</div>
-                                <div class="cell est_02">{{ row.est_02 ?? '—' }}</div>
-                                <div class="cell est_03">{{ row.est_03 ?? '—' }}</div>
-                                <div class="cell est_04">{{ row.est_04 ?? '—' }}</div>
-                                <div class="cell est_05">{{ row.est_05 ?? '—' }}</div>
-                                <div class="cell est_06">{{ row.est_06 ?? '—' }}</div>
-                                <div class="cell est_07">{{ row.est_07 ?? '—' }}</div>
-                                <div class="cell est_08">{{ row.est_08 ?? '—' }}</div>
-                                <div class="cell est_09">{{ row.est_09 ?? '—' }}</div>
-                                <div class="cell est_10">{{ row.est_10 ?? '—' }}</div>
-                                <div class="cell est_11">{{ row.est_11 ?? '—' }}</div>
-                                <div class="cell est_12">{{ row.est_12 ?? '—' }}</div>
-                                <div class="cell acciones">
-                                    <button type="button" class="btn-icon-edit"
-                                        (click)="iniciarEdicionEstandarCategoria(row)"
-                                        title="Editar registro">
-                                        <mat-icon>edit</mat-icon>
-                                    </button>
-                                    <button type="button" class="btn-icon-delete"
-                                        (click)="eliminarEstandarCategoria(row)"
-                                        [disabled]="eliminandoId === row.id"
-                                        title="Eliminar registro">
-                                        <mat-icon>{{ eliminandoId === row.id ? 'hourglass_empty' : 'delete'
-                                            }}</mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                        </cdk-virtual-scroll-viewport>
-                    </div>
-                </div>
-
-                <div class="footer-table">
-                    <div class="footer-left"><strong>Total de filas:</strong></div>
-                    <div class="footer-right num"><strong>{{ dataEstandarCategoria.length }}</strong></div>
-                </div>
-            </mat-card>
-        </div>
-
-        <!-- MODAL EDITAR / CREAR ESTÁNDAR CATEGORÍA -->
-        <div class="modal-overlay" *ngIf="mostrarFormularioEstandarCategoria"
-            (click)="cancelarEdicionEstandarCategoria()">
-            <div class="modal-card" (click)="$event.stopPropagation()">
-                <header class="modal-header">
-                    <div class="modal-header-info">
-                        <h2>Formulario de Estándar Categoría</h2>
-                        <p class="modal-subtitle" *ngIf="estandarCategoriaForm.get('id')?.value">
-                            Edición del registro ID: {{ estandarCategoriaForm.get('id')?.value }}
-                        </p>
-                        <p class="modal-subtitle" *ngIf="!estandarCategoriaForm.get('id')?.value">
-                            Nuevo estándar categoría para el año {{ estandarCategoriaForm.get('anio')?.value }}
-                        </p>
-                    </div>
-                    <button type="button" class="close-modal-btn" (click)="cancelarEdicionEstandarCategoria()"
-                        aria-label="Cerrar"><mat-icon>close</mat-icon></button>
-                </header>
-
-                <form [formGroup]="estandarCategoriaForm" (ngSubmit)="updateQueryEstandarCategoria()"
-                    class="modal-form-container">
-                    <div class="modal-body">
-                        <div class="form-grid">
-                            <input type="hidden" formControlName="id" />
-
-                            <div class="field-input full-width">
-                                <label for="sc_id_estandar">Estándar (Tipo - Indicador) <span class="required">*</span></label>
-                                <select id="sc_id_estandar" formControlName="id_estandar">
-                                    <option [ngValue]="null" disabled>Seleccione un estándar...</option>
-                                    <option *ngFor="let est of listaEstandares" [ngValue]="est.id">
-                                        {{ est.tipo }} - {{ est.indicador }}
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="field-input">
-                                <label for="sc_categoria_centro">Categoría Centro <span
-                                        class="required">*</span></label>
-                                <input type="text" id="sc_categoria_centro" formControlName="categoria_centro"
-                                    placeholder="Ej. III-1" />
-                            </div>
-
-                            <div class="field-input">
-                                <label for="sc_anio">Año <span class="required">*</span></label>
-                                <input type="number" id="sc_anio" formControlName="anio" readonly placeholder="Año" />
-                            </div>
-
-                            <div class="field-input full-width">
-                                <label for="sc_est_fijo">Estándar Fijo <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_fijo" formControlName="est_fijo" />
-                            </div>
-
-                            <div class="field-input">
-                                <label for="sc_est_01">Enero <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_01" formControlName="est_01" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_02">Febrero <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_02" formControlName="est_02" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_03">Marzo <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_03" formControlName="est_03" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_04">Abril <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_04" formControlName="est_04" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_05">Mayo <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_05" formControlName="est_05" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_06">Junio <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_06" formControlName="est_06" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_07">Julio <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_07" formControlName="est_07" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_08">Agosto <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_08" formControlName="est_08" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_09">Septiembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_09" formControlName="est_09" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_10">Octubre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_10" formControlName="est_10" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_11">Noviembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_11" formControlName="est_11" />
-                            </div>
-                            <div class="field-input">
-                                <label for="sc_est_12">Diciembre <span class="required">*</span></label>
-                                <input type="number" step="any" id="sc_est_12" formControlName="est_12" />
-                            </div>
-                        </div>
-
-                        <div class="validation-message-banner" *ngIf="errorEstandarCategoriaForm">
-                            <mat-icon>error_outline</mat-icon><span>{{ errorEstandarCategoriaForm }}</span>
-                        </div>
-                    </div>
-
-                    <footer class="modal-footer">
-                        <button type="button" class="btn-modal-action btn-cancel"
-                            (click)="cancelarEdicionEstandarCategoria()"
-                            [disabled]="savingEstandarCategoria">Cancelar</button>
-                        <button type="submit" class="btn-modal-action btn-save" [disabled]="savingEstandarCategoria">
-                            <mat-icon *ngIf="!savingEstandarCategoria">save</mat-icon><span
-                                *ngIf="!savingEstandarCategoria">{{ estandarCategoriaForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Fila' }}</span>
-                            <span *ngIf="savingEstandarCategoria" class="spinner-btn"></span><span
-                                *ngIf="savingEstandarCategoria">Guardando…</span>
-                        </button>
-                    </footer>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <!-- tap 4: tmi_centro -->
     <div class="tab-content" *ngIf="activeTab === 'Centros TMI'">
         <div class="header">
@@ -779,15 +59,18 @@
             </div>
         </div>
 
-        <div *ngIf="loadingCentrosTMI" class="loading">
-            <p>Cargando datos de centros TMI...</p>
+        <div *ngIf="loadingCentrosTMI && !dataCentrosTMI.length" class="lv-lista" aria-busy="true">
+            <div class="lv-progreso" role="progressbar" aria-label="Cargando centros TMI"></div>
+            <div *ngFor="let n of esqueletoLista" class="lv-esqueleto" aria-hidden="true"><span></span><span></span><span></span></div>
         </div>
 
         <div *ngIf="errorCentrosTMI" class="alert alert-danger">
             {{ errorCentrosTMI }}
         </div>
 
-        <div *ngIf="!loadingCentrosTMI && !errorCentrosTMI" class="dashboard-content">
+        <div *ngIf="!errorCentrosTMI && (dataCentrosTMI.length || !loadingCentrosTMI)" class="dashboard-content lv-lista"
+            [class.lv-actualizando]="loadingCentrosTMI" [attr.aria-busy]="loadingCentrosTMI">
+            <div class="lv-progreso" *ngIf="loadingCentrosTMI" role="progressbar" aria-label="Cargando centros TMI"></div>
             <mat-card class="table"
                 style="--cols-table: minmax(55px, 0.5fr) minmax(160px, 1.5fr) minmax(65px, 0.6fr) minmax(90px, 0.8fr) minmax(95px, 0.8fr) minmax(200px, 2fr) minmax(90px, 0.8fr) minmax(75px, 0.7fr) minmax(95px, 0.8fr) minmax(95px, 0.8fr) minmax(85px, 0.7fr);">
                 <div class="table-title-row">
@@ -993,15 +276,12 @@
             </div>
         </div>
 
-        <div *ngIf="loadingExclusion" class="loading">
-            <p>Cargando exclusiones de centros y estándares...</p>
-        </div>
 
         <div *ngIf="errorExclusion" class="alert alert-danger">
             {{ errorExclusion }}
         </div>
 
-        <div *ngIf="!loadingExclusion && !errorExclusion && !selectPeriodoExclusion" class="dashboard-content">
+        <div *ngIf="!errorExclusion && !selectPeriodoExclusion" class="dashboard-content">
             <mat-card class="table exg">
                 <div class="table-title-row">
                     <h3>Exclusiones por centro</h3>
@@ -1029,13 +309,22 @@
                     </span>
                 </div>
 
-                <div class="exg-lista">
-                    <section class="exg-centro" *ngFor="let g of gruposExclusion"
-                        [class.exg-centro-abierto]="centrosExclusionAbiertos.has(g.clave)">
+                <div class="exg-lista lv-lista" [class.lv-actualizando]="loadingExclusion && gruposExclusion.length"
+                    [attr.aria-busy]="loadingExclusion">
+                    @if (loadingExclusion) {<div class="lv-progreso" role="progressbar" aria-label="Cargando exclusiones"></div>}
+                    @if (loadingExclusion && !gruposExclusion.length) {
+                    @for (n of esqueletoLista; track n) {<div class="lv-esqueleto" aria-hidden="true"><span></span><span></span><span></span></div>}
+                    }
+                    @if (filasExclusion.length) {
+                    <cdk-virtual-scroll-viewport class="lv-viewport" [itemSize]="altoFilaLista" [minBufferPx]="altoFilaLista * 8"
+                        [maxBufferPx]="altoFilaLista * 16" [style.height.px]="altoListaExclusion" [style.--lv-alto]="altoFilaLista + 'px'">
+                    <div *cdkVirtualFor="let r of filasExclusion; trackBy: trackFilaExclusion" class="lv-fila">
+                    @let g = r.g;
+                    @if (!r.f) {
+                    <div class="exg-centro lv-cab" [class.exg-centro-abierto]="centrosExclusionAbiertos.has(g.clave)">
                         <div class="exg-centro-cabecera">
                             <button type="button" class="exg-centro-toggle" (click)="toggleCentroExclusion(g.clave)"
-                                [attr.aria-expanded]="centrosExclusionAbiertos.has(g.clave)"
-                                [attr.aria-controls]="'exg-' + g.clave">
+                                [attr.aria-expanded]="centrosExclusionAbiertos.has(g.clave)">
                                 <mat-icon class="exg-chevron" aria-hidden="true">chevron_right</mat-icon>
                                 <span class="exg-cod">{{ g.codcentro }}</span>
                                 <span class="exg-nombre">{{ g.centro }}</span>
@@ -1046,9 +335,10 @@
                                 <mat-icon aria-hidden="true">add</mat-icon><span>Agregar</span>
                             </button>
                         </div>
-
-                        <ul class="exg-filas" [id]="'exg-' + g.clave" *ngIf="centrosExclusionAbiertos.has(g.clave)">
-                            <li class="exg-fila" *ngFor="let f of g.filas" [class.exg-fila-todos]="f.todos">
+                    </div>
+                    } @else {
+                            @let f = r.f!;
+                            <div class="exg-fila" [class.exg-fila-todos]="f.todos">
                                 <div class="exg-indicador">
                                     <ng-container *ngIf="!f.todos">
                                         <span class="exg-tipo">{{ f.row.tipo ?? '—' }}</span>
@@ -1085,11 +375,13 @@
                                         <mat-icon>{{ eliminandoId === f.row.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
                                     </button>
                                 </div>
-                            </li>
-                        </ul>
-                    </section>
+                            </div>
+                    }
+                    </div>
+                    </cdk-virtual-scroll-viewport>
+                    }
 
-                    <div class="exg-vacio" *ngIf="!gruposExclusion.length">
+                    <div class="exg-vacio" *ngIf="!loadingExclusion && !gruposExclusion.length">
                         <mat-icon aria-hidden="true">{{ busquedaExclusion ? 'search_off' : 'event_available' }}</mat-icon>
                         <p *ngIf="busquedaExclusion">Ninguna exclusión coincide con «{{ busquedaExclusion }}».</p>
                         <p *ngIf="!busquedaExclusion">No hay centros excluidos en {{ anioExclusion }}.</p>
@@ -1259,6 +551,12 @@
                             </div>
                         </section>
 
+                        <div class="dyn-ok exc-aviso-existente" *ngIf="exclusionesExistentes.length">
+                            <mat-icon>info</mat-icon>
+                            <span>Este centro ya tiene exclusión en {{ exclusionForm.get('anio')?.value }} para:
+                                <strong>{{ exclusionesExistentes.join(', ') }}</strong>. Al guardar se
+                                <strong>actualiza ese registro</strong>: los meses que marques se suman a los ya excluidos.</span>
+                        </div>
                         <div class="validation-message-banner" *ngIf="errorExclusionForm" role="alert">
                             <mat-icon>error_outline</mat-icon><span>{{ errorExclusionForm }}</span>
                         </div>

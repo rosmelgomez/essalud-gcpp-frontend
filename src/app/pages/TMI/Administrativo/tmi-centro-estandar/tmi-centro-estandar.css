@@ -1,0 +1,22 @@
+/* Centro del formulario: red (select) y búsqueda por código o nombre en una fila */
+.ce-filtros {
+    display: grid;
+    grid-template-columns: minmax(160px, 260px) minmax(0, 1fr);
+    gap: 8px;
+}
+
+.ce-filtros .dyn-search {
+    margin: 0;
+}
+
+@media (max-width: 560px) {
+    .ce-filtros {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Aviso: el centro ya está registrado en ese indicador y año */
+.ce-aviso {
+    align-items: flex-start;
+    margin-top: 12px;
+}

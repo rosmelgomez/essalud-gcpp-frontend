@@ -3,6 +3,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { AyudaFlotante } from '../../Administrativo/ayuda-flotante';
 import {
   TmiCalculoService, TmiDashboardDatos, TmiDashCentro, TmiDashDetalle, TmiDashIndicador, TmiDashRed, mensajeError,
 } from '../../../../services/tmi';
@@ -47,7 +48,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, 
  *  con filtros de periodo, red, establecimiento e indicador. */
 @Component({
   selector: 'app-tmi-dashboard',
-  imports: [FormsModule, NgTemplateOutlet, RouterLink, MatIconModule],
+  imports: [FormsModule, NgTemplateOutlet, RouterLink, MatIconModule, AyudaFlotante],
   templateUrl: './tmi-dashboard.html',
   styleUrl: './tmi-dashboard.css',
 })
@@ -62,6 +63,8 @@ export class TmiDashboard implements OnInit {
   data = signal<TmiDashboardDatos | null>(null);
   cargando = signal(false);
   error = signal('');
+  excelCargando = signal(false);
+  excelError = signal('');
 
   // filtros
   red = signal('');
@@ -198,7 +201,7 @@ export class TmiDashboard implements OnInit {
       if (S.ind) {
         const d = c.det[S.ind.i], f = (v: number | null | undefined) => this.fmtV(v, S.ind!);
         return [
-          { label: 'Valor real', value: d ? f(d.v) : '—', note: d ? `Acumulado a ${mes}.` : 'El indicador no aplica a este establecimiento.' },
+          { label: 'Valor real', value: d ? f(d.v) : '—', note: d ? (S.ind.tipo_calculo === 'ACUMULADO' ? `Acumulado de enero a ${mes}.` : `Solo el valor de ${mes} (mensual).`) : 'El indicador no aplica a este establecimiento.' },
           { label: 'Estándar', value: d ? f(d.e) : '—', note: d ? this.textoAcept(d, S.ind) : undefined },
           { label: 'Puntaje total del establecimiento', value: num(c.nota, 1), note: `Sobre 20, con ${evals.length} indicadores evaluados.`, cls: band20(c.nota) },
           { label: 'Puesto en su red', value: posRed, note: red ? this.nombreRed(red) : c.red },
@@ -436,6 +439,17 @@ export class TmiDashboard implements OnInit {
     this.router.navigate([], {
       relativeTo: this.route, replaceUrl: true,
       queryParams: { periodo: this.periodo() || null, red: this.red() || null, centro: this.centro(), ind: this.ind() },
+    });
+  }
+
+  /** Excel del periodo (el mismo de Administración), armado con el resultado guardado. */
+  descargarExcel() {
+    if (!this.periodo() || this.excelCargando()) return;
+    this.excelCargando.set(true);
+    this.excelError.set('');
+    this.calculoSrv.descargarExcelDashboard(this.periodo()).subscribe({
+      next: () => this.excelCargando.set(false),
+      error: (e: Error) => { this.excelCargando.set(false); this.excelError.set(e.message); },
     });
   }
 

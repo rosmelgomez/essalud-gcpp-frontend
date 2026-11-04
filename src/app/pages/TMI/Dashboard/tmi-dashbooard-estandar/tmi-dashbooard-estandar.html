@@ -1,11 +1,53 @@
 <div class="dash">
   <header class="head">
     <div class="head-top">
-      <p class="eyebrow">EsSalud · Sub Gerencia de Estadística @if (data()) { · Cifras preliminares a {{ mesTxt() }} {{ data()!.anio }} }</p>
-      <a class="btn" routerLink="/tmi/dashboard" [queryParams]="{ periodo: periodo() || null }"><mat-icon>insights</mat-icon> Tablero de puntajes</a>
+      <p class="eyebrow">EsSalud · Sub Gerencia de Estadística @if (periodo()) { · Cifras preliminares a {{ mesTxt() }} {{ anio() }} }</p>
+      <span class="head-links">
+        <details class="dyn-ayuda ayuda-guia">
+          <summary><mat-icon>help_outline</mat-icon> ¿Cómo leer este tablero?</summary>
+          <div class="dyn-ayuda-panel guia-panel" role="note">
+    <p class="guia-intro">Este tablero compara, para cada establecimiento y cada indicador, <b>lo que se logró</b> (valor real) con
+      <b>lo que se esperaba lograr</b> (estándar). No pone notas ni calificaciones: solo muestra qué tan cerca o lejos está cada uno de su meta.</p>
+    <dl class="glosario">
+      <div><dt><i class="pt-l"></i> Valor real</dt>
+        <dd>Lo que realmente logró el establecimiento. En los gráficos es el <b>punto azul</b> o la <b>barra azul</b>.</dd></div>
+      <div><dt><span class="sim">∑</span> Acumulado o mensual</dt>
+        <dd>Cada indicador se mide de una de dos formas. <b>Acumulado</b>: se suma todo lo de enero hasta el mes elegido (por ejemplo, la
+          concentración de consultas). <b>Mensual</b>: se toma solo el valor de ese mes, sin sumar los anteriores (la mayoría de indicadores).
+          Cada indicador dice cuál es, junto a su nombre.</dd></div>
+      <div><dt><i class="tick-l"></i> Estándar</dt>
+        <dd>La meta: el valor que se espera que alcance el establecimiento. En los gráficos es la <b>raya negra</b> o la <b>línea punteada</b>.</dd></div>
+      <div><dt><span class="sim">±</span> Brecha</dt>
+        <dd>La distancia entre el valor real y el estándar: <b>valor real − estándar</b>. Con signo <b>+</b> el valor real está por encima de la meta;
+          con <b>−</b>, por debajo. Ejemplo: real 90 y estándar 100 → brecha −10.</dd></div>
+      <div><dt><span class="sim">↑↓</span> Sentido</dt>
+        <dd>Indica qué es lo deseable en cada indicador. <b>↑ mayor es mejor</b>: conviene superar el estándar.
+          <b>↓ menor es mejor</b>: conviene quedar por debajo (por ejemplo, días de estancia). <b>↔ dentro del rango</b>: conviene quedar cerca del estándar, ni muy arriba ni muy abajo.
+          Por eso una brecha positiva no siempre es buena: depende del sentido.</dd></div>
+      <div><dt><span class="sim">pp</span> Puntos porcentuales</dt>
+        <dd>Cuando el indicador es un porcentaje, la brecha se da en puntos: de 80% a 90% hay <b>10 pp</b> de diferencia.</dd></div>
+      <div><dt><span class="sim">≈</span> Valor típico (mediana)</dt>
+        <dd>Cuando se juntan varios establecimientos (una red, un tipo o todo el país) se muestra el <b>valor del medio</b>:
+          se ordenan de menor a mayor y se toma el que queda al centro. Así un caso muy alto o muy bajo no distorsiona el resultado.</dd></div>
+      <div><dt><i class="sw banda"></i> Franja celeste</dt>
+        <dd>En el gráfico de evolución, la mitad de los establecimientos tiene su valor dentro de esa franja. Si es angosta, los establecimientos
+          se parecen entre sí; si es ancha, hay mucha diferencia entre ellos.</dd></div>
+      <div><dt><span class="sim">NA</span> Sin dato</dt>
+        <dd>El establecimiento no tiene información para ese indicador (no registró producción o el indicador no le corresponde).
+          Es distinto de <b>0</b>, que sí es un dato: hubo registro, pero el valor fue cero.</dd></div>
+    </dl>
+    <p class="note">Consejo: pase el mouse sobre cualquier punto, barra o fila para ver sus números exactos, y haga clic para ver más detalle.
+      Use los filtros de arriba para elegir una red, un establecimiento o un indicador.</p>
+          </div>
+        </details>
+        <button class="btn" type="button" (click)="descargarExcel()" [disabled]="excelCargando() || sinDatos()"
+        title="Excel del TMI del periodo, el mismo de Administración"><mat-icon>table_view</mat-icon> {{ excelCargando() ? 'Generando Excel…' : 'Descargar Excel' }}</button>
+        <a class="btn" routerLink="/tmi/dashboard" [queryParams]="{ periodo: periodo() || null }"><mat-icon>insights</mat-icon> Tablero TMI</a>
+      </span>
     </div>
-    <h1>Indicadores frente a su estándar</h1>
-    @if (data()) { <p class="lead">{{ lead() }}</p> }
+    @if (excelError()) { <p class="excel-err" role="alert">{{ excelError() }}</p> }
+    <h1>Estándar frente a valor real</h1>
+    @if (periodo() && !cargando() && !error()) { <p class="lead">{{ lead() }}</p> }
   </header>
 
   <nav class="filters" aria-label="Filtros">
@@ -17,14 +59,14 @@
     </div>
     <div class="f">
       <label for="e-red">Red asistencial</label>
-      <select id="e-red" [ngModel]="red()" (ngModelChange)="setRed($event)">
+      <select id="e-red" [ngModel]="red()" (ngModelChange)="setRed($event)" [disabled]="sinDatos()">
         <option value="">Todas las redes (nacional)</option>
         @for (o of opcionesRed(); track o.value) { <option [value]="o.value">{{ o.label }}</option> }
       </select>
     </div>
     <div class="f">
       <label for="e-cen">Establecimiento</label>
-      <select id="e-cen" [ngModel]="centro() ?? ''" (ngModelChange)="setCentro($event === '' ? null : +$event)">
+      <select id="e-cen" [ngModel]="centro() ?? ''" (ngModelChange)="setCentro($event === '' ? null : +$event)" [disabled]="sinDatos()">
         <option value="">{{ red() ? 'Toda la red' : 'Todos los establecimientos' }}</option>
         @for (g of opcionesCentro(); track g.grupo) {
           @if (g.grupo) {
@@ -39,14 +81,14 @@
     </div>
     <div class="f">
       <label for="e-serv">Servicio</label>
-      <select id="e-serv" [ngModel]="serv()" (ngModelChange)="setServ($event)">
+      <select id="e-serv" [ngModel]="serv()" (ngModelChange)="setServ($event)" [disabled]="sinDatos()">
         <option value="">Todos los servicios</option>
         @for (s of servicios(); track s.value) { <option [value]="s.value">{{ s.nombre }}</option> }
       </select>
     </div>
     <div class="f">
       <label for="e-ind">Indicador</label>
-      <select id="e-ind" [ngModel]="ind() ?? ''" (ngModelChange)="setInd($event === '' ? null : +$event)">
+      <select id="e-ind" [ngModel]="ind() ?? ''" (ngModelChange)="setInd($event === '' ? null : +$event)" [disabled]="sinDatos()">
         <option value="">Todos los indicadores</option>
         @for (sv of opcionesInd(); track sv.value) {
         <optgroup [label]="sv.nombre">
@@ -62,27 +104,27 @@
   <div class="card estado">Cargando el resultado del periodo…</div>
   } @else if (error()) {
   <div class="card estado error">{{ error() }}</div>
-  } @else if (data()) {
+  } @else if (periodo()) {
+
 
   <!-- resumen -->
   <section class="tiles" aria-label="Resumen">
     @for (t of tiles(); track t.label) {
-    @if (t.estado) {
-    <button type="button" class="card tile sel-tile" [class]="'card tile sel-tile ' + t.cls" [class.on]="estado() === t.estado"
-      [attr.aria-pressed]="estado() === t.estado" (click)="setEstado(t.estado)">
-      <span class="tile-label">{{ t.label }}</span>
-      <span class="big" [style.color]="color(t.cls)">{{ t.value }}</span>
-      <span class="note">{{ t.note }} {{ estado() === t.estado ? 'Clic para quitar el filtro.' : 'Clic para filtrar.' }}</span>
-    </button>
-    } @else {
     <div class="card tile">
       <span class="tile-label">{{ t.label }}</span>
       <span class="big">{{ t.value }}</span>
       <span class="note">{{ t.note }}</span>
     </div>
     }
-    }
   </section>
+
+  @if (sinDatos()) {
+  <div class="card estado vacio-per">
+    <mat-icon>event_busy</mat-icon>
+    <b>Sin datos para {{ mesTxt() }} {{ anio() }}</b>
+    <span class="note">El resultado de este periodo todavía no está calculado. Elija otro periodo para ver el estándar y el valor real.</span>
+  </div>
+  } @else {
 
   <!-- ficha del indicador elegido -->
   @if (indSel(); as x) {
@@ -94,36 +136,416 @@
     <dl class="kv">
       <dt>Sentido</dt><dd>{{ sentidoTxt(x) || '—' }}</dd>
       <dt>Formato</dt><dd>{{ x.pct ? 'Porcentaje' : 'Número' }}</dd>
-      <dt>Puntaje nacional</dt><dd>{{ x.nacional == null ? '—' : x.nacional.toFixed(2) }} de 5</dd>
+      <dt>Cálculo</dt><dd>{{ x.acum ? 'Acumulado (suma de enero a ' + mesTxt() + ')' : 'Mensual (solo el valor de ' + mesTxt() + ')' }}</dd>
     </dl>
     <button class="btn" type="button" (click)="setInd(null)">Quitar filtro de indicador</button>
   </section>
   }
 
-  <!-- resumen por indicador -->
-  @if (resumenInds().length) {
+  <!-- gráficos del indicador elegido -->
+  @if (indSel()) {
+  <div class="graf-grid">
+    @if (evolucion(); as g) {
+    <section class="card">
+      <div class="card-head">
+        <h3>Evolución del valor real {{ calculoTxt(indSel()!) }}</h3>
+        <p class="note">{{ ambito() }}, enero a {{ mesTxt() }}.</p>
+      </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>{{ indSel()!.acum ? 'este indicador es acumulado: cada punto suma desde enero hasta ese mes, por eso la línea va creciendo o se estabiliza.' : 'este indicador es mensual: cada punto es el valor de ese mes solo, sin sumar los anteriores.' }} Si la línea azul está <b>por encima</b> de la
+        línea punteada (el estándar), en ese mes se superaba la meta. {{ g.multi ? 'La línea azul es el valor típico de los establecimientos y la franja celeste muestra dónde está la mitad de ellos.' : '' }}</p></div></details>
+      <div class="legend">
+        <span><i class="ln"></i>{{ g.multi ? 'Valor real típico' : 'Valor real' }}</span>
+        @if (g.multi) { <span><i class="sw banda"></i>Donde está la mitad de los establecimientos</span> }
+        @if (g.eY != null) { <span><i class="ln ln-dash"></i>Estándar</span> }
+      </div>
+      <svg class="chart" [attr.viewBox]="'0 0 ' + g.W + ' ' + g.H" role="img" aria-label="Evolución mensual del valor real frente al estándar">
+        @for (t of g.ticks; track $index) {
+        <line class="grid" [attr.x1]="g.L" [attr.x2]="g.W - g.R" [attr.y1]="t.y" [attr.y2]="t.y" />
+        <text class="ax" [attr.x]="g.L - 8" [attr.y]="t.y + 4" text-anchor="end">{{ t.label }}</text>
+        }
+        @if (g.banda) { <polygon class="banda" [attr.points]="g.banda" /> }
+        @if (g.eY != null) { <line class="est" [attr.x1]="g.L" [attr.x2]="g.W - g.R" [attr.y1]="g.eY" [attr.y2]="g.eY" /> }
+        <polyline class="real" [attr.points]="g.linea" />
+        @for (p of g.puntos; track p.k) {
+        <text class="ax" [attr.x]="p.x" [attr.y]="g.H - 8" text-anchor="middle">{{ p.label }}</text>
+        @if (p.y != null) {
+        <circle class="pt" [attr.cx]="p.x" [attr.cy]="p.y" r="4.5" />
+        <rect class="hit" [attr.x]="p.x - 18" [attr.y]="g.T" width="36" [attr.height]="g.H - g.T - g.B"
+          (mousemove)="tipMes($event, p)" (mouseleave)="ocultarTip()" />
+        }
+        }
+      </svg>
+    </section>
+    }
+
+    @if (serie(); as s) {
+    <section class="card">
+      <div class="card-head">
+        <h3>Valor real en cada periodo calculado</h3>
+        <p class="note">{{ ambito() }}. Resultado guardado al cerrar cada mes de {{ anio() }}, hasta {{ mesTxt() }}{{ centrosAmbito().length > 1 ? ' (valor típico de los establecimientos)' : '' }}.</p>
+      </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>cada punto es el valor real que se guardó en ese cierre ({{ calculoTxt(indSel()!) }}). Sirve para ver si sube o baja de un mes a otro y si se acerca a la línea punteada (el estándar). El punto más grande es el periodo elegido.</p></div></details>
+      @if (s.g; as g) {
+      <div class="legend">
+        <span><i class="ln"></i>Valor real</span><span><i class="ln ln-dash"></i>Estándar</span>
+      </div>
+      <svg class="chart" [attr.viewBox]="'0 0 ' + g.W + ' ' + g.H" role="img" aria-label="Valor real y estándar por periodo">
+        @for (t of g.ey.ticks; track $index) {
+        <line class="grid" [attr.x1]="g.L" [attr.x2]="g.W - g.R" [attr.y1]="t.p" [attr.y2]="t.p" />
+        <text class="ax" [attr.x]="g.L - 8" [attr.y]="t.p + 4" text-anchor="end">{{ t.label }}</text>
+        }
+        <polyline class="est-line" [attr.points]="g.lineaE" />
+        <polyline class="real" [attr.points]="g.lineaV" />
+        @for (q of g.puntos; track q.p) {
+        <text class="ax" [attr.x]="q.x" [attr.y]="g.H - 8" text-anchor="middle" [class.sel]="q.p === periodo()">{{ q.label }}</text>
+        @if (q.y != null) { <circle class="pt" [attr.cx]="q.x" [attr.cy]="q.y" [attr.r]="q.p === periodo() ? 6 : 4.5" /> }
+        <rect class="hit" [attr.x]="q.x - 18" [attr.y]="g.T" width="36" [attr.height]="g.H - g.T - g.B"
+          (mousemove)="tipPeriodo($event, q)" (mouseleave)="ocultarTip()" />
+        }
+      </svg>
+      }
+      @if (s.faltan) {
+      <div class="comp-pie">
+        @if (comparando()) {
+        <span class="note">{{ progresoComp() }} Cada periodo puede tardar cerca de un minuto.</span>
+        } @else {
+        <span class="note">{{ s.total - s.faltan }} de {{ s.total }} periodos cargados.</span>
+        <button class="btn" type="button" (click)="compararPeriodos()"><mat-icon>history</mat-icon> Cargar los {{ s.faltan }} periodos restantes</button>
+        }
+      </div>
+      }
+    </section>
+    }
+
+    @if (distribucion(); as g) {
+    <section class="card">
+      <div class="card-head">
+        <h3>Valor real por establecimiento</h3>
+        <p class="note">{{ ambito() }}, {{ g.barras.length.toLocaleString('es-PE') }} establecimientos, del valor real más alto al más bajo.</p>
+      </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>cada barra es un establecimiento. La raya negra sobre las barras es el estándar de cada uno: si la barra <b>pasa</b> la raya, ese establecimiento supera su estándar; si no llega, está por debajo. Clic en una barra para ver el establecimiento.</p></div></details>
+      <div class="legend">
+        <span><i class="sw real"></i>Valor real</span><span><i class="ln est"></i>Estándar</span>
+      </div>
+      <svg class="chart" [attr.viewBox]="'0 0 ' + g.W + ' ' + g.H" role="img" aria-label="Valor real por establecimiento frente al estándar">
+        @for (t of g.ticks; track $index) {
+        <line class="grid" [attr.x1]="g.L" [attr.x2]="g.W - g.R" [attr.y1]="t.y" [attr.y2]="t.y" />
+        <text class="ax" [attr.x]="g.L - 8" [attr.y]="t.y + 4" text-anchor="end">{{ t.label }}</text>
+        }
+        @for (b of g.barras; track b.f.key) {
+        <rect class="bar" [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.w" [attr.height]="b.h"
+          (mousemove)="tipFila($event, b.f)" (mouseleave)="ocultarTip()" (click)="setCentro(b.f.c.cod)" />
+        }
+        <path class="est-step" [attr.d]="g.est" />
+        <line class="base" [attr.x1]="g.L" [attr.x2]="g.W - g.R" [attr.y1]="g.y0" [attr.y2]="g.y0" />
+      </svg>
+    </section>
+    }
+
+    @if (brechas(); as g) {
+    <section class="card">
+      <div class="card-head">
+        <h3>Brecha por establecimiento</h3>
+        <p class="note">{{ g.arriba.toLocaleString('es-PE') }} establecimientos por encima del estándar,
+          {{ g.debajo.toLocaleString('es-PE') }} por debajo{{ g.igual ? ' y ' + g.igual.toLocaleString('es-PE') + ' iguales' : '' }}.
+          {{ sentidoTxt(indSel()!) ? 'En este indicador: ' + sentidoTxt(indSel()!) + '.' : '' }}</p>
+      </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>cada barra es un establecimiento. Las barras <b>azules hacia arriba</b> superan su estándar en esa cantidad; las <b>naranjas hacia abajo</b> quedan por debajo en esa cantidad. Mientras más larga la barra, más lejos de la meta. Recuerde el sentido: si menor es mejor, quedar por debajo es lo deseado.</p></div></details>
+      <div class="legend">
+        <span><i class="sw real"></i>Por encima del estándar</span><span><i class="sw alt"></i>Por debajo del estándar</span>
+      </div>
+      <svg class="chart" [attr.viewBox]="'0 0 ' + g.W + ' ' + g.H" role="img" aria-label="Brecha entre valor real y estándar por establecimiento">
+        @for (t of g.ticks; track $index) {
+        <line class="grid" [attr.x1]="g.L" [attr.x2]="g.W - g.R" [attr.y1]="t.y" [attr.y2]="t.y" />
+        <text class="ax" [attr.x]="g.L - 8" [attr.y]="t.y + 4" text-anchor="end">{{ t.label }}</text>
+        }
+        @for (b of g.barras; track b.f.key) {
+        <rect class="bar" [class.neg]="!b.pos" [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.w" [attr.height]="b.h"
+          (mousemove)="tipFila($event, b.f)" (mouseleave)="ocultarTip()" (click)="setCentro(b.f.c.cod)" />
+        }
+        <line class="base" [attr.x1]="g.L" [attr.x2]="g.W - g.R" [attr.y1]="g.y0" [attr.y2]="g.y0" />
+      </svg>
+    </section>
+    }
+
+    @if (dispersion(); as g) {
+    <section class="card">
+      <div class="card-head">
+        <h3>Estándar frente a valor real</h3>
+        <p class="note">Un punto por establecimiento.
+          {{ g.unicoE ? 'Todos tienen el mismo estándar: los puntos se separan un poco hacia los lados para que no se tapen.' : '' }}</p>
+      </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>hacia la derecha el estándar es más alto; hacia arriba, el valor real es más alto. La línea punteada marca donde el valor real es <b>igual</b> al estándar: los puntos <b>sobre</b> la línea lo superan y los de <b>abajo</b> no llegan.</p></div></details>
+      <svg class="chart" [attr.viewBox]="'0 0 ' + g.W + ' ' + g.H" role="img" aria-label="Dispersión del estándar frente al valor real">
+        @for (t of g.ey.ticks; track $index) {
+        <line class="grid" [attr.x1]="g.L" [attr.x2]="g.W - g.R" [attr.y1]="t.p" [attr.y2]="t.p" />
+        <text class="ax" [attr.x]="g.L - 8" [attr.y]="t.p + 4" text-anchor="end">{{ t.label }}</text>
+        }
+        @for (t of g.ex.ticks; track $index) {
+        <text class="ax" [attr.x]="t.p" [attr.y]="g.H - 14" text-anchor="middle">{{ t.label }}</text>
+        }
+        <text class="ax tit" [attr.x]="g.W - g.R" [attr.y]="g.H - 1" text-anchor="end">Estándar →</text>
+        <text class="ax tit" [attr.x]="g.L + 4" [attr.y]="g.T + 10">↑ Valor real</text>
+        <line class="diag" [attr.x1]="g.diag.x1" [attr.y1]="g.diag.y1" [attr.x2]="g.diag.x2" [attr.y2]="g.diag.y2" />
+        @for (p of g.pts; track p.f.key) {
+        <circle class="disp" [attr.cx]="p.cx" [attr.cy]="p.cy" r="4" (mousemove)="tipFila($event, p.f)" (mouseleave)="ocultarTip()"
+          (click)="setCentro(p.f.c.cod)" />
+        }
+      </svg>
+    </section>
+    }
+
+    @if (histograma(); as g) {
+    <section class="card">
+      <div class="card-head">
+        <h3>Cuántos establecimientos hay en cada rango de valor real</h3>
+        <p class="note">{{ ambito() }}.</p>
+      </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>cada barra junta a los establecimientos con valores parecidos (el rango está abajo). Mientras más alta la barra, más establecimientos tienen ese valor. La línea punteada es el estándar típico: las barras a un lado y otro muestran cuántos quedan por encima o por debajo.</p></div></details>
+      <svg class="chart" [attr.viewBox]="'0 0 ' + g.W + ' ' + g.H" role="img" aria-label="Histograma del valor real">
+        @for (t of g.ticksY; track $index) {
+        <line class="grid" [attr.x1]="g.L" [attr.x2]="g.W - g.R" [attr.y1]="t.y" [attr.y2]="t.y" />
+        <text class="ax" [attr.x]="g.L - 8" [attr.y]="t.y + 4" text-anchor="end">{{ t.label }}</text>
+        }
+        @for (t of g.ticksX; track $index) {
+        <text class="ax" [attr.x]="t.x" [attr.y]="g.H - 12" text-anchor="middle">{{ t.label }}</text>
+        }
+        @for (b of g.barras; track $index) {
+        <rect class="bar" [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.w" [attr.height]="b.h" (mousemove)="tipBin($event, b)" (mouseleave)="ocultarTip()" />
+        }
+        @if (g.eX != null) { <line class="est" [attr.x1]="g.eX" [attr.x2]="g.eX" [attr.y1]="g.T" [attr.y2]="g.H - g.B" /> }
+      </svg>
+    </section>
+    }
+  </div>
+
+  @if (extremos(); as ex) {
   <section class="sec">
     <div class="sec-head">
-      <h2>Cumplimiento por indicador</h2>
-      <p>{{ ambito() }}. Proporción de establecimientos que cumplen, quedan en el rango aceptable o no cumplen el estándar de cada indicador;
-        primero los de mayor incumplimiento. Clic en un indicador para ver su detalle.</p>
+      <h2>Valores más altos y más bajos</h2>
+      <p>{{ ambito() }}. Los {{ ex.k }} establecimientos con el valor real más alto y los {{ ex.k }} con el más bajo.</p>
+    </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>el punto azul es el valor real y la raya negra el estándar. Si el punto está a la derecha de la raya, el valor real es mayor que el estándar. A la derecha se lee: valor real / estándar. Clic en un establecimiento para verlo.</p></div></details>
+    <div class="ext-grid">
+      @for (lado of [{ t: 'Más altos', rs: ex.top }, { t: 'Más bajos', rs: ex.bot }]; track lado.t) {
+      <div class="card">
+        <h3 class="card-h3">{{ lado.t }}</h3>
+        <div class="res">
+          @for (r of lado.rs; track r.f.key; let k = $index) {
+          <div class="res-row clic ext" role="button" tabindex="0" (click)="setCentro(r.f.c.cod)" (keydown.enter)="setCentro(r.f.c.cod)"
+            (mousemove)="tipFila($event, r.f)" (mouseleave)="ocultarTip()">
+            <span class="res-name"><span class="rk">{{ k + 1 }}</span>{{ nombreCentro(r.f.c) }}<small>&nbsp;· {{ redCorta(r.f.c.red) }}</small></span>
+            <span class="track db">
+              @if (r.pe != null) { <u [style.left.%]="r.pe"></u> }
+              @if (r.pv != null) { <i [style.left]="'calc(' + r.pv + '% - 5px)'"></i> }
+            </span>
+            <span class="res-val">{{ fmtV(r.f.d!.v, r.f.x) }} <small>/ {{ fmtV(r.f.d!.e, r.f.x) }}</small></span>
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  </section>
+  }
+
+  @if (porRed().length) {
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Valor real y estándar por red</h2>
+      <p>Valor típico (mediana) de los establecimientos de cada red, de mayor a menor valor real. Clic en una red para verla.</p>
+    </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>el punto azul es el valor real y la raya negra el estándar; la franja celeste entre ambos es la brecha: mientras más larga, más lejos de la meta. A la derecha se lee: valor real / estándar.</p></div></details>
+    <div class="card">
+      <div class="legend"><span><i class="pt-l"></i>Valor real</span><span><i class="tick-l"></i>Estándar</span></div>
+      <div class="res">
+        @for (r of porRed(); track r.key) { <ng-container *ngTemplateOutlet="filaPar; context: { $implicit: r }" /> }
+      </div>
+    </div>
+  </section>
+  }
+
+  @if (porTipo().length) {
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Valor real y estándar por tipo de establecimiento</h2>
+      <p>{{ ambito() }}. Valor típico (mediana) de los establecimientos de cada tipo (hospital, centro de atención, posta…), de mayor a menor valor real.</p>
+    </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>el punto azul es el valor real y la raya negra el estándar; la franja celeste entre ambos es la brecha: mientras más larga, más lejos de la meta. A la derecha se lee: valor real / estándar.</p></div></details>
+    <div class="card">
+      <div class="legend"><span><i class="pt-l"></i>Valor real</span><span><i class="tick-l"></i>Estándar</span></div>
+      <div class="res">
+        @for (r of porTipo(); track r.key) { <ng-container *ngTemplateOutlet="filaPar; context: { $implicit: r }" /> }
+      </div>
+    </div>
+  </section>
+  }
+  }
+
+  <!-- establecimiento elegido -->
+  @if (comparaCentro().length) {
+  <section class="sec">
+    <div class="sec-head">
+      <h2>{{ ambito() }} frente a su red y al país</h2>
+      <p>{{ indSel() ? '' : 'Clic en un indicador para ver su detalle.' }}</p>
+    </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>compare el <b>punto azul</b> (este establecimiento) con el <b>cuadrado</b> (lo típico en su red), el <b>círculo</b> (lo típico en el país) y la <b>raya negra</b> (el estándar). Cada fila tiene su propia escala.</p></div></details>
+    <div class="card">
+      <div class="legend">
+        <span><i class="pt-l"></i>Este establecimiento</span><span><i class="sq-l"></i>Típico de su red</span>
+        <span><i class="ring-l"></i>Típico del país</span><span><i class="tick-l"></i>Estándar</span>
+      </div>
+      <div class="res">
+        @for (r of comparaCentro(); track r.x.i) {
+        <div class="res-row comp" [class.clic]="!indSel()" (click)="indSel() ? null : setInd(r.x.i)" (mousemove)="tipComp($event, r)" (mouseleave)="ocultarTip()">
+          <span class="res-name"><i class="dot" [style.background]="r.x.color"></i>{{ r.x.nombre }}<small class="tag">{{ calculoTxt(r.x) }}</small></span>
+          <span class="track db">
+            @if (r.pe != null) { <u [style.left.%]="r.pe"></u> }
+            @if (r.pn != null) { <em class="ring" [style.left]="'calc(' + r.pn + '% - 5px)'"></em> }
+            @if (r.pr != null) { <em class="sq" [style.left]="'calc(' + r.pr + '% - 4px)'"></em> }
+            @if (r.pv != null) { <i [style.left]="'calc(' + r.pv + '% - 5px)'"></i> }
+          </span>
+          <span class="res-val">{{ fmtV(r.v, r.x) }} <small>/ {{ fmtV(r.e, r.x) }}</small></span>
+        </div>
+        }
+      </div>
+    </div>
+  </section>
+  }
+
+  @if (mini().length) {
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Evolución de cada indicador</h2>
+      <p>{{ ambito() }}, de enero a {{ mesTxt() }}. Clic en un indicador para ver su detalle.</p>
+    </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>la línea azul muestra cómo fue cambiando el valor real mes a mes; la línea punteada es el estándar. En los indicadores <b>acumulados</b> cada punto suma desde enero; en los <b>mensuales</b>, cada punto es el valor de ese mes solo. Abajo de cada cuadro: el valor real a la fecha y el estándar.</p></div></details>
+    <div class="mini-grid">
+      @for (m of mini(); track m.f.key) {
+      <button type="button" class="card mini" (click)="setInd(m.f.x.i)" (mousemove)="tipFila($event, m.f)" (mouseleave)="ocultarTip()">
+        <span class="mini-name"><i class="dot" [style.background]="m.f.x.color"></i><span>{{ m.f.x.nombre }} <small class="tag">{{ calculoTxt(m.f.x) }}</small></span></span>
+        <svg class="chart" [attr.viewBox]="'0 0 ' + m.W + ' ' + m.H" aria-hidden="true">
+          @if (m.eY != null) { <line class="est" x1="0" [attr.x2]="m.W" [attr.y1]="m.eY" [attr.y2]="m.eY" /> }
+          <polyline class="real thin" [attr.points]="m.linea" />
+          @if (m.ult) { <circle class="pt" [attr.cx]="m.ult.x" [attr.cy]="m.ult.y" r="3.5" /> }
+        </svg>
+        <span class="mini-val"><b>{{ fmtV(m.f.d!.v, m.f.x) }}</b> <small>estándar {{ fmtV(m.f.d!.e, m.f.x) }}</small></span>
+      </button>
+      }
+    </div>
+  </section>
+  }
+
+  <!-- vista general -->
+  @if (mapa(); as m) {
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Mapa de valor real frente al estándar</h2>
+      <p>{{ red() ? 'Establecimientos de ' + ambito() : 'Redes' }} (filas) e indicadores (columnas). Clic en un cuadro para ver el detalle.</p>
     </div>
     <div class="card">
       <div class="legend">
-        <span><i class="sw f-ok"></i>Cumple (5)</span><span><i class="sw f-warn"></i>Aceptable (3)</span><span><i class="sw f-bad"></i>No cumple (1)</span>
+        <span><i class="sw" style="background: rgba(224, 138, 0, .8)"></i>−50% o menos</span>
+        <span><i class="sw" style="background: rgba(224, 138, 0, .25)"></i>Algo por debajo</span>
+        <span><i class="sw" style="background: rgba(0, 122, 201, .25)"></i>Algo por encima</span>
+        <span><i class="sw" style="background: rgba(0, 122, 201, .8)"></i>+50% o más</span>
+        <span><i class="sw vacio"></i>Sin dato</span>
+      </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>cada cuadro cruza una fila con un indicador. El número dice cuánto se aleja el valor real del estándar: <b>+10%</b> = 10% más que el estándar; <b>−20%</b> = 20% menos. <b>Azul</b> = por encima, <b>naranja</b> = por debajo; mientras más fuerte el color, más lejos. Los códigos de arriba son abreviaturas: la lista de la derecha dice qué indicador es cada uno (pase el mouse por un nombre para resaltar su columna). Recuerde el sentido: si menor es mejor, el naranja es lo deseado.</p></div></details>
+      <details class="dyn-ayuda calc">
+        <summary><mat-icon>calculate</mat-icon> ¿Cómo se calcula el número de cada cuadro?</summary>
+        <div class="dyn-ayuda-panel calc-panel" role="note">
+        <ol>
+          <li><b>Valor real {{ red() ? 'del establecimiento' : 'de la red' }}.</b>
+            @if (red()) {
+            Es el valor real del establecimiento en ese indicador, tal como aparece en la tabla de abajo.
+            } @else {
+            Se toman los establecimientos de la red que tienen dato en ese indicador, se ordenan de menor a mayor y se elige el
+            <b>valor del medio</b> (mediana). Ese es el «valor real típico» de la red. No es una suma ni un promedio: así un establecimiento muy alto
+            o muy bajo no cambia el resultado.
+            }
+            Según el indicador, el valor real es <b>acumulado</b> (suma de enero a {{ mesTxt() }}) o <b>mensual</b> (solo {{ mesTxt() }}).</li>
+          <li><b>Estándar {{ red() ? 'del establecimiento' : 'de la red' }}.</b>
+            {{ red() ? 'Es la meta que le corresponde al establecimiento.' : 'Igual que el valor real: el valor del medio de los estándares de esos establecimientos.' }}</li>
+          <li><b>Diferencia en porcentaje.</b> Se resta el estándar al valor real y se divide entre el estándar:
+            <span class="formula">(valor real − estándar) ÷ estándar</span>. Así se pueden comparar indicadores que se miden distinto
+            (días, porcentajes, consultas…), porque todos quedan como «qué tanto por ciento por encima o por debajo de su meta».</li>
+        </ol>
+        @if (m.ejemplo; as ej) {
+        <p class="ejemplo"><b>Ejemplo con los datos de este periodo:</b> {{ ej.fila }}, {{ ej.x.nombre }} ({{ calculoTxt(ej.x) }}).
+          {{ ej.n > 1 ? 'Valor real típico de sus ' + ej.n + ' establecimientos' : 'Valor real' }}: <b>{{ fmtV(ej.v, ej.x) }}</b>;
+          estándar: <b>{{ fmtV(ej.e, ej.x) }}</b>.
+          <span class="formula">({{ fmtV(ej.v, ej.x) }} − {{ fmtV(ej.e, ej.x) }}) ÷ {{ fmtV(ej.e, ej.x) }} = {{ fmtRel(ej.rel) }}</span>
+          → {{ ej.rel >= 0 ? 'está ' + fmtRel(ej.rel) + ' por encima' : 'está ' + fmtRel(-ej.rel).slice(1) + ' por debajo' }} de su estándar.
+          <span class="note">(Los valores se muestran redondeados; el cálculo usa los valores exactos, por eso puede variar en un decimal.)</span></p>
+        }
+        <p class="note">Ojo: este porcentaje no es lo mismo que la <b>brecha</b> de la tabla. La brecha es la resta simple (valor real − estándar), en las
+          unidades del indicador; aquí esa resta se divide entre el estándar para expresarla en porcentaje. Un cuadro vacío o con «·» no tiene valor real o no tiene estándar.
+          Pase el mouse sobre cualquier cuadro para ver su cálculo.</p>
+      </div>
+      </details>
+      <div class="mapa-wrap">
+        <div class="mapbox">
+          <table class="mapa">
+            <thead>
+              <tr>
+                <th class="rowh"></th>
+                @for (x of m.inds; track x.i) {
+                <th [class.hl]="colHl() === x.i" [style.border-top-color]="x.color" (mousemove)="mostrarTip($event, x.nombre, [x.serv + ' · ' + x.codigo, sentidoTxt(x), 'Cálculo ' + calculoTxt(x, true)])" (mouseleave)="ocultarTip()">
+                  <span>{{ x.codigo }}</span>
+                </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of m.filas; track f.key) {
+              <tr>
+                <th class="rowh">{{ f.label }}</th>
+                @for (c of f.celdas; track c.x.i) {
+                <td [class.hl]="colHl() === c.x.i" [style.background]="c.bg" [style.color]="c.fg" [class.clic]="c.n" (click)="irCelda(f, c)"
+                  (mousemove)="c.n ? tipCelda($event, f, c) : null" (mouseleave)="ocultarTip()">{{ c.txt }}</td>
+                }
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <aside class="mapa-ley" aria-label="Indicadores del mapa">
+          <h4>Indicadores <span class="note">(código de la columna)</span></h4>
+          @for (sv of servicios(); track sv.value) {
+          @if (indsMapa(m.inds, sv.value).length) {
+          <p class="ley-serv"><i class="dot" [style.background]="sv.color"></i>{{ sv.nombre }}</p>
+          <ul>
+            @for (x of indsMapa(m.inds, sv.value); track x.i) {
+            <li (mouseenter)="colHl.set(x.i)" (mouseleave)="colHl.set(null)" (click)="setInd(x.i)" [class.hl]="colHl() === x.i"
+              title="Clic para ver el detalle del indicador">
+              <code [style.border-left-color]="x.color">{{ x.codigo }}</code>
+              <span>{{ x.nombre }} <small>{{ sentidoTxt(x) }} · {{ calculoTxt(x) }}</small></span>
+            </li>
+            }
+          </ul>
+          }
+          }
+        </aside>
+      </div>
+    </div>
+  </section>
+  }
+
+  @if (porIndicador().length && !cen()) {
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Valor real y estándar por indicador</h2>
+      <p>{{ ambito() }}. Valor típico (mediana) de los establecimientos en cada indicador. Clic en un indicador para ver su detalle.</p>
+    </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>el punto azul es el valor real y la raya negra el estándar; la franja celeste entre ambos es la brecha: mientras más larga, más lejos de la meta. A la derecha se lee: valor real / estándar. Cada fila tiene su propia escala, porque cada indicador se mide distinto: compare el punto con su raya, no con las otras filas.</p></div></details>
+    <div class="card">
+      <div class="legend">
+        <span><i class="pt-l"></i>Valor real</span><span><i class="tick-l"></i>Estándar</span>
+        <span>· Color del punto junto al nombre: servicio</span>
       </div>
       <div class="res">
-        @for (r of resumenInds(); track r.x.id) {
-        <div class="res-row" role="button" tabindex="0" (click)="setInd(r.x.i)" (keydown.enter)="setInd(r.x.i)">
-          <span class="res-name"><i class="dot" [style.background]="r.x.color"></i>{{ r.x.nombre }}</span>
-          <span class="stack">
-            <i class="f-ok" [style.width.%]="r.ok / r.n * 100"></i>
-            <i class="f-warn" [style.width.%]="r.warn / r.n * 100"></i>
-            <i class="f-bad" [style.width.%]="r.bad / r.n * 100"></i>
-          </span>
-          <span class="res-val">{{ r.ok }}/{{ r.n }}</span>
-        </div>
-        }
+        @for (r of porIndicador(); track r.key) { <ng-container *ngTemplateOutlet="filaPar; context: { $implicit: r }" /> }
       </div>
     </div>
   </section>
@@ -132,20 +554,15 @@
   <!-- tabla -->
   <section class="sec">
     <div class="sec-head">
-      <h2>{{ cen() ? 'Indicadores de ' + ambito() : indSel() ? 'Establecimientos · ' + ambito() : 'Evaluaciones indicador–establecimiento · ' + ambito() }}</h2>
-      <p>Estándar, rango aceptable y valor real acumulado a {{ mesTxt() }}. La barra muestra el valor real (punto) frente al estándar (marca)
-        y al rango aceptable (franja). {{ cen() ? (indSel() ? '' : 'Clic en una fila para filtrar por el indicador.') : 'Clic en una fila para ver el establecimiento.' }}</p>
+      <h2>{{ cen() ? 'Indicadores de ' + ambito() : indSel() ? 'Establecimientos · ' + ambito() : 'Indicador por establecimiento · ' + ambito() }}</h2>
+      <p>Estándar y valor real de {{ mesTxt() }}: acumulado (enero a {{ mesTxt() }}) o mensual (solo {{ mesTxt() }}), según el indicador.
+        {{ cen() ? (indSel() ? '' : 'Clic en una fila para ver el indicador.') : 'Clic en una fila para ver el establecimiento.' }}</p>
     </div>
+      <details class="dyn-ayuda"><summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary><div class="dyn-ayuda-panel" role="note"><p>en la columna <b>Comparación</b>, el punto azul es el valor real y la raya negra el estándar. <b>Brecha</b> = valor real − estándar. <b>NA</b> = sin dato. Clic en un título de columna para ordenar.</p></div></details>
     <div class="card">
       <div class="tools">
         <input type="search" placeholder="Buscar establecimiento, red o indicador…" aria-label="Buscar"
           [ngModel]="q()" (ngModelChange)="q.set($event); limite.set(100)">
-        <div class="chips" role="group" aria-label="Filtrar por estado">
-          @for (e of estadosFiltro; track e) {
-          <button type="button" class="pill" [class]="'pill ' + e" [class.on]="estado() === e" [attr.aria-pressed]="estado() === e"
-            (click)="setEstado(e)">{{ estadoTxt[e] }}</button>
-          }
-        </div>
         <span class="note">{{ filas().length.toLocaleString('es-PE') }} filas</span>
         <button class="btn" type="button" (click)="descargarCsv()"><mat-icon>download</mat-icon> Descargar CSV</button>
       </div>
@@ -154,7 +571,7 @@
           <thead>
             <tr>
               @for (c of columnas(); track c.k) {
-              <th [class.num]="c.num" [class.sm]="c.sm" [attr.aria-sort]="sortKey() === c.k ? (sortDir() > 0 ? 'ascending' : 'descending') : null">
+              <th [class.num]="c.num" [class.sm]="c.sm" [attr.aria-sort]="(sortKey() || columnas()[0].k) === c.k ? (sortDir() > 0 ? 'ascending' : 'descending') : null">
                 <button type="button" (click)="ordenar(c.k, !!c.num)">{{ c.t }}</button>
               </th>
               }
@@ -164,26 +581,23 @@
           </thead>
           <tbody>
             @for (f of visibles(); track f.key) {
-            <tr [class.na]="f.estado === 'na'" (click)="irFila(f)" (mousemove)="tipFila($event, f)" (mouseleave)="ocultarTip()">
+            <tr [class.na]="!f.d" (click)="irFila(f)" (mousemove)="tipFila($event, f)" (mouseleave)="ocultarTip()">
               @if (!cen()) {
               <td class="name">{{ nombreCentro(f.c) }}</td>
               <td class="sm">{{ redCorta(f.c.red) }}</td>
               }
               @if (!indSel()) {
               <td class="sm"><i class="dot" [style.background]="f.x.color"></i>{{ f.x.serv }}</td>
-              <td class="name">{{ f.x.nombre }}<span class="sub">{{ sentidoTxt(f.x) }}</span></td>
+              <td class="name">{{ f.x.nombre }}<span class="sub">{{ sentidoTxt(f.x) }} · {{ calculoTxt(f.x) }}</span></td>
               }
               <td class="num">{{ fmtV(f.d?.e, f.x) }}</td>
-              <td class="num">{{ aceptTxt(f) }}</td>
               <td class="num strong">{{ f.d ? fmtV(f.d.v, f.x) : 'NA' }}</td>
-              <td class="num sm" [style.color]="f.estado === 'na' ? null : color(f.estado)">{{ fmtBrecha(f) }}</td>
-              <td><span class="pill" [class]="'pill ' + f.estado">{{ estadoTxt[f.estado] }}</span></td>
+              <td class="num sm">{{ fmtBrecha(f) }}</td>
               <td class="cmp">
                 @if (f.bar; as b) {
                 <span class="track">
-                  @if (b.a0 != null) { <s [style.left.%]="b.a0" [style.width.%]="b.a1! - b.a0"></s> }
                   @if (b.e != null) { <u [style.left.%]="b.e"></u> }
-                  <i [style.left]="'calc(' + b.v + '% - 5px)'" [style.background]="color(f.estado)"></i>
+                  <i [style.left]="'calc(' + b.v + '% - 5px)'"></i>
                 </span>
                 }
               </td>
@@ -198,7 +612,7 @@
               }
             </tr>
             } @empty {
-            <tr><td [attr.colspan]="columnas().length + (cen() ? 2 : 1)" class="vacio">Sin evaluaciones para estos filtros.</td></tr>
+            <tr><td [attr.colspan]="columnas().length + (cen() ? 2 : 1)" class="vacio">Sin datos para estos filtros.</td></tr>
             }
           </tbody>
         </table>
@@ -211,21 +625,26 @@
     </div>
   </section>
 
-  <section class="method">
-    <p><b>Cómo leer este tablero.</b> Para cada indicador y establecimiento se compara el valor real acumulado del año con su estándar.
-      Si el valor alcanza el estándar el indicador <b>cumple</b> (5 puntos); si no lo alcanza pero queda dentro del rango aceptable es
-      <b>aceptable</b> (3 puntos); fuera de ese rango, o sin producción, <b>no cumple</b> (1 punto). En los indicadores de incremento mayor es mejor,
-      en los de decremento menor es mejor y en los de banda el valor debe quedar dentro del rango.</p>
-    <p>Brecha: valor real menos estándar (en puntos porcentuales si el indicador es un porcentaje).</p>
-    <p>Fuente: resultado final del TMI guardado para {{ mesTxt() }} {{ data()!.anio }}@if (data()!.fecha_calculo) { (calculado el {{ data()!.fecha_calculo!.slice(0, 10) }})}.
-      Cifras preliminares: podrían modificarse por omisiones o correcciones propias del proceso estadístico.</p>
-  </section>
+  }
   }
 </div>
 
 @if (tip(); as t) {
 <div class="tip" role="tooltip" [style.left.px]="t.x" [style.top.px]="t.y">
   <b>{{ t.title }}</b>
-  @for (l of t.lines; track $index) { <span>{{ l }}</span> }
+  @for (l of t.lines; track $index) { @if (l) { <span>{{ l }}</span> } }
 </div>
 }
+
+<ng-template #filaPar let-r>
+  <div class="res-row" [class.clic]="!!r.go" [attr.role]="r.go ? 'button' : null" [attr.tabindex]="r.go ? 0 : null"
+    (click)="r.go?.()" (keydown.enter)="r.go?.()" (mousemove)="tipPar($event, r, 'establecimientos')" (mouseleave)="ocultarTip()">
+    <span class="res-name">@if (r.color !== 'var(--d-accent)') { <i class="dot" [style.background]="r.color"></i> }{{ r.label }}@if (r.color !== 'var(--d-accent)') { <small class="tag">{{ calculoTxt(r.x) }}</small> }</span>
+    <span class="track db">
+      @if (r.pv != null && r.pe != null) { <b [style.left.%]="r.pv < r.pe ? r.pv : r.pe" [style.width.%]="r.pv < r.pe ? r.pe - r.pv : r.pv - r.pe"></b> }
+      @if (r.pe != null) { <u [style.left.%]="r.pe"></u> }
+      @if (r.pv != null) { <i [style.left]="'calc(' + r.pv + '% - 5px)'"></i> }
+    </span>
+    <span class="res-val">{{ fmtV(r.v, r.x) }} <small>/ {{ fmtV(r.e, r.x) }}</small></span>
+  </div>
+</ng-template>

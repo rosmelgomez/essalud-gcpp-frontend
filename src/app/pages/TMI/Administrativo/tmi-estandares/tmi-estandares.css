@@ -1,0 +1,63 @@
+.std-fila {
+    grid-template-columns: minmax(0, 1fr) 170px 200px 72px;
+}
+
+.std-fila .exg-rango strong {
+    font-weight: 600;
+    color: var(--rpt-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.std-mes-distinto,
+.std-mes-distinto strong {
+    color: var(--rpt-warn) !important;
+}
+
+.std-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 140px;
+    gap: 6px 12px;
+    align-items: center;
+    max-height: 52vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.std-form-mes {
+    grid-template-columns: minmax(0, 1fr) 140px 140px;
+}
+
+.std-form-cab {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rpt-muted);
+    border-bottom: 1px solid var(--rpt-line);
+    padding-bottom: 4px;
+}
+
+.std-form-clave {
+    font-size: 13px;
+    color: var(--rpt-ink);
+}
+
+.std-form input {
+    height: 34px;
+    padding: 0 8px;
+    border: 1px solid var(--rpt-line-strong);
+    border-radius: var(--rpt-radius-sm);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+}
+
+.std-form input:focus {
+    outline: 2px solid var(--rpt-brand);
+    outline-offset: -1px;
+}
+
+@media (max-width: 720px) {
+    .std-fila {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+

@@ -1,0 +1,181 @@
+<div class="header">
+    <h2 class="bar-title">Estándares por indicador</h2>
+    <div class="header-actions">
+        <div class="buscar-group">
+            <select class="anio-select" [ngModel]="anio()" (ngModelChange)="cambiarPeriodo($event, mes())" aria-label="Año">
+                @for (a of anios; track a) {<option [ngValue]="a">{{ a }}</option>}
+            </select>
+            <select class="periodo-select" [ngModel]="mes()" (ngModelChange)="cambiarPeriodo(anio(), $event)" aria-label="Mes">
+                @for (m of meses; track m.value) {<option [ngValue]="m.value">{{ m.label }}</option>}
+            </select>
+            <button (click)="cargar()" class="btn-download" [disabled]="cargando()">
+                <mat-icon>refresh</mat-icon> Actualizar
+            </button>
+        </div>
+    </div>
+    <details class="dyn-ayuda">
+        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
+        <div class="dyn-ayuda-panel" role="note">
+            <p>
+            Cada indicador muestra solo las claves con las que se evalúa (Nivel, Tipo o Nivel y Tipo, según se definió al
+            crearlo): son las únicas que usa el cálculo. En <strong>Nivel y Tipo</strong> cada centro usa una sola
+            clave: si su tipo está en la lista (por ejemplo CNSR), se evalúa por su tipo; si no, por su nivel. Si esa clave
+            está vacía o en 0, el centro queda sin estándar: no toma el de su nivel. El <strong>fijo del año</strong> es el estándar que toma cada mes al
+            llegar su fecha de cierre. Si el mes elegido ya cerró, también puede cambiar el estándar <strong>solo de ese
+            mes</strong>. Un valor 0 deja la clave sin estándar (el centro queda en NA). El estándar propio de un centro
+            (pestaña Por centro) gana sobre este.
+            </p>
+        </div>
+    </details>
+</div>
+
+@if (error()) {
+<div class="alert alert-danger">{{ error() }}</div>
+}
+@if (mensaje()) {
+<div class="dyn-ok" style="margin-bottom: 12px;"><mat-icon>check_circle</mat-icon> {{ mensaje() }}</div>
+}
+
+<mat-card class="table exg">
+    <div class="exg-toolbar">
+        <div class="exc-buscar exg-buscar">
+            <mat-icon aria-hidden="true">search</mat-icon>
+            <input type="search" placeholder="Buscar indicador, grupo, nivel o tipo" aria-label="Buscar estándares"
+                [ngModel]="filtro()" (ngModelChange)="buscar($event)" (keydown.escape)="buscar('')" />
+        </div>
+        <span class="exg-resumen">
+            <strong>{{ visibles().length }}</strong> {{ visibles().length === 1 ? 'indicador' : 'indicadores' }}
+            · <strong>{{ totalClaves() }}</strong> {{ totalClaves() === 1 ? 'estándar' : 'estándares' }}
+            · {{ nombreMes() }} {{ anio() }} {{ indicadores()[0]?.mes_cerrado ? '(cerrado)' : '(usa el fijo)' }}
+        </span>
+        @if (visibles().length > 1) {
+        <span class="exg-toolbar-acciones">
+            <button type="button" class="exc-accion" (click)="abrirTodos(true)">Expandir todo</button>
+            <button type="button" class="exc-accion" (click)="abrirTodos(false)">Contraer todo</button>
+        </span>
+        }
+    </div>
+
+    <div class="exg-lista lv-lista" [class.lv-actualizando]="cargando() && indicadores().length" [attr.aria-busy]="cargando()">
+        @if (cargando()) {<div class="lv-progreso" role="progressbar" aria-label="Cargando estándares"></div>}
+        @if (cargando() && !indicadores().length) {
+        @for (n of esqueleto; track n) {
+        <div class="lv-esqueleto" aria-hidden="true"><span></span><span></span><span></span></div>
+        }
+        }
+        @if (visibles().length) {
+        <cdk-virtual-scroll-viewport class="lv-viewport" [itemSize]="altoFila" [minBufferPx]="altoFila * 8"
+            [maxBufferPx]="altoFila * 16" [style.height.px]="altoLista()" [style.--lv-alto]="altoFila + 'px'">
+        <div *cdkVirtualFor="let f of filas(); trackBy: trackFila" class="lv-fila">
+        @let i = f.i;
+        @if (f.t === 'ind') {
+        <div class="exg-centro lv-cab" [class.exg-centro-abierto]="abiertos().has(i.id)">
+            <div class="exg-centro-cabecera">
+                <button type="button" class="exg-centro-toggle" (click)="toggle(i.id)"
+                    [attr.aria-expanded]="abiertos().has(i.id)">
+                    <mat-icon class="exg-chevron" aria-hidden="true">chevron_right</mat-icon>
+                    <span class="exg-cod">{{ i.orden }}</span>
+                    <span class="est-titulo">
+                        <span class="exg-nombre">{{ i.indicador }}</span>
+                        <span class="est-grupo">{{ i.grupo ? i.grupo + ' · ' : '' }}Se evalúa por {{ textoBase(i) }}</span>
+                    </span>
+                    <span class="est-valores" [title]="'Estándar de ' + nombreMes() + ': ' + resumen(i)">{{ resumen(i) }}</span>
+                    <span class="exc-contador">{{ i.claves.length }} {{ i.claves.length === 1 ? 'clave' : 'claves' }}</span>
+                </button>
+                <button type="button" class="exc-accion exg-agregar" (click)="abrirEdicion(i)" [disabled]="!i.claves.length"
+                    [attr.aria-label]="'Editar estándar de ' + i.indicador" title="Editar estándar">
+                    <mat-icon aria-hidden="true">edit</mat-icon><span>Editar</span>
+                </button>
+            </div>
+        </div>
+        } @else if (f.t === 'clave') {
+                @let k = f.k!;
+                @let v = efectivo(i, k);
+                <div class="exg-fila std-fila" [class.est-fila-cero]="v == null">
+                    <div class="exg-indicador">
+                        <span class="exg-ind-nombre">{{ etiquetaClave(i, k) }}</span>
+                        <span class="exg-tipo">{{ k.centros }} {{ k.centros === 1 ? 'centro' : 'centros' }}</span>
+                    </div>
+                    <span class="exg-rango">Fijo {{ anio() }} <strong>{{ k.fijo ? fmt(i, k.fijo) : 'sin estándar' }}</strong></span>
+                    <span class="exg-rango" [class.std-mes-distinto]="mesDistinto(i, k)"
+                        [title]="mesDistinto(i, k) ? 'Cambiado solo para ' + nombreMes() : ''">
+                        {{ nombreMes() }}
+                        <strong>{{ i.mes_cerrado ? (v != null ? fmt(i, v) : 'sin estándar') : 'usa el fijo' }}</strong>
+                    </span>
+                    <span class="exg-resultado est-fijo" [class.est-fijo-cero]="v == null"
+                        title="Estándar que usa el cálculo en el mes elegido">{{ v != null ? fmt(i, v) : '—' }}</span>
+                </div>
+        } @else {
+                <div class="exg-fila std-fila"><span class="exg-rango">La base {{ textoBase(i) }} no tiene claves activas.</span></div>
+        }
+        </div>
+        </cdk-virtual-scroll-viewport>
+        }
+
+        @if (!cargando() && !visibles().length) {
+        <div class="exg-vacio">
+            <mat-icon aria-hidden="true">{{ filtro() ? 'search_off' : 'rule' }}</mat-icon>
+            @if (filtro() && indicadores().length) {
+            <p>Ningún indicador coincide con «{{ filtro() }}».</p>
+            <button type="button" class="exc-accion" (click)="buscar('')">Limpiar búsqueda</button>
+            } @else {
+            <p>No hay indicadores activos.</p>
+            }
+        </div>
+        }
+    </div>
+</mat-card>
+
+<!-- MODAL EDITAR ESTÁNDAR DEL INDICADOR -->
+@if (editando(); as i) {
+<div class="modal-overlay" (click)="cerrarEdicion()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="std_titulo" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+            <div class="modal-header-info">
+                <h2 id="std_titulo">Editar estándar</h2>
+                <p class="modal-subtitle">{{ i.orden }}. {{ i.indicador }} · Se evalúa por {{ textoBase(i) }}</p>
+            </div>
+            <button type="button" class="close-modal-btn" (click)="cerrarEdicion()" aria-label="Cerrar">
+                <mat-icon>close</mat-icon></button>
+        </header>
+        <form class="modal-form-container" (ngSubmit)="guardar()">
+            <div class="modal-body">
+                <div class="std-form" [class.std-form-mes]="i.mes_cerrado">
+                    <span class="std-form-cab">Clave</span>
+                    <span class="std-form-cab">Fijo {{ anio() }}</span>
+                    @if (i.mes_cerrado) {<span class="std-form-cab">{{ nombreMes() }} {{ anio() }}</span>}
+                    @for (e of edicion(); track e.fuente + e.clave; let idx = $index) {
+                    <label class="std-form-clave" [for]="'std_f_' + idx">{{ e.etiqueta }}</label>
+                    <input [id]="'std_f_' + idx" [name]="'std_f_' + idx" type="number" step="any" min="0"
+                        [ngModel]="e.fijo" (ngModelChange)="cambiarValor(idx, 'fijo', $event)" />
+                    @if (i.mes_cerrado) {
+                    <input [id]="'std_m_' + idx" [name]="'std_m_' + idx" type="number" step="any" min="0"
+                        [attr.aria-label]="e.etiqueta + ' en ' + nombreMes()"
+                        [ngModel]="e.mes" (ngModelChange)="cambiarValor(idx, 'mes', $event)" />
+                    }
+                    }
+                </div>
+
+                <p class="dyn-hint">
+                    @if (i.mes_cerrado) {
+                    {{ nombreMes() }} ya cerró: su columna cambia solo ese mes. El fijo lo toman los meses que aún no cierran.
+                    } @else {
+                    {{ nombreMes() }} aún no llega a su fecha de cierre: usa el fijo, igual que los meses siguientes.
+                    }
+                    @if (i.formato === 'PORCENTAJE') { Valores en fracción: 0.98 = 98 %. }
+                    0 = sin estándar.
+                </p>
+                @if (errorForm()) {
+                <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span></div>
+                }
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn-modal-action btn-cancel" (click)="cerrarEdicion()" [disabled]="guardando()">Cancelar</button>
+                <button type="submit" class="btn-modal-action btn-save" [disabled]="guardando()">
+                    <mat-icon>save</mat-icon>{{ guardando() ? 'Guardando…' : 'Guardar' }}
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>
+}

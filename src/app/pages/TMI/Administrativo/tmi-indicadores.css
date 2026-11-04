@@ -1738,3 +1738,9 @@
         gap: 16px;
     }
 }
+
+/* Exclusión: aviso de que el centro ya tiene exclusión de esos indicadores en el año */
+.exc-aviso-existente {
+    align-items: flex-start;
+    margin-bottom: 10px;
+}

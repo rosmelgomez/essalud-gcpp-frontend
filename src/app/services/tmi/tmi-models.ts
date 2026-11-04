@@ -104,6 +104,34 @@ export interface TmiValorEstandar {
   [mes: `est_${string}`]: number | null;
 }
 
+/** Estándar de un indicador en una clave de su base_estandar (lo único que usa el cálculo). */
+export interface TmiEstandarPeriodoClave {
+  orden: number | null;
+  fuente: 'NIVEL' | 'TIPO' | 'CATEGORIA';
+  clave: string;
+  descripcion: string | null;
+  prioridad: number;
+  /** Estándar fijo del año: los meses lo toman al llegar su fecha de cierre. */
+  fijo: number | null;
+  /** Valor propio del mes (solo existe si el mes ya cerró). */
+  mes: number | null;
+  centros: number;
+}
+
+/** Indicador con sus estándares para un periodo, solo en las claves de su base_estandar. */
+export interface TmiEstandarPeriodo {
+  id: number;
+  orden: number;
+  codigo: string;
+  indicador: string;
+  grupo: string | null;
+  base_estandar: string;
+  base_descripcion: string | null;
+  formato: 'NUMERO' | 'PORCENTAJE';
+  mes_cerrado: boolean;
+  claves: TmiEstandarPeriodoClave[];
+}
+
 /** % Acept de un indicador: su porcentaje y el estándar del mes de cada clave (el % Acept se calcula). */
 export interface TmiAceptacionIndicador {
   id: number;
@@ -322,6 +350,8 @@ export interface TmiDashIndicador {
   servicio: string;
   sentido: 'MENOR' | 'MAYOR' | 'BANDA' | null;
   formato: 'NUMERO' | 'PORCENTAJE' | null;
+  /** ACUMULADO: valor de enero al mes; MENSUAL: valor del mes solo. */
+  tipo_calculo?: 'ACUMULADO' | 'MENSUAL';
   nacional: number | null;   // promedio de las redes sin las redes APP (1 a 5)
 }
 /** Valor del centro en un indicador (null en el arreglo si el indicador no aplica). */

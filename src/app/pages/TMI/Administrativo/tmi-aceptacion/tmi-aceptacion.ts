@@ -3,9 +3,16 @@ import { DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 
 import { AyudaFlotante } from '../ayuda-flotante';
 import { TmiEstandarService, TmiAceptacionIndicador, TmiTipoEstandar, mensajeError } from '../../../../services/tmi';
+
+/** Fila de la lista virtual: la cabecera del indicador o una de sus claves (si está abierto). */
+interface FilaLista {
+  i: TmiAceptacionIndicador;
+  k?: TmiAceptacionIndicador['claves'][number];
+}
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
@@ -29,9 +36,9 @@ interface Edicion {
  *  del año, que cada mes toma al llegar su fecha de cierre, y luego el valor del mes se puede modificar. */
 @Component({
   selector: 'app-tmi-aceptacion',
-  imports: [AyudaFlotante, FormsModule, MatCardModule, MatIconModule, DecimalPipe, PercentPipe],
+  imports: [AyudaFlotante, FormsModule, MatCardModule, MatIconModule, DecimalPipe, PercentPipe, ScrollingModule],
   templateUrl: './tmi-aceptacion.html',
-  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css'],
+  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css', '../lista-virtual.css', '../tmi-estandar-resumen/tmi-estandar-resumen.css'],
 })
 export class TmiAceptacion implements OnInit {
   private estandarSrv = inject(TmiEstandarService);
@@ -51,6 +58,33 @@ export class TmiAceptacion implements OnInit {
     return f ? this.indicadores().filter((i) => `${i.indicador} ${i.grupo ?? ''}`.toLowerCase().includes(f)) : this.indicadores();
   });
 
+  /** Indicador con el formulario flotante abierto y sus valores al abrirlo (para Cancelar). */
+  editando = signal<number | null>(null);
+  private antesDeEditar: Edicion | null = null;
+  indicadorEditando = computed(() => this.indicadores().find((i) => i.id === this.editando()) ?? null);
+
+  /** Indicadores desplegados (con búsqueda se abren los que coinciden). */
+  abiertos = signal<Set<number>>(new Set());
+
+  /** Lista virtual: todas las filas miden lo mismo, así solo se dibujan las que se ven. */
+  readonly altoFila = 52;
+  readonly esqueleto = [1, 2, 3, 4, 5, 6];
+  lista = computed<FilaLista[]>(() => {
+    const abiertos = this.abiertos();
+    const ed = this.edicion();
+    const out: FilaLista[] = [];
+    for (const i of this.visibles()) {
+      if (!ed[i.id]) continue;
+      out.push({ i });
+      if (abiertos.has(i.id)) for (const k of i.claves) out.push({ i, k });
+    }
+    return out;
+  });
+  altoLista = computed(() => Math.max(this.altoFila, Math.min(this.lista().length * this.altoFila, 640)));
+  trackFila = (_: number, r: FilaLista) => `${r.i.id}-${r.k ? r.k.fuente + r.k.clave : ''}`;
+  /** Si el usuario cambia de mes antes de que llegue la respuesta, la vieja se descarta. */
+  private pedido = 0;
+
   cargando = signal(false);
   guardando = signal<number | null>(null);
   error = signal('');
@@ -62,10 +96,12 @@ export class TmiAceptacion implements OnInit {
   }
 
   cargar(): void {
+    const n = ++this.pedido;
     this.cargando.set(true);
     this.error.set('');
     this.estandarSrv.getAceptacion(this.anio(), this.mes()).subscribe({
       next: (lista) => {
+        if (n !== this.pedido) return;
         this.indicadores.set(lista);
         const ed: Record<number, Edicion> = {};
         for (const i of lista) {
@@ -80,10 +116,60 @@ export class TmiAceptacion implements OnInit {
         this.cargando.set(false);
       },
       error: (e) => {
+        if (n !== this.pedido) return;
+        this.indicadores.set([]);
         this.error.set(mensajeError(e, 'No se pudo cargar el % Acept de los indicadores.'));
         this.cargando.set(false);
       },
     });
+  }
+
+  abrirEdicion(i: TmiAceptacionIndicador): void {
+    const e = this.edicion()[i.id];
+    this.antesDeEditar = e ? { ...e, fijo: { ...e.fijo }, mes: { ...e.mes } } : null;
+    this.error.set('');
+    this.editando.set(i.id);
+  }
+
+  /** Cancelar: vuelve a los valores que tenía al abrir el formulario. */
+  cerrarEdicion(): void {
+    const id = this.editando();
+    if (id == null || this.guardando() === id) return;
+    if (this.antesDeEditar) {
+      const antes = this.antesDeEditar;
+      this.edicion.update((ed) => ({ ...ed, [id]: antes }));
+    }
+    this.antesDeEditar = null;
+    this.error.set('');
+    this.editando.set(null);
+  }
+
+  buscar(valor: string): void {
+    this.filtro.set(valor ?? '');
+    if (this.filtro().trim()) this.abiertos.set(new Set(this.visibles().map((i) => i.id)));
+  }
+
+  toggle(id: number): void {
+    const s = new Set(this.abiertos());
+    if (s.has(id)) s.delete(id);
+    else s.add(id);
+    this.abiertos.set(s);
+  }
+
+  abrirTodos(abrir: boolean): void {
+    this.abiertos.set(abrir ? new Set(this.visibles().map((i) => i.id)) : new Set());
+  }
+
+  /** Cabecera: "± 20 %", "+ 20 %", "− 5 pts" según el sentido y lo que está en pantalla. */
+  resumenPorcentaje(i: TmiAceptacionIndicador, e: Edicion): string {
+    const p = i.mes_cerrado ? e.mes : e.fijo;
+    const u = e.tipo === 'REL' ? '%' : 'pts';
+    if (p.arriba == null) return 'Sin %';
+    if (i.sentido === 'BANDA') {
+      const abajo = p.abajo ?? p.arriba;
+      return abajo === p.arriba ? `± ${p.arriba} ${u}` : `+ ${p.arriba} / − ${abajo} ${u}`;
+    }
+    return `${i.sentido === 'MAYOR' ? '−' : '+'} ${p.arriba} ${u}`;
   }
 
   cambiarPeriodo(anio: number, mes: number): void {
@@ -150,6 +236,8 @@ export class TmiAceptacion implements OnInit {
     this.estandarSrv.putTolerancia(i.id, dto).subscribe({
       next: () => {
         this.guardando.set(null);
+        this.antesDeEditar = null;
+        this.editando.set(null);
         this.mensaje.set(`% Acept de ${i.indicador} guardado para ${alcance}. Se aplica desde el próximo cálculo.`);
         this.cargar();
       },

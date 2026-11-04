@@ -19,6 +19,7 @@ import { TmiCalculo } from './tmi-calculo/tmi-calculo';
 import { TmiCierreComponent } from './tmi-cierre/tmi-cierre';
 
 import { TmiAceptacion } from './tmi-aceptacion/tmi-aceptacion';
+import { TmiEstandares } from './tmi-estandares/tmi-estandares';
 import { TmiEstandarService } from '../../../services/tmi/tmi-estandar-service';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
 import { TmiCentroService } from '../../../services/tmi';
@@ -40,9 +41,15 @@ interface GrupoExclusion {
   filas: FilaExclusion[];
 }
 
+/** Fila de la lista virtual de Exclusiones: la cabecera del centro o una de sus exclusiones (si está abierto). */
+interface FilaListaExclusion {
+  g: GrupoExclusion;
+  f?: FilaExclusion;
+}
+
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-export type TabType ='Estandares Tipo' | 'Estandares Nivel' | 'Estandares Categoria' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre'
+export type TabType = 'Estandares' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre'
   | 'Aceptacion' | 'Variables' | 'Indicadores' | 'Estandar Centro' | 'Calcular';
 
 @Component({
@@ -65,34 +72,29 @@ export type TabType ='Estandares Tipo' | 'Estandares Nivel' | 'Estandares Catego
     TmiCalculo,
     TmiCierreComponent,
 
-    TmiAceptacion
+    TmiAceptacion,
+    TmiEstandares
   ],
   templateUrl: './tmi-indicadores.html',
-  styleUrl: './tmi-indicadores.css',
+  styleUrls: ['./tmi-indicadores.css', './lista-virtual.css'],
 })
 export class TmiIndicadores implements OnInit {
-  @ViewChild('viewportTipo') viewportTipo?: CdkVirtualScrollViewport;
-  @ViewChild('viewportNivel') viewportNivel?: CdkVirtualScrollViewport;
-  @ViewChild('viewportCategoria') viewportCategoria?: CdkVirtualScrollViewport;
   @ViewChild('viewportCentros') viewportCentros?: CdkVirtualScrollViewport;
 
   currentDate: string = '';
 
-  periodoMinimoEditable: string = '';
   eliminandoId: number | null = null;
   errorEliminarFila: string = '';
 
   // Tabs, agrupadas en el orden del trabajo: fórmulas, estándares, centros y cierre
-  activeTab: TabType = 'Estandares Tipo';
+  activeTab: TabType = 'Estandares';
   readonly gruposTabs: { titulo: string; tabs: { id: TabType; texto: string }[] }[] = [
     { titulo: 'Fórmulas', tabs: [
       { id: 'Variables', texto: 'Variables' },
       { id: 'Indicadores', texto: 'Indicadores' },
     ] },
     { titulo: 'Estándares', tabs: [
-      { id: 'Estandares Tipo', texto: 'Por tipo' },
-      { id: 'Estandares Nivel', texto: 'Por nivel' },
-      { id: 'Estandares Categoria', texto: 'Por categoría' },
+      { id: 'Estandares', texto: 'Por indicador' },
       { id: 'Estandar Centro', texto: 'Por centro' },
       { id: 'Aceptacion', texto: '% Acept' },
     ] },
@@ -132,36 +134,6 @@ export class TmiIndicadores implements OnInit {
     return anios;
   }
 
-  onBuscarEstandarTipo(): void {
-    if (!this.anioEstandarTipo) {
-      this.errorEstandarTipo = 'Por favor seleccione un año válido.';
-      return;
-    }
-    this.selectPeriodoEstandarTipo = false;
-    this.periodoEstandarTipo = `${this.anioEstandarTipo}${this.mesEstandarTipo}`;
-    this.getQueryEstandarTipo();
-  }
-
-  onBuscarEstandarNivel(): void {
-    if (!this.anioEstandarNivel) {
-      this.errorEstandarNivel = 'Por favor seleccione un año válido.';
-      return;
-    }
-    this.selectPeriodoEstandarNivel = false;
-    this.periodoEstandarNivel = `${this.anioEstandarNivel}${this.mesEstandarNivel}`;
-    this.getQueryEstandarNivel();
-  }
-
-  onBuscarEstandarCategoria(): void {
-    if (!this.anioEstandarCategoria) {
-      this.errorEstandarCategoria = 'Por favor seleccione un año válido.';
-      return;
-    }
-    this.selectPeriodoEstandarCategoria = false;
-    this.periodoEstandarCategoria = `${this.anioEstandarCategoria}${this.mesEstandarCategoria}`;
-    this.getQueryEstandarCategoria();
-  }
-
   onBuscarCentrosTMI(): void {
     this.selectPeriodoCentrosTMI = false;
     this.getQueryCentrosTMI();
@@ -180,118 +152,6 @@ export class TmiIndicadores implements OnInit {
 
   // catalogo de indicadores/estándares para select en formularios
   public listaEstandares: any[] = [];
-
-  // tmi_estandar_tipo
-  public dataEstandarTipo: any[] = [];
-  public dataEstandarTipoFilter: any[] = [];
-  anioEstandarTipo: string = '';
-  mesEstandarTipo: string = '';
-  periodoEstandarTipo: string = '';
-  selectPeriodoEstandarTipo: boolean = true;
-  public loadingEstandarTipo: boolean = false;
-  public errorEstandarTipo: string = '';
-  public mostrarFormularioEstandarTipo: boolean = false;
-  public savingEstandarTipo: boolean = false;
-  public errorEstandarTipoForm: string = ''; 
-  public estandarTipoForm!: FormGroup;
-
-  filtersEstandarTipo = {
-    id: "",
-    id_estandar: "",
-    tipo: "",
-    indicador: "",
-    tipo_centro: "",
-    anio: "",
-    est_fijo: "",
-    est_01: "",
-    est_02: "",
-    est_03: "",
-    est_04: "",
-    est_05: "",
-    est_06: "",
-    est_07: "",
-    est_08: "",
-    est_09: "",
-    est_10: "",
-    est_11: "",
-    est_12: "",
-  }
-
-  // tmi_estandar_nivel
-  public dataEstandarNivel: any[] = [];
-  public dataEstandarNivelFilter: any[] = [];
-  anioEstandarNivel: string = '';
-  mesEstandarNivel: string = '';
-  periodoEstandarNivel: string = '';
-  selectPeriodoEstandarNivel: boolean = true;
-  public loadingEstandarNivel: boolean = false;
-  public errorEstandarNivel: string = '';
-  public mostrarFormularioEstandarNivel: boolean = false;
-  public savingEstandarNivel: boolean = false;
-  public errorEstandarNivelForm: string = '';
-  public estandarNivelForm!: FormGroup;
-
-  filtersEstandarNivel = {
-    id: "",
-    id_estandar: "",
-    tipo: "",
-    indicador: "",
-    nivel_centro: "",
-    anio: "",
-    est_fijo: "",
-    est_01: "",
-    est_02: "",
-    est_03: "",
-    est_04: "",
-    est_05: "",
-    est_06: "",
-    est_07: "",
-    est_08: "",
-    est_09: "",
-    est_10: "",
-    est_11: "",
-    est_12: "",
-    acept: "",
-    aceptmenos: ""
-  };
-
-  // tmi_estandar_categoria
-  public dataEstandarCategoria: any[] = [];
-  public dataEstandarCategoriaFilter: any[] = [];
-  anioEstandarCategoria: string = '';
-  mesEstandarCategoria: string = '';
-  periodoEstandarCategoria: string = '';
-  selectPeriodoEstandarCategoria: boolean = true;
-  public loadingEstandarCategoria: boolean = false;
-  public errorEstandarCategoria: string = '';
-  public mostrarFormularioEstandarCategoria: boolean = false;
-  public savingEstandarCategoria: boolean = false;
-  public errorEstandarCategoriaForm: string = '';
-  public estandarCategoriaForm!: FormGroup;
-
-  filtersEstandarCategoria = {
-    id: "",
-    id_estandar: "",
-    tipo: "",
-    indicador: "",
-    categoria_centro: "",
-    anio: "",
-    est_fijo: "",
-    est_01: "",
-    est_02: "",
-    est_03: "",
-    est_04: "",
-    est_05: "",
-    est_06: "",
-    est_07: "",
-    est_08: "",
-    est_09: "",
-    est_10: "",
-    est_11: "",
-    est_12: "",
-    acept: "",
-    aceptmenos: ""
-  };
 
   // tmi_centro
   public listaCentros: any[] = [];
@@ -340,6 +200,24 @@ export class TmiIndicadores implements OnInit {
   public busquedaExclusion: string = '';
   public centrosExclusionAbiertos = new Set<string>();
 
+  /** Lista virtual de Exclusiones: todas las filas miden lo mismo, así solo se dibujan las que se ven. */
+  readonly altoFilaLista = 56;
+  readonly esqueletoLista = [1, 2, 3, 4, 5, 6];
+  public filasExclusion: FilaListaExclusion[] = [];
+  public altoListaExclusion = 0;
+  trackFilaExclusion = (_: number, r: FilaListaExclusion) => `${r.g.clave}-${r.f?.row?.id ?? ''}`;
+
+  /** Rearma la lista plana (centros y, si están abiertos, sus exclusiones). */
+  private armarFilasExclusion(): void {
+    const out: FilaListaExclusion[] = [];
+    for (const g of this.gruposExclusion) {
+      out.push({ g });
+      if (this.centrosExclusionAbiertos.has(g.clave)) for (const f of g.filas) out.push({ g, f });
+    }
+    this.filasExclusion = out;
+    this.altoListaExclusion = Math.max(this.altoFilaLista, Math.min(out.length * this.altoFilaLista, 640));
+  }
+
   constructor(
     private estandarSrv: TmiEstandarService,
     private centroSrv: TmiCentroService,
@@ -356,18 +234,6 @@ export class TmiIndicadores implements OnInit {
     const anioDefecto = String(mesAnterior.getFullYear());
     const mesDefecto = String(mesAnterior.getMonth() + 1).padStart(2, '0');
 
-    this.anioEstandarTipo = anioDefecto;
-    this.mesEstandarTipo = mesDefecto;
-    this.periodoEstandarTipo = `${anioDefecto}${mesDefecto}`;
-
-    this.anioEstandarNivel = anioDefecto;
-    this.mesEstandarNivel = mesDefecto;
-    this.periodoEstandarNivel = `${anioDefecto}${mesDefecto}`;
-
-    this.anioEstandarCategoria = anioDefecto;
-    this.mesEstandarCategoria = mesDefecto;
-    this.periodoEstandarCategoria = `${anioDefecto}${mesDefecto}`;
-
     this.anioCentrosTMI = anioDefecto;
     this.mesCentrosTMI = mesDefecto;
     this.periodoCentrosTMI = `${anioDefecto}${mesDefecto}`;
@@ -375,8 +241,6 @@ export class TmiIndicadores implements OnInit {
     this.anioExclusion = anioDefecto;
     this.mesExclusion = mesDefecto;
     this.periodoExclusion = `${anioDefecto}${mesDefecto}`;
-
-    this.periodoMinimoEditable = `${anioDefecto}${mesDefecto}`;
 
     this.reactiveForm();
     this.getQueryEstandar();
@@ -409,69 +273,6 @@ export class TmiIndicadores implements OnInit {
   }
 
   reactiveForm() {
-    // Form 1: tmi_estandar_tipo
-    this.estandarTipoForm = this.formBuilder.group({
-      id: [null, []],
-      id_estandar: [null, [Validators.required]],
-      tipo_centro: ['', [Validators.required]],
-      anio: [null, [Validators.required]],
-      est_fijo: [0, [Validators.required]],
-      est_01: [0, [Validators.required]],
-      est_02: [0, [Validators.required]],
-      est_03: [0, [Validators.required]],
-      est_04: [0, [Validators.required]],
-      est_05: [0, [Validators.required]],
-      est_06: [0, [Validators.required]],
-      est_07: [0, [Validators.required]],
-      est_08: [0, [Validators.required]],
-      est_09: [0, [Validators.required]],
-      est_10: [0, [Validators.required]],
-      est_11: [0, [Validators.required]],
-      est_12: [0, [Validators.required]]
-    });
-
-    // Form 2: tmi_estandar_nivel
-    this.estandarNivelForm = this.formBuilder.group({
-      id: [null, []],
-      id_estandar: [null, [Validators.required]],
-      nivel_centro: ['', [Validators.required]],
-      anio: [null, [Validators.required]],
-      est_fijo: [0, [Validators.required]],
-      est_01: [0, [Validators.required]],
-      est_02: [0, [Validators.required]],
-      est_03: [0, [Validators.required]],
-      est_04: [0, [Validators.required]],
-      est_05: [0, [Validators.required]],
-      est_06: [0, [Validators.required]],
-      est_07: [0, [Validators.required]],
-      est_08: [0, [Validators.required]],
-      est_09: [0, [Validators.required]],
-      est_10: [0, [Validators.required]],
-      est_11: [0, [Validators.required]],
-      est_12: [0, [Validators.required]]
-    });
-
-    // Form 3: tmi_estandar_categoria
-    this.estandarCategoriaForm = this.formBuilder.group({
-      id: [null, []],
-      id_estandar: [null, [Validators.required]],
-      categoria_centro: ['', [Validators.required]],
-      anio: [null, [Validators.required]],
-      est_fijo: [0, [Validators.required]],
-      est_01: [0, [Validators.required]],
-      est_02: [0, [Validators.required]],
-      est_03: [0, [Validators.required]],
-      est_04: [0, [Validators.required]],
-      est_05: [0, [Validators.required]],
-      est_06: [0, [Validators.required]],
-      est_07: [0, [Validators.required]],
-      est_08: [0, [Validators.required]],
-      est_09: [0, [Validators.required]],
-      est_10: [0, [Validators.required]],
-      est_11: [0, [Validators.required]],
-      est_12: [0, [Validators.required]]
-    });
-
     // Form 4: tmi_centro
     this.centrosForm = this.formBuilder.group({
       id: [null, []],
@@ -516,429 +317,6 @@ export class TmiIndicadores implements OnInit {
       e => e.tipo === row.tipo && e.indicador === row.indicador
     );
     return encontrado ? Number(encontrado.id) : null;
-  }
-
-  private payloadEstandarAnual(form: FormGroup, campoCentro: 'tipo_centro' | 'nivel_centro' | 'categoria_centro'): any {
-    const valor = form.getRawValue();
-    return {
-      id: valor.id ? Number(valor.id) : null,
-      id_estandar: Number(valor.id_estandar),
-      [campoCentro]: String(valor[campoCentro] ?? '').trim(),
-      anio: Number(valor.anio),
-      est_fijo: Number(valor.est_fijo ?? 0),
-      est_01: Number(valor.est_01 ?? 0),
-      est_02: Number(valor.est_02 ?? 0),
-      est_03: Number(valor.est_03 ?? 0),
-      est_04: Number(valor.est_04 ?? 0),
-      est_05: Number(valor.est_05 ?? 0),
-      est_06: Number(valor.est_06 ?? 0),
-      est_07: Number(valor.est_07 ?? 0),
-      est_08: Number(valor.est_08 ?? 0),
-      est_09: Number(valor.est_09 ?? 0),
-      est_10: Number(valor.est_10 ?? 0),
-      est_11: Number(valor.est_11 ?? 0),
-      est_12: Number(valor.est_12 ?? 0)
-    };
-  }
-
-  // tmi_estandar_tipo
-  getQueryEstandarTipo() {
-    this.loadingEstandarTipo = true;
-    this.errorEstandarTipo = '';
-
-    this.estandarSrv.getQueryEstandarTipo(this.anioEstandarTipo).subscribe({
-      next: (res: any) => {
-        this.dataEstandarTipoFilter = res || [];
-        this.dataEstandarTipo = this.filtrarEstandar(this.dataEstandarTipoFilter, this.filtersEstandarTipo);
-        this.loadingEstandarTipo = false;
-        this.cdr.markForCheck();
-        setTimeout(() => {
-          this.viewportTipo?.checkViewportSize();
-          this.cdr.markForCheck();
-        }, 0);
-      },
-      error: (error: any) => {
-        console.error(error);
-        this.errorEstandarTipo = 'Error al cargar los estándares por tipo';
-        this.loadingEstandarTipo = false;
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  // nueva fila en el año consultado
-  iniciarAltaEstandarTipo(): void {
-    if (!this.listaEstandares.length) this.getQueryEstandar();
-    if (!this.estandarTipoForm) this.reactiveForm();
-    this.estandarTipoForm.reset({
-      id: null,
-      id_estandar: null,
-      tipo_centro: '',
-      anio: Number(this.anioEstandarTipo),
-      est_fijo: 0,
-      est_01: 0,
-      est_02: 0,
-      est_03: 0,
-      est_04: 0,
-      est_05: 0,
-      est_06: 0,
-      est_07: 0,
-      est_08: 0,
-      est_09: 0,
-      est_10: 0,
-      est_11: 0,
-      est_12: 0
-    });
-    this.errorEstandarTipoForm = '';
-    this.mostrarFormularioEstandarTipo = true;
-    this.cdr.markForCheck();
-  }
-
-  eliminarEstandarTipo(row: any): void {
-    if (this.eliminandoId !== null) return;
-    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.tipo} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
-    this.eliminarFila(row, this.estandarSrv.deleteQueryEstandarTipo(row.id), () => this.getQueryEstandarTipo());
-  }
-
-  iniciarEdicionEstandarTipo(row: any): void {
-    if (!this.listaEstandares.length) this.getQueryEstandar();
-    if (!this.estandarTipoForm) this.reactiveForm();
-    this.estandarTipoForm.reset();
-    this.estandarTipoForm.patchValue({
-      id: row.id ?? null,
-      id_estandar: this.resolverIdEstandar(row),
-      tipo_centro: row.tipo_centro ?? '',
-      anio: row.anio ?? Number(this.anioEstandarTipo),
-      est_fijo: row.est_fijo ?? 0,
-      est_01: row.est_01 ?? 0,
-      est_02: row.est_02 ?? 0,
-      est_03: row.est_03 ?? 0,
-      est_04: row.est_04 ?? 0,
-      est_05: row.est_05 ?? 0,
-      est_06: row.est_06 ?? 0,
-      est_07: row.est_07 ?? 0,
-      est_08: row.est_08 ?? 0,
-      est_09: row.est_09 ?? 0,
-      est_10: row.est_10 ?? 0,
-      est_11: row.est_11 ?? 0,
-      est_12: row.est_12 ?? 0
-    });
-    this.errorEstandarTipoForm = '';
-    this.mostrarFormularioEstandarTipo = true;
-    this.cdr.markForCheck();
-  }
-
-  cancelarEdicionEstandarTipo(): void {
-    this.mostrarFormularioEstandarTipo = false;
-    this.errorEstandarTipoForm = '';
-    this.savingEstandarTipo = false;
-    this.cdr.markForCheck();
-  }
-
-  updateQueryEstandarTipo(): void {
-    if (this.estandarTipoForm.invalid) {
-      this.estandarTipoForm.markAllAsTouched();
-      this.errorEstandarTipoForm = 'Por favor, complete todos los campos obligatorios.';
-      return;
-    }
-    this.savingEstandarTipo = true;
-    this.errorEstandarTipoForm = '';
-
-    const dto = this.payloadEstandarAnual(this.estandarTipoForm, 'tipo_centro');
-    const peticion = dto.id ? this.estandarSrv.putQueryEstandarTipo(dto) : this.estandarSrv.postQueryEstandarTipo(dto);
-    peticion.subscribe({
-      next: () => {
-        this.savingEstandarTipo = false;
-        this.mostrarFormularioEstandarTipo = false;
-        this.getQueryEstandarTipo();
-      },
-      error: (error: any) => {
-        console.error(error);
-        this.savingEstandarTipo = false;
-        this.errorEstandarTipoForm = typeof error === 'string' ? error : (error?.error?.detail || (dto.id ? 'Error al actualizar ' : 'Error al agregar ') + 'estándar tipo');
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  filterDataEstandarTipo(column: keyof typeof this.filtersEstandarTipo, event: any): void {
-    this.filtersEstandarTipo[column] = event.target.value;
-    this.aplicarFiltrosEstandarTipo();
-  }
-
-  private aplicarFiltrosEstandarTipo(): void {
-    this.dataEstandarTipo = this.filtrarEstandar(this.dataEstandarTipoFilter, this.filtersEstandarTipo);
-    this.viewportTipo?.scrollToIndex(0);
-    this.cdr.markForCheck();
-  }
-
-  /** Filas que contienen el texto de cada filtro con valor, sin distinguir mayúsculas ni tildes. */
-  private filtrarEstandar(datos: any[], filtros: Record<string, string>): any[] {
-    const norm = (v: any) => String(v ?? '').toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').trim();
-    const activos = Object.entries(filtros).map(([k, f]) => [k, norm(f)]).filter(([, f]) => f);
-    return datos.filter(row => activos.every(([k, f]) => norm(row[k]).includes(f)));
-  }
-
-  // tmi_estandar_nivel
-  getQueryEstandarNivel() {
-    this.loadingEstandarNivel = true;
-    this.errorEstandarNivel = '';
-
-    this.estandarSrv.getQueryEstandarNivel(this.anioEstandarNivel).subscribe({
-      next: (res: any) => {
-        this.dataEstandarNivelFilter = res || [];
-        this.dataEstandarNivel = this.filtrarEstandar(this.dataEstandarNivelFilter, this.filtersEstandarNivel);
-        this.loadingEstandarNivel = false;
-        this.cdr.markForCheck();
-        setTimeout(() => {
-          this.viewportNivel?.checkViewportSize();
-          this.cdr.markForCheck();
-        }, 0);
-      },
-      error: (error: any) => {
-        console.error(error);
-        this.errorEstandarNivel = 'Error al cargar los estándares por nivel';
-        this.loadingEstandarNivel = false;
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  // nueva fila en el año consultado
-  iniciarAltaEstandarNivel(): void {
-    if (!this.listaEstandares.length) this.getQueryEstandar();
-    if (!this.estandarNivelForm) this.reactiveForm();
-    this.estandarNivelForm.reset({
-      id: null,
-      id_estandar: null,
-      nivel_centro: '',
-      anio: Number(this.anioEstandarNivel),
-      est_fijo: 0,
-      est_01: 0,
-      est_02: 0,
-      est_03: 0,
-      est_04: 0,
-      est_05: 0,
-      est_06: 0,
-      est_07: 0,
-      est_08: 0,
-      est_09: 0,
-      est_10: 0,
-      est_11: 0,
-      est_12: 0
-    });
-    this.errorEstandarNivelForm = '';
-    this.mostrarFormularioEstandarNivel = true;
-    this.cdr.markForCheck();
-  }
-
-  eliminarEstandarNivel(row: any): void {
-    if (this.eliminandoId !== null) return;
-    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.tipo} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
-    this.eliminarFila(row, this.estandarSrv.deleteQueryEstandarNivel(row.id), () => this.getQueryEstandarNivel());
-  }
-
-  iniciarEdicionEstandarNivel(row: any): void {
-    if (!this.listaEstandares.length) this.getQueryEstandar();
-    if (!this.estandarNivelForm) this.reactiveForm();
-    this.estandarNivelForm.reset();
-    this.estandarNivelForm.patchValue({
-      id: row.id ?? null,
-      id_estandar: this.resolverIdEstandar(row),
-      nivel_centro: row.nivel_centro ?? '',
-      anio: row.anio ?? Number(this.anioEstandarNivel),
-      est_fijo: row.est_fijo ?? 0,
-      est_01: row.est_01 ?? 0,
-      est_02: row.est_02 ?? 0,
-      est_03: row.est_03 ?? 0,
-      est_04: row.est_04 ?? 0,
-      est_05: row.est_05 ?? 0,
-      est_06: row.est_06 ?? 0,
-      est_07: row.est_07 ?? 0,
-      est_08: row.est_08 ?? 0,
-      est_09: row.est_09 ?? 0,
-      est_10: row.est_10 ?? 0,
-      est_11: row.est_11 ?? 0,
-      est_12: row.est_12 ?? 0
-    });
-    this.errorEstandarNivelForm = '';
-    this.mostrarFormularioEstandarNivel = true;
-    this.cdr.markForCheck();
-  }
-
-  cancelarEdicionEstandarNivel(): void {
-    this.mostrarFormularioEstandarNivel = false;
-    this.errorEstandarNivelForm = '';
-    this.savingEstandarNivel = false;
-    this.cdr.markForCheck();
-  }
-
-  updateQueryEstandarNivel(): void {
-    if (this.estandarNivelForm.invalid) {
-      this.estandarNivelForm.markAllAsTouched();
-      this.errorEstandarNivelForm = 'Por favor, complete todos los campos obligatorios.';
-      return;
-    }
-    this.savingEstandarNivel = true;
-    this.errorEstandarNivelForm = '';
-
-    const dto = this.payloadEstandarAnual(this.estandarNivelForm, 'nivel_centro');
-    const peticion = dto.id ? this.estandarSrv.putQueryEstandarNivel(dto) : this.estandarSrv.postQueryEstandarNivel(dto);
-    peticion.subscribe({
-      next: () => {
-        this.savingEstandarNivel = false;
-        this.mostrarFormularioEstandarNivel = false;
-        this.getQueryEstandarNivel();
-      },
-      error: (error: any) => {
-        console.error(error);
-        this.savingEstandarNivel = false;
-        this.errorEstandarNivelForm = typeof error === 'string' ? error : (error?.error?.detail || (dto.id ? 'Error al actualizar ' : 'Error al agregar ') + 'estándar nivel');
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  filterDataEstandarNivel(column: keyof typeof this.filtersEstandarNivel, event: any): void {
-    this.filtersEstandarNivel[column] = event.target.value;
-    this.aplicarFiltrosEstandarNivel();
-  }
-
-  private aplicarFiltrosEstandarNivel(): void {
-    this.dataEstandarNivel = this.filtrarEstandar(this.dataEstandarNivelFilter, this.filtersEstandarNivel);
-    this.viewportNivel?.scrollToIndex(0);
-    this.cdr.markForCheck();
-  }
-
-  // tmi_estandar_categoria
-  getQueryEstandarCategoria() {
-    this.loadingEstandarCategoria = true;
-    this.errorEstandarCategoria = '';
-
-    this.estandarSrv.getQueryEstandarCategoria(this.anioEstandarCategoria).subscribe({
-      next: (res: any) => {
-        this.dataEstandarCategoriaFilter = res || [];
-        this.dataEstandarCategoria = this.filtrarEstandar(this.dataEstandarCategoriaFilter, this.filtersEstandarCategoria);
-        this.loadingEstandarCategoria = false;
-        this.cdr.markForCheck();
-        setTimeout(() => {
-          this.viewportCategoria?.checkViewportSize();
-          this.cdr.markForCheck();
-        }, 0);
-      },
-      error: (error: any) => {
-        console.error(error);
-        this.errorEstandarCategoria = 'Error al cargar los estándares por categoría';
-        this.loadingEstandarCategoria = false;
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  // nueva fila en el año consultado
-  iniciarAltaEstandarCategoria(): void {
-    if (!this.listaEstandares.length) this.getQueryEstandar();
-    if (!this.estandarCategoriaForm) this.reactiveForm();
-    this.estandarCategoriaForm.reset({
-      id: null,
-      id_estandar: null,
-      categoria_centro: '',
-      anio: Number(this.anioEstandarCategoria),
-      est_fijo: 0,
-      est_01: 0,
-      est_02: 0,
-      est_03: 0,
-      est_04: 0,
-      est_05: 0,
-      est_06: 0,
-      est_07: 0,
-      est_08: 0,
-      est_09: 0,
-      est_10: 0,
-      est_11: 0,
-      est_12: 0
-    });
-    this.errorEstandarCategoriaForm = '';
-    this.mostrarFormularioEstandarCategoria = true;
-    this.cdr.markForCheck();
-  }
-
-  eliminarEstandarCategoria(row: any): void {
-    if (this.eliminandoId !== null) return;
-    if (!confirm(`¿Eliminar la fila ID ${row.id} (${row.tipo} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
-    this.eliminarFila(row, this.estandarSrv.deleteQueryEstandarCategoria(row.id), () => this.getQueryEstandarCategoria());
-  }
-
-  iniciarEdicionEstandarCategoria(row: any): void {
-    if (!this.listaEstandares.length) this.getQueryEstandar();
-    if (!this.estandarCategoriaForm) this.reactiveForm();
-    this.estandarCategoriaForm.reset();
-    this.estandarCategoriaForm.patchValue({
-      id: row.id ?? null,
-      id_estandar: this.resolverIdEstandar(row),
-      categoria_centro: row.categoria_centro ?? '',
-      anio: row.anio ?? Number(this.anioEstandarCategoria),
-      est_fijo: row.est_fijo ?? 0,
-      est_01: row.est_01 ?? 0,
-      est_02: row.est_02 ?? 0,
-      est_03: row.est_03 ?? 0,
-      est_04: row.est_04 ?? 0,
-      est_05: row.est_05 ?? 0,
-      est_06: row.est_06 ?? 0,
-      est_07: row.est_07 ?? 0,
-      est_08: row.est_08 ?? 0,
-      est_09: row.est_09 ?? 0,
-      est_10: row.est_10 ?? 0,
-      est_11: row.est_11 ?? 0,
-      est_12: row.est_12 ?? 0
-    });
-    this.errorEstandarCategoriaForm = '';
-    this.mostrarFormularioEstandarCategoria = true;
-    this.cdr.markForCheck();
-  }
-
-  cancelarEdicionEstandarCategoria(): void {
-    this.mostrarFormularioEstandarCategoria = false;
-    this.errorEstandarCategoriaForm = '';
-    this.savingEstandarCategoria = false;
-    this.cdr.markForCheck();
-  }
-
-  updateQueryEstandarCategoria(): void {
-    if (this.estandarCategoriaForm.invalid) {
-      this.estandarCategoriaForm.markAllAsTouched();
-      this.errorEstandarCategoriaForm = 'Por favor, complete todos los campos obligatorios.';
-      return;
-    }
-    this.savingEstandarCategoria = true;
-    this.errorEstandarCategoriaForm = '';
-
-    const dto = this.payloadEstandarAnual(this.estandarCategoriaForm, 'categoria_centro');
-    const peticion = dto.id ? this.estandarSrv.putQueryEstandarCategoria(dto) : this.estandarSrv.postQueryEstandarCategoria(dto);
-    peticion.subscribe({
-      next: () => {
-        this.savingEstandarCategoria = false;
-        this.mostrarFormularioEstandarCategoria = false;
-        this.getQueryEstandarCategoria();
-      },
-      error: (error: any) => {
-        console.error(error);
-        this.savingEstandarCategoria = false;
-        this.errorEstandarCategoriaForm = typeof error === 'string' ? error : (error?.error?.detail || (dto.id ? 'Error al actualizar ' : 'Error al agregar ') + 'estándar categoría');
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  filterDataEstandarCategoria(column: keyof typeof this.filtersEstandarCategoria, event: any): void {
-    this.filtersEstandarCategoria[column] = event.target.value;
-    this.aplicarFiltrosEstandarCategoria();
-  }
-
-  private aplicarFiltrosEstandarCategoria(): void {
-    this.dataEstandarCategoria = this.filtrarEstandar(this.dataEstandarCategoriaFilter, this.filtersEstandarCategoria);
-    this.viewportCategoria?.scrollToIndex(0);
-    this.cdr.markForCheck();
   }
 
   /// tmi_centro
@@ -1182,6 +560,20 @@ export class TmiIndicadores implements OnInit {
     return this.listaEstandares.filter(e => `${e.tipo ?? ''} ${e.indicador ?? ''}`.toLowerCase().includes(filtro));
   }
 
+  /** Alta de un centro que ya tiene exclusión en el año (mismo centro, año e indicador): nombres de esos indicadores.
+   *  Solo se puede saber para el año que está en pantalla (son las exclusiones cargadas). */
+  get exclusionesExistentes(): string[] {
+    const v = this.exclusionForm?.getRawValue();
+    if (!v || v.id || v.id_centro == null || Number(v.anio) !== Number(this.anioExclusion)) return [];
+    const delCentro = this.dataExclusionFilter.filter(r => Number(r.id_centro) === Number(v.id_centro));
+    if (this.todosIndicadoresExclusion) {
+      return delCentro.some(r => r.id_indicador == null && r.id_estandar == null) ? ['Todos los indicadores'] : [];
+    }
+    return delCentro
+      .filter(r => this.indicadoresExclusion.has(Number(r.id_indicador ?? this.resolverIdEstandar(r))))
+      .map(r => String(r.indicador ?? 'Indicador ' + (r.id_indicador ?? r.id_estandar)));
+  }
+
   toggleIndicadorExclusion(id: number): void {
     if (this.indicadoresExclusion.has(id)) this.indicadoresExclusion.delete(id);
     else this.indicadoresExclusion.add(id);
@@ -1361,6 +753,7 @@ export class TmiIndicadores implements OnInit {
     if (texto || resultado.length <= 8) this.centrosExclusionAbiertos = new Set(resultado.map(g => g.clave));
     this.gruposExclusion = resultado;
     this.dataExclusion = resultado.flatMap(g => g.filas.map(f => f.row));
+    this.armarFilasExclusion();
   }
 
   /** Meses excluidos como texto corto: "Todo el año", "Abr – Jun", "Ene, Mar – May". */
@@ -1386,10 +779,12 @@ export class TmiIndicadores implements OnInit {
   toggleCentroExclusion(clave: string): void {
     if (this.centrosExclusionAbiertos.has(clave)) this.centrosExclusionAbiertos.delete(clave);
     else this.centrosExclusionAbiertos.add(clave);
+    this.armarFilasExclusion();
   }
 
   abrirTodosCentrosExclusion(abrir: boolean): void {
     this.centrosExclusionAbiertos = abrir ? new Set(this.gruposExclusion.map(g => g.clave)) : new Set<string>();
+    this.armarFilasExclusion();
   }
 
   downloadCSV(): void {
@@ -1417,42 +812,6 @@ export class TmiIndicadores implements OnInit {
   }
 
 
-  // 202608 -> Agosto 2026
-  nombrePeriodo(periodo: string): string {
-    const p = String(periodo ?? '').trim();
-    const mes = this.mesesDisponibles.find(m => m.value === p.substring(4, 6));
-    return mes ? `${mes.label} ${p.substring(0, 4)}` : p;
-  }
-
-  // periodos anteriores al mínimo ya no se agregan ni modifican
-  esPeriodoEditable(periodo: string): boolean {
-    return String(periodo ?? '').trim() >= this.periodoMinimoEditable;
-  }
-
-  // un periodo sin filas se genera en su cierre copiando el anterior, por eso no se le agregan filas antes
-  puedeAgregarFilas(periodo: string, filas: any[]): boolean {
-    return this.esPeriodoEditable(periodo) && filas.length > 0;
-  }
-
-  motivoNoAgregar(periodo: string, filas: any[]): string {
-    if (!this.esPeriodoEditable(periodo)) {
-      return `El periodo ${this.nombrePeriodo(periodo)} ya no se puede modificar; el mínimo es ${this.nombrePeriodo(this.periodoMinimoEditable)}`;
-    }
-    if (!filas.length) return 'El periodo aún no tiene filas; se genera en su fecha de cierre';
-    return `Agregar fila en ${this.nombrePeriodo(periodo)}`;
-  }
-
-  // la última fila de un periodo no se elimina: el cierre volvería a generar el periodo completo
-  puedeEliminarFila(row: any, filas: any[]): boolean {
-    return this.esPeriodoEditable(row.periodo) && filas.length > 1 && this.eliminandoId === null;
-  }
-
-  tituloEliminar(row: any, filas: any[]): string {
-    if (!this.esPeriodoEditable(row.periodo)) return 'Periodo de solo lectura';
-    if (filas.length <= 1) return 'No se puede eliminar la última fila del periodo';
-    return 'Eliminar fila';
-  }
-
   private eliminarFila(row: any, peticion: Observable<any>, recargar: () => void): void {
     this.eliminandoId = row.id;
     this.errorEliminarFila = '';
@@ -1471,23 +830,11 @@ export class TmiIndicadores implements OnInit {
     });
   }
 
-  private camposPeriodo(periodo: string) {
-    return { periodo, anio: Number(periodo.substring(0, 4)), mes: Number(periodo.substring(4, 6)) };
-  }
-
-  private payloadFormulario(form: FormGroup): any {
-    const valor = form.getRawValue();
-    return { ...valor, id: valor.id || null };
-  }
-
   // tabs
   setActiveTab(tab: TabType): void {
     this.activeTab = tab;
     this.errorEliminarFila = '';
     // los estándares y exclusiones se cargan solos la primera vez que se abre la pestaña
-    if (tab === 'Estandares Tipo' && this.selectPeriodoEstandarTipo) this.onBuscarEstandarTipo();
-    if (tab === 'Estandares Nivel' && this.selectPeriodoEstandarNivel) this.onBuscarEstandarNivel();
-    if (tab === 'Estandares Categoria' && this.selectPeriodoEstandarCategoria) this.onBuscarEstandarCategoria();
     if (tab === 'Exclusion Centro Estandar' && this.selectPeriodoExclusion) this.onBuscarExclusion();
     if (tab === 'Centros TMI') this.getQueryCentrosTMI();
     this.cdr.markForCheck();

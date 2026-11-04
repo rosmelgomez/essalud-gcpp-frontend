@@ -27,51 +27,113 @@
 <div class="alert alert-danger">{{ error() }}</div>
 }
 
-<mat-card class="table" style="--cols-table: minmax(70px, 0.5fr) minmax(220px, 2.2fr) minmax(220px, 2.2fr) minmax(130px, 1.1fr) minmax(80px, 0.6fr) minmax(200px, 2fr) minmax(90px, 0.7fr);">
+<mat-card class="table exg">
     <div class="table-title-row">
         <h3>Excepciones {{ anio() }}</h3>
         <button type="button" class="btn-download btn-agregar-fila" (click)="nuevo()">
             <mat-icon>add</mat-icon> Agregar estándar
         </button>
     </div>
-    <div class="wrapper-table">
-        <div class="grid-table">
-            <div class="header-table">
-                <div class="cell">CÓDIGO</div>
-                <div class="cell">CENTRO</div>
-                <div class="cell">INDICADOR</div>
-                <div class="cell">ESTÁNDAR</div>
-                <div class="cell">% ACEPT</div>
-                <div class="cell">SUSTENTO</div>
-                <div class="cell acciones">ACCIONES</div>
+
+    <div class="exg-toolbar">
+        <div class="exc-buscar exg-buscar">
+            <mat-icon aria-hidden="true">search</mat-icon>
+            <input type="search" placeholder="Buscar por código, centro, red o indicador" aria-label="Buscar estándares por centro"
+                [value]="busqueda()" (input)="buscar($any($event.target).value)" />
+        </div>
+        <span class="exg-resumen">
+            <strong>{{ grupos().length }}</strong> {{ grupos().length === 1 ? 'centro' : 'centros' }}
+            · <strong>{{ totalFilas() }}</strong> {{ totalFilas() === 1 ? 'estándar' : 'estándares' }}
+        </span>
+        @if (grupos().length > 1) {
+        <span class="exg-toolbar-acciones">
+            <button type="button" class="exc-accion" (click)="abrirTodos(true)">Expandir todo</button>
+            <button type="button" class="exc-accion" (click)="abrirTodos(false)">Contraer todo</button>
+        </span>
+        }
+    </div>
+
+    <div class="exg-lista lv-lista" [class.lv-actualizando]="loading() && filas().length" [attr.aria-busy]="loading()">
+        @if (loading()) {<div class="lv-progreso" role="progressbar" aria-label="Cargando estándares por centro"></div>}
+        @if (loading() && !filas().length) {
+        @for (n of esqueleto; track n) {<div class="lv-esqueleto" aria-hidden="true"><span></span><span></span><span></span></div>}
+        }
+        @if (grupos().length) {
+        <cdk-virtual-scroll-viewport class="lv-viewport" [itemSize]="altoFila" [minBufferPx]="altoFila * 8"
+            [maxBufferPx]="altoFila * 16" [style.height.px]="altoLista()" [style.--lv-alto]="altoFila + 'px'">
+        <div *cdkVirtualFor="let r of lista(); trackBy: trackFila" class="lv-fila">
+        @let g = r.g;
+        @if (!r.x) {
+        <div class="exg-centro lv-cab" [class.exg-centro-abierto]="abiertos().has(g.clave)">
+            <div class="exg-centro-cabecera">
+                <button type="button" class="exg-centro-toggle" (click)="toggle(g.clave)"
+                    [attr.aria-expanded]="abiertos().has(g.clave)">
+                    <mat-icon class="exg-chevron" aria-hidden="true">chevron_right</mat-icon>
+                    <span class="exg-cod">{{ g.codcentro }}</span>
+                    <span class="est-titulo">
+                        <span class="exg-nombre">{{ g.centro }}</span>
+                        @if (g.red) {<span class="est-grupo">{{ g.red }}</span>}
+                    </span>
+                    <span class="exc-contador">{{ g.filas.length }} {{ g.filas.length === 1 ? 'indicador' : 'indicadores' }}</span>
+                </button>
+                <button type="button" class="exc-accion exg-agregar" (click)="nuevo(g.codcentro)"
+                    [attr.aria-label]="'Agregar estándar a ' + g.centro" title="Agregar estándar a este centro">
+                    <mat-icon aria-hidden="true">add</mat-icon><span>Agregar</span>
+                </button>
             </div>
-            <div class="dyn-scroll">
-                @if (loading()) {<div class="dyn-empty">Cargando...</div>}
-                @for (f of filas(); track f.id) {
-                <div class="row-table">
-                    <div class="cell">{{ f.codcentro }}</div>
-                    <div class="cell txt" [title]="f.red || ''">{{ f.centro || '—' }}</div>
-                    <div class="cell txt">{{ f.indicador || ('Indicador ' + f.id_indicador) }}</div>
-                    <div class="cell">{{ resumenMeses(f) }}</div>
-                    <div class="cell">@if (f.acept != null) { {{ f.acept }} } @else if (f.acept_defecto != null) {<span class="dyn-acept-defecto"
-                        title="% Acept del indicador en el periodo de la consulta">{{ f.acept_defecto | number: '1.0-4' }}</span>} @else { — }</div>
-                    <div class="cell txt" [title]="f.sustento || ''">{{ f.sustento || '—' }}</div>
-                    <div class="cell acciones">
-                        <button type="button" class="btn-icon-edit" (click)="editar(f)" title="Editar"><mat-icon>edit</mat-icon></button>
-                        <button type="button" class="btn-icon-delete" (click)="eliminar(f)" [disabled]="eliminandoId() === f.id" title="Eliminar">
-                            <mat-icon>{{ eliminandoId() === f.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
+        </div>
+        } @else {
+                @let x = r.x!;
+                <div class="exg-fila est-fila" [class.est-fila-cero]="!x.f.aplica">
+                    <div class="exg-indicador">
+                        <span class="exg-ind-nombre">{{ x.f.indicador || ('Indicador ' + x.f.id_indicador) }}</span>
+                        <span class="exg-tipo">
+                            % Acept
+                            @if (x.f.acept != null) { {{ x.f.acept }} }
+                            @else if (x.f.acept_defecto != null) {<span class="dyn-acept-defecto"
+                                title="% Acept del indicador en el periodo de la consulta">{{ x.f.acept_defecto | number: '1.0-4' }}</span>}
+                            @else { — }
+                            @if (x.f.sustento) { · <span [title]="x.f.sustento">{{ x.f.sustento }}</span> }
+                        </span>
+                    </div>
+
+                    <div class="exg-meses-col">
+                        <div class="exg-meses" role="img" [attr.aria-label]="'Meses: ' + x.rango">
+                            @for (m of x.meses; track $index) {
+                            <span class="exg-mes" [class.exg-mes-on]="m.valor !== null" [title]="m.titulo">{{ mesesCorto[$index].charAt(0) }}</span>
+                            }
+                        </div>
+                        <span class="exg-rango">{{ x.rango }}</span>
+                    </div>
+
+                    <span class="exg-resultado est-fijo" [class.exg-resultado-cero]="!x.f.aplica"
+                        [title]="x.f.aplica ? 'Estándar propio del centro' : 'No aplica: queda NA'">{{ x.valor }}</span>
+
+                    <div class="exg-acciones">
+                        <button type="button" class="btn-icon-edit" (click)="editar(x.f)" title="Editar"
+                            [attr.aria-label]="'Editar estándar de ' + g.centro + ' en ' + x.f.indicador"><mat-icon>edit</mat-icon></button>
+                        <button type="button" class="btn-icon-delete" (click)="eliminar(x.f)" [disabled]="eliminandoId() === x.f.id" title="Eliminar"
+                            [attr.aria-label]="'Eliminar estándar de ' + g.centro + ' en ' + x.f.indicador">
+                            <mat-icon>{{ eliminandoId() === x.f.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
                         </button>
                     </div>
                 </div>
-                } @empty {
-                @if (!loading()) {<div class="dyn-empty">No hay estándares propios de centro en {{ anio() }}.</div>}
-                }
-            </div>
+        }
         </div>
-    </div>
-    <div class="footer-table">
-        <div class="footer-left"><strong>Total de filas:</strong></div>
-        <div class="footer-right num"><strong>{{ filas().length }}</strong></div>
+        </cdk-virtual-scroll-viewport>
+        }
+
+        @if (!loading() && !grupos().length) {
+        <div class="exg-vacio">
+            <mat-icon aria-hidden="true">{{ busqueda() ? 'search_off' : 'rule' }}</mat-icon>
+            @if (busqueda()) {
+            <p>Ningún estándar coincide con «{{ busqueda() }}».</p>
+            <button type="button" class="exc-accion" (click)="buscar('')">Limpiar búsqueda</button>
+            } @else {
+            <p>No hay estándares propios de centro en {{ anio() }}.</p>
+            }
+        </div>
+        }
     </div>
 </mat-card>
 
@@ -91,8 +153,15 @@
                 <div class="form-grid">
                     <div class="field-input full-width">
                         <label for="ce_buscar">Centro <span class="required">*</span></label>
-                        <input id="ce_buscar" type="text" class="dyn-search" placeholder="Filtrar por código, nombre o red..."
-                            [ngModel]="filtroCentro()" (ngModelChange)="filtroCentro.set($event)" [ngModelOptions]="{ standalone: true }" />
+                        <div class="ce-filtros">
+                            <select id="ce_red" aria-label="Filtrar por red" [ngModel]="filtroRed()"
+                                (ngModelChange)="filtroRed.set($event)" [ngModelOptions]="{ standalone: true }">
+                                <option value="">Todas las redes</option>
+                                @for (r of redes(); track r) {<option [value]="r">{{ r }}</option>}
+                            </select>
+                            <input id="ce_buscar" type="text" class="dyn-search" placeholder="Filtrar por código o nombre..."
+                                [ngModel]="filtroCentro()" (ngModelChange)="filtroCentro.set($event)" [ngModelOptions]="{ standalone: true }" />
+                        </div>
                         <select id="ce_centro" formControlName="codcentro">
                             <option value="">Seleccione un centro</option>
                             @for (c of centrosFiltrados(); track c.codcentro) {
@@ -145,6 +214,12 @@
                             placeholder="Ej. Carta N° 3002-OCPD-EsSalud-2009" />
                     </div>
                 </div>
+                @if (existente(); as ex) {
+                <div class="dyn-ok ce-aviso"><mat-icon>info</mat-icon>
+                    <span>Este centro ya tiene estándar propio para este indicador en {{ ex.anio }}. Al guardar se
+                        <strong>actualiza ese registro</strong>: los meses que ingreses reemplazan a los guardados y los
+                        meses que dejes vacíos conservan su valor.</span></div>
+                }
                 @if (errorForm()) {
                 <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span></div>
                 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Backend } from '../../model/api';
 import {
-  TmiAceptacionIndicador, TmiEstandarClave, TmiIndicadorEstandar, TmiTipoEstandar, TmiValorEstandar,
+  TmiAceptacionIndicador, TmiEstandarClave, TmiEstandarPeriodo, TmiIndicadorEstandar, TmiTipoEstandar, TmiValorEstandar,
 } from './tmi-models';
 
 const base_url = Backend.apiTmi;
@@ -78,6 +78,17 @@ export class TmiEstandarService {
   postEstandarClave(dto: TmiEstandarClave) { return this.http.post<{ id: number }>(`${dinamico_url}/estandar-claves`, dto); }
   putEstandarClave(id: number, dto: TmiEstandarClave) { return this.http.put(`${dinamico_url}/estandar-claves/${id}`, dto); }
   deleteEstandarClave(id: number) { return this.http.delete(`${dinamico_url}/estandar-claves/${id}`); }
+
+  // estándares del periodo: cada indicador solo con las claves de su base_estandar
+  getEstandaresPeriodo(anio: number, mes: number) {
+    return this.http.get<TmiEstandarPeriodo[]>(`${dinamico_url}/estandares-periodo/${anio}/${mes}`);
+  }
+  putEstandarPeriodo(idIndicador: number, dto: {
+    anio: number; mes: number;
+    valores: { fuente: string; clave: string; fijo: number | null; mes: number | null }[];
+  }) {
+    return this.http.put(`${dinamico_url}/indicadores/${idIndicador}/estandar-periodo`, dto);
+  }
 
   // estándar por mes de un indicador en cada clave de su tipo de estándar
   getValoresEstandar(idIndicador: number, anio: number) {
