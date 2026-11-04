@@ -203,6 +203,8 @@
           (mousemove)="tipPeriodo($event, q)" (mouseleave)="ocultarTip()" />
         }
       </svg>
+      } @else {
+      <p class="note">Ningún periodo cargado tiene valor real para este indicador en {{ ambito() }}.</p>
       }
       @if (s.faltan) {
       <div class="comp-pie">

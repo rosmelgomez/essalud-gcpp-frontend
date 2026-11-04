@@ -10,7 +10,7 @@ export const redirectGuard: CanActivateFn = () => {
   const sesion = inject(AuthService);
 
   return authService.apiToken().pipe(
-    map(() => router.createUrlTree(['/home'])),
+    map(() => router.createUrlTree(['/tmi/administrativo'])),
     catchError(() => {
       sesion.clearSession();
       return of(router.createUrlTree(['/login']));

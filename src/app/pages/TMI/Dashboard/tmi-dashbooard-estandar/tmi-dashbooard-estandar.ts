@@ -425,13 +425,18 @@ export class TmiDashbooardEstandar implements OnInit {
         v: mediana(ds.map((q) => q.v).filter(esNum)), e: mediana(ds.map((q) => q.e).filter(esNum)) };
     });
     const faltan = puntos.filter((q) => !q.cargado).length;
+    // se dibuja con los periodos que ya tengan valor; los que faltan cargar quedan en el eje sin punto
     const vals = puntos.flatMap((q) => [q.v, q.e]).filter(esNum);
-    const conValor = puntos.filter((q) => q.v != null).length;
-    if (conValor < 2 || !vals.length) return { faltan, total: ps.length, g: null };
+    if (!puntos.some((q) => q.v != null)) return { faltan, total: ps.length, g: null };
     const W = 800, H = 230, L = 64, R = 18, T = 14, B = 30;
     const ey = this.eje(vals, H - B, T, x, false);
     const X = (k: number) => puntos.length === 1 ? L + (W - L - R) / 2 : L + k / (puntos.length - 1) * (W - L - R);
-    const linea = (key: 'v' | 'e') => puntos.map((q, k) => q[key] == null ? '' : `${X(k)},${ey.f(q[key]!)}`).filter(Boolean).join(' ');
+    const linea = (key: 'v' | 'e') => {
+      const pts = puntos.map((q, k) => q[key] == null ? null : { x: X(k), y: ey.f(q[key]!) }).filter((q) => q != null);
+      // un solo estándar: línea de referencia de lado a lado
+      if (key === 'e' && pts.length === 1) return `${L},${pts[0].y} ${W - R},${pts[0].y}`;
+      return pts.map((q) => `${q.x},${q.y}`).join(' ');
+    };
     return {
       faltan, total: ps.length,
       g: { W, H, L, R, T, B, ey, lineaV: linea('v'), lineaE: linea('e'),
