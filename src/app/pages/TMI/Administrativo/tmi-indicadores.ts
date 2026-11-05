@@ -22,7 +22,7 @@ import { TmiAceptacion } from './tmi-aceptacion/tmi-aceptacion';
 import { TmiEstandares } from './tmi-estandares/tmi-estandares';
 import { TmiEstandarService } from '../../../services/tmi/tmi-estandar-service';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
-import { TmiCentroService } from '../../../services/tmi';
+import { TmiCatalogosCentro, TmiCentroService } from '../../../services/tmi';
 
 /** Exclusión (fila de tmi_exclusion_centro_indicador) con sus meses listos para pintar. */
 interface FilaExclusion {
@@ -293,7 +293,7 @@ export class TmiIndicadores implements OnInit {
       id_centro: [null, [Validators.required]],
       id_estandar: [null, []],
       anio: [null, [Validators.required]],
-      resultado: ['NA', [Validators.required]],
+      resultado: ['0', [Validators.required]],
       excl_01: [false, []],
       excl_02: [false, []],
       excl_03: [false, []],
@@ -349,8 +349,34 @@ export class TmiIndicadores implements OnInit {
     });
   }
 
+  // Catálogos de nivel, tipo y categoría para el formulario de centros (nivel_centro, tipo_centro, categoria_centro)
+  public catalogosCentro: TmiCatalogosCentro = { niveles: [], tipos: [], categorias: [] };
+
+  private cargarCatalogosCentro(): void {
+    if (this.catalogosCentro.niveles.length) return;
+    this.centroSrv.getCatalogosCentro().subscribe({
+      next: (c) => {
+        this.catalogosCentro = { niveles: c?.niveles ?? [], tipos: c?.tipos ?? [], categorias: c?.categorias ?? [] };
+        this.cdr.markForCheck();
+      },
+      error: (e) => console.error(e),
+    });
+  }
+
+  /** Opciones de un catálogo; si el centro tiene un valor que no está en el catálogo, se agrega para no perderlo. */
+  opcionesCatalogo(catalogo: keyof TmiCatalogosCentro, campo: string): { codigo: string; texto: string }[] {
+    const lista = this.catalogosCentro[catalogo].map((x) => ({
+      // nivel y tipo: solo el código (nivel_centro, tipo_centro); categoría: código y nombre
+      codigo: x.codigo, texto: catalogo !== 'categorias' || !x.descripcion || x.descripcion === x.codigo ? x.codigo : `${x.codigo} · ${x.descripcion}`,
+    }));
+    const actual = String(this.centrosForm?.get(campo)?.value ?? '').trim();
+    if (actual && !lista.some((o) => o.codigo === actual)) lista.push({ codigo: actual, texto: `${actual} (no está en el catálogo)` });
+    return lista;
+  }
+
   // nuevo centro
   iniciarAltaCentro(): void {
+    this.cargarCatalogosCentro();
     if (!this.centrosForm) this.reactiveForm();
     this.centrosForm.reset({
       id: null,
@@ -376,6 +402,7 @@ export class TmiIndicadores implements OnInit {
   }
 
   iniciarEdicionCentro(row: any): void {
+    this.cargarCatalogosCentro();
     if (!this.centrosForm) this.reactiveForm();
     this.centrosForm.reset();
     this.centrosForm.patchValue({
@@ -494,7 +521,7 @@ export class TmiIndicadores implements OnInit {
       id_centro: idCentro != null ? Number(idCentro) : null,
       id_estandar: null,
       anio: Number(this.anioExclusion),
-      resultado: 'NA',
+      resultado: '0',
       excl_01: false,
       excl_02: false,
       excl_03: false,
@@ -619,7 +646,7 @@ export class TmiIndicadores implements OnInit {
       id_centro: row.id_centro != null ? Number(row.id_centro) : null,
       id_estandar: this.resolverIdEstandar(row),
       anio: row.anio ?? Number(this.anioExclusion),
-      resultado: row.resultado === '0' ? '0' : 'NA',
+      resultado: row.resultado === 'NA' ? 'NA' : '0',
       excl_01: Boolean(row.excl_01),
       excl_02: Boolean(row.excl_02),
       excl_03: Boolean(row.excl_03),
@@ -675,7 +702,7 @@ export class TmiIndicadores implements OnInit {
       id_indicador: idEstandar,
       ids_indicador: ids.length ? ids : null,
       anio: Number(valor.anio),
-      resultado: valor.resultado === '0' ? '0' : 'NA',
+      resultado: valor.resultado === 'NA' ? 'NA' : '0',
       excl_01: Boolean(valor.excl_01),
       excl_02: Boolean(valor.excl_02),
       excl_03: Boolean(valor.excl_03),

@@ -217,18 +217,29 @@
 
                             <div class="field-input">
                                 <label for="centro_categoria">Categoría</label>
-                                <input type="text" id="centro_categoria" formControlName="categoria"
-                                    placeholder="Categoría" />
+                                <!-- sin catálogo de categorías todavía: se escribe -->
+                                <input *ngIf="!catalogosCentro.categorias.length" type="text" id="centro_categoria"
+                                    formControlName="categoria" placeholder="Categoría" />
+                                <select *ngIf="catalogosCentro.categorias.length" id="centro_categoria" formControlName="categoria">
+                                    <option value="">Sin categoría</option>
+                                    <option *ngFor="let o of opcionesCatalogo('categorias', 'categoria')" [value]="o.codigo">{{ o.texto }}</option>
+                                </select>
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_nivel">Nivel <span class="required">*</span></label>
-                                <input type="text" id="centro_nivel" formControlName="nivel" placeholder="Nivel" />
+                                <select id="centro_nivel" formControlName="nivel">
+                                    <option value="">{{ catalogosCentro.niveles.length ? 'Seleccione un nivel' : 'Cargando…' }}</option>
+                                    <option *ngFor="let o of opcionesCatalogo('niveles', 'nivel')" [value]="o.codigo">{{ o.texto }}</option>
+                                </select>
                             </div>
 
                             <div class="field-input">
                                 <label for="centro_tipo">Tipo <span class="required">*</span></label>
-                                <input type="text" id="centro_tipo" formControlName="tipo" placeholder="Tipo" />
+                                <select id="centro_tipo" formControlName="tipo">
+                                    <option value="">{{ catalogosCentro.tipos.length ? 'Seleccione un tipo' : 'Cargando…' }}</option>
+                                    <option *ngFor="let o of opcionesCatalogo('tipos', 'tipo')" [value]="o.codigo">{{ o.texto }}</option>
+                                </select>
                             </div>
 
                             <div class="field-input">
@@ -359,9 +370,9 @@
                                     <span class="exg-rango">{{ f.rango }}</span>
                                 </div>
 
-                                <span class="exg-resultado" [class.exg-resultado-cero]="f.row.resultado === '0'"
-                                    [title]="f.row.resultado === '0' ? 'El mes excluido queda con puntaje 0' : 'El mes excluido queda como No aplica'">
-                                    {{ f.row.resultado === '0' ? '0' : 'NA' }}
+                                <span class="exg-resultado" [class.exg-resultado-cero]="f.row.resultado !== 'NA'"
+                                    [title]="f.row.resultado !== 'NA' ? 'El mes excluido queda con puntaje 0' : 'El mes excluido queda como No aplica'">
+                                    {{ f.row.resultado === 'NA' ? 'NA' : '0' }}
                                 </span>
 
                                 <div class="exg-acciones">
@@ -532,20 +543,20 @@
                         <section class="exc-seccion">
                             <span class="exc-seccion-titulo" id="exc_res_titulo">En el resultado final, el mes excluido queda como</span>
                             <div class="exc-resultado" role="radiogroup" aria-labelledby="exc_res_titulo">
-                                <label class="exc-opcion" [class.exc-opcion-activa]="exclusionForm.get('resultado')?.value !== '0'">
-                                    <input type="radio" formControlName="resultado" value="NA" />
-                                    <span class="exc-opcion-valor">NA</span>
-                                    <span class="exc-opcion-texto">
-                                        <strong>No aplica</strong>
-                                        <small>El mes no se evalúa ni cuenta en el puntaje.</small>
-                                    </span>
-                                </label>
-                                <label class="exc-opcion" [class.exc-opcion-activa]="exclusionForm.get('resultado')?.value === '0'">
+                                <label class="exc-opcion" [class.exc-opcion-activa]="exclusionForm.get('resultado')?.value !== 'NA'">
                                     <input type="radio" formControlName="resultado" value="0" />
                                     <span class="exc-opcion-valor">0</span>
                                     <span class="exc-opcion-texto">
                                         <strong>Puntaje 0</strong>
                                         <small>El mes se evalúa con valor 0 y puntaje 0.</small>
+                                    </span>
+                                </label>
+                                <label class="exc-opcion" [class.exc-opcion-activa]="exclusionForm.get('resultado')?.value === 'NA'">
+                                    <input type="radio" formControlName="resultado" value="NA" />
+                                    <span class="exc-opcion-valor">NA</span>
+                                    <span class="exc-opcion-texto">
+                                        <strong>No aplica</strong>
+                                        <small>El mes no se evalúa ni cuenta en el puntaje.</small>
                                     </span>
                                 </label>
                             </div>

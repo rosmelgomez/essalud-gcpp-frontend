@@ -136,7 +136,7 @@ export class TmiDashboard implements OnInit {
   opcionesRed = computed(() => this.redes().map((r) => ({ value: r.nombre, label: this.nombreRed(r, true) })));
   opcionesCentro = computed(() => {
     const filtra = (cs: TmiDashCentro[]) => cs
-      .map((c) => ({ value: c.cod, label: titleCase(c.nombre) + (c.tipo ? ' · ' + c.tipo : '') }));
+      .map((c) => ({ value: c.cod, label: titleCase(c.nombre) + (this.catTxt(c) ? ' · ' + this.catTxt(c) : '') }));
     if (this.red()) return [{ grupo: '', items: filtra(this.centrosDeRed().get(this.red()) ?? []) }];
     return this.redes().map((r) => ({ grupo: this.nombreRed(r, true), items: filtra(this.centrosDeRed().get(r.nombre) ?? []) }))
       .filter((g) => g.items.length);
@@ -212,7 +212,7 @@ export class TmiDashboard implements OnInit {
         { label: 'Puesto en su red', value: posRed, note: red ? this.nombreRed(red) : c.red },
         { label: 'Puesto nacional', value: `${posNac} de ${this.centros().length}`, note: 'Entre todos los establecimientos evaluados.' },
         { label: 'Indicadores que cumplen', value: `${evals.filter((p) => p === 5).length} de ${evals.length}`, note: 'Con el puntaje máximo de 5.' },
-        { label: 'Nivel y tipo', value: [c.nivel, c.tipo].filter(Boolean).join(' · ') || '—', note: `Código ${c.cod}. Puntaje de la red: ${num(red?.nota, 1)}.` },
+        { label: 'Nivel y tipo', value: [c.nivel, this.catTxt(c)].filter(Boolean).join(' · ') || '—', note: `Código ${c.cod}. Puntaje de la red: ${num(red?.nota, 1)}.` },
       ];
     }
     if (S.ind) {
@@ -273,7 +273,7 @@ export class TmiDashboard implements OnInit {
       ref = i == null ? this.notaNacional() : S.ind!.nacional; refName = 'nacional'; titulo = 'Ranking de redes';
     } else {
       items = this.lista().map((c) => ({ key: String(c.cod), name: titleCase(c.nombre), v: val(c), on: S.cen === c, cod: c.cod,
-        sub: `${this.redCorta(c.red)} · ${[c.nivel, c.tipo].filter(Boolean).join(' ')}` }));
+        sub: `${this.redCorta(c.red)} · ${[c.nivel, this.catTxt(c)].filter(Boolean).join(' ')}` }));
       ref = i == null ? (S.red ? S.red.nota : this.notaNacional()) : (S.red ? S.red.pts[i] : S.ind!.nacional);
       refName = S.red ? 'de la red' : 'nacional';
       titulo = S.cen ? 'Ranking de establecimientos de su red' : 'Ranking de establecimientos';
@@ -353,7 +353,7 @@ export class TmiDashboard implements OnInit {
       { k: 'nombre', t: 'Establecimiento', v: (c) => titleCase(c.nombre) },
       { k: 'red', t: 'Red', v: (c) => this.redCorta(c.red), sm: true },
       { k: 'nivel', t: 'Nivel', v: (c) => c.nivel ?? '' },
-      { k: 'tipo', t: 'Tipo', v: (c) => c.tipo ?? '', sm: true },
+      { k: 'tipo', t: 'Tipo', v: (c) => this.catTxt(c), sm: true },
       { k: 'n', t: 'Indicadores', v: (c) => c.pts.filter((p) => p != null).length, num: true, sm: true },
       { k: 'cumple', t: 'Con 5', v: (c) => c.pts.filter((p) => p === 5).length, num: true, sm: true },
     ];
@@ -368,7 +368,7 @@ export class TmiDashboard implements OnInit {
     const cols = this.columnas(), q = norm(this.q().trim());
     const col = cols.find((c) => c.k === this.sortKey()) ?? cols[cols.length - 1], dir = this.sortDir();
     return this.lista()
-      .filter((c) => !q || norm(`${c.nombre} ${c.red} ${c.tipo ?? ''} ${c.cod}`).includes(q))
+      .filter((c) => !q || norm(`${c.nombre} ${c.red} ${this.catTxt(c)} ${c.cod}`).includes(q))
       .map((c) => ({ c, celdas: cols.map((cc) => {
         const v = cc.v(c);
         return { v, txt: v == null ? (cc.num ? 'NA' : '') : cc.f ? cc.f(v) : String(v), pill: cc.pill && v != null ? cc.pill(v) : null, num: !!cc.num, sm: !!cc.sm };
@@ -485,7 +485,7 @@ export class TmiDashboard implements OnInit {
   }
   tipPunto(ev: MouseEvent, f: { c: TmiDashCentro; d: TmiDashDetalle }) {
     const x = this.S().ind!;
-    this.mostrarTip(ev, titleCase(f.c.nombre), [`${this.redCorta(f.c.red)} · ${f.c.tipo ?? ''}`, `Valor real: ${this.fmtV(f.d.v, x)}`,
+    this.mostrarTip(ev, titleCase(f.c.nombre), [`${this.redCorta(f.c.red)} · ${this.catTxt(f.c)}`, `Valor real: ${this.fmtV(f.d.v, x)}`,
       `Estándar: ${this.fmtV(f.d.e, x)}`, `Puntaje: ${f.d.p ?? 'NA'}`]);
   }
   hoverK = signal<{ g: Grafico; k: number } | null>(null);
@@ -524,6 +524,8 @@ export class TmiDashboard implements OnInit {
     if (r.instituto) return titleCase(r.nombre);
     return (corto ? '' : 'Red ') + this.redCorta(r.nombre);
   }
+  /** Este tablero muestra la categoría del centro (C.A.P.I, P.M., ...); si no viene, el tipo. */
+  catTxt(c: TmiDashCentro) { return c.categoria ?? c.tipo ?? ''; }
   redCorta(n: string) { return titleCase(n.replace(/^RED (ASISTENCIAL|PRESTACIONAL) /i, '')); }
   private nombreServ(s: string) { return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : 'Otros'; }
   private nombreInd(s: string) {

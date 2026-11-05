@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Backend } from '../../model/api';
-import { TmiCentroCatalogo, TmiCentroEstandar } from './tmi-models';
+import { TmiCatalogosCentro, TmiCentroCatalogo, TmiCentroEstandar } from './tmi-models';
 
 const base_url = Backend.apiTmi;
 const dinamico_url = Backend.apiTmi + '/dinamico';
@@ -27,6 +27,11 @@ export class TmiCentroService {
   /** Centros activos con red, tipo, nivel y categoría, para los formularios. */
   getCentros() {
     return this.http.get<TmiCentroCatalogo[]>(`${dinamico_url}/catalogo/centros`);
+  }
+
+  /** Catálogos de nivel, tipo y categoría (nivel_centro, tipo_centro, categoria_centro), en su orden. */
+  getCatalogosCentro() {
+    return this.http.get<TmiCatalogosCentro>(`${dinamico_url}/catalogos-centro`);
   }
 
   /// exclusion centro estandar

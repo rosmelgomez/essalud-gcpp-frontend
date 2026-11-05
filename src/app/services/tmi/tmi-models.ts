@@ -376,11 +376,25 @@ export interface TmiDashCentro {
   nombre: string;
   red: string;
   nivel: string | null;
+  /** tmi_centro.tipo (catálogo tipo_centro) */
   tipo: string | null;
+  /** tmi_centro.categoria (catálogo categoria_centro) */
+  categoria?: string | null;
   pts: (number | null)[];
   nota: number;
   mensual: number[];
   det: (TmiDashDetalle | null)[];
+}
+/** Elemento de un catálogo de centro (nivel_centro, tipo_centro, categoria_centro): codigo = valor en tmi_centro. */
+export interface TmiCatalogoCentroItem {
+  codigo: string;
+  descripcion: string | null;
+  orden: number | null;
+}
+export interface TmiCatalogosCentro {
+  niveles: TmiCatalogoCentroItem[];
+  tipos: TmiCatalogoCentroItem[];
+  categorias: TmiCatalogoCentroItem[];
 }
 export interface TmiDashboardDatos {
   periodo: string;
@@ -390,4 +404,6 @@ export interface TmiDashboardDatos {
   indicadores: TmiDashIndicador[];
   redes: TmiDashRed[];
   centros: TmiDashCentro[];
+  /** Nombres y orden de nivel y tipo (catálogos de centro). */
+  catalogos?: TmiCatalogosCentro;
 }
