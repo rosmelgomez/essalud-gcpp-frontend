@@ -24,7 +24,6 @@
         <button type="button" class="btn" (click)="descargarExcel()" [disabled]="excelCargando() || sinDatos()"
           title="El mismo Excel de Administración, con el resultado de este periodo">
           <mat-icon>table_view</mat-icon> {{ excelCargando() ? 'Generando…' : 'Descargar Excel' }}</button>
-        <a class="btn" routerLink="/tmi/dashboard" [queryParams]="{ periodo: periodo() }"><mat-icon>insights</mat-icon> Tablero TMI</a>
       </span>
     </div>
     <h1>Resumen de indicadores por red y centro asistencial</h1>
