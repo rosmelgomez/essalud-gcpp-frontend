@@ -170,13 +170,13 @@ export class TmiIndicadores implements OnInit {
 
   filtersCentrosTMI = {
     id: "",
+    codred: "",
     red: "",
-    orden: "",
-    orden_tipo: "",
     codcentro: "",
     centro: "",
     categoria: "",
     nivel: "",
+    nivel_estandar: "",
     tipo: "",
     flag: ""
   };
@@ -276,13 +276,13 @@ export class TmiIndicadores implements OnInit {
     // Form 4: tmi_centro
     this.centrosForm = this.formBuilder.group({
       id: [null, []],
+      codred: ['', []],
       red: ['', [Validators.required]],
-      orden: ['', [Validators.required]],
-      orden_tipo: ['', [Validators.required]],
       codcentro: ['', [Validators.required]],
       centro: ['', [Validators.required]],
       categoria: ['', []],
-      nivel: ['', [Validators.required]],
+      nivel: ['', []],
+      nivel_estandar: ['', [Validators.required]],
       tipo: ['', [Validators.required]],
       flag: [true, []]
     });
@@ -349,14 +349,15 @@ export class TmiIndicadores implements OnInit {
     });
   }
 
-  // Catálogos de nivel, tipo y categoría para el formulario de centros (nivel_centro, tipo_centro, categoria_centro)
-  public catalogosCentro: TmiCatalogosCentro = { niveles: [], tipos: [], categorias: [] };
+  // Catálogos del formulario de centros: nivel de atención (tmi_nivel_centro, informativo), nivel estándar
+  // (tmi_nivel_estandar_centro) y tipo (tmi_tipo_centro); estos dos unen el centro con los estándares. Categoría: texto libre.
+  public catalogosCentro: Required<TmiCatalogosCentro> = { niveles: [], niveles_estandar: [], tipos: [] };
 
   private cargarCatalogosCentro(): void {
-    if (this.catalogosCentro.niveles.length) return;
+    if (this.catalogosCentro.niveles_estandar.length) return;
     this.centroSrv.getCatalogosCentro().subscribe({
       next: (c) => {
-        this.catalogosCentro = { niveles: c?.niveles ?? [], tipos: c?.tipos ?? [], categorias: c?.categorias ?? [] };
+        this.catalogosCentro = { niveles: c?.niveles ?? [], niveles_estandar: c?.niveles_estandar ?? [], tipos: c?.tipos ?? [] };
         this.cdr.markForCheck();
       },
       error: (e) => console.error(e),
@@ -366,8 +367,8 @@ export class TmiIndicadores implements OnInit {
   /** Opciones de un catálogo; si el centro tiene un valor que no está en el catálogo, se agrega para no perderlo. */
   opcionesCatalogo(catalogo: keyof TmiCatalogosCentro, campo: string): { codigo: string; texto: string }[] {
     const lista = this.catalogosCentro[catalogo].map((x) => ({
-      // nivel y tipo: solo el código (nivel_centro, tipo_centro); categoría: código y nombre
-      codigo: x.codigo, texto: catalogo !== 'categorias' || !x.descripcion || x.descripcion === x.codigo ? x.codigo : `${x.codigo} · ${x.descripcion}`,
+      // nivel estándar y tipo: solo el código; nivel de atención: código y nombre (I · Primer nivel)
+      codigo: x.codigo, texto: catalogo !== 'niveles' || !x.descripcion || x.descripcion === x.codigo ? x.codigo : `${x.codigo} · ${x.descripcion}`,
     }));
     const actual = String(this.centrosForm?.get(campo)?.value ?? '').trim();
     if (actual && !lista.some((o) => o.codigo === actual)) lista.push({ codigo: actual, texto: `${actual} (no está en el catálogo)` });
@@ -380,13 +381,13 @@ export class TmiIndicadores implements OnInit {
     if (!this.centrosForm) this.reactiveForm();
     this.centrosForm.reset({
       id: null,
+      codred: '',
       red: '',
-      orden: '',
-      orden_tipo: '',
       codcentro: '',
       centro: '',
       categoria: '',
       nivel: '',
+      nivel_estandar: '',
       tipo: '',
       flag: true
     });
@@ -407,13 +408,13 @@ export class TmiIndicadores implements OnInit {
     this.centrosForm.reset();
     this.centrosForm.patchValue({
       id: row.id ?? null,
+      codred: row.codred ?? '',
       red: row.red ?? '',
-      orden: String(row.orden ?? ''),
-      orden_tipo: String(row.orden_tipo ?? ''),
       codcentro: String(row.codcentro ?? ''),
       centro: row.centro ?? '',
       categoria: row.categoria ?? '',
       nivel: row.nivel ?? '',
+      nivel_estandar: row.nivel_estandar ?? '',
       tipo: row.tipo ?? '',
       flag: row.flag !== undefined && row.flag !== null ? Boolean(row.flag) : true
     });
@@ -441,13 +442,13 @@ export class TmiIndicadores implements OnInit {
     const valor = this.centrosForm.getRawValue();
     const dto = {
       id: valor.id ? Number(valor.id) : null,
+      codred: valor.codred ? String(valor.codred).trim() : null,
       red: String(valor.red ?? '').trim(),
-      orden: String(valor.orden ?? '').trim(),
-      orden_tipo: String(valor.orden_tipo ?? '').trim(),
       codcentro: String(valor.codcentro ?? '').trim(),
       centro: String(valor.centro ?? '').trim(),
       categoria: valor.categoria ? String(valor.categoria).trim() : null,
-      nivel: String(valor.nivel ?? '').trim(),
+      nivel: valor.nivel ? String(valor.nivel).trim() : null,
+      nivel_estandar: String(valor.nivel_estandar ?? '').trim(),
       tipo: String(valor.tipo ?? '').trim(),
       flag: Boolean(valor.flag)
     };
@@ -479,12 +480,12 @@ export class TmiIndicadores implements OnInit {
     this.dataCentrosTMI = this.dataCentrosTMIFilter.filter(row =>
       check(row.id, this.filtersCentrosTMI.id) &&
       check(row.red, this.filtersCentrosTMI.red) &&
-      check(row.orden, this.filtersCentrosTMI.orden) &&
-      check(row.orden_tipo, this.filtersCentrosTMI.orden_tipo) &&
+      check(row.codred, this.filtersCentrosTMI.codred) &&
       check(row.codcentro, this.filtersCentrosTMI.codcentro) &&
       check(row.centro, this.filtersCentrosTMI.centro) &&
       check(row.categoria, this.filtersCentrosTMI.categoria) &&
       check(row.nivel, this.filtersCentrosTMI.nivel) &&
+      check(row.nivel_estandar, this.filtersCentrosTMI.nivel_estandar) &&
       check(row.tipo, this.filtersCentrosTMI.tipo) &&
       checkFlag(row.flag, this.filtersCentrosTMI.flag)
     );

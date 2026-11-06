@@ -16,7 +16,7 @@
             <h3>1. Calcular el periodo</h3>
             <div class="dyn-paso-periodo">
                 @if (!puedeCalcular() && periodoCalculo()) {
-                <span class="dyn-badge dyn-p0">Se puede calcular hasta {{ nombrePeriodo(periodoCalculo()) }}</span>
+                <span class="dyn-badge dyn-p0">Se puede calcular hasta {{ nombrePeriodo(periodoCalculo()) }}{{ periodoCalculo() !== estadoPeriodos()?.periodo_calculo ? ': TOTALIZADO3 todavía no tiene datos de ' + nombrePeriodo(estadoPeriodos()!.periodo_calculo) : '' }}</span>
                 } @else if (guardadoCalculo(); as g) {
                 <span class="dyn-badge dyn-p5">Último cálculo: {{ fecha(g.fecha_calculo) }}</span>
                 } @else {
@@ -155,6 +155,7 @@
                 <div class="cell">CENTRO</div>
                 <div class="cell">NIVEL</div>
                 <div class="cell">TIPO</div>
+                <div class="cell">NIVEL ESTÁNDAR</div>
                 <div class="cell">ESTÁNDAR</div>
                 @if (esBanda()) {<div class="cell">% ACEPTMENOS</div>}
                 <div class="cell">% ACEPT</div>
@@ -171,8 +172,9 @@
                     <div class="cell txt">{{ r.red }}</div>
                     <div class="cell">{{ r.codcentro }}</div>
                     <div class="cell txt">{{ r.centro }}</div>
-                    <div class="cell">{{ r.nivel }}</div>
-                    <div class="cell">{{ r.categoria }}</div>
+                    <div class="cell">{{ r.nivel ?? '—' }}</div>
+                    <div class="cell">{{ r.tipo ?? '—' }}</div>
+                    <div class="cell">{{ r.nivel_estandar ?? '—' }}</div>
                     <div class="cell num">{{ r.estandar == null ? '—' : (r.estandar | number: '1.0-4') }}</div>
                     @if (esBanda()) {<div class="cell num">{{ r.aceptmenos == null ? '—' : (r.aceptmenos | number: '1.0-4') }}</div>}
                     <div class="cell num">{{ r.acept == null ? '—' : (r.acept | number: '1.0-4') }}</div>

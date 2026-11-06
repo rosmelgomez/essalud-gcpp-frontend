@@ -72,7 +72,7 @@
             [class.lv-actualizando]="loadingCentrosTMI" [attr.aria-busy]="loadingCentrosTMI">
             <div class="lv-progreso" *ngIf="loadingCentrosTMI" role="progressbar" aria-label="Cargando centros TMI"></div>
             <mat-card class="table"
-                style="--cols-table: minmax(55px, 0.5fr) minmax(160px, 1.5fr) minmax(65px, 0.6fr) minmax(90px, 0.8fr) minmax(95px, 0.8fr) minmax(200px, 2fr) minmax(90px, 0.8fr) minmax(75px, 0.7fr) minmax(95px, 0.8fr) minmax(95px, 0.8fr) minmax(85px, 0.7fr);">
+                style="--cols-table: minmax(55px, 0.5fr) minmax(80px, 0.6fr) minmax(160px, 1.5fr) minmax(95px, 0.8fr) minmax(200px, 2fr) minmax(90px, 0.8fr) minmax(70px, 0.6fr) minmax(120px, 0.9fr) minmax(95px, 0.8fr) minmax(85px, 0.7fr) minmax(95px, 0.8fr);">
                 <div class="table-title-row">
                     <h3>Detalle de Centros TMI</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaCentro()"
@@ -93,6 +93,11 @@
                             (keyup)="filterDataCentrosTMI('centro', $event)" />
                     </label>
                     <label class="filter-field">
+                        <span>Cód. red</span>
+                        <input type="text" class="filter-input" placeholder="Buscar cód. red..."
+                            (keyup)="filterDataCentrosTMI('codred', $event)" />
+                    </label>
+                    <label class="filter-field">
                         <span>Red</span>
                         <input type="text" class="filter-input" placeholder="Buscar red..."
                             (keyup)="filterDataCentrosTMI('red', $event)" />
@@ -108,6 +113,11 @@
                             (keyup)="filterDataCentrosTMI('nivel', $event)" />
                     </label>
                     <label class="filter-field">
+                        <span>Nivel estándar</span>
+                        <input type="text" class="filter-input" placeholder="Buscar nivel estándar..."
+                            (keyup)="filterDataCentrosTMI('nivel_estandar', $event)" />
+                    </label>
+                    <label class="filter-field">
                         <span>Tipo</span>
                         <input type="text" class="filter-input" placeholder="Buscar tipo..."
                             (keyup)="filterDataCentrosTMI('tipo', $event)" />
@@ -117,13 +127,13 @@
                     <div class="grid-table">
                         <div class="header-table">
                             <div class="cell id">ID</div>
+                            <div class="cell codred">CODRED</div>
                             <div class="cell red">RED</div>
-                            <div class="cell orden">ORDEN</div>
-                            <div class="cell orden_tipo">ORDEN_TIPO</div>
                             <div class="cell codcentro">CODCENTRO</div>
                             <div class="cell centro">CENTRO</div>
                             <div class="cell categoria">CATEGORIA</div>
                             <div class="cell nivel">NIVEL</div>
+                            <div class="cell nivel_estandar">NIVEL_ESTANDAR</div>
                             <div class="cell tipo">TIPO</div>
                             <div class="cell flag">FLAG</div>
                             <div class="cell acciones">ACCIONES</div>
@@ -132,13 +142,13 @@
                         <cdk-virtual-scroll-viewport #viewportCentros class="viewport-table" [itemSize]="44">
                             <div *cdkVirtualFor="let row of dataCentrosTMI" class="row-table">
                                 <div class="cell id">{{ row.id ?? '—' }}</div>
+                                <div class="cell codred">{{ row.codred ?? '—' }}</div>
                                 <div class="cell red">{{ row.red ?? '—' }}</div>
-                                <div class="cell orden">{{ row.orden ?? '—' }}</div>
-                                <div class="cell orden_tipo">{{ row.orden_tipo ?? '—' }}</div>
                                 <div class="cell codcentro">{{ row.codcentro ?? '—' }}</div>
                                 <div class="cell centro">{{ row.centro ?? '—' }}</div>
                                 <div class="cell categoria">{{ row.categoria ?? '—' }}</div>
                                 <div class="cell nivel">{{ row.nivel ?? '—' }}</div>
+                                <div class="cell nivel_estandar">{{ row.nivel_estandar ?? '—' }}</div>
                                 <div class="cell tipo">{{ row.tipo ?? '—' }}</div>
                                 <div class="cell flag">{{ row.flag ? 'Activo' : 'Inactivo' }}</div>
                                 <div class="cell acciones">
@@ -188,6 +198,11 @@
                             <input type="hidden" formControlName="id" />
 
                             <div class="field-input">
+                                <label for="centro_codred">Código Red</label>
+                                <input type="text" id="centro_codred" formControlName="codred" placeholder="Código de red" />
+                            </div>
+
+                            <div class="field-input">
                                 <label for="centro_red">Red Asistencial <span class="required">*</span></label>
                                 <input type="text" id="centro_red" formControlName="red" placeholder="Ingrese Red" />
                             </div>
@@ -205,32 +220,26 @@
                             </div>
 
                             <div class="field-input">
-                                <label for="centro_orden">Orden <span class="required">*</span></label>
-                                <input type="text" id="centro_orden" formControlName="orden" placeholder="Ej. 1" />
-                            </div>
-
-                            <div class="field-input">
-                                <label for="centro_orden_tipo">Orden Tipo <span class="required">*</span></label>
-                                <input type="text" id="centro_orden_tipo" formControlName="orden_tipo"
-                                    placeholder="Orden Tipo" />
-                            </div>
-
-                            <div class="field-input">
                                 <label for="centro_categoria">Categoría</label>
-                                <!-- sin catálogo de categorías todavía: se escribe -->
-                                <input *ngIf="!catalogosCentro.categorias.length" type="text" id="centro_categoria"
-                                    formControlName="categoria" placeholder="Categoría" />
-                                <select *ngIf="catalogosCentro.categorias.length" id="centro_categoria" formControlName="categoria">
-                                    <option value="">Sin categoría</option>
-                                    <option *ngFor="let o of opcionesCatalogo('categorias', 'categoria')" [value]="o.codigo">{{ o.texto }}</option>
+                                <!-- sin catálogo: el cálculo no une por categoría (une por nivel estándar y tipo) -->
+                                <input type="text" id="centro_categoria" formControlName="categoria" placeholder="Categoría" />
+                            </div>
+
+                            <div class="field-input">
+                                <!-- nivel de atención: solo informativo, el cálculo usa nivel_estandar -->
+                                <label for="centro_nivel">Nivel</label>
+                                <select id="centro_nivel" formControlName="nivel">
+                                    <option value="">Sin nivel</option>
+                                    <option *ngFor="let o of opcionesCatalogo('niveles', 'nivel')" [value]="o.codigo">{{ o.texto }}</option>
                                 </select>
                             </div>
 
                             <div class="field-input">
-                                <label for="centro_nivel">Nivel <span class="required">*</span></label>
-                                <select id="centro_nivel" formControlName="nivel">
-                                    <option value="">{{ catalogosCentro.niveles.length ? 'Seleccione un nivel' : 'Cargando…' }}</option>
-                                    <option *ngFor="let o of opcionesCatalogo('niveles', 'nivel')" [value]="o.codigo">{{ o.texto }}</option>
+                                <!-- nivel_estandar reemplaza a nivel (I, II, III): une el centro con los estándares de fuente NIVEL -->
+                                <label for="centro_nivel_estandar">Nivel estándar <span class="required">*</span></label>
+                                <select id="centro_nivel_estandar" formControlName="nivel_estandar">
+                                    <option value="">{{ catalogosCentro.niveles_estandar.length ? 'Seleccione un nivel estándar' : 'Cargando…' }}</option>
+                                    <option *ngFor="let o of opcionesCatalogo('niveles_estandar', 'nivel_estandar')" [value]="o.codigo">{{ o.texto }}</option>
                                 </select>
                             </div>
 

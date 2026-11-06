@@ -6,7 +6,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
 import { AyudaFlotante } from '../ayuda-flotante';
-import { TmiEstandarService, TmiAceptacionIndicador, TmiTipoEstandar, mensajeError } from '../../../../services/tmi';
+import {
+  TmiCalculoService, TmiEstandarService, TmiAceptacionIndicador, TmiTipoEstandar, mensajeError,
+} from '../../../../services/tmi';
 
 /** Fila de la lista virtual: la cabecera del indicador o una de sus claves (si está abierto). */
 interface FilaLista {
@@ -42,6 +44,7 @@ interface Edicion {
 })
 export class TmiAceptacion implements OnInit {
   private estandarSrv = inject(TmiEstandarService);
+  private calculoSrv = inject(TmiCalculoService);
 
   readonly meses = MESES.map((label, i) => ({ value: i + 1, label }));
   readonly anios = Array.from({ length: 4 }, (_, i) => new Date().getFullYear() + 1 - i);
@@ -90,9 +93,19 @@ export class TmiAceptacion implements OnInit {
   error = signal('');
   mensaje = signal('');
 
+  /** Abre en el último periodo con datos (como Estándar y Calcular y Excel): el mes anterior si TOTALIZADO3 ya lo tiene;
+   *  si no, el último cargado (sin datos de octubre, septiembre). */
   ngOnInit(): void {
     this.estandarSrv.getTiposEstandar().subscribe({ next: (t) => this.tipos.set(t) });
-    this.cargar();
+    this.cargando.set(true);
+    this.calculoSrv.getPeriodoCalculo().subscribe({
+      next: (e) => {
+        const p = e.periodo_datos && e.periodo_datos < e.periodo_calculo ? e.periodo_datos : e.periodo_calculo;
+        if (p) { this.anio.set(+p.slice(0, 4)); this.mes.set(+p.slice(4)); }
+        this.cargar();
+      },
+      error: () => this.cargar(),
+    });
   }
 
   cargar(): void {

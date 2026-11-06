@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Backend } from '../../model/api';
-import { TmiAmbito, TmiAnalisisFormula, TmiIndicador, TmiLetra, TmiResultadoDirecto } from './tmi-models';
+import { TmiAnalisisFormula, TmiIndicador, TmiLetra } from './tmi-models';
 
 const base_url = Backend.apiTmi + '/dinamico';
 
-/** Indicadores: datos de la hoja, fórmula con letras, letras y ámbito de centros. */
+/** Indicadores: datos de la hoja, fórmula con letras y letras. */
 @Injectable({ providedIn: 'root' })
 export class TmiIndicadorService {
   constructor(private http: HttpClient) { }
@@ -22,16 +22,6 @@ export class TmiIndicadorService {
   analizarFormula(formula_alias: string, variables: Record<string, number>) {
     return this.http.post<TmiAnalisisFormula>(`${base_url}/formula/analizar`, { formula_alias, variables });
   }
-  /** Calcula el indicador con el query automático sobre TOTALIZADO3 (sin estándares ni exclusiones). */
-  getResultadoDirecto(idIndicador: number, periodo: number) {
-    return this.http.get<TmiResultadoDirecto>(`${base_url}/indicadores/${idIndicador}/resultado-directo/${periodo}`);
-  }
 
   getLetras(idIndicador: number) { return this.http.get<TmiLetra[]>(`${base_url}/indicadores/${idIndicador}/letras`); }
-  postLetra(dto: TmiLetra) { return this.http.post(`${base_url}/letras`, dto); }
-  deleteLetra(id: number) { return this.http.delete(`${base_url}/letras/${id}`); }
-
-  getAmbito(idIndicador: number) { return this.http.get<TmiAmbito[]>(`${base_url}/indicadores/${idIndicador}/ambito`); }
-  postAmbito(dto: TmiAmbito) { return this.http.post(`${base_url}/ambito`, dto); }
-  deleteAmbito(id: number) { return this.http.delete(`${base_url}/ambito/${id}`); }
 }

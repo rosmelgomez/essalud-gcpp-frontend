@@ -286,13 +286,21 @@ export class TmiDashbooardEstandar implements OnInit {
     this.centro.set(null);
     this.guardarFiltros();
   }
+  /** Al cambiar nivel o tipo se deja de ver el centro elegido y se listan los centros que cumplen los filtros que
+   *  quedan: con «Todos» en tipo y un nivel elegido, se filtra solo por nivel; con «Todos» en nivel y un tipo
+   *  elegido, solo por tipo. */
   setNivel(n: string) {
     this.nivel.set(n);
+    this.centro.set(null);
     // el tipo elegido puede no existir en el nivel nuevo
     if (this.tipo() && !this.tiposRed().includes(this.tipo())) this.tipo.set('');
     this.guardarFiltros();
   }
-  setTipo(t: string) { this.tipo.set(t); this.guardarFiltros(); }
+  setTipo(t: string) {
+    this.tipo.set(t);
+    this.centro.set(null);
+    this.guardarFiltros();
+  }
   /** Al elegir un centro, los selects de red, nivel y tipo pasan a los del centro. null = todos los centros de la red
    *  (vista de la red): nivel y tipo vuelven a «Todos» y la red se mantiene. */
   setCentro(cod: number | null) {

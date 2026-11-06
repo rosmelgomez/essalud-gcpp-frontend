@@ -17,10 +17,11 @@
         <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
         <div class="dyn-ayuda-panel" role="note">
             <p>
-            Cada indicador muestra solo las claves con las que se evalúa (Nivel, Tipo o Nivel y Tipo, según se definió al
-            crearlo): son las únicas que usa el cálculo. En <strong>Nivel y Tipo</strong> cada centro usa una sola
-            clave: si su tipo está en la lista (por ejemplo CNSR), se evalúa por su tipo; si no, por su nivel. Si esa clave
-            está vacía o en 0, el centro queda sin estándar: no toma el de su nivel. El <strong>fijo del año</strong> es el estándar que toma cada mes al
+            Cada indicador muestra solo las claves con las que se evalúa (según se definió al crearlo): son las únicas
+            que usa el cálculo. El <strong>Nivel</strong> puede ser el nivel de atención del centro (I, II, III) o su nivel
+            estándar (H.N., H.I, POL., C.M., P.M., CNSR ...). Si un indicador combina los dos, cada centro usa una sola
+            clave: si su nivel estándar está en la lista (por ejemplo CNSR), se evalúa por ese; si no, por I, II, III. Si esa clave está vacía o en 0, el centro queda sin estándar:
+            no toma el de su nivel. El <strong>fijo del año</strong> es el estándar que toma cada mes al
             llegar su fecha de cierre. Si el mes elegido ya cerró, también puede cambiar el estándar <strong>solo de ese
             mes</strong>. Un valor 0 deja la clave sin estándar (el centro queda en NA). El estándar propio de un centro
             (pestaña Por centro) gana sobre este.
@@ -45,8 +46,6 @@
         </div>
         <span class="exg-resumen">
             <strong>{{ visibles().length }}</strong> {{ visibles().length === 1 ? 'indicador' : 'indicadores' }}
-            · <strong>{{ totalClaves() }}</strong> {{ totalClaves() === 1 ? 'estándar' : 'estándares' }}
-            · {{ nombreMes() }} {{ anio() }} {{ indicadores()[0]?.mes_cerrado ? '(cerrado)' : '(usa el fijo)' }}
         </span>
         @if (visibles().length > 1) {
         <span class="exg-toolbar-acciones">
@@ -77,9 +76,8 @@
                     <span class="exg-cod">{{ i.orden }}</span>
                     <span class="est-titulo">
                         <span class="exg-nombre">{{ i.indicador }}</span>
-                        <span class="est-grupo">{{ i.grupo ? i.grupo + ' · ' : '' }}Se evalúa por {{ textoBase(i) }}</span>
+                        @if (i.grupo) {<span class="est-grupo">{{ i.grupo }}</span>}
                     </span>
-                    <span class="est-valores" [title]="'Estándar de ' + nombreMes() + ': ' + resumen(i)">{{ resumen(i) }}</span>
                     <span class="exc-contador">{{ i.claves.length }} {{ i.claves.length === 1 ? 'clave' : 'claves' }}</span>
                 </button>
                 <button type="button" class="exc-accion exg-agregar" (click)="abrirEdicion(i)" [disabled]="!i.claves.length"
@@ -94,7 +92,6 @@
                 <div class="exg-fila std-fila" [class.est-fila-cero]="v == null">
                     <div class="exg-indicador">
                         <span class="exg-ind-nombre">{{ etiquetaClave(i, k) }}</span>
-                        <span class="exg-tipo">{{ k.centros }} {{ k.centros === 1 ? 'centro' : 'centros' }}</span>
                     </div>
                     <span class="exg-rango">Fijo {{ anio() }} <strong>{{ k.fijo ? fmt(i, k.fijo) : 'sin estándar' }}</strong></span>
                     <span class="exg-rango" [class.std-mes-distinto]="mesDistinto(i, k)"
@@ -106,7 +103,7 @@
                         title="Estándar que usa el cálculo en el mes elegido">{{ v != null ? fmt(i, v) : '—' }}</span>
                 </div>
         } @else {
-                <div class="exg-fila std-fila"><span class="exg-rango">La base {{ textoBase(i) }} no tiene claves activas.</span></div>
+                <div class="exg-fila std-fila"><span class="exg-rango">Este indicador no tiene claves activas.</span></div>
         }
         </div>
         </cdk-virtual-scroll-viewport>
@@ -133,7 +130,7 @@
         <header class="modal-header">
             <div class="modal-header-info">
                 <h2 id="std_titulo">Editar estándar</h2>
-                <p class="modal-subtitle">{{ i.orden }}. {{ i.indicador }} · Se evalúa por {{ textoBase(i) }}</p>
+                <p class="modal-subtitle">{{ i.orden }}. {{ i.indicador }}</p>
             </div>
             <button type="button" class="close-modal-btn" (click)="cerrarEdicion()" aria-label="Cerrar">
                 <mat-icon>close</mat-icon></button>

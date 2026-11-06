@@ -28,7 +28,7 @@ const AYUDA_INDICADOR = {
     + 'hasta el mes, sin contar los meses excluidos.',
   sin_datos_anio: 'Qué pasa con un centro que no tiene ningún registro en todo el año. NA: aparece en la hoja con NA. '
     + 'Mostrar 0: aparece con 0. No listar: no aparece en la hoja del indicador.',
-  base_estandar: 'Qué estándar se usa para evaluar al centro: el de su nivel, su tipo, su categoría o una combinación. '
+  base_estandar: 'Qué estándar se usa para evaluar al centro: el de su nivel estándar, su tipo, su categoría o una combinación. '
     + 'Los valores se cargan en las pestañas de Estándares. Si el centro tiene un estándar propio en Estándar por '
     + 'Centro, se usa ese.',
   sentido: 'Menor es mejor: puntaje 5 si el valor no pasa el estándar, 3 si no pasa el % Acept y 1 si lo pasa. '

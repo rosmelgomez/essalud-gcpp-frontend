@@ -51,10 +51,15 @@ export class TmiCalculo implements OnInit {
   periodoSel = signal(this.periodo);
   /** Columnas de la grilla: ORDEN, RED, CÓDIGO, CENTRO, NIVEL, TIPO, ESTÁNDAR, [% ACEPTMENOS en banda], % ACEPT, TOTAL, 12 meses, PUNTAJE, MOTIVO. */
   columnasGrid = computed(() =>
-    `60px 230px 70px 240px 60px 80px 80px 80px ${this.esBanda() ? '80px ' : ''}95px repeat(12, 92px) 75px 160px`);
+    `60px 230px 70px 240px 60px 90px 90px 80px 80px ${this.esBanda() ? '80px ' : ''}95px repeat(12, 92px) 75px 160px`);
   esBanda = computed(() => (this.indicadores().find((i) => i.id === this.idIndicador())?.sentido ?? '') === 'BANDA');
-  /** Último periodo que se puede calcular: el mes anterior al actual (en octubre, septiembre). */
-  periodoCalculo = computed(() => this.estadoPeriodos()?.periodo_calculo ?? '');
+  /** Último periodo que se puede calcular: el mes anterior al actual (en octubre, septiembre), o el último con datos en
+   *  TOTALIZADO3 si ese mes todavía no se cargó (sin datos de octubre, septiembre). La tabla y el Excel abren en él. */
+  periodoCalculo = computed(() => {
+    const e = this.estadoPeriodos();
+    if (!e) return '';
+    return e.periodo_datos && e.periodo_datos < e.periodo_calculo ? e.periodo_datos : e.periodo_calculo;
+  });
   /** Periodo que eligió el usuario para calcular (año y mes). */
   anioCalc = signal(String(new Date().getFullYear()));
   mesCalc = signal('01');
@@ -127,10 +132,11 @@ export class TmiCalculo implements OnInit {
       next: (e) => {
         this.estadoPeriodos.set(e);
         if (inicial) {
-          this.anioCalc.set(e.periodo_calculo.slice(0, 4));
-          this.mesCalc.set(e.periodo_calculo.slice(4));
-          this.anio = e.periodo_calculo.slice(0, 4);
-          this.mes = e.periodo_calculo.slice(4);
+          const p = this.periodoCalculo();
+          this.anioCalc.set(p.slice(0, 4));
+          this.mesCalc.set(p.slice(4));
+          this.anio = p.slice(0, 4);
+          this.mes = p.slice(4);
           this.cambioPeriodo();
         }
       },

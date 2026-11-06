@@ -5,10 +5,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
 import { AyudaFlotante } from '../ayuda-flotante';
-import { TmiEstandarService, TmiEstandarPeriodo, TmiEstandarPeriodoClave, mensajeError } from '../../../../services/tmi';
+import {
+  TmiCalculoService, TmiEstandarService, TmiEstandarPeriodo, TmiEstandarPeriodoClave, mensajeError,
+} from '../../../../services/tmi';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-const FUENTE_TEXTO: Record<string, string> = { NIVEL: 'Nivel', TIPO: 'Tipo', CATEGORIA: 'Categoría' };
 
 /** Lo que el usuario escribe en el formulario: fijo del año y, si el mes ya cerró, el valor del mes. */
 /** Fila de la lista virtual: la cabecera del indicador, una clave (si está abierto) o el aviso de que no tiene claves. */
@@ -27,7 +28,7 @@ interface EdicionClave {
 }
 
 /**
- * Estándares en un solo lugar: cada indicador muestra solo las claves de su base_estandar (Nivel, Tipo, Nivel y Tipo...),
+ * Estándares en un solo lugar: cada indicador muestra solo las claves de su base_estandar (Nivel: I, II, III o nivel estándar),
  * que son las que usa el cálculo. Se edita por periodo, igual que el % Acept: el fijo del año (lo toman los meses al
  * llegar su fecha de cierre) y, si el mes elegido ya cerró, el valor de ese mes.
  */
@@ -39,6 +40,7 @@ interface EdicionClave {
 })
 export class TmiEstandares implements OnInit {
   private estandarSrv = inject(TmiEstandarService);
+  private calculoSrv = inject(TmiCalculoService);
 
   readonly meses = MESES.map((label, i) => ({ value: i + 1, label }));
   readonly anios = Array.from({ length: 4 }, (_, i) => new Date().getFullYear() + 1 - i);
@@ -55,7 +57,6 @@ export class TmiEstandares implements OnInit {
       `${i.indicador} ${i.grupo ?? ''} ${i.base_descripcion ?? i.base_estandar} ${i.claves.map((k) => k.clave).join(' ')}`
         .toLowerCase().includes(f));
   });
-  totalClaves = computed(() => this.visibles().reduce((n, i) => n + i.claves.length, 0));
   abiertos = signal<Set<number>>(new Set());
 
   /** Lista virtual: todas las filas miden lo mismo, así solo se dibujan las que se ven. */
@@ -88,8 +89,18 @@ export class TmiEstandares implements OnInit {
   guardando = signal(false);
   errorForm = signal('');
 
+  /** Abre en el último periodo con datos (como Calcular y Excel): el mes anterior si TOTALIZADO3 ya lo tiene; si no, el
+   *  último cargado (sin datos de octubre, septiembre). Así se ve el estándar de ese mes y no el fijo de un mes abierto. */
   ngOnInit(): void {
-    this.cargar();
+    this.cargando.set(true);
+    this.calculoSrv.getPeriodoCalculo().subscribe({
+      next: (e) => {
+        const p = e.periodo_datos && e.periodo_datos < e.periodo_calculo ? e.periodo_datos : e.periodo_calculo;
+        if (p) { this.anio.set(+p.slice(0, 4)); this.mes.set(+p.slice(4)); }
+        this.cargar();
+      },
+      error: () => this.cargar(),
+    });
   }
 
   cargar(): void {
@@ -147,25 +158,12 @@ export class TmiEstandares implements OnInit {
   }
 
   etiquetaClave(i: TmiEstandarPeriodo, k: TmiEstandarPeriodoClave): string {
-    const nombre = k.descripcion || k.clave;
-    // en bases combinadas (Nivel y Tipo) se aclara de qué tabla sale cada clave
-    return new Set(i.claves.map((c) => c.fuente)).size > 1 ? `${FUENTE_TEXTO[k.fuente] ?? k.fuente} ${nombre}` : nombre;
-  }
-
-  /** Cabecera: "4 · 3.5 · sin estándar" (valores distintos del mes elegido). */
-  resumen(i: TmiEstandarPeriodo): string {
-    const vals = [...new Set(i.claves.map((k) => this.efectivo(i, k)))];
-    const con = vals.filter((v): v is number => v != null).sort((a, b) => b - a).map((v) => this.fmt(i, v));
-    if (vals.includes(null)) con.push('sin estándar');
-    return con.join(' · ') || 'sin estándar';
+    // solo el código de la clave (I, II, III, H.N., CNSR ...)
+    return k.descripcion || k.clave;
   }
 
   fmt(i: TmiEstandarPeriodo, v: number): string {
     return i.formato === 'PORCENTAJE' ? `${+(v * 100).toFixed(2)} %` : String(+v.toFixed(4));
-  }
-
-  textoBase(i: TmiEstandarPeriodo): string {
-    return i.base_descripcion || i.base_estandar || 'sin base';
   }
 
   // ---------- formulario flotante ----------

@@ -78,32 +78,6 @@ export interface TmiTipoEstandar {
   indicadores?: string | null;
 }
 
-/** Tabla maestra: clave de un tipo de estándar (valor del centro y tabla de donde sale el estándar). */
-export interface TmiEstandarClave {
-  id?: number;
-  tipo_estandar: string;
-  orden: number | null;
-  fuente: 'NIVEL' | 'TIPO' | 'CATEGORIA';
-  clave: string;
-  descripcion: string | null;
-  prioridad: number;
-  activo: boolean;
-  centros?: number;
-}
-
-/** Estándar por mes de un indicador en una clave de su tipo de estándar. */
-export interface TmiValorEstandar {
-  id_clave: number;
-  orden: number | null;
-  fuente: TmiEstandarClave['fuente'];
-  clave: string;
-  descripcion: string | null;
-  prioridad: number;
-  activo: boolean;
-  centros: number;
-  [mes: `est_${string}`]: number | null;
-}
-
 /** Estándar de un indicador en una clave de su base_estandar (lo único que usa el cálculo). */
 export interface TmiEstandarPeriodoClave {
   orden: number | null;
@@ -176,12 +150,6 @@ export interface TmiAnalisisFormula {
   terminos: TmiTerminoFormula[];
 }
 
-/** Resultado del query automático: valor de la fórmula por centro y mes ('01'..'12'), directo de TOTALIZADO3. */
-export interface TmiResultadoDirecto {
-  sql: string;
-  filas: ({ codcentro: number; centro: string | null; total: number | null } & Record<string, number | string | null>)[];
-}
-
 /** Letra (alias) de la fórmula de un indicador: una variable por letra. */
 export interface TmiLetra {
   id?: number;
@@ -193,33 +161,6 @@ export interface TmiLetra {
   total_anual?: string;
   filas_logica?: number;
   detalle_logica?: string | null;
-}
-
-export interface TmiAmbito {
-  id?: number;
-  id_indicador: number;
-  red: string | null;
-  nivel?: string | null;
-  categoria?: string | null;
-  tipo: string | null;
-  codcentro: number | null;
-  incluir: boolean;
-  periodo_desde: number;
-  periodo_hasta: number;
-}
-
-export interface TmiIndicadorEstandar {
-  id?: number;
-  id_indicador: number;
-  nivel: string | null;
-  categoria: string | null;
-  tipo: string | null;
-  periodo_desde: number;
-  periodo_hasta: number;
-  estandar: number;
-  acept?: number | null;
-  aceptmenos?: number | null;
-  activo: boolean;
 }
 
 export interface TmiCentroEstandar {
@@ -272,6 +213,7 @@ export interface TmiCentroCatalogo {
   red: string;
   tipo: string;
   nivel: string;
+  nivel_estandar?: string | null;
   categoria?: string;
 }
 export interface TmiProblemaConfig { id_indicador: number | null; elemento: string; problema: string; }
@@ -286,7 +228,8 @@ export interface TmiResultadoFinal {
   red: string | null;
   codcentro: number;
   centro: string | null;
-  nivel: string | null;
+  nivel: string | null;            // nivel del centro (I, II, III)
+  nivel_estandar?: string | null;  // clave con la que se unió al estándar (solo informativo)
   tipo: string | null;
   categoria: string | null;
   estandar: number | null;
@@ -304,6 +247,8 @@ export interface TmiResultadoFinal {
 
 export interface TmiPeriodoCalculo {
   periodo_calculo: string;          // único periodo que se puede calcular (mes anterior)
+  /** Último periodo con datos en TOTALIZADO3 hasta periodo_calculo (null = ninguno en el último año). */
+  periodo_datos?: string | null;
   solo_periodo_anterior: boolean;
   periodos: { periodo: number; indicadores: number; centros: number; fecha_calculo: string }[];
 }
@@ -391,10 +336,12 @@ export interface TmiCatalogoCentroItem {
   descripcion: string | null;
   orden: number | null;
 }
+/** Catálogos del centro: niveles = nivel de atención (I, II, III, tmi_nivel_centro); niveles_estandar y tipos unen el
+ *  centro con los estándares (tmi_nivel_estandar_centro, tmi_tipo_centro). La categoría no tiene catálogo. */
 export interface TmiCatalogosCentro {
   niveles: TmiCatalogoCentroItem[];
+  niveles_estandar?: TmiCatalogoCentroItem[];
   tipos: TmiCatalogoCentroItem[];
-  categorias: TmiCatalogoCentroItem[];
 }
 export interface TmiDashboardDatos {
   periodo: string;

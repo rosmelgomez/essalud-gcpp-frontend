@@ -20,17 +20,8 @@ export class TmiCatalogoService {
     return this.relacionGas$;
   }
 
-  getGrupos() {
-    return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/grupos`);
-  }
   getGruposReporte() {
     return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/grupos-reporte`);
-  }
-  getActividades() {
-    return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/actividades`);
-  }
-  getServicios(tipgrupo: number, actividad: number) {
-    return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/servicios/${tipgrupo}/${actividad}`);
   }
   getTiposCalculo() {
     return this.http.get<{ codigo: string; descripcion: string }[]>(`${base_url}/catalogo/tipos-calculo`);

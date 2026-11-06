@@ -61,3 +61,8 @@
     }
 }
 
+
+/* sin el resumen de valores, el contador de claves va a la derecha */
+.exg-centro-toggle .exc-contador {
+    margin-left: auto;
+}
