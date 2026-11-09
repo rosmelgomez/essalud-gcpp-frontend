@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { OnInit } from '@angular/core';
@@ -8,6 +8,8 @@ import { AuthService, MENSAJE_SESION_EXPIRADA } from '../../services/usuario/aut
 import { RouteLogger } from '../../services/route-logger';
 import { UsersService } from '../../services/usuario/users-service';
 import { Auth } from '../../model/user';
+import { LocalStorageService } from '../../services/local-storage-service';
+import { rutaInicio } from '../../guards/tmi-acceso';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
@@ -18,6 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './login.css',
 })
 export class Login implements OnInit {
+  private readonly almacen = inject(LocalStorageService);
   public loginForm!: FormGroup;
   public changePasswordForm!: FormGroup;
   showPassword = false;
@@ -49,7 +52,7 @@ export class Login implements OnInit {
     // Si la sesión de api_token sigue activa, redirigir al home.
     this.authloginService.apiToken().subscribe({
       next: () => {
-        this.router.navigate(['/tmi/administrativo']);
+        this.router.navigate([this.inicio()]);
       },
       // sin sesión válida: borrar cualquier dato que haya quedado de una sesión anterior
       error: () => this.authService.clearSession(),
@@ -179,8 +182,13 @@ export class Login implements OnInit {
    * Navega al inicio sin vaciar el formulario: resetearlo antes de que termine la
    * navegación (el guard consulta /api-token) dejaba los campos vacíos marcados en rojo.
    */
+  /** Inicio según el usuario: administración del TMI (ADMIN con access_tmi) o /home. */
+  private inicio(): string {
+    return rutaInicio(this.authService.getCurrentUserValue() ?? this.almacen.getUser());
+  }
+
   private irAlInicio(): void {
-    this.router.navigate(['/tmi/administrativo'], { state: { surveyReminder: '1' } })
+    this.router.navigate([this.inicio()], { state: { surveyReminder: '1' } })
       .then((ok) => { if (!ok) this.isLoggingIn = false; })
       .catch(() => (this.isLoggingIn = false));
   }
@@ -213,7 +221,7 @@ export class Login implements OnInit {
           this.showChangePassword = false;
           this.tempUserDto = null;
 
-          this.router.navigate(['/tmi/administrativo'], {
+          this.router.navigate([this.inicio()], {
             state: { surveyReminder: '1' },
           });
         },

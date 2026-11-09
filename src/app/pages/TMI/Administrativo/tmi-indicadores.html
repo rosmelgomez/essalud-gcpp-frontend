@@ -2,7 +2,7 @@
 
     <header class="header">
         <div class="header-content">
-            <h1 class="title">Table de Monitoreo de Indicadores - TMI</h1>
+            <h1 class="title">Tabla de Monitoreo de Indicadores - TMI</h1>
             <p class="subtitle">Centros, estándares y cierre mensual del TMI</p>
         </div>
         <a class="btn-dashboard" routerLink="/tmi/dashboard"><mat-icon>insights</mat-icon> Ver dashboard</a>
@@ -51,7 +51,7 @@
     <!-- tap 4: tmi_centro -->
     <div class="tab-content" *ngIf="activeTab === 'Centros TMI'">
         <div class="header">
-            <h2 class="bar-title">Tabla de Centros Asistenciales TMI</h2>
+            <h2 class="bar-title">Tabla de centros asistenciales TMI</h2>
             <div class="header-actions">
                 <div class="buscar-group">
                     <button (click)="getQueryCentrosTMI()" class="btn-search">Actualizar</button>
@@ -270,7 +270,7 @@
                             [disabled]="savingCentrosTMI">Cancelar</button>
                         <button type="submit" class="btn-modal-action btn-save" [disabled]="savingCentrosTMI">
                             <mat-icon *ngIf="!savingCentrosTMI">save</mat-icon><span *ngIf="!savingCentrosTMI">{{
-                                centrosForm.get('id')?.value ? 'Guardar Cambios' : 'Agregar Centro' }}</span>
+                                centrosForm.get('id')?.value ? 'Guardar cambios' : 'Agregar centro' }}</span>
                             <span *ngIf="savingCentrosTMI" class="spinner-btn"></span><span
                                 *ngIf="savingCentrosTMI">Guardando…</span>
                         </button>
@@ -283,7 +283,7 @@
     <!-- tap 5: exclusion_centro_estandar -->
     <div class="tab-content" *ngIf="activeTab === 'Exclusion Centro Estandar'">
         <div class="header">
-            <h2 class="bar-title">Exclusión de Centros por Indicador</h2>
+            <h2 class="bar-title">Exclusión de centros por indicador</h2>
             <div class="header-actions">
                 <div class="buscar-group">
                     <select [(ngModel)]="anioExclusion" (ngModelChange)="onBuscarExclusion()" class="anio-select" aria-label="Año">

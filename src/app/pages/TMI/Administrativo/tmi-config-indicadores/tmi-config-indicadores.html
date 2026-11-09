@@ -48,9 +48,9 @@
 </mat-card>
 }
 
-<div class="dyn-split">
+<div class="dyn-split dyn-split-igual">
     <!-- LISTA -->
-    <mat-card class="table" style="--cols-table: minmax(36px, 0.3fr) minmax(170px, 2fr) minmax(90px, 0.9fr) minmax(150px, 1.8fr) minmax(104px, 0.8fr) minmax(76px, 0.6fr);">
+    <mat-card class="table dyn-lista-card" style="--cols-table: minmax(36px, 0.3fr) minmax(170px, 2fr) minmax(90px, 0.9fr) minmax(150px, 1.8fr) minmax(104px, 0.8fr) minmax(76px, 0.6fr);">
         <div class="table-title-row">
             <h3>Indicadores</h3>
             <button type="button" class="btn-download btn-agregar-fila" (click)="nuevo()">
@@ -116,6 +116,26 @@
         @if (errorDetalle()) {
         <div class="alert alert-danger">{{ errorDetalle() }}</div>
         }
+
+        <div class="dyn-inline dyn-sql-descarga">
+            <div class="field-input">
+                <label for="in_periodo_sql">Mes para probar en SQL Server</label>
+                <input id="in_periodo_sql" type="month" [ngModel]="periodoSql()" (ngModelChange)="periodoSql.set($event)" />
+            </div>
+            <button type="button" class="btn-download" (click)="descargarSql(ind, false)"
+                [disabled]="!ind.formula || !periodoSql() || !!descargandoSql()"
+                [title]="ind.formula ? 'Query que calcula solo la fórmula sobre TOTALIZADO3, por red y centro (sin estándares ni exclusiones)' : 'Guarde la fórmula primero'">
+                <mat-icon>{{ descargandoSql() === 'formula' ? 'hourglass_empty' : 'download' }}</mat-icon> SQL solo fórmula
+            </button>
+            <button type="button" class="btn-download" (click)="descargarSql(ind, true)"
+                [disabled]="!ind.formula || !periodoSql() || !!descargandoSql()"
+                [title]="ind.formula ? 'Query con la fórmula, el estándar del mes (también el específico de cada centro) y los centros/meses excluidos' : 'Guarde la fórmula primero'">
+                <mat-icon>{{ descargandoSql() === 'completo' ? 'hourglass_empty' : 'download' }}</mat-icon> SQL con estándares y exclusiones
+            </button>
+            @if (formulaCambiada()) {
+            <span class="dyn-hint">El SQL usa la fórmula guardada: guarde los cambios para descargarlos.</span>
+            }
+        </div>
 
         <div class="dyn-section-title">Fórmula</div>
         <details class="dyn-ayuda dyn-ayuda-seccion">
@@ -269,6 +289,48 @@
     </mat-card>
 </div>
 
+<!-- Historial de cambios del indicador seleccionado: card aparte -->
+@if (seleccionado(); as ind) {
+<mat-card class="table dyn-historial-card">
+    <div class="table-title-row">
+        <div>
+            <h3>Historial de cambios · {{ ind.codigo }}</h3>
+            <span class="dyn-hint">Quién cambió la fórmula, los estándares, el % Acept, las exclusiones o el ámbito, y cuándo.</span>
+        </div>
+        <button type="button" class="btn-download" (click)="verHistorial(ind)" [disabled]="cargandoHistorial()">
+            <mat-icon>{{ cargandoHistorial() ? 'hourglass_empty' : 'history' }}</mat-icon> {{ historial() ? 'Ocultar' : 'Ver historial' }}
+        </button>
+    </div>
+    @if (historial(); as h) {
+    @if (!h.length) {
+    <div class="dyn-empty">Sin cambios registrados para este indicador (el historial se guarda desde esta versión).</div>
+    } @else {
+    <div class="dyn-historial-lista">
+        <table>
+            <thead><tr><th>Fecha</th><th>Usuario</th><th>Qué</th><th>Campo</th><th>Antes</th><th>Después</th></tr></thead>
+            <tbody>
+                @for (x of h; track x.id) {
+                @for (c of x.cambios; track c.campo; let primero = $first) {
+                <tr>
+                    <td>{{ primero ? fechaHora(x.fecha) : '' }}</td>
+                    <td>{{ primero ? (x.usuario ?? '—') : '' }}</td>
+                    <td>{{ primero ? x.accion_texto + ' · ' + x.que : '' }}</td>
+                    <td>{{ c.campo }}</td>
+                    <td>{{ valorHistorial(c.antes) }}</td>
+                    <td>{{ valorHistorial(c.despues) }}</td>
+                </tr>
+                } @empty {
+                <tr><td>{{ fechaHora(x.fecha) }}</td><td>{{ x.usuario ?? '—' }}</td><td colspan="4">{{ x.accion_texto }} · {{ x.que }}</td></tr>
+                }
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+    }
+</mat-card>
+}
+
 <!-- MODAL INDICADOR -->
 @if (mostrarForm()) {
 <div class="modal-overlay" (click)="mostrarForm.set(false)">
@@ -283,6 +345,18 @@
         </header>
         <form [formGroup]="form" (ngSubmit)="guardar()" class="modal-form-container">
             <div class="modal-body">
+                <!-- paso a paso, como el formulario de Solicitud de acceso -->
+                <nav class="stepper" aria-label="Pasos">
+                    @for (n of pasos; track n.n; let ultimo = $last) {
+                    <button type="button" class="step" [class.is-active]="paso() === n.n" [class.is-done]="paso() > n.n"
+                        (click)="irPaso(n.n)" [attr.aria-current]="paso() === n.n ? 'step' : null">
+                        <span class="step-dot">@if (paso() > n.n) {<mat-icon>check</mat-icon>} @else {<span>{{ n.n }}</span>}</span>
+                        {{ n.t }}
+                    </button>
+                    @if (!ultimo) {<span class="step-line" [class.is-done]="paso() > n.n" aria-hidden="true"></span>}
+                    }
+                </nav>
+                @if (paso() === 1) {
                 <div class="dyn-section-title" style="margin-top: 0;">Identificación</div>
                 <div class="form-grid">
                     <div class="field-input full-width">
@@ -322,6 +396,8 @@
                     </div>
                 </div>
 
+                }
+                @if (paso() === 2) {
                 <div class="dyn-section-title">1. Cálculo del pivot final</div>
                 <p class="dyn-hint">La fórmula se escribe en el panel del indicador
                     {{ form.controls.id.value ? '' : 'después de guardarlo' }}. Una división entre 0 da NA ese mes.</p>
@@ -356,8 +432,40 @@
                             <option value="OCULTAR">No listar</option>
                         </select>
                     </div>
+                    <div class="field-input">
+                        <div class="dyn-campo-cab">
+                            <label for="in_varnula">Letra sin datos</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'si_variable_nula'"
+                                [attr.aria-expanded]="ayudaCampo() === 'si_variable_nula'" aria-label="Qué hace: Letra sin datos" (click)="alternarAyuda('si_variable_nula', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'si_variable_nula') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.si_variable_nula }}</div>
+                        }
+                        <select id="in_varnula" formControlName="si_variable_nula">
+                            <option value="CERO">Vale 0</option>
+                            <option value="NA">Deja NA</option>
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <div class="dyn-campo-cab">
+                            <label for="in_divcero">División entre 0</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCampo() === 'si_division_cero'"
+                                [attr.aria-expanded]="ayudaCampo() === 'si_division_cero'" aria-label="Qué hace: División entre 0" (click)="alternarAyuda('si_division_cero', $event)">
+                                <mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCampo() === 'si_division_cero') {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">{{ ayuda.si_division_cero }}</div>
+                        }
+                        <select id="in_divcero" formControlName="si_division_cero">
+                            <option value="NA">Deja NA</option>
+                            <option value="CERO">Resultado 0</option>
+                        </select>
+                    </div>
                 </div>
 
+                }
+                @if (paso() === 3) {
                 <div class="dyn-section-title">2. Evaluación</div>
                 <p class="dyn-hint">Cómo se evalúa el indicador. Los valores de los estándares se cargan en las pestañas de Estándares y el porcentaje del % Acept en la pestaña % Acept.</p>
                 <div class="form-grid">
@@ -466,6 +574,7 @@
                         </select>
                     </div>
                 </div>
+                }
                 @if (errorForm()) {
                 <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span></div>
                 }
@@ -473,9 +582,19 @@
             <footer class="modal-footer">
                 <button type="button" class="btn-modal-action btn-cancel" (click)="mostrarForm.set(false)"
                     [disabled]="guardando()">Cancelar</button>
+                <span class="foot-spacer"></span>
+                @if (paso() > 1) {
+                <button type="button" class="btn-modal-action btn-cancel" (click)="irAnterior()" [disabled]="guardando()">
+                    <mat-icon>arrow_back</mat-icon>Atrás</button>
+                }
+                @if (paso() < pasos.length) {
+                <button type="button" class="btn-modal-action btn-save" (click)="irSiguiente()">
+                    Siguiente<mat-icon>arrow_forward</mat-icon></button>
+                } @else {
                 <button type="submit" class="btn-modal-action btn-save" [disabled]="guardando()">
                     <mat-icon>save</mat-icon>{{ guardando() ? 'Guardando…' : 'Guardar' }}
                 </button>
+                }
             </footer>
         </form>
     </div>

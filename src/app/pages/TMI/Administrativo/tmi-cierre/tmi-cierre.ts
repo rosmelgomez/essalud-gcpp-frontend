@@ -59,6 +59,15 @@ export class TmiCierreComponent implements OnInit, OnDestroy {
   cierresConError = computed(() => this.cierres().filter((c) => c.estado === 'ERROR').length);
   cierresAtrasados = computed(() => this.cierres().filter((c) => this.esAtrasado(c)).length);
   ejecutando = computed(() => this.cierres().some((c) => c.estado === 'EN_PROCESO'));
+  cierresPendientes = computed(() => this.cierres().filter((c) => c.estado === 'PENDIENTE').length);
+  /** Búsqueda de la lista de cierres (como Exclusiones): por periodo (202610), mes (octubre) o estado. */
+  busqueda = signal('');
+  cierresFiltrados = computed(() => {
+    const q = this.busqueda().trim().toLowerCase();
+    if (!q) return this.cierres();
+    return this.cierres().filter((c) =>
+      `${c.periodo} ${this.nombrePeriodo(c.periodo)} ${this.etiquetaEstado(c.estado)}`.toLowerCase().includes(q));
+  });
 
   private espera?: ReturnType<typeof setTimeout>;
   private consultas = 0;
@@ -196,6 +205,16 @@ export class TmiCierreComponent implements OnInit, OnDestroy {
   }
 
   // cierres
+
+  /** Periodos (no cerrados) con día propio en el formulario. */
+  diasPropios(e: EdicionCalendario): number {
+    return e.dias.filter((d, i) => d != null && !e.bloqueado[i]).length;
+  }
+
+  /** Quita el día propio de los periodos no cerrados: usan el día general. */
+  limpiarDias(e: EdicionCalendario): void {
+    e.dias = e.dias.map((d, i) => (e.bloqueado[i] ? d : null));
+  }
 
   nombrePeriodo(periodo: string): string {
     const p = String(periodo ?? '').trim();

@@ -18,6 +18,8 @@ export interface User {
   flag: boolean;
   roles?: string[] | string[];
   firstLogin?: boolean;
+  /** Puede entrar a la administración del TMI (junto con el rol ADMIN). */
+  access_tmi?: boolean;
 }
 
 export interface Rol {

@@ -1,5 +1,5 @@
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, DestroyRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, Injector, OnInit, afterNextRender, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Subject, catchError, debounceTime, map, of, switchMap } from 'rxjs';
 
 import { AyudaFlotante } from '../ayuda-flotante';
-import { TmiCatalogoService, TmiVariableService, TmiIndicadorService, TmiEstandarService, TmiCalculoService, TmiIndicador, TmiCatalogo, TmiProblemaConfig, TmiTipoEstandar, TmiLetra, TmiVariable, TmiAnalisisFormula, mensajeError, TmiTerminoFormula } from '../../../../services/tmi';
+import { TmiCatalogoService, TmiVariableService, TmiIndicadorService, TmiEstandarService, TmiCalculoService, TmiIndicador, TmiCatalogo, TmiProblemaConfig, TmiTipoEstandar, TmiLetra, TmiVariable, TmiAnalisisFormula, mensajeError, TmiTerminoFormula, TmiReglaNulo, TmiCambioConfig } from '../../../../services/tmi';
 
 const HOJA = /^[^\[\]:*?/\\]+$/;
 const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -37,6 +37,18 @@ const AYUDA_INDICADOR = {
   formato: 'Cómo se muestran los valores del indicador en el Excel: como número o como porcentaje.',
   decimales: 'Decimales a los que se redondea el valor antes de compararlo con el estándar. Si lo deja vacío, no se '
     + 'redondea.',
+  si_variable_nula: 'Qué hacer si en un mes al centro le falta el dato de una letra de la fórmula. '
+    + 'Opción «Vale 0»: esa letra se toma como 0 y la fórmula se calcula igual. '
+    + 'Opción «Deja NA»: la fórmula no se calcula y el mes queda sin resultado (NA). '
+    + 'Ejemplo: fórmula A / B, en marzo B = 50 y A no tiene dato. Con la opción «Vale 0», A se toma como 0 y marzo da '
+    + '0 / 50 = 0. Con la opción «Deja NA», marzo queda NA. '
+    + 'Si la letra sin dato es la de abajo de la división (B), se aplica lo que diga «División entre 0».',
+  si_division_cero: 'Qué hacer si en un mes la letra de abajo de la división vale 0, porque no se puede dividir entre 0. '
+    + 'Opción «Deja NA»: el mes queda sin resultado (NA). '
+    + 'Opción «Resultado 0»: el mes da 0. '
+    + 'Ejemplo: fórmula A / B, en marzo A = 30 y B = 0. Con la opción «Deja NA», marzo queda NA. '
+    + 'Con la opción «Resultado 0», marzo da 0. '
+    + 'Si B no tiene dato y en «Letra sin datos» eligió «Vale 0», B se toma como 0 y también se aplica esta regla.',
   cero_es_logro: 'Qué puntaje recibe un mes con valor 0. Sin producción: puntaje 0. Es un buen resultado: el 0 se '
     + 'califica contra el estándar como cualquier otro valor.',
   mostrar_no_aplica: 'Centros que no tienen estándar o que quedan fuera del ámbito del indicador. Listar como NA: '
@@ -44,6 +56,14 @@ const AYUDA_INDICADOR = {
   activo: 'Un indicador inactivo no se calcula ni sale en el Excel.',
 } as const;
 type CampoAyuda = keyof typeof AYUDA_INDICADOR;
+
+/** Mes anterior al actual como AAAA-MM (valor de un input type="month"). */
+function mesAnterior(): string {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
 
 /** Convierte la fórmula guardada ((A - B) / C) en bloques. */
 function aBloques(texto: string | null | undefined): Bloque[] {
@@ -126,7 +146,7 @@ function normalizar(texto: string | null | undefined): string {
   selector: 'app-tmi-config-indicadores',
   imports: [AyudaFlotante, ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, CdkDropList, CdkDrag],
   templateUrl: './tmi-config-indicadores.html',
-  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css'],
+  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css', './tmi-config-indicadores.css'],
 })
 export class TmiConfigIndicadores implements OnInit {
   private catalogoSrv = inject(TmiCatalogoService);
@@ -136,6 +156,8 @@ export class TmiConfigIndicadores implements OnInit {
   private calculoSrv = inject(TmiCalculoService);
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private injector = inject(Injector);
 
   indicadores = signal<TmiIndicador[]>([]);
   seleccionado = signal<TmiIndicador | null>(null);
@@ -153,6 +175,12 @@ export class TmiConfigIndicadores implements OnInit {
   alternarAyuda(campo: CampoAyuda, ev: Event): void {
     ev.stopPropagation();
     this.ayudaCampo.update((c) => (c === campo ? null : campo));
+    if (this.ayudaCampo() !== campo) return;
+    // el formulario tiene scroll propio: si la ayuda queda cortada abajo, se desplaza hasta verla entera
+    afterNextRender(() => {
+      const pop = this.host.nativeElement.querySelector('.dyn-ayuda-pop');
+      pop?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, { injector: this.injector });
   }
 
   @HostListener('document:click')
@@ -212,6 +240,8 @@ export class TmiConfigIndicadores implements OnInit {
     // la fórmula se escribe en el panel del indicador (PUT /formula); el backend no la toma del formulario
     tipo_calculo: ['MENSUAL', Validators.required],
     sin_datos_anio: ['NA' as 'MOSTRAR' | 'NA' | 'OCULTAR'],
+    si_variable_nula: ['CERO' as TmiReglaNulo],
+    si_division_cero: ['NA' as TmiReglaNulo],
     base_estandar: ['TIPO' as TmiIndicador['base_estandar']],
     sentido: ['MENOR' as TmiIndicador['sentido']],
     tipo_tolerancia: ['REL' as 'REL' | 'ABS'],
@@ -231,7 +261,9 @@ export class TmiConfigIndicadores implements OnInit {
       switchMap(({ alias, vars }) => {
         if (!alias) return of({ ok: null as TmiAnalisisFormula | null, err: '' });
         this.analizando.set(true);
-        return this.indicadorSrv.analizarFormula(alias, vars).pipe(
+        const ind = this.seleccionado();
+        const regla = ind ? { si_variable_nula: ind.si_variable_nula, si_division_cero: ind.si_division_cero } : undefined;
+        return this.indicadorSrv.analizarFormula(alias, vars, regla).pipe(
           map((a) => ({ ok: a as TmiAnalisisFormula | null, err: '' })),
           catchError((e) => of({ ok: null, err: enBloques(mensajeError(e, 'Fórmula no válida.'), alias) })));
       }),
@@ -264,7 +296,7 @@ export class TmiConfigIndicadores implements OnInit {
         this.loading.set(false);
       },
       error: (e) => {
-        this.error.set(mensajeError(e, 'No se pudo cargar los indicadores.'));
+        this.error.set(mensajeError(e, 'No se pudieron cargar los indicadores.'));
         this.loading.set(false);
       },
     });
@@ -287,7 +319,116 @@ export class TmiConfigIndicadores implements OnInit {
   seleccionar(ind: TmiIndicador): void {
     this.seleccionado.set(ind);
     this.errorDetalle.set('');
+    this.historial.set(null);
     this.deshacerFormula();
+  }
+
+  // ---------- descargar el query del indicador (.sql) para probarlo en SQL Server ----------
+  /** Mes del query (AAAA-MM del input type="month"); por defecto el mes anterior. */
+  periodoSql = signal(mesAnterior());
+  /** Descarga en curso: 'formula' o 'completo'. */
+  descargandoSql = signal<'' | 'formula' | 'completo'>('');
+
+  /** completo = con estándares, exclusiones y estándar específico de cada centro; si no, solo la fórmula. */
+  descargarSql(ind: TmiIndicador, completo = false): void {
+    const periodo = Number(this.periodoSql().replace('-', ''));
+    if (!ind.id || !ind.formula || !/^\d{6}$/.test(String(periodo))) return;
+    this.errorDetalle.set('');
+    this.descargandoSql.set(completo ? 'completo' : 'formula');
+    this.indicadorSrv.getConsultaSql(ind.id, periodo, completo).subscribe({
+      next: ({ sql }) => {
+        this.descargandoSql.set('');
+        // BOM: SSMS abre el archivo como UTF-8 y conserva las tildes de los comentarios
+        const url = window.URL.createObjectURL(new Blob(['﻿' + sql], { type: 'application/sql;charset=utf-8' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${(ind.codigo || 'indicador').replace(/[^\w.-]+/g, '_')}_${periodo}_${completo ? 'completo' : 'formula'}.sql`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (e) => {
+        this.descargandoSql.set('');
+        this.errorDetalle.set(mensajeError(e, 'No se pudo generar el SQL del indicador.'));
+      },
+    });
+  }
+
+  // ---------- historial de cambios del indicador (fórmula, estándares, % Acept, exclusiones, ámbito) ----------
+  historial = signal<TmiCambioConfig[] | null>(null);
+  cargandoHistorial = signal(false);
+
+  /** Primer clic: carga los últimos cambios del indicador; segundo clic: los oculta. */
+  verHistorial(ind: TmiIndicador): void {
+    if (!ind.id) return;
+    if (this.historial()) {
+      this.historial.set(null);
+      return;
+    }
+    this.cargandoHistorial.set(true);
+    this.calculoSrv.getHistorial(ind.id).subscribe({
+      next: (h) => {
+        this.historial.set(h);
+        this.cargandoHistorial.set(false);
+      },
+      error: (e) => {
+        this.cargandoHistorial.set(false);
+        this.errorDetalle.set(mensajeError(e, 'No se pudo cargar el historial de cambios.'));
+      },
+    });
+  }
+
+  fechaHora(f: string | undefined): string {
+    return f ? new Date(f).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' }) : '';
+  }
+
+  valorHistorial(v: string | number | null): string {
+    return v == null || v === '' ? '—' : String(v);
+  }
+
+  // ---------- paso a paso del formulario (como Solicitud de acceso) ----------
+  readonly pasos = [
+    { n: 1, t: 'Identificación', campos: ['indicador', 'codigo', 'grupo', 'nombre_hoja', 'orden', 'titulo_hoja'] },
+    { n: 2, t: 'Cálculo', campos: ['tipo_calculo', 'sin_datos_anio', 'si_variable_nula', 'si_division_cero'] },
+    { n: 3, t: 'Evaluación', campos: [] as string[] },   // el resto de los campos
+  ];
+  paso = signal(1);
+  /** Campos de un paso; el último toma los que no están en los anteriores. */
+  private camposPaso(n: number): string[] {
+    const p = this.pasos[n - 1];
+    if (p.campos.length) return p.campos;
+    const antes = new Set(this.pasos.flatMap((x) => x.campos));
+    return Object.keys(this.form.controls).filter((k) => k !== 'id' && !antes.has(k));
+  }
+  private pasoValido(n: number): boolean {
+    return this.camposPaso(n).every((k) => !this.form.get(k)?.invalid);
+  }
+  /** Siguiente: solo si los campos del paso están bien; si no, se marcan. */
+  irSiguiente(): void {
+    const n = this.paso();
+    if (!this.pasoValido(n)) {
+      this.camposPaso(n).forEach((k) => this.form.get(k)?.markAsTouched());
+      this.errorForm.set('Complete los campos obligatorios de este paso.');
+      return;
+    }
+    this.errorForm.set('');
+    this.paso.set(Math.min(this.pasos.length, n + 1));
+  }
+  irAnterior(): void {
+    this.errorForm.set('');
+    this.paso.set(Math.max(1, this.paso() - 1));
+  }
+  /** Clic en un paso: hacia atrás siempre; hacia adelante solo si los pasos anteriores están bien. */
+  irPaso(n: number): void {
+    if (n < this.paso()) {
+      this.errorForm.set('');
+      this.paso.set(n);
+      return;
+    }
+    while (this.paso() < n) {
+      const antes = this.paso();
+      this.irSiguiente();
+      if (this.paso() === antes) return;
+    }
   }
 
   // indicador
@@ -296,6 +437,7 @@ export class TmiConfigIndicadores implements OnInit {
     this.form.reset();
     this.form.patchValue({ orden: siguiente });
     this.errorForm.set('');
+    this.paso.set(1);
     this.mostrarForm.set(true);
   }
 
@@ -304,6 +446,7 @@ export class TmiConfigIndicadores implements OnInit {
     this.form.reset();
     this.form.patchValue({ ...ind, id: ind.id ?? 0, titulo_hoja: ind.titulo_hoja ?? '' });
     this.errorForm.set('');
+    this.paso.set(1);
     this.mostrarForm.set(true);
   }
 
@@ -311,6 +454,9 @@ export class TmiConfigIndicadores implements OnInit {
     const f = this.form.getRawValue();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      // vuelve al primer paso con un campo por corregir
+      const malo = this.pasos.find((x) => !this.pasoValido(x.n));
+      if (malo) this.paso.set(malo.n);
       this.errorForm.set('Revise los campos obligatorios. El nombre de hoja no admite [ ] : * ? / \\ y tiene máximo 31 caracteres.');
       return;
     }
@@ -453,7 +599,7 @@ export class TmiConfigIndicadores implements OnInit {
         this.guardado.set({ alias: normalizar(ind.formula_alias), letras: this.claveLetras() });
         this.analizar();
       },
-      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudo cargar las variables de la fórmula.')),
+      error: (e) => this.errorDetalle.set(mensajeError(e, 'No se pudieron cargar las variables de la fórmula.')),
     });
   }
 

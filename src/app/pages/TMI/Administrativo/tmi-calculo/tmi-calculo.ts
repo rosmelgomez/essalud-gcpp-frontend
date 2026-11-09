@@ -3,7 +3,7 @@ import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { TmiIndicadorService, TmiCalculoService, TmiIndicador, TmiResultadoFinal, TmiPeriodoCalculo, TmiProblemaConfig, mensajeError } from '../../../../services/tmi';
+import { TmiIndicadorService, TmiCalculoService, TmiIndicador, TmiResultadoFinal, TmiPeriodoCalculo, TmiProblemaConfig, TmiAvisoConfig, mensajeError } from '../../../../services/tmi';
 
 
 const MESES = [
@@ -85,6 +85,11 @@ export class TmiCalculo implements OnInit {
   });
   resumen = signal<Record<string, number> | null>(null);
   problemas = signal<TmiProblemaConfig[] | null>(null);
+  /** Avisos del periodo a calcular (no bloquean): centros que quedarían NA por falta de estándar o de % Acept. */
+  avisos = signal<TmiAvisoConfig[] | null>(null);
+  avisosPeriodo = signal('');
+  cargandoAvisos = signal(false);
+  centrosConAviso = computed(() => (this.avisos() ?? []).reduce((s, a) => s + a.centros, 0));
 
   ocupado = signal<'' | 'validar' | 'calcular' | 'excel' | 'resultado'>('');
   error = signal('');
@@ -138,6 +143,7 @@ export class TmiCalculo implements OnInit {
           this.anio = p.slice(0, 4);
           this.mes = p.slice(4);
           this.cambioPeriodo();
+          this.cargarAvisos();
         }
       },
     });
@@ -154,8 +160,29 @@ export class TmiCalculo implements OnInit {
     this.mensaje.set('');
   }
 
+  /** Avisos del periodo elegido para calcular: se cargan al abrir la pantalla, al cambiar el año o el mes y al validar. */
+  cargarAvisos(): void {
+    const periodo = this.periodoCalcSel();
+    if (!/^\d{6}$/.test(periodo)) return;
+    this.cargandoAvisos.set(true);
+    this.calculoSrv.getAvisosConfig(periodo).subscribe({
+      next: (a) => {
+        // si el usuario cambió el periodo mientras tanto, se ignora la respuesta vieja
+        if (periodo !== this.periodoCalcSel()) return;
+        this.avisos.set(a);
+        this.avisosPeriodo.set(periodo);
+        this.cargandoAvisos.set(false);
+      },
+      error: () => {
+        this.avisos.set(null);
+        this.cargandoAvisos.set(false);
+      },
+    });
+  }
+
   validar(): void {
     this.inicio('validar');
+    this.cargarAvisos();
     this.calculoSrv.validarConfig().subscribe({
       next: (p) => {
         this.problemas.set(p);

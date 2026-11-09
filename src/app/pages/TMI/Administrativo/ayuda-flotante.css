@@ -86,6 +86,8 @@
 
 /* "Cómo funciona" dentro de una sección (Fórmula), no en la cabecera de la pestaña */
 .dyn-ayuda.dyn-ayuda-seccion {
+    /* dentro de una tarjeta (flex en columna) el 100% de .dyn-ayuda sería el alto de la tarjeta y taparía lo de abajo */
+    flex: none;
     margin: 0 0 12px;
 }
 

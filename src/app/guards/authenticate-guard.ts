@@ -5,6 +5,7 @@ import { LocalStorageService } from '../services/local-storage-service';
 import { AuthService, MENSAJE_SESION_EXPIRADA } from '../services/usuario/auth-service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, of } from 'rxjs';
+import { tieneAccesoTmiAdmin } from './tmi-acceso';
 
 
 export const authenticateGuard: CanActivateFn = (route) => {
@@ -37,11 +38,25 @@ export const authenticateGuard: CanActivateFn = (route) => {
     const hasRequired = requiredRoles.some((r) => userRoles.includes(r));
 
     console.log('[AuthGuard] Has required roles:', hasRequired);
-    return hasRequired ? true : router.createUrlTree(['/']);
+    // sin el rol pedido va a /home ("/" lleva a la administración del TMI y volvería a caer aquí)
+    return hasRequired ? true : router.createUrlTree(['/home']);
+  };
+
+  /** Rutas con data.accessTmi: además del rol, el usuario debe tener access_tmi = true. */
+  const validarAccesoTmi = () => {
+    if (!route.data['accessTmi']) return true;
+    if (tieneAccesoTmiAdmin(dataImport.getUser())) return true;
+    console.log('[AuthGuard] Sin access_tmi: no puede entrar a', route.routeConfig?.path);
+    return router.createUrlTree(['/home']);
+  };
+
+  const validar = () => {
+    const roles = validateRoles();
+    return roles === true ? validarAccesoTmi() : roles;
   };
 
   return authService.apiToken().pipe(
-    map(() => validateRoles()),
+    map(() => validar()),
     catchError((err: HttpErrorResponse) => {
       // api_token vencido o backend sin respuesta: se borra todo lo guardado de la sesión
       // (si el backend no respondió no se muestra aviso)

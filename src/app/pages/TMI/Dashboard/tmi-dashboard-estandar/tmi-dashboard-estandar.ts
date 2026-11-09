@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { AyudaFlotante } from '../../Administrativo/ayuda-flotante';
@@ -33,12 +33,12 @@ const etiquetaPeriodo = (p: string) => `${MESES_L[+p.slice(4) - 1]} ${p.slice(0,
  *  - Con centro: por indicador, el estándar, el % Acept, el valor real y el valor de cada mes del centro.
  *  Sin promedios ni medianas ni puntajes (eso va en el tablero TMI). */
 @Component({
-  selector: 'app-tmi-dashbooard-estandar',
-  imports: [FormsModule, RouterLink, MatIconModule, ScrollingModule, AyudaFlotante],
-  templateUrl: './tmi-dashbooard-estandar.html',
-  styleUrl: './tmi-dashbooard-estandar.css',
+  selector: 'app-tmi-dashboard-estandar',
+  imports: [FormsModule, MatIconModule, ScrollingModule, AyudaFlotante],
+  templateUrl: './tmi-dashboard-estandar.html',
+  styleUrl: './tmi-dashboard-estandar.css',
 })
-export class TmiDashbooardEstandar implements OnInit {
+export class TmiDashboardEstandar implements OnInit {
   private calculoSrv = inject(TmiCalculoService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);

@@ -53,7 +53,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px 18px;
-    padding: 12px 0 2px;
+    padding: 0;
     font-size: 12px;
     color: var(--rpt-muted);
 }
@@ -100,3 +100,173 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
+
+/* ---------- Diseño de la pestaña Exclusiones (exg-*): listas a todo el ancho ---------- */
+.cie-fuerte {
+    font-weight: 600;
+}
+
+/* Calendario: año, nombres de los meses y una pastilla con el día de cierre de cada periodo */
+.cie-anio {
+    grid-template-columns: minmax(120px, 1fr) auto auto;
+    padding-left: 16px;
+}
+
+.cie-meses {
+    grid-template-columns: repeat(12, 34px);
+}
+
+.cie-mes-nombre {
+    font-size: 11px;
+    text-align: center;
+    color: var(--rpt-muted);
+}
+
+.exg-mes.cie-dia {
+    min-width: 22px;
+    padding: 0 4px;
+    color: var(--rpt-ink-2);
+}
+
+.exg-mes.cie-dia-propio {
+    color: #ffffff;
+    background: var(--rpt-brand);
+}
+
+.exg-mes.cie-dia-cerrado {
+    color: var(--rpt-muted);
+    text-decoration: line-through;
+    background: transparent;
+    border: 1px dashed var(--rpt-line-strong);
+}
+
+/* Ejecución: mismas columnas en la cabecera y en cada fila */
+.cie-fila {
+    grid-template-columns: minmax(130px, 1fr) minmax(150px, 0.9fr) minmax(220px, 2fr) minmax(130px, 0.8fr)
+                           56px minmax(170px, 1fr) minmax(110px, 0.7fr);
+    padding-left: 16px;
+    font-size: 13px;
+}
+
+.cie-cabecera {
+    display: grid;
+    gap: 8px 20px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rpt-muted);
+    background: var(--rpt-surface-2);
+    border-bottom: 1px solid var(--rpt-line);
+}
+
+.cie-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.cie-fila-hoy,
+.cie-fila-hoy:hover {
+    background: var(--rpt-brand-tint);
+}
+
+.cie-fila-error,
+.cie-fila-error:hover {
+    background: var(--rpt-danger-bg);
+}
+
+.cie-fila-atrasado,
+.cie-fila-atrasado:hover {
+    background: var(--rpt-warn-bg);
+}
+
+@media (max-width: 900px) {
+    .cie-cabecera {
+        display: none;
+    }
+
+    .cie-fila,
+    .cie-anio {
+        grid-template-columns: 1fr;
+    }
+
+    .cie-meses {
+        grid-template-columns: repeat(6, 34px);
+    }
+
+    .cie-num {
+        text-align: left;
+    }
+}
+
+/* ---------- Modal del calendario (diseño del modal de Exclusiones) ---------- */
+.cal-general-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+}
+
+.cal-general-fila .cal-general {
+    width: 120px;
+    margin: 0;
+}
+
+.cal-meses {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.cal-mes-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    border: 1px solid var(--rpt-line);
+    border-radius: var(--rpt-radius-sm);
+    transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.cal-mes-campo label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rpt-ink-2);
+}
+
+.cal-mes-campo input {
+    width: 100%;
+    height: 32px;
+    padding: 0 8px;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    color: var(--rpt-ink);
+    background: var(--rpt-surface);
+    border: 1px solid var(--rpt-line-strong);
+    border-radius: 6px;
+}
+
+.cal-mes-campo input::placeholder {
+    color: var(--rpt-muted);
+}
+
+.cal-mes-propio {
+    background: var(--rpt-brand-tint);
+    border-color: var(--rpt-brand);
+}
+
+.cal-mes-cerrado {
+    background: var(--rpt-surface-2);
+}
+
+.cal-mes-cerrado input {
+    color: var(--rpt-muted);
+    background: var(--rpt-surface-2);
+    cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .cal-meses {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+

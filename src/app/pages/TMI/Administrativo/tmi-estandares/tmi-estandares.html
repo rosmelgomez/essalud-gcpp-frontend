@@ -17,14 +17,20 @@
         <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
         <div class="dyn-ayuda-panel" role="note">
             <p>
-            Cada indicador muestra solo las claves con las que se evalúa (según se definió al crearlo): son las únicas
-            que usa el cálculo. El <strong>Nivel</strong> puede ser el nivel de atención del centro (I, II, III) o su nivel
-            estándar (H.N., H.I, POL., C.M., P.M., CNSR ...). Si un indicador combina los dos, cada centro usa una sola
-            clave: si su nivel estándar está en la lista (por ejemplo CNSR), se evalúa por ese; si no, por I, II, III. Si esa clave está vacía o en 0, el centro queda sin estándar:
-            no toma el de su nivel. El <strong>fijo del año</strong> es el estándar que toma cada mes al
-            llegar su fecha de cierre. Si el mes elegido ya cerró, también puede cambiar el estándar <strong>solo de ese
-            mes</strong>. Un valor 0 deja la clave sin estándar (el centro queda en NA). El estándar propio de un centro
-            (pestaña Por centro) gana sobre este.
+            Cada indicador muestra solo las claves con las que se evalúa, definidas al crearlo; el cálculo no usa otras.
+            El <strong>Nivel</strong> puede ser el nivel de atención del centro (I, II, III) o su nivel estándar (H.N.,
+            H.I, POL., C.M., P.M., CNSR ...).
+            </p>
+            <p>
+            Si un indicador combina los dos, cada centro usa una sola clave. Si su nivel estándar está en la lista (por
+            ejemplo CNSR), se evalúa por ese; si no, por I, II o III. Si esa clave está vacía o en 0, el centro queda sin
+            estándar y no toma el de su nivel.
+            </p>
+            <p>
+            El <strong>fijo del año</strong> es el estándar que toma cada mes al llegar su fecha de cierre. Si el mes
+            elegido ya cerró, también puede cambiar el estándar <strong>solo de ese mes</strong>. Un valor 0 deja la clave
+            sin estándar y el centro queda en NA. Si un centro tiene estándar propio (pestaña Por centro), se usa ese en
+            lugar de este.
             </p>
         </div>
     </details>

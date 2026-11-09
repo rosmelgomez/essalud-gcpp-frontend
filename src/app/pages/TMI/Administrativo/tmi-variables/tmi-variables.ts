@@ -87,7 +87,7 @@ export class TmiVariables implements OnInit {
         this.loading.set(false);
       },
       error: (e) => {
-        this.error.set(mensajeError(e, 'No se pudo cargar las variables.'));
+        this.error.set(mensajeError(e, 'No se pudieron cargar las variables.'));
         this.loading.set(false);
       },
     });
@@ -205,7 +205,7 @@ export class TmiVariables implements OnInit {
     if (!v?.id) return;
     this.variableSrv.getComponentes(v.id).subscribe({
       next: (c) => this.componentes.set(c),
-      error: (e) => this.errorLogica.set(mensajeError(e, 'No se pudo cargar los componentes de la variable.')),
+      error: (e) => this.errorLogica.set(mensajeError(e, 'No se pudieron cargar los componentes de la variable.')),
     });
   }
 

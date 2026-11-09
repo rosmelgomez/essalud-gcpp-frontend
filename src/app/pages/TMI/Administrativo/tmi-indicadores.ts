@@ -141,7 +141,7 @@ export class TmiIndicadores implements OnInit {
 
   onBuscarExclusion(): void {
     if (!this.anioExclusion) {
-      this.errorExclusion = 'Por favor seleccione un año válido.';
+      this.errorExclusion = 'Seleccione un año válido.';
       return;
     }
     this.selectPeriodoExclusion = false;
@@ -433,7 +433,7 @@ export class TmiIndicadores implements OnInit {
   updateQueryCentrosTMI(): void {
     if (this.centrosForm.invalid) {
       this.centrosForm.markAllAsTouched();
-      this.errorCentroForm = 'Por favor, complete todos los campos obligatorios del formulario.';
+      this.errorCentroForm = 'Complete los campos obligatorios.';
       return;
     }
     this.savingCentrosTMI = true;
@@ -677,7 +677,7 @@ export class TmiIndicadores implements OnInit {
   updateQueryExclusion(): void {
     if (this.exclusionForm.invalid) {
       this.exclusionForm.markAllAsTouched();
-      this.errorExclusionForm = 'Por favor, seleccione el centro, el estándar y el año.';
+      this.errorExclusionForm = 'Seleccione el centro, el estándar y el año.';
       return;
     }
     const valor = this.exclusionForm.getRawValue();

@@ -21,6 +21,7 @@ export class LocalStorageService {
       codcas: user.codcas,
       codred: user.codred,
       roles: user.roles,
+      access_tmi: user.access_tmi === true,
     };
     localStorage.setItem('user', JSON.stringify(perfil));
   }

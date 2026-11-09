@@ -19,8 +19,17 @@ export class TmiIndicadorService {
   putFormula(idIndicador: number, formula_alias: string, variables: Record<string, number>) {
     return this.http.put<TmiAnalisisFormula>(`${base_url}/indicadores/${idIndicador}/formula`, { formula_alias, variables });
   }
-  analizarFormula(formula_alias: string, variables: Record<string, number>) {
-    return this.http.post<TmiAnalisisFormula>(`${base_url}/formula/analizar`, { formula_alias, variables });
+  /** regla: si_variable_nula / si_division_cero del indicador, para que la vista previa genere el mismo SQL. */
+  analizarFormula(formula_alias: string, variables: Record<string, number>,
+                  regla?: Pick<TmiIndicador, 'si_variable_nula' | 'si_division_cero'>) {
+    return this.http.post<TmiAnalisisFormula>(`${base_url}/formula/analizar`, { formula_alias, variables, ...regla });
+  }
+
+  /** Query que calcula el indicador directo de TOTALIZADO3 para el periodo (AAAAMM), listo para ejecutar en SSMS. */
+  /** conEstandares: agrega el estándar (también el específico de cada centro) y las exclusiones; si no, solo la fórmula. */
+  getConsultaSql(idIndicador: number, periodo: number, conEstandares = false) {
+    return this.http.get<{ sql: string }>(`${base_url}/indicadores/${idIndicador}/consulta/${periodo}`,
+      { params: { con_estandares: conEstandares } });
   }
 
   getLetras(idIndicador: number) { return this.http.get<TmiLetra[]>(`${base_url}/indicadores/${idIndicador}/letras`); }

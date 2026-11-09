@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, catchError, from, map, switchMap, throwError } from 'rxjs';
 import { Backend } from '../../model/api';
-import { TmiDashboardDatos, TmiPeriodoCalculo, TmiProblemaConfig, TmiResultadoFinal } from './tmi-models';
+import { TmiAvisoConfig, TmiCambioConfig, TmiDashboardDatos, TmiPeriodoCalculo, TmiProblemaConfig, TmiResultadoFinal } from './tmi-models';
 import { mensajeError } from './tmi-error';
 
 const base_url = Backend.apiTmi + '/dinamico';
@@ -36,6 +36,14 @@ export class TmiCalculoService {
   constructor(private http: HttpClient) { }
 
   validarConfig() { return this.http.get<TmiProblemaConfig[]>(`${base_url}/validar-config`); }
+  /** Avisos que no bloquean el cálculo del periodo (AAAAMM): centros sin estándar o sin % Acept. */
+  getAvisosConfig(periodo: string) { return this.http.get<TmiAvisoConfig[]>(`${base_url}/avisos-config/${periodo}`); }
+  /** Historial de cambios de la configuración; idIndicador: solo los de ese indicador. */
+  getHistorial(idIndicador?: number, limite = 200) {
+    const params: Record<string, number> = { limite };
+    if (idIndicador != null) params['id_indicador'] = idIndicador;
+    return this.http.get<TmiCambioConfig[]>(`${base_url}/historial`, { params });
+  }
   calcular(periodo: string) {
     return this.http.post<{ periodo: string; puntajes: Record<string, number> }>(`${base_url}/calcular/${periodo}`, {});
   }

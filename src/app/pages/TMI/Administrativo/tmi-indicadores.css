@@ -637,10 +637,8 @@
 }
 
 /* ---------- Cierre ---------- */
-.cierre-card {
+.cierre-card {   /* todo el ancho, como la pestaña Exclusiones */
     width: 100%;
-    max-width: 1040px;
-    margin: 0 auto;
 }
 
 .cierre-card > h3 {

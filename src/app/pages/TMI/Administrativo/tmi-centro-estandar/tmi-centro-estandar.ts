@@ -187,7 +187,7 @@ export class TmiCentroEstandarTab implements OnInit {
       error: (e) => {
         if (n !== this.pedido) return;
         this.filas.set([]);
-        this.error.set(mensajeError(e, 'No se pudo cargar los estándares por centro.'));
+        this.error.set(mensajeError(e, 'No se pudieron cargar los estándares por centro.'));
         this.loading.set(false);
       },
     });

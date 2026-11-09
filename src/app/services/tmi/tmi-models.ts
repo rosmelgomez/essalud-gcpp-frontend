@@ -64,8 +64,15 @@ export interface TmiIndicador {
   mostrar_no_aplica: boolean;
   activo: boolean;
   formato: 'NUMERO' | 'PORCENTAJE';   // formato de los valores en el Excel
+  /** Regla de nulos de la fórmula. Letra sin dato en el mes: CERO = vale 0 | NA = el mes queda NA. */
+  si_variable_nula: TmiReglaNulo;
+  /** División entre 0 (divisor 0 o sin dato): NA = el mes queda NA | CERO = resultado 0. */
+  si_division_cero: TmiReglaNulo;
   grupo_descripcion?: string;
 }
+
+/** Regla de nulos de un indicador: CERO + CERO = ISNULL(ISNULL(A,0) / NULLIF(ISNULL(B,0),0), 0). */
+export type TmiReglaNulo = 'CERO' | 'NA';
 
 /** Tabla maestra: tipo de estándar con el que se evalúa un indicador. */
 export interface TmiTipoEstandar {
@@ -217,6 +224,24 @@ export interface TmiCentroCatalogo {
   categoria?: string;
 }
 export interface TmiProblemaConfig { id_indicador: number | null; elemento: string; problema: string; }
+/** Aviso que no bloquea el cálculo: centros que quedarían NA por falta de estándar o de % Acept en el periodo. */
+export interface TmiAvisoConfig { id_indicador: number; elemento: string; indicador: string; centros: number; aviso: string; }
+
+/** Cambio de la configuración (tmi_config_historial): quién, cuándo y cada campo antes y después. */
+export interface TmiCambioConfig {
+  id: number;
+  fecha: string;
+  usuario: string | null;
+  tabla: string;
+  que: string;
+  id_registro: number | null;
+  id_indicador: number | null;
+  codigo: string | null;
+  indicador: string | null;
+  accion: 'ALTA' | 'CAMBIO' | 'BAJA';
+  accion_texto: string;
+  cambios: { campo: string; antes: string | number | null; despues: string | number | null }[];
+}
 
 /** Fila de tmi_resultado_indicador: resultado final del indicador guardado en el periodo de cálculo. */
 export interface TmiResultadoFinal {

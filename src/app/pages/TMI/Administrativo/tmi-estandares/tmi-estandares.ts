@@ -117,7 +117,7 @@ export class TmiEstandares implements OnInit {
         if (n !== this.pedido) return;
         // sin datos del mes pedido: no dejar a la vista los del mes anterior
         this.indicadores.set([]);
-        this.error.set(mensajeError(e, 'No se pudo cargar los estándares.'));
+        this.error.set(mensajeError(e, 'No se pudieron cargar los estándares.'));
         this.cargando.set(false);
       },
     });
