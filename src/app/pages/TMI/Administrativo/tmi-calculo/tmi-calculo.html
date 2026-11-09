@@ -25,11 +25,11 @@
             </div>
         </div>
         <div class="dyn-inline">
-            <select class="anio-select" aria-label="Año a calcular" [ngModel]="anioCalc()" (ngModelChange)="anioCalc.set($event); cargarAvisos()"
+            <select class="anio-select" aria-label="Año a calcular" [ngModel]="anioCalc()" (ngModelChange)="anioCalc.set($event)"
                 [disabled]="!!ocupado()">
                 @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
             </select>
-            <select class="periodo-select" aria-label="Mes a calcular" [ngModel]="mesCalc()" (ngModelChange)="mesCalc.set($event); cargarAvisos()"
+            <select class="periodo-select" aria-label="Mes a calcular" [ngModel]="mesCalc()" (ngModelChange)="mesCalc.set($event)"
                 [disabled]="!!ocupado()">
                 @for (m of meses; track m.value) {<option [value]="m.value">{{ m.label }}</option>}
             </select>
@@ -46,27 +46,6 @@
         Elija el año y el mes para calcular los indicadores activos y guardar el resultado final. Se puede calcular
         hasta el mes anterior al actual. Si el periodo ya tenía un resultado guardado, se reemplaza.
     </p>
-    @if (avisos(); as av) {
-    @if (av.length && avisosPeriodo() === periodoCalcSel()) {
-    <details class="dyn-excel-indicadores">
-        <summary>
-            <mat-icon style="vertical-align: middle; font-size: 18px;">warning_amber</mat-icon>
-            Avisos de {{ nombrePeriodo(avisosPeriodo()) }} (no impiden calcular):
-            <strong>{{ av.length }}</strong> en {{ centrosConAviso() }} centros × indicador
-        </summary>
-        <ul class="dyn-avisos">
-            @for (a of av; track $index) {<li><strong>{{ a.elemento }}</strong> · {{ a.indicador }}: {{ a.aviso }}</li>}
-        </ul>
-        <p class="dyn-hint">
-            Si un centro debe tener estándar, cárguelo en Estándares; si no le corresponde el indicador, defina el ámbito
-            del indicador o marque "no aplica" en su estándar específico, y el aviso desaparece.
-        </p>
-    </details>
-    } @else if (!av.length && avisosPeriodo() === periodoCalcSel()) {
-    <p class="dyn-hint"><mat-icon style="vertical-align: middle; font-size: 18px;">check_circle</mat-icon>
-        Todos los centros de {{ nombrePeriodo(avisosPeriodo()) }} tienen estándar y % Acept.</p>
-    }
-    }
     @if (ocupado() === 'calcular') {
     <div class="loading loading-excel">
         <p>Calculando TMI {{ nombrePeriodo(periodoCalcSel()) }}...</p>
