@@ -15,7 +15,8 @@
         </details>
         <button class="btn" type="button" (click)="descargarExcel()" [disabled]="excelCargando() || !data()"
         title="Excel del TMI del periodo, el mismo de Administración"><mat-icon>table_view</mat-icon> {{ excelCargando() ? 'Generando Excel…' : 'Descargar Excel' }}</button>
-        <a class="btn" routerLink="/tmi/dashboard-estandar" [queryParams]="{ periodo: periodo() || null }"><mat-icon>rule</mat-icon> Estándar vs. valor real</a>
+        <a class="btn" routerLink="/tmi/dashboard-estandar" [queryParams]="{ periodo: periodo() || null }">TMI Administracion</a>
+        <a class="btn" routerLink="/tmi/administrativo" [queryParams]="{ periodo: periodo() || null }"><mat-icon>rule</mat-icon> Estándar vs. valor real</a>
       </span>
     </div>
     @if (excelError()) { <p class="excel-err" role="alert">{{ excelError() }}</p> }
