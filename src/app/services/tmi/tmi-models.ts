@@ -275,7 +275,95 @@ export interface TmiPeriodoCalculo {
   /** Último periodo con datos en TOTALIZADO3 hasta periodo_calculo (null = ninguno en el último año). */
   periodo_datos?: string | null;
   solo_periodo_anterior: boolean;
-  periodos: { periodo: number; indicadores: number; centros: number; fecha_calculo: string }[];
+  /** origen_datos: con qué datos se calculó el resultado oficial (BACKUP = copia del cierre; ACTUAL = TOTALIZADO3);
+   *  origenes: cada resultado guardado del periodo (con TOTALIZADO3 y con TOTALIZADO3_BACKUP). */
+  periodos: {
+    periodo: number; indicadores: number; centros: number; fecha_calculo: string; origen_datos?: TmiOrigenDatos | null;
+    origenes?: Partial<Record<TmiOrigenDatos, { fecha_calculo: string; indicadores: number; centros: number }>>;
+  }[];
+  /** Copias de TOTALIZADO3 guardadas al cierre (TOTALIZADO3_BACKUP): con ellas se calcula el periodo "como fue". */
+  backups?: TmiBackup[];
+}
+
+/** De dónde salen los datos del cálculo: TOTALIZADO3 de hoy o la copia del cierre del periodo. */
+export type TmiOrigenDatos = 'ACTUAL' | 'BACKUP';
+
+/** Copia de TOTALIZADO3 de un periodo (enero..periodo). */
+export interface TmiBackup {
+  periodo_backup: number;
+  filas: number;
+  fecha_backup: string;
+  usuario_backup: string | null;
+}
+
+/** Un cálculo guardado de un centro (tmi_resultado) con su justificación. */
+export interface TmiCalculoGuardado {
+  origen_datos: TmiOrigenDatos;
+  periodo_backup: number | null;
+  valor: number | null;
+  estandar: number | null;
+  acept: number | null;
+  aceptmenos: number | null;
+  puntaje: string;
+  motivo_na: string | null;
+  tipo_calculo: string | null;
+  formula_alias: string | null;
+  formula: string | null;
+  formula_desarrollo: string | null;
+  usuario_calculo: string | null;
+  fecha_calculo: string;
+}
+
+/** Resultado de un centro como fue (copia del cierre) y con los datos actuales. */
+export interface TmiJustificacionCentro {
+  codcentro: number;
+  centro: string | null;
+  red: string | null;
+  BACKUP: TmiCalculoGuardado | null;
+  ACTUAL: TmiCalculoGuardado | null;
+  cambio: boolean;
+}
+
+export interface TmiJustificacion {
+  periodo: number;
+  id_indicador: number;
+  con_backup: boolean;
+  origenes: TmiOrigenDatos[];
+  centros: TmiJustificacionCentro[];
+}
+
+/** Valor de un término de la fórmula (grupo, actividad, servicio) en un cálculo guardado. */
+export interface TmiTerminoResultado {
+  origen_datos: TmiOrigenDatos;
+  codigo: string;
+  tipgrupo: number;
+  actividad: number;
+  servicio: number | null;
+  mediana: boolean;
+  texto: string | null;
+  valor_mes: number | null;
+  valor: number | null;
+  filas_mes: number | null;
+  filas: number | null;
+}
+
+/** Fila de TOTALIZADO3 que cambió desde la copia del cierre. */
+export interface TmiFilaCambiada {
+  ID: number;
+  periodo: number;
+  tipgrupo: number;
+  desctipgrupo: string | null;
+  actividad: number;
+  descactividad: string | null;
+  servicio: number | null;
+  descservicio: string | null;
+  cantidad_backup: number | null;
+  cantidad_actual: number | null;
+  usuariomod: string | null;
+  fechamod: string | null;
+  usuariomod_backup: string | null;
+  fechamod_backup: string | null;
+  cambio: 'CAMBIO' | 'NUEVA' | 'BORRADA';
 }
 
 /** Fila de la tabla cierre: ejecución del cierre de un periodo. */

@@ -289,6 +289,9 @@
                     <select [(ngModel)]="anioExclusion" (ngModelChange)="onBuscarExclusion()" class="anio-select" aria-label="Año">
                         <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
                     </select>
+                    <select [(ngModel)]="mesExclusion" (ngModelChange)="cambiarMesExclusion()" class="periodo-select" aria-label="Mes">
+                        <option *ngFor="let m of mesesExclusion" [value]="m.key.substring(5)">{{ m.nombre }}</option>
+                    </select>
                     <button (click)="onBuscarExclusion()" class="btn-download" [disabled]="loadingExclusion">
                         <mat-icon>refresh</mat-icon> Actualizar
                     </button>
@@ -304,7 +307,7 @@
         <div *ngIf="!errorExclusion && !selectPeriodoExclusion" class="dashboard-content">
             <mat-card class="table exg">
                 <div class="table-title-row">
-                    <h3>Exclusiones por centro</h3>
+                    <h3>Exclusiones por centro{{ mesSelExclusion >= 0 ? ' · ' + mesesExclusion[mesSelExclusion].nombre + ' ' + anioExclusion : ' · ' + anioExclusion }}</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaExclusion()"
                         title="Agregar nueva exclusión">
                         <mat-icon>add</mat-icon> Agregar exclusión
@@ -374,14 +377,18 @@
                                     <div class="exg-meses" role="img"
                                         [attr.aria-label]="'Meses excluidos: ' + f.rango">
                                         <span class="exg-mes" *ngFor="let m of mesesCortosExclusion; let i = index"
-                                            [class.exg-mes-on]="f.meses[i]" [title]="m + (f.meses[i] ? ': excluido' : ': no excluido')">{{ m.charAt(0) }}</span>
+                                            [class.exg-mes-on]="f.meses[i]" [class.exg-mes-cero]="f.meses[i] && f.res[i] === '0'"
+                                            [class.exg-mes-sel]="i === mesSelExclusion"
+                                            [title]="m + (f.meses[i] ? ': excluido, queda ' + (f.res[i] === 'NA' ? 'NA' : 'con 0') : ': no excluido')">{{ m.charAt(0) }}</span>
                                     </div>
                                     <span class="exg-rango">{{ f.rango }}</span>
                                 </div>
 
-                                <span class="exg-resultado" [class.exg-resultado-cero]="f.row.resultado !== 'NA'"
-                                    [title]="f.row.resultado !== 'NA' ? 'El mes excluido queda con puntaje 0' : 'El mes excluido queda como No aplica'">
-                                    {{ f.row.resultado === 'NA' ? 'NA' : '0' }}
+                                <span class="exg-resultado" [class.exg-resultado-azul]="f.resultado === '0'"
+                                    [title]="f.resultado === '0' ? 'El mes excluido queda con puntaje 0'
+                                        : f.resultado === 'NA' ? 'El mes excluido queda como No aplica'
+                                        : 'Unos meses quedan con 0 (azul claro) y otros como NA (azul)'">
+                                    {{ f.resultado === 'mixto' ? '0/NA' : f.resultado }}
                                 </span>
 
                                 <div class="exg-acciones">
@@ -404,7 +411,7 @@
                     <div class="exg-vacio" *ngIf="!loadingExclusion && !gruposExclusion.length">
                         <mat-icon aria-hidden="true">{{ busquedaExclusion ? 'search_off' : 'event_available' }}</mat-icon>
                         <p *ngIf="busquedaExclusion">Ninguna exclusión coincide con «{{ busquedaExclusion }}».</p>
-                        <p *ngIf="!busquedaExclusion">No hay centros excluidos en {{ anioExclusion }}.</p>
+                        <p *ngIf="!busquedaExclusion">No hay centros excluidos en {{ mesSelExclusion >= 0 ? mesesExclusion[mesSelExclusion].nombre + ' ' : '' }}{{ anioExclusion }}.</p>
                         <button type="button" class="exc-accion" *ngIf="busquedaExclusion" (click)="buscarExclusion('')">Limpiar búsqueda</button>
                     </div>
                 </div>
@@ -418,164 +425,118 @@
                 <header class="modal-header">
                     <div class="modal-header-info">
                         <h2 id="exc_titulo">{{ exclusionForm.get('id')?.value ? 'Editar exclusión de centro' : 'Nueva exclusión de centro' }}</h2>
-                        <p class="modal-subtitle">
-                            Año {{ exclusionForm.get('anio')?.value }}
-                            <ng-container *ngIf="exclusionForm.get('id')?.value"> · Registro {{ exclusionForm.get('id')?.value }}</ng-container>
-                        </p>
+                        <p class="modal-subtitle">{{ centroExclusionNombre || 'Elija el centro' }} · {{ nombreMesFormExclusion }} {{ exclusionForm.get('anio')?.value }}</p>
                     </div>
                     <button type="button" class="close-modal-btn" (click)="cancelarEdicionExclusion()"
                         aria-label="Cerrar"><mat-icon>close</mat-icon></button>
                 </header>
 
                 <form [formGroup]="exclusionForm" (ngSubmit)="updateQueryExclusion()" class="modal-form-container">
-                    <div class="modal-body exc-body">
+                    <div class="modal-body exc-body exc-body-std">
                         <input type="hidden" formControlName="id" />
-                        <input type="hidden" formControlName="anio" />
 
-                        <!-- 1. Red y centro: la red filtra los centros del select -->
-                        <section class="exc-seccion exc-red-centro">
-                            <div class="exc-campo">
-                                <label class="exc-seccion-titulo" for="exc_red">Red</label>
-                                <div class="field-input">
-                                    <select id="exc_red" [value]="redExclusion"
-                                        (change)="cambiarRedExclusion($any($event.target).value)">
-                                        <option value="">Todas las redes</option>
-                                        <option *ngFor="let red of redesExclusion" [value]="red"
-                                            [selected]="red === redExclusion">{{ red }}</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="exc-campo">
-                                <label class="exc-seccion-titulo" for="exc_id_centro">Centro asistencial <span class="required">*</span>
-                                    <span class="exc-campo-ayuda" *ngIf="redExclusion">{{ centrosExclusionPorRed.length }} en la red</span>
-                                </label>
-                                <div class="field-input">
-                                    <select id="exc_id_centro" formControlName="id_centro" (change)="cambiarCentroExclusion()">
-                                        <option [ngValue]="null" disabled>{{ listaCentros.length ? 'Seleccione un centro…' : 'Cargando centros…' }}</option>
-                                        <option *ngFor="let cen of centrosExclusionPorRed" [ngValue]="cen.id">
-                                            {{ cen.codcentro }} - {{ cen.centro }}<ng-container *ngIf="!redExclusion"> ({{ cen.red }})</ng-container>
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- 2. Indicadores. Edición: el registro es de un solo indicador (o de todos) -->
-                        <section class="exc-seccion" *ngIf="exclusionForm.get('id')?.value">
-                            <label class="exc-seccion-titulo" for="exc_id_estandar">Indicador <span class="required">*</span></label>
+                        <!-- Campos: como el formulario de Estándar por centro (form-grid / field-input) -->
+                        <div class="form-grid">
                             <div class="field-input">
-                                <select id="exc_id_estandar" formControlName="id_estandar">
-                                    <option [ngValue]="null">Todos los indicadores</option>
-                                    <option *ngFor="let est of listaEstandares" [ngValue]="est.id">
-                                        {{ est.tipo }} - {{ est.indicador }}
+                                <label for="exc_red">Red</label>
+                                <select id="exc_red" [value]="redExclusion" (change)="cambiarRedExclusion($any($event.target).value)">
+                                    <option value="">Todas las redes</option>
+                                    <option *ngFor="let red of redesExclusion" [value]="red" [selected]="red === redExclusion">{{ red }}</option>
+                                </select>
+                            </div>
+                            <div class="field-input">
+                                <label for="exc_id_centro">Centro <span class="required">*</span>
+                                    <span class="exc-campo-ayuda" *ngIf="redExclusion">{{ centrosExclusionPorRed.length }} en la red</span></label>
+                                <select id="exc_id_centro" formControlName="id_centro" (change)="cambiarCentroExclusion()">
+                                    <option [ngValue]="null" disabled>{{ listaCentros.length ? 'Seleccione un centro…' : 'Cargando centros…' }}</option>
+                                    <option *ngFor="let cen of centrosExclusionPorRed" [ngValue]="cen.id">
+                                        {{ cen.codcentro }} - {{ cen.centro }}<ng-container *ngIf="!redExclusion"> ({{ cen.red }})</ng-container>
                                     </option>
                                 </select>
                             </div>
-                        </section>
-
-                        <!-- Alta: el usuario marca los indicadores a excluir; se guarda un registro por indicador -->
-                        <section class="exc-seccion" *ngIf="!exclusionForm.get('id')?.value">
-                            <div class="exc-seccion-cabecera">
-                                <span class="exc-seccion-titulo" id="exc_ind_titulo">Indicadores a excluir <span class="required">*</span></span>
-                                <span class="exc-contador" *ngIf="!todosIndicadoresExclusion"
-                                    [class.exc-contador-activo]="indicadoresExclusion.size > 0">
-                                    {{ indicadoresExclusion.size }} de {{ listaEstandares.length }}
-                                </span>
+                            <!-- Edición: el registro es de un solo indicador (o de todos) -->
+                            <div class="field-input full-width" *ngIf="exclusionForm.get('id')?.value">
+                                <label for="exc_id_estandar">Indicador <span class="required">*</span></label>
+                                <select id="exc_id_estandar" formControlName="id_estandar">
+                                    <option [ngValue]="null">Todos los indicadores</option>
+                                    <option *ngFor="let est of listaEstandares" [ngValue]="est.id">{{ est.tipo }} - {{ est.indicador }}</option>
+                                </select>
                             </div>
+                            <!-- Alta: se marcan los indicadores; se guarda un registro por indicador -->
+                            <div class="field-input full-width" *ngIf="!exclusionForm.get('id')?.value">
+                                <label id="exc_ind_titulo">Indicadores <span class="required">*</span>
+                                    <span class="exc-campo-ayuda" *ngIf="!todosIndicadoresExclusion">{{ indicadoresExclusion.size }} de {{ listaEstandares.length }}</span></label>
+                                <label class="exc-todos">
+                                    <input type="checkbox" [checked]="todosIndicadoresExclusion"
+                                        (change)="todosIndicadoresExclusion = $any($event.target).checked" />
+                                    <span>
+                                        <strong>Todos los indicadores del centro</strong>
+                                        <small>Un solo registro que aplica a cualquier indicador, incluidos los que se creen después.</small>
+                                    </span>
+                                </label>
 
-                            <label class="exc-todos">
-                                <input type="checkbox" [checked]="todosIndicadoresExclusion"
-                                    (change)="todosIndicadoresExclusion = $any($event.target).checked" />
-                                <span>
-                                    <strong>Todos los indicadores del centro</strong>
-                                    <small>Un solo registro que aplica a cualquier indicador, incluidos los que se creen después.</small>
-                                </span>
-                            </label>
-
-                            <div class="exc-picker" *ngIf="!todosIndicadoresExclusion" role="group" aria-labelledby="exc_ind_titulo">
-                                <div class="exc-picker-toolbar">
-                                    <div class="exc-buscar">
-                                        <mat-icon aria-hidden="true">search</mat-icon>
-                                        <input type="search" placeholder="Buscar por tipo o indicador" aria-label="Buscar indicador"
-                                            [value]="filtroIndicadorExclusion"
-                                            (input)="filtroIndicadorExclusion = $any($event.target).value" />
+                                <div class="exc-picker" *ngIf="!todosIndicadoresExclusion" role="group" aria-labelledby="exc_ind_titulo">
+                                    <div class="exc-picker-toolbar">
+                                        <div class="exc-buscar">
+                                            <mat-icon aria-hidden="true">search</mat-icon>
+                                            <input type="search" placeholder="Buscar por tipo o indicador" aria-label="Buscar indicador"
+                                                [value]="filtroIndicadorExclusion"
+                                                (input)="filtroIndicadorExclusion = $any($event.target).value" />
+                                        </div>
+                                        <button type="button" class="exc-accion" (click)="marcarIndicadoresExclusion(true)"
+                                            [disabled]="!indicadoresExclusionVisibles.length">Marcar {{ filtroIndicadorExclusion ? 'resultados' : 'todos' }}</button>
+                                        <button type="button" class="exc-accion" (click)="marcarIndicadoresExclusion(false)"
+                                            [disabled]="!indicadoresExclusion.size">Limpiar</button>
                                     </div>
-                                    <button type="button" class="exc-accion" (click)="marcarIndicadoresExclusion(true)"
-                                        [disabled]="!indicadoresExclusionVisibles.length">Marcar {{ filtroIndicadorExclusion ? 'resultados' : 'todos' }}</button>
-                                    <button type="button" class="exc-accion" (click)="marcarIndicadoresExclusion(false)"
-                                        [disabled]="!indicadoresExclusion.size">Limpiar</button>
-                                </div>
-                                <div class="exc-lista">
-                                    <label class="exc-item" *ngFor="let est of indicadoresExclusionVisibles"
-                                        [class.exc-item-activo]="indicadoresExclusion.has(est.id)">
-                                        <input type="checkbox" [checked]="indicadoresExclusion.has(est.id)"
-                                            (change)="toggleIndicadorExclusion(est.id)" />
-                                        <span class="exc-item-texto">
-                                            <span class="exc-item-tipo">{{ est.tipo }}</span>
-                                            <span class="exc-item-nombre">{{ est.indicador }}</span>
-                                        </span>
-                                    </label>
-                                    <p class="exc-vacio" *ngIf="!indicadoresExclusionVisibles.length">
-                                        {{ listaEstandares.length ? 'Ningún indicador coincide con «' + filtroIndicadorExclusion + '».' : 'Cargando indicadores…' }}
-                                    </p>
+                                    <div class="exc-lista">
+                                        <label class="exc-item" *ngFor="let est of indicadoresExclusionVisibles"
+                                            [class.exc-item-activo]="indicadoresExclusion.has(est.id)">
+                                            <input type="checkbox" [checked]="indicadoresExclusion.has(est.id)"
+                                                (change)="toggleIndicadorExclusion(est.id)" />
+                                            <span class="exc-item-texto">
+                                                <span class="exc-item-tipo">{{ est.tipo }}</span>
+                                                <span class="exc-item-nombre">{{ est.indicador }}</span>
+                                            </span>
+                                        </label>
+                                        <p class="exc-vacio" *ngIf="!indicadoresExclusionVisibles.length">
+                                            {{ listaEstandares.length ? 'Ningún indicador coincide con «' + filtroIndicadorExclusion + '».' : 'Cargando indicadores…' }}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </section>
+                        </div>
 
-                        <!-- 3. Meses -->
-                        <section class="exc-seccion">
-                            <div class="exc-seccion-cabecera">
-                                <span class="exc-seccion-titulo" id="exc_meses_titulo">Meses excluidos</span>
-                                <span class="exc-contador" [class.exc-contador-activo]="mesesExcluidosCount > 0">
-                                    {{ mesesExcluidosCount === 12 ? 'Todo el año' : mesesExcluidosCount + ' de 12' }}
-                                </span>
-                                <span class="exc-cabecera-acciones">
-                                    <button type="button" class="exc-accion" (click)="marcarMesesExclusion(true)"
-                                        [disabled]="mesesExcluidosCount === 12">Todo el año</button>
-                                    <button type="button" class="exc-accion" (click)="marcarMesesExclusion(false)"
-                                        [disabled]="!mesesExcluidosCount">Limpiar</button>
-                                </span>
+                        <!-- Mes elegido: solo ese mes cambia (como Estándares) -->
+                        <div class="form-grid exc-mes-form">
+                            <div class="field-input">
+                                <label for="exc_mes">Mes <span class="required">*</span></label>
+                                <select id="exc_mes" [value]="mesFormExclusion"
+                                    (change)="cambiarMesFormExclusion($any($event.target).value)">
+                                    <option *ngFor="let m of mesesExclusion" [value]="m.key.substring(5)"
+                                        [selected]="m.key.substring(5) === mesFormExclusion">{{ m.nombre }} {{ exclusionForm.get('anio')?.value }}</option>
+                                </select>
                             </div>
-                            <div class="exc-meses" role="group" aria-labelledby="exc_meses_titulo">
-                                <button type="button" class="exc-mes" *ngFor="let m of mesesExclusion"
-                                    [class.exc-mes-activo]="exclusionForm.get(m.key)?.value"
-                                    [attr.aria-pressed]="!!exclusionForm.get(m.key)?.value"
-                                    [attr.aria-label]="m.nombre"
-                                    (click)="toggleMesExclusion(m.key)">
-                                    <mat-icon aria-hidden="true">{{ exclusionForm.get(m.key)?.value ? 'block' : 'radio_button_unchecked' }}</mat-icon>
-                                    {{ m.corto }}
-                                </button>
+                            <div class="field-input">
+                                <label for="exc_res">Queda como <span class="required">*</span></label>
+                                <select id="exc_res" [value]="resultadoFormExclusion"
+                                    [class.exc-tabla-cero]="resultadoFormExclusion === '0'"
+                                    (change)="resultadoFormExclusion = $any($event.target).value">
+                                    <option value="" *ngIf="exclusionForm.get('id')?.value" [selected]="resultadoFormExclusion === ''">No excluido</option>
+                                    <option value="0" [selected]="resultadoFormExclusion === '0'">0 · Puntaje 0</option>
+                                    <option value="NA" [selected]="resultadoFormExclusion === 'NA'">NA · No aplica</option>
+                                </select>
                             </div>
-                        </section>
-
-                        <!-- 4. Resultado -->
-                        <section class="exc-seccion">
-                            <span class="exc-seccion-titulo" id="exc_res_titulo">En el resultado final, el mes excluido queda como</span>
-                            <div class="exc-resultado" role="radiogroup" aria-labelledby="exc_res_titulo">
-                                <label class="exc-opcion" [class.exc-opcion-activa]="exclusionForm.get('resultado')?.value !== 'NA'">
-                                    <input type="radio" formControlName="resultado" value="0" />
-                                    <span class="exc-opcion-valor">0</span>
-                                    <span class="exc-opcion-texto">
-                                        <strong>Puntaje 0</strong>
-                                        <small>El mes se evalúa con valor 0 y puntaje 0.</small>
-                                    </span>
-                                </label>
-                                <label class="exc-opcion" [class.exc-opcion-activa]="exclusionForm.get('resultado')?.value === 'NA'">
-                                    <input type="radio" formControlName="resultado" value="NA" />
-                                    <span class="exc-opcion-valor">NA</span>
-                                    <span class="exc-opcion-texto">
-                                        <strong>No aplica</strong>
-                                        <small>El mes no se evalúa ni cuenta en el puntaje.</small>
-                                    </span>
-                                </label>
-                            </div>
-                        </section>
+                        </div>
+                        <p class="exc-hint">
+                            Solo se cambia {{ nombreMesFormExclusion }}; los demás meses quedan como están.
+                            <strong>0</strong>: el mes se evalúa con valor 0 y puntaje 0. <strong>NA</strong>: no se evalúa ni cuenta en el puntaje.
+                        </p>
 
                         <div class="dyn-ok exc-aviso-existente" *ngIf="exclusionesExistentes.length">
                             <mat-icon>info</mat-icon>
                             <span>Este centro ya tiene exclusión en {{ exclusionForm.get('anio')?.value }} para:
                                 <strong>{{ exclusionesExistentes.join(', ') }}</strong>. Al guardar se
-                                <strong>actualiza ese registro</strong>: los meses que marques se suman a los ya excluidos.</span>
+                                <strong>actualiza ese registro</strong>: se agrega {{ nombreMesFormExclusion }} y los otros meses quedan igual.</span>
                         </div>
                         <div class="validation-message-banner" *ngIf="errorExclusionForm" role="alert">
                             <mat-icon>error_outline</mat-icon><span>{{ errorExclusionForm }}</span>
@@ -585,7 +546,7 @@
                     <footer class="modal-footer">
                         <span class="exc-resumen" *ngIf="!exclusionForm.get('id')?.value">
                             {{ todosIndicadoresExclusion ? 'Todos los indicadores' : indicadoresExclusion.size + ' indicador' + (indicadoresExclusion.size === 1 ? '' : 'es') }}
-                            · {{ mesesExcluidosCount }} {{ mesesExcluidosCount === 1 ? 'mes' : 'meses' }}
+                            · {{ nombreMesFormExclusion }}
                         </span>
                         <button type="button" class="btn-modal-action btn-cancel" (click)="cancelarEdicionExclusion()"
                             [disabled]="savingExclusion">Cancelar</button>

@@ -16,8 +16,8 @@
             <h3>1. Calcular el periodo</h3>
             <div class="dyn-paso-periodo">
                 @if (!puedeCalcular() && periodoCalculo()) {
-                <span class="dyn-badge dyn-p0">Se puede calcular hasta {{ nombrePeriodo(periodoCalculo()) }}{{ periodoCalculo() !== estadoPeriodos()?.periodo_calculo ? ': TOTALIZADO3 todavía no tiene datos de ' + nombrePeriodo(estadoPeriodos()!.periodo_calculo) : '' }}</span>
-                } @else if (guardadoCalculo(); as g) {
+                <span class="dyn-badge dyn-p0">Se puede calcular hasta {{ nombrePeriodo(periodoCalculo()) }}{{ periodoCalculo() !== estadoPeriodos()?.periodo_calculo ? '. Todavía no llegan los datos de ' + nombrePeriodo(estadoPeriodos()!.periodo_calculo) : '' }}</span>
+                } @else if (guardadoCalculo()?.origenes?.ACTUAL; as g) {
                 <span class="dyn-badge dyn-p5">Último cálculo: {{ fecha(g.fecha_calculo) }}</span>
                 } @else {
                 <span class="dyn-badge dyn-pNA">Todavía no se calculó</span>
@@ -43,8 +43,9 @@
         </div>
     </div>
     <p class="dyn-hint">
-        Elija el año y el mes para calcular los indicadores activos y guardar el resultado final. Se puede calcular
-        hasta el mes anterior al actual. Si el periodo ya tenía un resultado guardado, se reemplaza.
+        Elija el año y el mes, hasta el mes anterior al actual. Se calculan los indicadores activos con los datos de hoy
+        y el resultado reemplaza al cálculo anterior del periodo. El resultado con los datos del cierre lo guarda el
+        cierre de cada mes y aquí no cambia. Puede ver los dos en el punto 2.
     </p>
     @if (ocupado() === 'calcular') {
     <div class="loading loading-excel">
@@ -83,9 +84,10 @@
         <div>
             <h3>2. Excel y resultados guardados</h3>
             <div class="dyn-paso-periodo">
-                @if (guardado(); as g) {
-                <span class="dyn-badge">{{ nombrePeriodo(periodoSel()) }} · guardado el {{ fecha(g.fecha_calculo) }} ·
-                    {{ g.indicadores }} indicadores · {{ g.centros }} centros</span>
+                @if (guardadoVer(); as g) {
+                <span class="dyn-badge">{{ nombrePeriodo(periodoSel()) }} · {{ origenVer() === 'BACKUP' ? 'datos del cierre' : 'datos de hoy' }}
+                    · calculado el {{ fecha(g.fecha_calculo) }} · {{ g.indicadores }} indicadores · {{ g.centros }} centros</span>
+                @if (guardado()?.origen_datos === origenVer()) {<span class="dyn-badge dyn-p5">Es el que usa el dashboard</span>}
                 } @else {
                 <span class="dyn-badge dyn-p0">{{ nombrePeriodo(periodoSel()) }} no tiene resultado guardado</span>
                 }
@@ -98,8 +100,13 @@
             <select [(ngModel)]="mes" (ngModelChange)="cambioPeriodo()" class="periodo-select" [disabled]="!!ocupado()">
                 @for (m of meses; track m.value) {<option [value]="m.value">{{ m.label }}</option>}
             </select>
-            <button (click)="descargar()" class="btn-search btn-excel" [disabled]="!!ocupado() || !guardado() || !excelIds().size"
-                [title]="guardado() ? 'Excel con el resultado guardado del periodo' : 'El periodo no tiene resultado guardado'">
+            <select class="periodo-select" aria-label="Resultado a ver" [ngModel]="origenVer()"
+                (ngModelChange)="cambioOrigenVer($event)" [disabled]="!!ocupado() || !guardado()">
+                <option value="ACTUAL" [disabled]="!guardado()?.origenes?.ACTUAL">Con los datos de hoy</option>
+                <option value="BACKUP" [disabled]="!guardado()?.origenes?.BACKUP">Con los datos del cierre</option>
+            </select>
+            <button (click)="descargar()" class="btn-search btn-excel" [disabled]="!!ocupado() || !guardadoVer() || !excelIds().size"
+                [title]="guardadoVer() ? 'Descarga el Excel del resultado elegido' : 'Este periodo no tiene ese resultado'">
                 @if (ocupado() === 'excel') {<span class="spinner-btn"></span>} @else {<mat-icon>download</mat-icon>}
                 {{ ocupado() === 'excel' ? 'Generando Excel…' : 'Descargar Excel' }}
             </button>
@@ -127,7 +134,7 @@
         <h4>Resultado final por indicador</h4>
         <div class="dyn-inline">
             <select class="periodo-select" aria-label="Indicador" [ngModel]="idIndicador()"
-                (ngModelChange)="idIndicador.set($event); verResultado()" [disabled]="!!ocupado()">
+                (ngModelChange)="cambioIndicador($event)" [disabled]="!!ocupado()">
                 @for (i of indicadores(); track i.id) {<option [ngValue]="i.id">{{ i.orden }}. {{ i.indicador }}</option>}
             </select>
         </div>
@@ -189,7 +196,7 @@
                 } @empty {
                 @if (ocupado() !== 'resultado') {
                 <div class="dyn-empty">
-                    {{ periodoSel() === periodoCalculo() ? 'El periodo todavía no se calculó: use "Calcular" arriba.' : 'Este periodo no tiene resultado guardado.' }}
+                    {{ periodoSel() === periodoCalculo() ? 'Este periodo todavía no se calcula. Use "Calcular" arriba.' : 'Este periodo no tiene resultado guardado.' }}
                 </div>
                 }
                 }
@@ -200,4 +207,173 @@
         <div class="footer-left"><strong>Centros:</strong></div>
         <div class="footer-right num"><strong>{{ resultadoFiltrado().length }}</strong></div>
     </div>
+</mat-card>
+
+<!-- 3. Justificación: el resultado con los datos del cierre y con los datos de hoy -->
+<mat-card class="table dyn-paso jus-card">
+    <div class="table-title-row">
+        <div>
+            <h3>3. Justificación del cálculo</h3>
+            <div class="dyn-paso-periodo">
+                @if (backupSel(); as b) {
+                <span class="dyn-badge dyn-p5">Datos del cierre de {{ nombrePeriodo(periodoSel()) }} guardados el
+                    {{ fecha(b.fecha_backup) }} · {{ b.filas | number }} filas{{ b.usuario_backup ? ' · ' + b.usuario_backup : '' }}</span>
+                } @else {
+                <span class="dyn-badge dyn-pNA">{{ nombrePeriodo(periodoSel()) }} todavía no tiene los datos del cierre guardados</span>
+                }
+            </div>
+        </div>
+        <div class="dyn-inline">
+            <button (click)="verJustificacion()" class="btn-search" [disabled]="!!ocupado() || idIndicador() == null">
+                @if (ocupado() === 'justificacion') {<span class="spinner-btn"></span>} @else {<mat-icon>fact_check</mat-icon>}
+                Ver justificación
+            </button>
+        </div>
+    </div>
+    <p class="dyn-hint">
+        Compara, para el periodo y el indicador de arriba, el resultado de cada centro con los datos del cierre y con
+        los datos de hoy. Al elegir un centro se ve la fórmula con sus valores, el grupo, la actividad y el servicio de
+        cada término, y los datos que cambiaron después del cierre, con quién los cambió y cuándo.
+    </p>
+
+    @if (justificacion(); as j) {
+    @if (faltaOrigen(j); as falta) {
+    <div class="jus-aviso">
+        <mat-icon>info</mat-icon>
+        <span>Para comparar falta calcular {{ nombrePeriodo(periodoSel()) }} {{ nombreOrigen(falta) }}.</span>
+        <button class="btn-download" (click)="calcularParaComparar(falta)" [disabled]="!!ocupado() || !puedeCalcularSel()">
+            <mat-icon>calculate</mat-icon> Calcular {{ nombreOrigen(falta) }}
+        </button>
+    </div>
+    }
+    <div class="filters-bar">
+        <label class="filter-field filter-field-wide">
+            <span>Centro</span>
+            <input type="text" class="filter-input" placeholder="Buscar centro, red o código..."
+                [ngModel]="filtroJust()" (ngModelChange)="filtroJust.set($event)" />
+        </label>
+        <label class="jus-check">
+            <input type="checkbox" [checked]="soloCambios()" (change)="soloCambios.set($any($event.target).checked)" />
+            Solo los que cambiaron ({{ cambiosJust() }})
+        </label>
+    </div>
+    <div class="jus-tabla">
+        <div class="jus-fila jus-cab">
+            <span>Centro</span>
+            <span>Con los datos del cierre</span>
+            <span>Con los datos de hoy</span>
+        </div>
+        <div class="jus-scroll">
+            @for (c of centrosJust(); track c.codcentro) {
+            <button type="button" class="jus-fila" [class.jus-cambio]="c.cambio"
+                [class.jus-elegido]="centroJust()?.codcentro === c.codcentro" (click)="abrirCentro(c)">
+                <span class="jus-centro"><strong>{{ c.codcentro }}</strong> {{ c.centro ?? '' }}
+                    <small>{{ c.red ?? '' }}</small></span>
+                @for (r of [c.BACKUP, c.ACTUAL]; track $index) {
+                <span class="jus-calc">
+                    @if (r) {
+                    <span [class]="claseP(r.puntaje)">{{ r.puntaje }}</span>
+                    <code>{{ r.formula_desarrollo ?? (r.valor == null ? 'NA' : (r.valor | number: '1.0-4')) }}</code>
+                    @if (r.motivo_na) {<small>{{ motivo(r.motivo_na) }}</small>}
+                    } @else {
+                    <small>Sin calcular</small>
+                    }
+                </span>
+                }
+            </button>
+            } @empty {
+            <div class="dyn-empty">Sin centros para mostrar.</div>
+            }
+        </div>
+    </div>
+
+    @if (centroJust(); as c) {
+    <section class="jus-detalle">
+        <h4>{{ c.codcentro }} · {{ c.centro }}</h4>
+        @if (c.BACKUP ?? c.ACTUAL; as r) {
+        <p class="jus-formula">
+            <strong>Fórmula:</strong> {{ r.formula_alias ?? '' }}{{ r.formula_alias ? ' = ' : '' }}<code>{{ r.formula }}</code>
+            · {{ r.tipo_calculo === 'ACUMULADO' ? 'acumulado de enero al mes' : 'valor del mes' }}
+        </p>
+        }
+        <div class="jus-calculos">
+            @for (r of [c.BACKUP, c.ACTUAL]; track $index) {
+            @if (r) {
+            <div class="jus-calculo">
+                <span class="jus-calculo-titulo">{{ $index === 0 ? 'Con los datos del cierre' : 'Con los datos de hoy' }}</span>
+                <code>{{ r.formula_desarrollo ?? 'NA' }}</code>
+                <span>Estándar {{ r.estandar == null ? '—' : (r.estandar | number: '1.0-4') }} · puntaje
+                    <span [class]="claseP(r.puntaje)">{{ r.puntaje }}</span></span>
+                <small>Calculado el {{ fecha(r.fecha_calculo) }}{{ r.usuario_calculo ? ' por ' + r.usuario_calculo : '' }}</small>
+            </div>
+            }
+            }
+        </div>
+
+        <h5>Términos de la fórmula</h5>
+        <div class="jus-terminos">
+            <div class="jus-term jus-cab">
+                <span>Término</span><span>Grupo · actividad · servicio</span><span class="num">Al cierre</span>
+                <span class="num">Hoy</span><span class="num">Diferencia</span><span class="num">Filas</span><span></span>
+            </div>
+            @for (t of terminosComparados(); track t.clave) {
+            <div class="jus-term" [class.jus-cambio]="t.cambio">
+                <span><strong>{{ t.codigo }}</strong></span>
+                <span><code>{{ textoTermino(t) }}</code></span>
+                <span class="num">{{ t.backup?.valor == null ? '—' : (t.backup!.valor | number: '1.0-4') }}</span>
+                <span class="num">{{ t.actual?.valor == null ? '—' : (t.actual!.valor | number: '1.0-4') }}</span>
+                <span class="num">{{ diferencia(t.actual?.valor, t.backup?.valor) == null || diferencia(t.actual?.valor, t.backup?.valor) === 0
+                    ? '' : (diferencia(t.actual?.valor, t.backup?.valor) | number: '1.0-4') }}</span>
+                <span class="num">{{ t.backup?.filas ?? '—' }} / {{ t.actual?.filas ?? '—' }}</span>
+                <span>
+                    @if (backupSel()) {
+                    <button type="button" class="jus-link" (click)="verFilas(t.codigo)" [disabled]="!!ocupado()">Filas</button>
+                    }
+                </span>
+            </div>
+            } @empty {
+            <div class="dyn-empty">{{ ocupado() === 'detalle' ? 'Cargando...' : 'Sin términos guardados para este centro.' }}</div>
+            }
+        </div>
+        <p class="dyn-hint">
+            Cada valor es el que entró en la fórmula{{ (c.BACKUP ?? c.ACTUAL)?.tipo_calculo === 'ACUMULADO' ? ', de enero al mes y sin los meses excluidos' : '' }}.
+            Filas indica cuántos registros se sumaron al cierre y hoy.
+        </p>
+        @if (backupSel()) {
+        <div class="dyn-inline">
+            <button type="button" class="btn-download" (click)="verFilas()" [disabled]="!!ocupado()">
+                <mat-icon>difference</mat-icon> Ver todos los datos que cambiaron
+            </button>
+        </div>
+        }
+
+        @if (filasCambiadas(); as f) {
+        <h5>Datos que cambiaron después del cierre{{ codigoFilas() ? ' · ' + codigoFilas() : '' }}</h5>
+        @if (f.length) {
+        <div class="jus-filas">
+            <div class="jus-fil jus-cab">
+                <span>Mes</span><span>Grupo</span><span>Actividad</span><span>Servicio</span><span class="num">Al cierre</span>
+                <span class="num">Hoy</span><span>Cambio</span><span>Modificado por</span><span>Fecha</span>
+            </div>
+            @for (x of f; track x.ID) {
+            <div class="jus-fil">
+                <span>{{ nombrePeriodo(x.periodo + '') }}</span>
+                <span>{{ x.tipgrupo }} {{ x.desctipgrupo ?? '' }}</span>
+                <span>{{ x.actividad }} {{ x.descactividad ?? '' }}</span>
+                <span>{{ x.servicio ?? '—' }} {{ x.descservicio ?? '' }}</span>
+                <span class="num">{{ x.cantidad_backup == null ? '—' : (x.cantidad_backup | number) }}</span>
+                <span class="num">{{ x.cantidad_actual == null ? '—' : (x.cantidad_actual | number) }}</span>
+                <span>{{ x.cambio === 'NUEVA' ? 'Registro nuevo' : x.cambio === 'BORRADA' ? 'Registro borrado' : 'Cantidad corregida' }}</span>
+                <span>{{ (x.cambio === 'BORRADA' ? x.usuariomod_backup : x.usuariomod) ?? '—' }}</span>
+                <span>{{ fecha((x.cambio === 'BORRADA' ? x.fechamod_backup : x.fechamod) ?? undefined) || '—' }}</span>
+            </div>
+            }
+        </div>
+        } @else {
+        <div class="dyn-ok"><mat-icon>check_circle</mat-icon> Los datos son los mismos que al cierre.</div>
+        }
+        }
+    </section>
+    }
+    }
 </mat-card>

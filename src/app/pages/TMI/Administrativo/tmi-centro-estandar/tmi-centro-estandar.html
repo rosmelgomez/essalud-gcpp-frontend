@@ -5,6 +5,10 @@
             <select class="anio-select" [value]="anio()" (change)="cambiarAnio($any($event.target).value)">
                 @for (a of anios; track a) {<option [value]="a" [selected]="a === anio()">{{ a }}</option>}
             </select>
+            <select class="periodo-select" aria-label="Mes" [ngModel]="mes()" (ngModelChange)="mes.set(+$event)">
+                <option [ngValue]="0">Todo el año</option>
+                @for (m of mesesNombre; track m; let i = $index) {<option [ngValue]="i + 1">{{ m }}</option>}
+            </select>
             <button (click)="cargar()" class="btn-download" [disabled]="loading()">
                 <mat-icon>refresh</mat-icon> Actualizar
             </button>
@@ -29,7 +33,7 @@
 
 <mat-card class="table exg">
     <div class="table-title-row">
-        <h3>Excepciones {{ anio() }}</h3>
+        <h3>Excepciones {{ mes() ? mesesNombre[mes() - 1] + ' ' : '' }}{{ anio() }}</h3>
         <button type="button" class="btn-download btn-agregar-fila" (click)="nuevo()">
             <mat-icon>add</mat-icon> Agregar estándar
         </button>
@@ -100,7 +104,7 @@
                     <div class="exg-meses-col">
                         <div class="exg-meses" role="img" [attr.aria-label]="'Meses: ' + x.rango">
                             @for (m of x.meses; track $index) {
-                            <span class="exg-mes" [class.exg-mes-on]="m.valor !== null" [title]="m.titulo">{{ mesesCorto[$index].charAt(0) }}</span>
+                            <span class="exg-mes" [class.exg-mes-on]="m.valor !== null" [class.exg-mes-sel]="$index === mes() - 1" [title]="m.titulo">{{ mesesCorto[$index].charAt(0) }}</span>
                             }
                         </div>
                         <span class="exg-rango">{{ x.rango }}</span>
@@ -130,7 +134,7 @@
             <p>Ningún estándar coincide con «{{ busqueda() }}».</p>
             <button type="button" class="exc-accion" (click)="buscar('')">Limpiar búsqueda</button>
             } @else {
-            <p>No hay estándares propios de centro en {{ anio() }}.</p>
+            <p>No hay estándares propios de centro en {{ mes() ? mesesNombre[mes() - 1] + ' ' : '' }}{{ anio() }}.</p>
             }
         </div>
         }
@@ -183,6 +187,13 @@
                         </select>
                     </div>
                     <div class="field-input">
+                        <label for="ce_mes">Mes</label>
+                        <select id="ce_mes" [ngModel]="mesForm" (ngModelChange)="mesForm = +$event" [ngModelOptions]="{ standalone: true }">
+                            <option [ngValue]="0">Todos los meses</option>
+                            @for (m of mesesNombre; track m; let i = $index) {<option [ngValue]="i + 1">{{ m }}</option>}
+                        </select>
+                    </div>
+                    <div class="field-input">
                         <label for="ce_acept">% Acept propio (opcional)</label>
                         <input id="ce_acept" type="number" step="any" formControlName="acept" placeholder="Usa el % Acept del indicador" />
                     </div>
@@ -199,7 +210,7 @@
                 </div>
                 <div class="dyn-meses">
                     @for (m of meses; track m; let i = $index) {
-                    <div class="field-input">
+                    <div class="field-input" [class.dyn-mes-elegido]="i === mesForm - 1">
                         <label [for]="'ce_m' + m">{{ mesesCorto[i] }}</label>
                         <input [id]="'ce_m' + m" type="number" step="any" [formControlName]="'est_' + m" />
                     </div>

@@ -2,7 +2,10 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, catchError, from, map, switchMap, throwError } from 'rxjs';
 import { Backend } from '../../model/api';
-import { TmiAvisoConfig, TmiCambioConfig, TmiDashboardDatos, TmiPeriodoCalculo, TmiProblemaConfig, TmiResultadoFinal } from './tmi-models';
+import {
+  TmiAvisoConfig, TmiCambioConfig, TmiDashboardDatos, TmiFilaCambiada, TmiJustificacion, TmiOrigenDatos, TmiPeriodoCalculo,
+  TmiProblemaConfig, TmiResultadoFinal, TmiTerminoResultado,
+} from './tmi-models';
 import { mensajeError } from './tmi-error';
 
 const base_url = Backend.apiTmi + '/dinamico';
@@ -44,20 +47,37 @@ export class TmiCalculoService {
     if (idIndicador != null) params['id_indicador'] = idIndicador;
     return this.http.get<TmiCambioConfig[]>(`${base_url}/historial`, { params });
   }
-  calcular(periodo: string) {
-    return this.http.post<{ periodo: string; puntajes: Record<string, number> }>(`${base_url}/calcular/${periodo}`, {});
+  /** origen: ACTUAL = TOTALIZADO3 de hoy; BACKUP = la copia del cierre del periodo (como fue). */
+  calcular(periodo: string, origen: TmiOrigenDatos = 'ACTUAL') {
+    return this.http.post<{ periodo: string; origen: TmiOrigenDatos; puntajes: Record<string, number> }>(
+      `${base_url}/calcular/${periodo}`, {}, { params: { origen } });
+  }
+  /** Resultado de cada centro como fue (copia del cierre) y con los datos actuales, con la fórmula desarrollada. */
+  getJustificacion(periodo: string, idIndicador: number) {
+    return this.http.get<TmiJustificacion>(`${base_url}/justificacion/${periodo}/${idIndicador}`);
+  }
+  /** Valor de cada término (grupo, actividad, servicio) del centro en cada cálculo guardado. */
+  getTerminosJustificacion(periodo: string, idIndicador: number, codcentro: number) {
+    return this.http.get<TmiTerminoResultado[]>(`${base_url}/justificacion/${periodo}/${idIndicador}/${codcentro}/terminos`);
+  }
+  /** Filas de TOTALIZADO3 que cambiaron desde la copia del cierre (codigo: solo ese término). */
+  getFilasCambiadas(periodo: string, idIndicador: number, codcentro: number, codigo?: string) {
+    const params: Record<string, string> = codigo ? { codigo } : {};
+    return this.http.get<TmiFilaCambiada[]>(`${base_url}/justificacion/${periodo}/${idIndicador}/${codcentro}/filas`, { params });
   }
   getPeriodoCalculo() { return this.http.get<TmiPeriodoCalculo>(`${base_url}/periodo-calculo`); }
-  getResultado(periodo: string, idIndicador: number) {
-    return this.http.get<TmiResultadoFinal[]>(`${base_url}/resultado/${periodo}/${idIndicador}`);
+  /** origen: ACTUAL = calculado con TOTALIZADO3; BACKUP = con TOTALIZADO3_BACKUP (copia del cierre); sin él, el oficial. */
+  getResultado(periodo: string, idIndicador: number, origen?: TmiOrigenDatos) {
+    const params: Record<string, string> = origen ? { origen } : {};
+    return this.http.get<TmiResultadoFinal[]>(`${base_url}/resultado/${periodo}/${idIndicador}`, { params });
   }
   /** Periodos con resultado guardado para el dashboard (ruta pública, sin sesión). */
   getPeriodosDashboard() { return this.http.get<TmiPeriodoCalculo['periodos']>(`${base_url}/dashboard/periodos`); }
   /** Datos del dashboard: resultado final guardado del periodo (AAAAMM). */
   getDashboard(periodo: string) { return this.http.get<TmiDashboardDatos>(`${base_url}/dashboard/${periodo}`); }
   /** ids: indicadores que lleva el Excel; sin ids, todos. */
-  getExcel(periodo: string, calcular: boolean, ids?: number[]) {
-    const filtro = ids?.length ? `&indicadores=${ids.join(',')}` : '';
+  getExcel(periodo: string, calcular: boolean, ids?: number[], origen?: TmiOrigenDatos) {
+    const filtro = (ids?.length ? `&indicadores=${ids.join(',')}` : '') + (origen ? `&origen=${origen}` : '');
     return this.http.get(`${base_url}/generar-excel/${periodo}?calcular=${calcular}${filtro}`, {
       responseType: 'blob',
       observe: 'response' as 'response',

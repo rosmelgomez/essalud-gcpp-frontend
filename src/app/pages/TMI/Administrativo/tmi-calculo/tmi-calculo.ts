@@ -3,7 +3,23 @@ import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { TmiIndicadorService, TmiCalculoService, TmiIndicador, TmiResultadoFinal, TmiPeriodoCalculo, TmiProblemaConfig, mensajeError } from '../../../../services/tmi';
+import {
+  TmiIndicadorService, TmiCalculoService, TmiIndicador, TmiResultadoFinal, TmiPeriodoCalculo, TmiProblemaConfig, mensajeError,
+  TmiFilaCambiada, TmiJustificacion, TmiJustificacionCentro, TmiOrigenDatos, TmiTerminoResultado,
+} from '../../../../services/tmi';
+
+/** Fila de la tabla de términos: el mismo término (grupo, actividad, servicio) como fue y con los datos actuales. */
+interface TerminoComparado {
+  clave: string;
+  codigo: string;
+  tipgrupo: number;
+  actividad: number;
+  servicio: number | null;
+  mediana: boolean;
+  backup: TmiTerminoResultado | null;
+  actual: TmiTerminoResultado | null;
+  cambio: boolean;
+}
 
 
 const MESES = [
@@ -86,9 +102,57 @@ export class TmiCalculo implements OnInit {
   resumen = signal<Record<string, number> | null>(null);
   problemas = signal<TmiProblemaConfig[] | null>(null);
 
-  ocupado = signal<'' | 'validar' | 'calcular' | 'excel' | 'resultado'>('');
+  backupSel = computed(() => this.backupDe(this.periodoSel()));
+  /** Resultado que se ve en el punto 2: el calculado con TOTALIZADO3 (ACTUAL) o con TOTALIZADO3_BACKUP (BACKUP).
+   *  null = el oficial del periodo; si el periodo no tiene el elegido, también el oficial. */
+  origenElegido = signal<TmiOrigenDatos | null>(null);
+  origenVer = computed<TmiOrigenDatos>(() => {
+    const g = this.guardado();
+    const o = this.origenElegido();
+    if (o && g?.origenes?.[o]) return o;
+    return (g?.origen_datos as TmiOrigenDatos) ?? 'ACTUAL';
+  });
+  guardadoVer = computed(() => this.guardado()?.origenes?.[this.origenVer()] ?? null);
+
+  // ---------- 3. justificación: como fue (copia del cierre) y con los datos actuales ----------
+  justificacion = signal<TmiJustificacion | null>(null);
+  soloCambios = signal(false);
+  filtroJust = signal('');
+  centrosJust = computed(() => {
+    const j = this.justificacion();
+    if (!j) return [];
+    const t = this.filtroJust().trim().toLowerCase();
+    return j.centros.filter((c) => (!this.soloCambios() || c.cambio)
+      && (!t || `${c.codcentro} ${c.centro ?? ''} ${c.red ?? ''}`.toLowerCase().includes(t)));
+  });
+  cambiosJust = computed(() => this.justificacion()?.centros.filter((c) => c.cambio).length ?? 0);
+  centroJust = signal<TmiJustificacionCentro | null>(null);
+  terminos = signal<TmiTerminoResultado[]>([]);
+  terminosComparados = computed<TerminoComparado[]>(() => {
+    const filas = new Map<string, TerminoComparado>();
+    for (const t of this.terminos()) {
+      const clave = `${t.codigo}|${t.tipgrupo}|${t.actividad}|${t.servicio ?? ''}`;
+      const f = filas.get(clave) ?? {
+        clave, codigo: t.codigo, tipgrupo: t.tipgrupo, actividad: t.actividad, servicio: t.servicio,
+        mediana: t.mediana, backup: null, actual: null, cambio: false,
+      };
+      if (t.origen_datos === 'BACKUP') f.backup = t; else f.actual = t;
+      filas.set(clave, f);
+    }
+    const lista = [...filas.values()];
+    for (const f of lista) f.cambio = !!f.backup && !!f.actual && (f.backup.valor ?? 0) !== (f.actual.valor ?? 0);
+    return lista;
+  });
+  filasCambiadas = signal<TmiFilaCambiada[] | null>(null);
+  codigoFilas = signal('');
+
+  ocupado = signal<'' | 'validar' | 'calcular' | 'excel' | 'resultado' | 'justificacion' | 'detalle'>('');
   error = signal('');
   mensaje = signal('');
+
+  private backupDe(periodo: string) {
+    return this.estadoPeriodos()?.backups?.find((b) => String(b.periodo_backup) === periodo) ?? null;
+  }
 
   private guardadoDe(periodo: string) {
     return this.estadoPeriodos()?.periodos.find((p) => String(p.periodo) === periodo) ?? null;
@@ -138,6 +202,8 @@ export class TmiCalculo implements OnInit {
           this.anio = p.slice(0, 4);
           this.mes = p.slice(4);
           this.cambioPeriodo();
+        } else {
+          this.verResultado();   // con los resultados guardados al día (el elegido puede ser uno nuevo)
         }
       },
     });
@@ -145,10 +211,11 @@ export class TmiCalculo implements OnInit {
 
   cambioPeriodo(): void {
     this.periodoSel.set(this.periodo);
+    this.limpiarJustificacion();
     this.verResultado();
   }
 
-  private inicio(accion: 'validar' | 'calcular' | 'excel' | 'resultado'): void {
+  private inicio(accion: 'validar' | 'calcular' | 'excel' | 'resultado' | 'justificacion' | 'detalle'): void {
     this.ocupado.set(accion);
     this.error.set('');
     this.mensaje.set('');
@@ -171,22 +238,26 @@ export class TmiCalculo implements OnInit {
   /** Calcula el periodo elegido (año y mes) y deja los select del Excel en ese periodo para ver el resultado. */
   calcular(): void {
     const periodo = this.periodoCalcSel();
+    // en pantalla se calcula con TOTALIZADO3; el de TOTALIZADO3_BACKUP lo hace el cierre
+    const origen: TmiOrigenDatos = 'ACTUAL';
     if (!this.puedeCalcular()) return;
-    if (periodo < this.periodoCalculo() && this.guardadoCalculo()
+    if (periodo < this.periodoCalculo() && this.guardadoCalculo()?.origenes?.ACTUAL
       && !confirm(`${this.nombrePeriodo(periodo)} ya pasó su fecha de cierre y tiene un resultado guardado.\n`
         + '¿Volver a calcularlo? Se reemplaza el resultado guardado.')) return;
     this.inicio('calcular');
-    this.calculoSrv.calcular(periodo).subscribe({
+    this.calculoSrv.calcular(periodo, origen).subscribe({
       next: (r) => {
         this.resumen.set(r.puntajes);
         this.periodoCalculado.set(periodo);
         this.problemas.set([]);
-        this.mensaje.set(`Cálculo de ${this.nombrePeriodo(periodo)} terminado y guardado.`);
+        this.mensaje.set(`${this.nombrePeriodo(periodo)} calculado y guardado con los datos de hoy.`);
+        this.origenElegido.set('ACTUAL');
         this.ocupado.set('');
-        this.cargarPeriodos();
         this.anio = periodo.slice(0, 4);
         this.mes = periodo.slice(4);
-        this.cambioPeriodo();
+        this.periodoSel.set(this.periodo);
+        this.limpiarJustificacion();
+        this.cargarPeriodos();
       },
       error: (e) => {
         if (Array.isArray(e?.error?.detail)) this.problemas.set(e.error.detail);
@@ -196,11 +267,131 @@ export class TmiCalculo implements OnInit {
     });
   }
 
+  /** Nombre del origen de los datos para la pantalla. */
+  nombreOrigen(o: TmiOrigenDatos): string {
+    return o === 'BACKUP' ? 'con los datos del cierre' : 'con los datos de hoy';
+  }
+
+  cambioOrigenVer(o: TmiOrigenDatos): void {
+    this.origenElegido.set(o);
+    this.verResultado();
+  }
+
+  cambioIndicador(id: number): void {
+    this.idIndicador.set(id);
+    this.limpiarJustificacion();
+    this.verResultado();
+  }
+
+  limpiarJustificacion(): void {
+    this.justificacion.set(null);
+    this.centroJust.set(null);
+    this.terminos.set([]);
+    this.filasCambiadas.set(null);
+  }
+
+  /** Resultado de cada centro del indicador como fue y con los datos actuales. */
+  verJustificacion(): void {
+    const id = this.idIndicador();
+    if (id == null) return;
+    const centro = this.centroJust()?.codcentro;
+    this.inicio('justificacion');
+    this.calculoSrv.getJustificacion(this.periodoSel(), id).subscribe({
+      next: (j) => {
+        this.justificacion.set(j);
+        this.ocupado.set('');
+        const c = centro == null ? null : j.centros.find((x) => x.codcentro === centro) ?? null;
+        if (c) this.abrirCentro(c); else this.centroJust.set(null);
+      },
+      error: (e) => {
+        this.error.set(mensajeError(e, 'No se pudo cargar la justificación.'));
+        this.ocupado.set('');
+      },
+    });
+  }
+
+  /** El cálculo que falta para comparar (null = no falta ninguno). */
+  faltaOrigen(j: TmiJustificacion): TmiOrigenDatos | null {
+    if (j.con_backup && !j.origenes.includes('BACKUP')) return 'BACKUP';
+    return j.origenes.includes('ACTUAL') ? null : 'ACTUAL';
+  }
+
+  /** Se puede calcular el periodo de la justificación (hasta el último periodo calculable). */
+  puedeCalcularSel = computed(() => !!this.periodoCalculo() && this.periodoSel() <= this.periodoCalculo());
+
+  /** Calcula el periodo de la justificación con ese origen y la vuelve a cargar. */
+  calcularParaComparar(origen: TmiOrigenDatos): void {
+    const periodo = this.periodoSel();
+    if (!this.puedeCalcularSel()) return;
+    this.inicio('justificacion');
+    this.calculoSrv.calcular(periodo, origen).subscribe({
+      next: () => {
+        this.mensaje.set(`${this.nombrePeriodo(periodo)} calculado ${this.nombreOrigen(origen)}.`);
+        this.cargarPeriodos();   // y vuelve a cargar el resultado
+        this.verJustificacion();
+      },
+      error: (e) => {
+        if (Array.isArray(e?.error?.detail)) this.problemas.set(e.error.detail);
+        this.error.set(mensajeError(e, 'No se pudo calcular el periodo.'));
+        this.ocupado.set('');
+      },
+    });
+  }
+
+  /** Detalle de un centro: el valor de cada término de la fórmula en cada cálculo. */
+  abrirCentro(c: TmiJustificacionCentro): void {
+    const id = this.idIndicador();
+    if (id == null) return;
+    this.centroJust.set(c);
+    this.filasCambiadas.set(null);
+    this.terminos.set([]);
+    this.inicio('detalle');
+    this.calculoSrv.getTerminosJustificacion(this.periodoSel(), id, c.codcentro).subscribe({
+      next: (t) => {
+        this.terminos.set(t);
+        this.ocupado.set('');
+      },
+      error: (e) => {
+        this.error.set(mensajeError(e, 'No se pudieron cargar los términos.'));
+        this.ocupado.set('');
+      },
+    });
+  }
+
+  /** Filas de TOTALIZADO3 del centro que cambiaron desde la copia del cierre (codigo: solo ese término). */
+  verFilas(codigo = ''): void {
+    const id = this.idIndicador();
+    const c = this.centroJust();
+    if (id == null || !c) return;
+    this.codigoFilas.set(codigo);
+    this.inicio('detalle');
+    this.calculoSrv.getFilasCambiadas(this.periodoSel(), id, c.codcentro, codigo || undefined).subscribe({
+      next: (f) => {
+        this.filasCambiadas.set(f);
+        this.ocupado.set('');
+      },
+      error: (e) => {
+        this.error.set(mensajeError(e, 'No se pudieron cargar las filas que cambiaron.'));
+        this.ocupado.set('');
+      },
+    });
+  }
+
+  /** [grupo;actividad#servicio] de un término. */
+  textoTermino(t: { tipgrupo: number; actividad: number; servicio: number | null; mediana: boolean }): string {
+    const base = `[${t.tipgrupo};${t.actividad}${t.servicio != null ? '#' + t.servicio : ''}]`;
+    return t.mediana ? `MEDIANA(${base})` : base;
+  }
+
+  diferencia(a: number | null | undefined, b: number | null | undefined): number | null {
+    return a == null || b == null ? null : a - b;
+  }
+
   verResultado(): void {
     const id = this.idIndicador();
     if (id == null) return;
     this.inicio('resultado');
-    this.calculoSrv.getResultado(this.periodo, id).subscribe({
+    this.calculoSrv.getResultado(this.periodo, id, this.guardado() ? this.origenVer() : undefined).subscribe({
       next: (r) => {
         this.resultado.set(r);
         this.ocupado.set('');
@@ -220,7 +411,7 @@ export class TmiCalculo implements OnInit {
       return;
     }
     const ids = this.todosEnExcel() ? undefined : this.indicadores().filter((i) => this.excelIds().has(i.id!)).map((i) => i.id!);
-    this.calculoSrv.getExcel(this.periodo, false, ids).subscribe({
+    this.calculoSrv.getExcel(this.periodo, false, ids, this.origenVer()).subscribe({
       next: (resp) => {
         const blob = resp.body;
         if (blob) {
@@ -234,7 +425,7 @@ export class TmiCalculo implements OnInit {
           link.download = nombre;
           link.click();
           window.URL.revokeObjectURL(url);
-          this.mensaje.set(`Excel de ${this.nombrePeriodo()} descargado.`);
+          this.mensaje.set(`Excel de ${this.nombrePeriodo()} descargado, ${this.origenVer() === 'BACKUP' ? 'con los datos del cierre' : 'con los datos de hoy'}.`);
         }
         this.ocupado.set('');
       },

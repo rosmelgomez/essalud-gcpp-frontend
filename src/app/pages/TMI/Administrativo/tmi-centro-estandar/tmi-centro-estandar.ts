@@ -12,6 +12,8 @@ import { aNumero, fmtNum, rangoMeses } from '../tmi-estandar-resumen/meses-rango
 import { TmiIndicadorService, TmiCentroService, TmiCentroEstandar, TmiCentroCatalogo, TmiIndicador, mensajeError } from '../../../../services/tmi';
 
 export const MESES = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+export const MESES_NOMBRE = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre',
+  'Octubre', 'Noviembre', 'Diciembre'];
 export const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 /** Estándar propio de un centro en un indicador, con sus meses listos para pintar. */
@@ -54,6 +56,11 @@ export class TmiCentroEstandarTab implements OnInit {
   readonly anios = Array.from({ length: 6 }, (_, i) => new Date().getFullYear() + 1 - i);
 
   anio = signal(new Date().getFullYear());
+  /** Mes de la cabecera: 0 = todo el año; 1..12 filtra la lista a los estándares propios de ese mes (y los NA). */
+  mes = signal(0);
+  readonly mesesNombre = MESES_NOMBRE;
+  /** Mes elegido en el formulario (0 = ninguno): su casilla se resalta. */
+  mesForm = 0;
   filas = signal<TmiCentroEstandar[]>([]);
   centros = signal<TmiCentroCatalogo[]>([]);
   indicadores = signal<TmiIndicador[]>([]);
@@ -73,14 +80,16 @@ export class TmiCentroEstandarTab implements OnInit {
     const texto = this.busqueda().trim().toLowerCase();
     const contiene = (...vals: any[]) => vals.some((v) => String(v ?? '').toLowerCase().includes(texto));
     const mapa = new Map<string, GrupoCentroEstandar>();
+    const mes = this.mes();
     for (const f of this.filas()) {
+      if (mes && f.aplica && aNumero((f as any)['est_' + MESES[mes - 1]]) === null) continue;
       const clave = String(f.codcentro);
       let g = mapa.get(clave);
       if (!g) {
         g = { clave, codcentro: clave, centro: f.centro || 'Centro sin nombre', red: f.red || '', filas: [] };
         mapa.set(clave, g);
       }
-      g.filas.push(this.fila(f));
+      g.filas.push(this.fila(f, mes));
     }
     const resultado: GrupoCentroEstandar[] = [];
     for (const g of mapa.values()) {
@@ -198,7 +207,8 @@ export class TmiCentroEstandarTab implements OnInit {
     this.cargar();
   }
 
-  private fila(f: TmiCentroEstandar): FilaCentroEstandar {
+  /** mes (1..12): el recuadro muestra el estándar de ese mes. */
+  private fila(f: TmiCentroEstandar, mes = 0): FilaCentroEstandar {
     const valores = MESES.map((m) => aNumero((f as any)['est_' + m]));
     const meses = valores.map((v, i) => ({
       valor: f.aplica ? v : null,
@@ -209,7 +219,7 @@ export class TmiCentroEstandarTab implements OnInit {
       f,
       meses,
       rango: f.aplica ? rangoMeses(valores, 'estándar general') : 'No aplica: el indicador queda NA todo el año',
-      valor: !f.aplica ? 'NA' : distintos.length === 1 ? fmtNum(distintos[0] as number) : distintos.length ? 'varía' : '—',
+      valor: !f.aplica ? 'NA' : mes ? fmtNum(valores[mes - 1] as number) : distintos.length === 1 ? fmtNum(distintos[0] as number) : distintos.length ? 'varía' : '—',
     };
   }
 
@@ -231,6 +241,7 @@ export class TmiCentroEstandarTab implements OnInit {
 
   nuevo(codcentro = ''): void {
     this.form.reset({ id: 0, codcentro, id_indicador: null, anio: this.anio(), aplica: true, acept: null, sustento: '' });
+    this.mesForm = this.mes();
     this.valorTodos = null;
     this.filtroCentro.set('');
     this.filtroRed.set('');
@@ -240,6 +251,7 @@ export class TmiCentroEstandarTab implements OnInit {
 
   editar(f: TmiCentroEstandar): void {
     this.form.reset({ ...f, id: f.id ?? 0, sustento: f.sustento ?? '' } as any);
+    this.mesForm = this.mes();
     this.valorTodos = null;
     this.filtroCentro.set('');
     this.filtroRed.set('');

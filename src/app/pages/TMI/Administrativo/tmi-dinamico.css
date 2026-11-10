@@ -971,3 +971,230 @@
         max-height: 460px;
     }
 }
+
+/* ---------- Justificación del cálculo (Calcular y generar el Excel, tarjeta 3) ---------- */
+.jus-card {
+    margin-top: 16px;
+}
+
+.jus-aviso {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 8px 0 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--rpt-line-strong);
+    border-left: 3px solid var(--rpt-brand);
+    border-radius: var(--rpt-radius-sm);
+    background: var(--rpt-brand-tint);
+    color: var(--rpt-ink);
+    font-size: 13px;
+}
+
+.jus-aviso mat-icon {
+    color: var(--rpt-brand);
+}
+
+.jus-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--rpt-ink-2);
+    cursor: pointer;
+}
+
+.jus-check input {
+    accent-color: var(--rpt-brand);
+}
+
+.jus-tabla {
+    border: 1px solid var(--rpt-line);
+    border-radius: var(--rpt-radius-sm);
+    overflow: hidden;
+}
+
+.jus-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.jus-fila {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    padding: 8px 12px;
+    border: 0;
+    border-bottom: 1px solid var(--rpt-line-soft);
+    background: var(--rpt-surface);
+    font: inherit;
+    font-size: 13px;
+    color: var(--rpt-ink);
+    text-align: left;
+}
+
+button.jus-fila {
+    cursor: pointer;
+}
+
+button.jus-fila:hover {
+    background: var(--rpt-surface-2);
+}
+
+.jus-cab {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rpt-muted);
+    background: var(--rpt-surface-2);
+    border-bottom: 1px solid var(--rpt-line);
+}
+
+.jus-fila.jus-cambio,
+.jus-term.jus-cambio {
+    box-shadow: inset 3px 0 0 var(--rpt-brand);
+    background: var(--rpt-brand-tint);
+}
+
+.jus-fila.jus-elegido {
+    outline: 2px solid var(--rpt-brand);
+    outline-offset: -2px;
+}
+
+.jus-centro small,
+.jus-calc small {
+    display: block;
+    color: var(--rpt-muted);
+    font-size: 12px;
+}
+
+.jus-calc {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.jus-calc code,
+.jus-calculo code,
+.jus-formula code,
+.jus-term code {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 12px;
+    color: var(--rpt-ink);
+    overflow-wrap: anywhere;
+}
+
+.jus-detalle {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rpt-line);
+}
+
+.jus-detalle h4 {
+    margin: 0 0 6px;
+    color: var(--rpt-ink);
+}
+
+.jus-detalle h5 {
+    margin: 16px 0 8px;
+    font-size: 13px;
+    color: var(--rpt-ink-2);
+}
+
+.jus-formula {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: var(--rpt-ink-2);
+}
+
+.jus-calculos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px;
+}
+
+.jus-calculo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--rpt-line);
+    border-radius: var(--rpt-radius-sm);
+    background: var(--rpt-surface-2);
+    font-size: 13px;
+}
+
+.jus-calculo-titulo {
+    font-weight: 600;
+    color: var(--rpt-brand-deep);
+}
+
+.jus-calculo small {
+    color: var(--rpt-muted);
+}
+
+.jus-terminos,
+.jus-filas {
+    border: 1px solid var(--rpt-line);
+    border-radius: var(--rpt-radius-sm);
+    overflow-x: auto;
+}
+
+.jus-term {
+    display: grid;
+    grid-template-columns: 60px minmax(150px, 1fr) 110px 110px 100px 90px 60px;
+    gap: 10px;
+    align-items: center;
+    min-width: 720px;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--rpt-line-soft);
+    font-size: 13px;
+}
+
+.jus-fil {
+    display: grid;
+    grid-template-columns: 110px minmax(140px, 1fr) minmax(140px, 1fr) minmax(120px, 1fr) 90px 90px 130px 110px 120px;
+    gap: 10px;
+    align-items: center;
+    min-width: 1080px;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--rpt-line-soft);
+    font-size: 13px;
+}
+
+.jus-term .num,
+.jus-fil .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.jus-link {
+    border: 0;
+    background: none;
+    padding: 0;
+    font: inherit;
+    font-size: 12px;
+    color: var(--rpt-brand);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.jus-link:disabled {
+    color: var(--rpt-muted);
+    cursor: default;
+}
+
+@media (max-width: 760px) {
+    .jus-fila {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .jus-fila.jus-cab span:not(:first-child) {
+        display: none;
+    }
+}
