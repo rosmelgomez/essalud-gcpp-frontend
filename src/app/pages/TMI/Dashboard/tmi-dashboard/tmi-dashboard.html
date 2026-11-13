@@ -10,7 +10,9 @@
       lo cumple. El puntaje de un establecimiento o red es lo obtenido sobre el máximo posible, llevado a escala de 20. El puntaje de una red por
       indicador es el promedio de sus establecimientos; el nacional, el promedio de las redes sin las redes APP.</p>
             <p>Bandas de lectura: nivel alto desde 16 puntos, medio desde 12 y bajo por debajo de 12 (en escala de 1 a 5: alto desde 4, medio desde 3).</p>
-            <p>Cifras preliminares: podrían modificarse por omisiones o correcciones propias del proceso estadístico.</p>
+            <p>Cada puntaje se calcula al abrir el tablero con los datos de hoy, que incluyen las correcciones hechas
+              después del cierre de cada mes. Cifras preliminares: podrían modificarse por omisiones o correcciones propias
+              del proceso estadístico.</p>
           </div>
         </details>
         <button class="btn" type="button" (click)="descargarExcel()" [disabled]="excelCargando() || !data()"

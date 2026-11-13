@@ -18,11 +18,13 @@
               <dt>Ene … Dic</dt><dd>El valor de cada mes (acumulado o del mes, según el indicador). Los meses después del periodo
                 elegido quedan vacíos.</dd>
             </dl>
-            <p>Cifras preliminares: podrían modificarse por omisiones o correcciones propias del proceso estadístico.</p>
+            <p>Cada número se calcula al abrir el tablero con los datos de hoy, que incluyen las correcciones hechas
+              después del cierre de cada mes. Cifras preliminares: podrían modificarse por omisiones o correcciones propias
+              del proceso estadístico.</p>
           </div>
         </details>
         <button type="button" class="btn" (click)="descargarExcel()" [disabled]="excelCargando() || sinDatos()"
-          title="El mismo Excel de Administración, con el resultado de este periodo">
+          title="El mismo Excel de Administración, calculado con los datos de hoy">
           <mat-icon>table_view</mat-icon> {{ excelCargando() ? 'Generando…' : 'Descargar Excel' }}</button>
       </span>
     </div>
@@ -42,7 +44,7 @@
       <label for="f-mes">Mes</label>
       <select id="f-mes" [ngModel]="periodo()" (ngModelChange)="cargar($event)">
         @for (m of mesesDelAnio(); track m.value) {
-        <option [value]="m.value">{{ m.label }}{{ m.calculado ? '' : ' (sin calcular)' }}</option>
+        <option [value]="m.value">{{ m.label }}{{ m.calculado ? '' : ' (sin datos)' }}</option>
         }
       </select>
     </div>
@@ -89,7 +91,7 @@
       } @else if (error()) {
       <div class="card estado error" role="alert">{{ error() }}</div>
       } @else if (sinDatos()) {
-      <div class="card estado">{{ etiquetaPeriodo(periodo()) }} todavía no tiene resultado calculado. Elija otro mes.</div>
+      <div class="card estado">{{ etiquetaPeriodo(periodo()) }} todavía no tiene datos. Elija otro mes.</div>
       } @else if (!centrosFiltrados().length) {
       <div class="card estado">{{ redTxt() }}: no hay centros{{ nivel() ? ' de nivel ' + nivel() : '' }}{{ tipo() ? ' de tipo ' + tipo() : '' }}. Elija otro nivel o tipo, o use «Borrar selección».</div>
       } @else {

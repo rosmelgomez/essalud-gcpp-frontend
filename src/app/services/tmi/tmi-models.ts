@@ -275,11 +275,14 @@ export interface TmiPeriodoCalculo {
   /** Último periodo con datos en TOTALIZADO3 hasta periodo_calculo (null = ninguno en el último año). */
   periodo_datos?: string | null;
   solo_periodo_anterior: boolean;
-  /** origen_datos: con qué datos se calculó el resultado oficial (BACKUP = copia del cierre; ACTUAL = TOTALIZADO3);
-   *  origenes: cada resultado guardado del periodo (con TOTALIZADO3 y con TOTALIZADO3_BACKUP). */
+  /** origen_datos: ACTUAL si el periodo tiene datos actuales; si no, BACKUP. origenes: con qué datos se puede calcular
+   *  el periodo (siempre en tiempo real, nada se guarda; sin fecha ni conteos). */
   periodos: {
-    periodo: number; indicadores: number; centros: number; fecha_calculo: string; origen_datos?: TmiOrigenDatos | null;
-    origenes?: Partial<Record<TmiOrigenDatos, { fecha_calculo: string; indicadores: number; centros: number }>>;
+    periodo: number; indicadores: number | null; centros: number | null; fecha_calculo: string | null;
+    origen_datos?: TmiOrigenDatos | null;
+    origenes?: Partial<Record<TmiOrigenDatos, {
+      fecha_calculo: string | null; indicadores: number | null; centros: number | null; en_vivo?: boolean;
+    }>>;
   }[];
   /** Copias de TOTALIZADO3 guardadas al cierre (TOTALIZADO3_BACKUP): con ellas se calcula el periodo "como fue". */
   backups?: TmiBackup[];
@@ -328,8 +331,23 @@ export interface TmiJustificacion {
   periodo: number;
   id_indicador: number;
   con_backup: boolean;
+  /** Centros del indicador con valor o puntaje distinto entre como fue y hoy. */
+  cambios?: number;
   origenes: TmiOrigenDatos[];
   centros: TmiJustificacionCentro[];
+}
+
+/** Cuántos centros cambiaron en cada indicador del periodo entre como fue y con los datos de hoy. */
+export interface TmiResumenCambios {
+  periodo: number;
+  con_backup: boolean;
+  con_datos_hoy: boolean;
+  indicadores_con_cambios: number;
+  centros_con_cambios: number;
+  indicadores: {
+    id_indicador: number; orden: number | null; codigo: string | null; indicador: string;
+    centros: number; cambios: number; cambios_puntaje: number;
+  }[];
 }
 
 /** Valor de un término de la fórmula (grupo, actividad, servicio) en un cálculo guardado. */
@@ -376,9 +394,6 @@ export interface TmiCierre {
   filas_insertadas: number | null;
   mensaje: string | null;
   usuario_modifica: string | null;
-  fecha_calculo: string | null;
-  indicadores_calculados: number | null;
-  centros_calculados: number | null;
 }
 
 /** Periodo del calendario de cierre: su día propio (null = el general), su fecha de cierre y el estado de su cierre. */

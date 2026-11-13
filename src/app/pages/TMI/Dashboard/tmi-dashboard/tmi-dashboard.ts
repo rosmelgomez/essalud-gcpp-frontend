@@ -387,7 +387,7 @@ export class TmiDashboard implements OnInit {
     this.centro.set(qp.get('centro') ? Number(qp.get('centro')) : null);
     this.ind.set(qp.get('ind') ? Number(qp.get('ind')) : null);
     this.cargando.set(true);
-    this.calculoSrv.getPeriodosDashboard().subscribe({
+    this.calculoSrv.getPeriodosDashboard('ACTUAL').subscribe({
       next: (r) => {
         const ps = (r ?? []).map((p) => String(p.periodo)).sort().reverse()
           .map((p) => ({ periodo: p, label: `${MESES_L[+p.slice(4) - 1]} ${p.slice(0, 4)}` }));
@@ -405,7 +405,7 @@ export class TmiDashboard implements OnInit {
     this.periodo.set(periodo);
     this.cargando.set(true);
     this.error.set('');
-    this.calculoSrv.getDashboard(periodo).subscribe({
+    this.calculoSrv.getDashboard(periodo, 'ACTUAL').subscribe({
       next: (d) => {
         this.data.set(d);
         this.cargando.set(false);
@@ -442,12 +442,12 @@ export class TmiDashboard implements OnInit {
     });
   }
 
-  /** Excel del periodo (el mismo de Administración), armado con el resultado guardado. */
+  /** Excel del periodo (el mismo de Administración), calculado con los datos actuales. */
   descargarExcel() {
     if (!this.periodo() || this.excelCargando()) return;
     this.excelCargando.set(true);
     this.excelError.set('');
-    this.calculoSrv.descargarExcelDashboard(this.periodo()).subscribe({
+    this.calculoSrv.descargarExcelDashboard(this.periodo(), 'ACTUAL').subscribe({
       next: () => this.excelCargando.set(false),
       error: (e: Error) => { this.excelCargando.set(false); this.excelError.set(e.message); },
     });

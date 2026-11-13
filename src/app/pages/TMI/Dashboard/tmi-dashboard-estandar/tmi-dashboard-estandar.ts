@@ -45,7 +45,7 @@ export class TmiDashboardEstandar implements OnInit {
 
   readonly mesesC = MESES_C;
 
-  /** Periodos para elegir: los calculados y el actual (sin cálculo se muestra vacío). */
+  /** Periodos para elegir: los que tienen datos actuales y el actual (sin datos se muestra vacío). */
   periodos = signal<string[]>([]);
   private calculados = new Set<string>();
   private cache = new Map<string, TmiDashboardDatos>();
@@ -232,7 +232,7 @@ export class TmiDashboardEstandar implements OnInit {
     this.centro.set(qp.get('centro') ? Number(qp.get('centro')) : null);
     this.ind.set(qp.get('ind') ? Number(qp.get('ind')) : null);
     this.cargando.set(true);
-    this.calculoSrv.getPeriodosDashboard().subscribe({
+    this.calculoSrv.getPeriodosDashboard('ACTUAL').subscribe({
       next: (r) => {
         const calc = (r ?? []).map((p) => String(p.periodo));
         this.calculados = new Set(calc);
@@ -259,7 +259,7 @@ export class TmiDashboardEstandar implements OnInit {
     const enCache = this.cache.get(periodo);
     if (enCache) { this.aplicar(enCache); return; }
     this.cargando.set(true);
-    this.calculoSrv.getDashboard(periodo).subscribe({
+    this.calculoSrv.getDashboard(periodo, 'ACTUAL').subscribe({
       next: (d) => {
         this.cache.set(periodo, d);
         if (this.periodo() === periodo) this.aplicar(d);
@@ -335,12 +335,12 @@ export class TmiDashboardEstandar implements OnInit {
     });
   }
 
-  /** Excel del periodo (el mismo de Administración), armado con el resultado guardado. */
+  /** Excel del periodo (el mismo de Administración), calculado con los datos actuales. */
   descargarExcel() {
     if (!this.periodo() || this.excelCargando()) return;
     this.excelCargando.set(true);
     this.excelError.set('');
-    this.calculoSrv.descargarExcelDashboard(this.periodo()).subscribe({
+    this.calculoSrv.descargarExcelDashboard(this.periodo(), 'ACTUAL').subscribe({
       next: () => this.excelCargando.set(false),
       error: (e: Error) => { this.excelCargando.set(false); this.excelError.set(e.message); },
     });

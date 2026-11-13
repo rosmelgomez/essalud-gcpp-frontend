@@ -4,7 +4,7 @@ import { Observable, catchError, from, map, switchMap, throwError } from 'rxjs';
 import { Backend } from '../../model/api';
 import {
   TmiAvisoConfig, TmiCambioConfig, TmiDashboardDatos, TmiFilaCambiada, TmiJustificacion, TmiOrigenDatos, TmiPeriodoCalculo,
-  TmiProblemaConfig, TmiResultadoFinal, TmiTerminoResultado,
+  TmiProblemaConfig, TmiResultadoFinal, TmiResumenCambios, TmiTerminoResultado,
 } from './tmi-models';
 import { mensajeError } from './tmi-error';
 
@@ -56,6 +56,10 @@ export class TmiCalculoService {
   getJustificacion(periodo: string, idIndicador: number) {
     return this.http.get<TmiJustificacion>(`${base_url}/justificacion/${periodo}/${idIndicador}`);
   }
+  /** Por indicador: cuántos centros cambiaron entre como fue (cierre) y con los datos de hoy. */
+  getResumenCambios(periodo: string) {
+    return this.http.get<TmiResumenCambios>(`${base_url}/justificacion/${periodo}/resumen`);
+  }
   /** Valor de cada término (grupo, actividad, servicio) del centro en cada cálculo guardado. */
   getTerminosJustificacion(periodo: string, idIndicador: number, codcentro: number) {
     return this.http.get<TmiTerminoResultado[]>(`${base_url}/justificacion/${periodo}/${idIndicador}/${codcentro}/terminos`);
@@ -71,10 +75,17 @@ export class TmiCalculoService {
     const params: Record<string, string> = origen ? { origen } : {};
     return this.http.get<TmiResultadoFinal[]>(`${base_url}/resultado/${periodo}/${idIndicador}`, { params });
   }
-  /** Periodos con resultado guardado para el dashboard (ruta pública, sin sesión). */
-  getPeriodosDashboard() { return this.http.get<TmiPeriodoCalculo['periodos']>(`${base_url}/dashboard/periodos`); }
-  /** Datos del dashboard: resultado final guardado del periodo (AAAAMM). */
-  getDashboard(periodo: string) { return this.http.get<TmiDashboardDatos>(`${base_url}/dashboard/${periodo}`); }
+  /** Periodos para el dashboard (ruta pública, sin sesión). origen ACTUAL: solo los que tienen datos actuales. */
+  getPeriodosDashboard(origen?: 'ACTUAL') {
+    const params = origen ? { origen } : undefined;
+    return this.http.get<TmiPeriodoCalculo['periodos']>(`${base_url}/dashboard/periodos`, { params });
+  }
+  /** Datos del dashboard del periodo (AAAAMM): con origen ACTUAL, calculado al momento con los datos de hoy; sin él,
+   *  el resultado oficial (el guardado del cierre). */
+  getDashboard(periodo: string, origen?: 'ACTUAL') {
+    const params = origen ? { origen } : undefined;
+    return this.http.get<TmiDashboardDatos>(`${base_url}/dashboard/${periodo}`, { params });
+  }
   /** ids: indicadores que lleva el Excel; sin ids, todos. */
   getExcel(periodo: string, calcular: boolean, ids?: number[], origen?: TmiOrigenDatos) {
     const filtro = (ids?.length ? `&indicadores=${ids.join(',')}` : '') + (origen ? `&origen=${origen}` : '');
@@ -83,10 +94,12 @@ export class TmiCalculoService {
       observe: 'response' as 'response',
     });
   }
-  /** Excel del periodo desde los dashboards (ruta pública): el de Administración con todos los indicadores, armado con
-   *  el resultado guardado (no recalcula). Lo descarga y emite el nombre del archivo; el error trae el detalle. */
-  descargarExcelDashboard(periodo: string): Observable<string> {
-    return this.http.get(`${base_url}/dashboard/${periodo}/excel`, { responseType: 'blob', observe: 'response' }).pipe(
+  /** Excel del periodo desde los dashboards (ruta pública): el de Administración con todos los indicadores, con el
+   *  resultado oficial o, con origen ACTUAL, calculado con los datos de hoy. Lo descarga y emite el nombre del
+   *  archivo; el error trae el detalle. */
+  descargarExcelDashboard(periodo: string, origen?: 'ACTUAL'): Observable<string> {
+    const params = origen ? { origen } : undefined;
+    return this.http.get(`${base_url}/dashboard/${periodo}/excel`, { responseType: 'blob', observe: 'response', params }).pipe(
       map((resp) => guardarExcel(resp, `TMI_${periodo}.xlsx`)),
       catchError((e) => from(leerErrorExcel(e)).pipe(switchMap((m) => throwError(() => new Error(m))))),
     );

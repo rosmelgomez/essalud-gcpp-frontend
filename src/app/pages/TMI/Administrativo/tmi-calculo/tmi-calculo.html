@@ -9,29 +9,37 @@
 <div class="dyn-ok" style="margin-bottom: 12px;"><mat-icon>check_circle</mat-icon> {{ mensaje() }}</div>
 }
 
-<!-- 1. Cálculo: el periodo que elige el usuario (hasta el mes anterior al actual) -->
+<!-- 1. Elección del usuario: año, mes y datos con que se calcula (todo en tiempo real) -->
 <mat-card class="table dyn-paso">
     <div class="table-title-row">
         <div>
-            <h3>1. Calcular el periodo</h3>
+            <h3>1. Elegir el periodo y los datos</h3>
             <div class="dyn-paso-periodo">
-                @if (!puedeCalcular() && periodoCalculo()) {
-                <span class="dyn-badge dyn-p0">Se puede calcular hasta {{ nombrePeriodo(periodoCalculo()) }}{{ periodoCalculo() !== estadoPeriodos()?.periodo_calculo ? '. Todavía no llegan los datos de ' + nombrePeriodo(estadoPeriodos()!.periodo_calculo) : '' }}</span>
-                } @else if (guardadoCalculo()?.origenes?.ACTUAL; as g) {
-                <span class="dyn-badge dyn-p5">Último cálculo: {{ fecha(g.fecha_calculo) }}</span>
+                @if (motivoNoCalcular()) {
+                <span class="dyn-badge dyn-p0">{{ motivoNoCalcular() }}</span>
+                } @else if (origenSel() === 'BACKUP') {
+                @if (backupSel(); as b) {
+                <span class="dyn-badge dyn-p5">Datos históricos: enero a {{ nombrePeriodo() }} como estaban al cierre, guardados el
+                    {{ fecha(b.fecha_backup) }} · {{ b.filas | number }} filas</span>
+                }
                 } @else {
-                <span class="dyn-badge dyn-pNA">Todavía no se calculó</span>
+                <span class="dyn-badge dyn-p5">Datos actuales: enero a {{ nombrePeriodo() }}</span>
                 }
             </div>
         </div>
         <div class="dyn-inline">
-            <select class="anio-select" aria-label="Año a calcular" [ngModel]="anioCalc()" (ngModelChange)="anioCalc.set($event)"
-                [disabled]="!!ocupado()">
+            <select class="anio-select" aria-label="Año" [ngModel]="anioSel()"
+                (ngModelChange)="anioSel.set($event); cambioEleccion()" [disabled]="!!ocupado()">
                 @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
             </select>
-            <select class="periodo-select" aria-label="Mes a calcular" [ngModel]="mesCalc()" (ngModelChange)="mesCalc.set($event)"
-                [disabled]="!!ocupado()">
+            <select class="periodo-select" aria-label="Mes" [ngModel]="mesSel()"
+                (ngModelChange)="mesSel.set($event); cambioEleccion()" [disabled]="!!ocupado()">
                 @for (m of meses; track m.value) {<option [value]="m.value">{{ m.label }}</option>}
+            </select>
+            <select class="periodo-select" aria-label="Datos para el cálculo" [ngModel]="origenSel()"
+                (ngModelChange)="origenSel.set($event); cambioEleccion()" [disabled]="!!ocupado()">
+                <option value="ACTUAL">Datos actuales</option>
+                <option value="BACKUP">Datos históricos</option>
             </select>
             <button (click)="validar()" class="btn-download" [disabled]="!!ocupado()">
                 <mat-icon>rule</mat-icon> Validar
@@ -43,14 +51,15 @@
         </div>
     </div>
     <p class="dyn-hint">
-        Elija el año y el mes, hasta el mes anterior al actual. Se calculan los indicadores activos con los datos de hoy
-        y el resultado reemplaza al cálculo anterior del periodo. El resultado con los datos del cierre lo guarda el
-        cierre de cada mes y aquí no cambia. Puede ver los dos en el punto 2.
+        Con <strong>datos actuales</strong> se calcula con la información de enero al mes elegido tal como está hoy.
+        Con <strong>datos históricos</strong> se usa la información de enero a ese mes tal como estaba el día del cierre.
+        El cálculo se hace al momento y no se guarda. El resultado, el Excel y la comparativa de abajo usan esta
+        misma elección.
     </p>
     @if (ocupado() === 'calcular') {
     <div class="loading loading-excel">
-        <p>Calculando TMI {{ nombrePeriodo(periodoCalcSel()) }}...</p>
-        <span class="loading-sub">Esto puede tardar unos segundos</span>
+        <p>Calculando el TMI de {{ nombrePeriodo() }} {{ nombreOrigen(origenSel()) }}...</p>
+        <span class="loading-sub">Se calcula cada mes de enero a {{ nombrePeriodo() }}, así que puede tardar unos segundos.</span>
     </div>
     }
 </mat-card>
@@ -60,7 +69,7 @@
     @if (p.length === 0) {
     <div class="dyn-ok"><mat-icon>check_circle</mat-icon> La configuración no tiene errores.</div>
     } @else {
-    <h3>{{ p.length }} problema(s): corríjalos en las pestañas Variables o Indicadores</h3>
+    <h3>{{ p.length === 1 ? 'Hay 1 problema en la configuración' : 'Hay ' + p.length + ' problemas en la configuración' }}. Corríjalos en las pestañas Variables o Indicadores.</h3>
     <ul class="dyn-problemas">
         @for (x of p; track $index) {<li><strong>{{ x.elemento }}</strong>: {{ x.problema }}</li>}
     </ul>
@@ -68,45 +77,21 @@
 </mat-card>
 }
 
-@if (puntajes().length) {
-<mat-card class="table" style="margin-bottom: 16px; padding-bottom: 12px;">
-    <h3>Puntajes de {{ nombrePeriodo(periodoCalculado()) }} (centros × indicadores)</h3>
-    <div class="dyn-chips">
-        @for (x of puntajes(); track x.clave) {
-        <span [class]="claseP(x.clave)">Puntaje {{ x.clave }}: {{ x.valor }}</span>
-        }
-    </div>
-</mat-card>
-}
-
 <mat-card class="table dyn-resultado" [style.--cols-table]="columnasGrid()">
     <div class="table-title-row">
         <div>
-            <h3>2. Excel y resultados guardados</h3>
+            <h3>2. Resultado y Excel</h3>
             <div class="dyn-paso-periodo">
-                @if (guardadoVer(); as g) {
-                <span class="dyn-badge">{{ nombrePeriodo(periodoSel()) }} · {{ origenVer() === 'BACKUP' ? 'datos del cierre' : 'datos de hoy' }}
-                    · calculado el {{ fecha(g.fecha_calculo) }} · {{ g.indicadores }} indicadores · {{ g.centros }} centros</span>
-                @if (guardado()?.origen_datos === origenVer()) {<span class="dyn-badge dyn-p5">Es el que usa el dashboard</span>}
+                @if (hayCalculo()) {
+                <span class="dyn-badge">{{ nombrePeriodo() }} · {{ origenSel() === 'BACKUP' ? 'datos históricos' : 'datos actuales' }}</span>
                 } @else {
-                <span class="dyn-badge dyn-p0">{{ nombrePeriodo(periodoSel()) }} no tiene resultado guardado</span>
+                <span class="dyn-badge dyn-pNA">Pulse "Calcular" para ver el resultado de {{ nombrePeriodo() }} {{ nombreOrigen(origenSel()) }}</span>
                 }
             </div>
         </div>
         <div class="dyn-inline">
-            <select [(ngModel)]="anio" (ngModelChange)="cambioPeriodo()" class="anio-select" [disabled]="!!ocupado()">
-                @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
-            </select>
-            <select [(ngModel)]="mes" (ngModelChange)="cambioPeriodo()" class="periodo-select" [disabled]="!!ocupado()">
-                @for (m of meses; track m.value) {<option [value]="m.value">{{ m.label }}</option>}
-            </select>
-            <select class="periodo-select" aria-label="Resultado a ver" [ngModel]="origenVer()"
-                (ngModelChange)="cambioOrigenVer($event)" [disabled]="!!ocupado() || !guardado()">
-                <option value="ACTUAL" [disabled]="!guardado()?.origenes?.ACTUAL">Con los datos de hoy</option>
-                <option value="BACKUP" [disabled]="!guardado()?.origenes?.BACKUP">Con los datos del cierre</option>
-            </select>
-            <button (click)="descargar()" class="btn-search btn-excel" [disabled]="!!ocupado() || !guardadoVer() || !excelIds().size"
-                [title]="guardadoVer() ? 'Descarga el Excel del resultado elegido' : 'Este periodo no tiene ese resultado'">
+            <button (click)="descargar()" class="btn-search btn-excel" [disabled]="!!ocupado() || !hayCalculo() || !excelIds().size"
+                [title]="hayCalculo() ? 'Descarga el Excel del periodo y los datos elegidos' : 'Primero pulse Calcular'">
                 @if (ocupado() === 'excel') {<span class="spinner-btn"></span>} @else {<mat-icon>download</mat-icon>}
                 {{ ocupado() === 'excel' ? 'Generando Excel…' : 'Descargar Excel' }}
             </button>
@@ -196,7 +181,7 @@
                 } @empty {
                 @if (ocupado() !== 'resultado') {
                 <div class="dyn-empty">
-                    {{ periodoSel() === periodoCalculo() ? 'Este periodo todavía no se calcula. Use "Calcular" arriba.' : 'Este periodo no tiene resultado guardado.' }}
+                    {{ hayCalculo() ? 'Este indicador no tiene centros en el periodo.' : 'Pulse "Calcular" arriba para ver el resultado.' }}
                 </div>
                 }
                 }
@@ -209,41 +194,99 @@
     </div>
 </mat-card>
 
-<!-- 3. Justificación: el resultado con los datos del cierre y con los datos de hoy -->
+<!-- 3. Comparativa: el cálculo con datos históricos frente al cálculo con datos actuales -->
 <mat-card class="table dyn-paso jus-card">
     <div class="table-title-row">
         <div>
-            <h3>3. Justificación del cálculo</h3>
+            <h3>3. Comparativa de cálculos: datos históricos y actuales</h3>
             <div class="dyn-paso-periodo">
                 @if (backupSel(); as b) {
-                <span class="dyn-badge dyn-p5">Datos del cierre de {{ nombrePeriodo(periodoSel()) }} guardados el
+                <span class="dyn-badge dyn-p5">Datos históricos de {{ nombrePeriodo(periodoSel()) }}, guardados el
                     {{ fecha(b.fecha_backup) }} · {{ b.filas | number }} filas{{ b.usuario_backup ? ' · ' + b.usuario_backup : '' }}</span>
                 } @else {
-                <span class="dyn-badge dyn-pNA">{{ nombrePeriodo(periodoSel()) }} todavía no tiene los datos del cierre guardados</span>
+                <span class="dyn-badge dyn-pNA">{{ nombrePeriodo(periodoSel()) }} todavía no tiene datos históricos</span>
                 }
             </div>
         </div>
         <div class="dyn-inline">
+            <select class="periodo-select" aria-label="Indicador a comparar" [ngModel]="idIndicador()"
+                (ngModelChange)="cambioIndicadorComparar($event)" [disabled]="!!ocupado()">
+                @for (i of indicadores(); track i.id) {<option [ngValue]="i.id">{{ i.orden }}. {{ i.indicador }}</option>}
+            </select>
             <button (click)="verJustificacion()" class="btn-search" [disabled]="!!ocupado() || idIndicador() == null">
-                @if (ocupado() === 'justificacion') {<span class="spinner-btn"></span>} @else {<mat-icon>fact_check</mat-icon>}
-                Ver justificación
+                @if (ocupado() === 'justificacion') {<span class="spinner-btn"></span>} @else {<mat-icon>compare_arrows</mat-icon>}
+                Comparar
             </button>
         </div>
     </div>
     <p class="dyn-hint">
-        Compara, para el periodo y el indicador de arriba, el resultado de cada centro con los datos del cierre y con
-        los datos de hoy. Al elegir un centro se ve la fórmula con sus valores, el grupo, la actividad y el servicio de
-        cada término, y los datos que cambiaron después del cierre, con quién los cambió y cuándo.
+        Pone lado a lado, para el periodo elegido arriba, el cálculo de cada centro con <strong>datos históricos</strong>
+        y con <strong>datos actuales</strong>. Los dos se calculan al momento: el resultado no se guarda. Primero aparece cuántos centros dan distinto en cada indicador. Al elegir un centro se ven
+        los dos cálculos con su fórmula, el valor de cada término (grupo, actividad y servicio) y los registros que
+        cambiaron después del cierre, con quién los cambió y cuándo.
     </p>
+    @if (calendario(); as k) {
+    <details class="jus-lectura jus-calendario">
+        <summary>Por qué los datos actuales pueden ser distintos del cierre de {{ k.mes }}</summary>
+        <ul>
+            <li><strong>Carga del mes.</strong> Los estadísticos ingresan los datos de {{ k.mesCorto }} en la primera
+                semana de {{ k.siguienteCorto }}. Por eso el cierre de {{ k.mes }} se hace en {{ k.siguiente }}.</li>
+            <li><strong>Datos históricos.</strong> El cierre guarda una copia de {{ k.rango }} tal como está ese
+                día@if (backupSel(); as b) { (esta copia se guardó el {{ fecha(b.fecha_backup) }})}. Esa copia ya no cambia.</li>
+            <li><strong>Correcciones.</strong> En la última semana de cada mes los estadísticos pueden corregir meses
+                anteriores.@if (!k.enero) { Por ejemplo, a fines de {{ k.siguienteCorto }} pueden corregir {{ k.anteriorCorto }}
+                o {{ k.mesCorto }}.} Esas correcciones también pueden llegar mucho después: en el cierre de agosto se
+                pueden cambiar datos de marzo.</li>
+            <li><strong>Datos actuales.</strong> Son los datos como están hoy, con todas esas correcciones. Si alguien cambió
+                un registro de {{ k.rango }} después del cierre, el cálculo con datos actuales da distinto y la
+                comparativa lo muestra, con quién lo cambió y cuándo.</li>
+        </ul>
+    </details>
+    }
+
+    @if (resumenCambios(); as rc) {
+    <section class="jus-resumen">
+        <div class="dyn-paso-periodo">
+            <span class="dyn-badge" [class.dyn-p1]="rc.indicadores_con_cambios > 0" [class.dyn-p5]="rc.indicadores_con_cambios === 0">
+                {{ rc.indicadores_con_cambios }} de {{ rc.indicadores.length }} indicadores cambiaron
+                · {{ rc.centros_con_cambios | number }} {{ rc.centros_con_cambios === 1 ? 'centro' : 'centros' }} con valor o puntaje distinto
+            </span>
+            @if (!rc.con_backup) {<span class="dyn-badge dyn-pNA">No hay datos históricos para comparar</span>}
+            @if (!rc.con_datos_hoy) {<span class="dyn-badge dyn-pNA">No hay datos actuales para comparar</span>}
+        </div>
+        <div class="jus-resumen-tabla">
+            <div class="jus-res jus-cab">
+                <span>Indicador</span><span class="num">Centros</span><span class="num">Cambiaron</span>
+                <span class="num">Cambió el puntaje</span>
+            </div>
+            @for (i of indicadoresResumen(); track i.id_indicador) {
+            <button type="button" class="jus-res" [class.jus-cambio]="i.cambios > 0"
+                [class.jus-elegido]="i.id_indicador === idIndicador()" (click)="verIndicadorResumen(i.id_indicador)"
+                [disabled]="!!ocupado()" [title]="'Comparar ' + i.indicador">
+                <span>{{ i.orden }}. {{ i.indicador }}</span>
+                <span class="num">{{ i.centros | number }}</span>
+                <span class="num"><strong>{{ i.cambios | number }}</strong></span>
+                <span class="num">{{ i.cambios_puntaje | number }}</span>
+            </button>
+            } @empty {
+            <div class="dyn-ok"><mat-icon>check_circle</mat-icon> Ningún indicador cambió: con datos actuales el resultado es el mismo que al cierre.</div>
+            }
+        </div>
+        <label class="jus-check">
+            <input type="checkbox" [checked]="verTodosResumen()" (change)="verTodosResumen.set($any($event.target).checked)" />
+            Ver también los indicadores que no cambiaron
+        </label>
+    </section>
+    }
 
     @if (justificacion(); as j) {
+    <h4 class="jus-subtitulo">{{ nombreIndicador() }} · {{ j.cambios ?? cambiosJust() }} de {{ j.centros.length }} centros cambiaron</h4>
     @if (faltaOrigen(j); as falta) {
     <div class="jus-aviso">
         <mat-icon>info</mat-icon>
-        <span>Para comparar falta calcular {{ nombrePeriodo(periodoSel()) }} {{ nombreOrigen(falta) }}.</span>
-        <button class="btn-download" (click)="calcularParaComparar(falta)" [disabled]="!!ocupado() || !puedeCalcularSel()">
-            <mat-icon>calculate</mat-icon> Calcular {{ nombreOrigen(falta) }}
-        </button>
+        <span>{{ falta === 'BACKUP'
+            ? nombrePeriodo() + ' no tiene datos históricos, así que solo se muestra con datos actuales.'
+            : nombrePeriodo() + ' no tiene datos actuales, así que solo se muestra con datos históricos.' }}</span>
     </div>
     }
     <div class="filters-bar">
@@ -257,11 +300,37 @@
             Solo los que cambiaron ({{ cambiosJust() }})
         </label>
     </div>
+    @if (j.centros[0]; as c0) {
+    @if (c0.BACKUP ?? c0.ACTUAL; as r0) {
+    <section class="jus-lectura">
+        <h5>Cómo se lee la fórmula <code>{{ r0.formula }}</code>@if (r0.formula_alias) { ({{ r0.formula_alias }})}</h5>
+        @if (letrasLeidas().length) {
+        <ul>
+            @for (l of letrasLeidas(); track l.letra) {
+            <li><strong>{{ l.letra }}</strong> = {{ l.variable }}:
+                @for (p of l.partes; track $index) {
+                @if ($index > 0) { + }
+                <code>{{ p.termino }}</code>
+                @if (p.grupo) {<small>(grupo {{ p.grupo }}, actividad {{ p.actividad }}, {{ p.servicio }})</small>}
+                }
+            </li>
+            }
+        </ul>
+        }
+        <p>Cada término entre corchetes es <code>[grupo;actividad]</code> y suma la cantidad registrada de ese grupo y
+            actividad en todos los servicios. Con <code>#</code> solo cuenta ese servicio: <code>[9;9#14]</code> es grupo 9,
+            actividad 9, servicio 14 (con <code>#77,78</code> cuenta los dos). <code>MEDIANA([...])</code> usa la mediana
+            de cada servicio en vez de la suma.
+            {{ r0.tipo_calculo === 'ACUMULADO' ? 'Cada término suma de enero al mes elegido.' : 'Cada término toma el valor del mes elegido.' }}</p>
+    </section>
+    }
+    }
     <div class="jus-tabla">
         <div class="jus-fila jus-cab">
             <span>Centro</span>
-            <span>Con los datos del cierre</span>
-            <span>Con los datos de hoy</span>
+            <span>Fórmula</span>
+            <span>Con datos históricos</span>
+            <span>Con datos actuales</span>
         </div>
         <div class="jus-scroll">
             @for (c of centrosJust(); track c.codcentro) {
@@ -269,6 +338,7 @@
                 [class.jus-elegido]="centroJust()?.codcentro === c.codcentro" (click)="abrirCentro(c)">
                 <span class="jus-centro"><strong>{{ c.codcentro }}</strong> {{ c.centro ?? '' }}
                     <small>{{ c.red ?? '' }}</small></span>
+                <span class="jus-calc jus-form"><code>{{ (c.BACKUP ?? c.ACTUAL)?.formula ?? '' }}</code></span>
                 @for (r of [c.BACKUP, c.ACTUAL]; track $index) {
                 <span class="jus-calc">
                     @if (r) {
@@ -295,12 +365,37 @@
             <strong>Fórmula:</strong> {{ r.formula_alias ?? '' }}{{ r.formula_alias ? ' = ' : '' }}<code>{{ r.formula }}</code>
             · {{ r.tipo_calculo === 'ACUMULADO' ? 'acumulado de enero al mes' : 'valor del mes' }}
         </p>
+        @if (lecturaCentro().length) {
+        <section class="jus-lectura">
+            <h5>Cómo se lee en este centro</h5>
+            <ul>
+                @for (l of lecturaCentro(); track l.letra) {
+                <li><strong>{{ l.letra }}</strong> = {{ l.variable }}:
+                    @for (p of l.partes; track $index) {
+                    @if ($index > 0) { + }
+                    <code>{{ p.termino }}</code>
+                    @if (p.grupo) {<small>(grupo {{ p.grupo }}, actividad {{ p.actividad }}, {{ p.servicio }})</small>}
+                    }
+                    @if (l.hay) {
+                    <span class="jus-lectura-valor">→ histórico <strong>{{ l.historico == null ? '—' : (l.historico | number: '1.0-4') }}</strong>
+                        · actual <strong>{{ l.actual == null ? '—' : (l.actual | number: '1.0-4') }}</strong></span>
+                    }
+                </li>
+                }
+            </ul>
+            @for (x of [c.BACKUP, c.ACTUAL]; track $index) {
+            @if (x) {
+            <p>{{ $index === 0 ? 'Con datos históricos' : 'Con datos actuales' }}: {{ x.formula_alias ?? '' }}{{ x.formula_alias ? ' = ' : '' }}<code>{{ x.formula_desarrollo ?? 'NA' }}</code></p>
+            }
+            }
+        </section>
+        }
         }
         <div class="jus-calculos">
             @for (r of [c.BACKUP, c.ACTUAL]; track $index) {
             @if (r) {
             <div class="jus-calculo">
-                <span class="jus-calculo-titulo">{{ $index === 0 ? 'Con los datos del cierre' : 'Con los datos de hoy' }}</span>
+                <span class="jus-calculo-titulo">{{ $index === 0 ? 'Con datos históricos' : 'Con datos actuales' }}</span>
                 <code>{{ r.formula_desarrollo ?? 'NA' }}</code>
                 <span>Estándar {{ r.estandar == null ? '—' : (r.estandar | number: '1.0-4') }} · puntaje
                     <span [class]="claseP(r.puntaje)">{{ r.puntaje }}</span></span>
@@ -313,8 +408,8 @@
         <h5>Términos de la fórmula</h5>
         <div class="jus-terminos">
             <div class="jus-term jus-cab">
-                <span>Término</span><span>Grupo · actividad · servicio</span><span class="num">Al cierre</span>
-                <span class="num">Hoy</span><span class="num">Diferencia</span><span class="num">Filas</span><span></span>
+                <span>Término</span><span>Grupo · actividad · servicio</span><span class="num">Histórico</span>
+                <span class="num">Actual</span><span class="num">Diferencia</span><span class="num">Filas</span><span></span>
             </div>
             @for (t of terminosComparados(); track t.clave) {
             <div class="jus-term" [class.jus-cambio]="t.cambio">
@@ -332,30 +427,67 @@
                 </span>
             </div>
             } @empty {
-            <div class="dyn-empty">{{ ocupado() === 'detalle' ? 'Cargando...' : 'Sin términos guardados para este centro.' }}</div>
+            <div class="dyn-empty">{{ ocupado() === 'detalle' ? 'Cargando...' : 'Sin términos para este centro.' }}</div>
             }
         </div>
         <p class="dyn-hint">
             Cada valor es el que entró en la fórmula{{ (c.BACKUP ?? c.ACTUAL)?.tipo_calculo === 'ACUMULADO' ? ', de enero al mes y sin los meses excluidos' : '' }}.
-            Filas indica cuántos registros se sumaron al cierre y hoy.
+            Filas es la cantidad de registros sumados en los datos históricos y en los actuales.
         </p>
         @if (backupSel()) {
         <div class="dyn-inline">
             <button type="button" class="btn-download" (click)="verFilas()" [disabled]="!!ocupado()">
-                <mat-icon>difference</mat-icon> Ver todos los datos que cambiaron
+                <mat-icon>difference</mat-icon> Ver todos los registros que cambiaron
             </button>
         </div>
         }
 
         @if (filasCambiadas(); as f) {
-        <h5>Datos que cambiaron después del cierre{{ codigoFilas() ? ' · ' + codigoFilas() : '' }}</h5>
+        <h5>Registros que cambiaron después del cierre{{ codigoFilas() ? ' · ' + codigoFilas() : '' }}</h5>
+        @if (lecturaFilas(); as lf) {
+        <details class="jus-lectura jus-calendario">
+            <summary>Cómo se lee esta tabla</summary>
+            <p>
+                @if (lf.codigo) {
+                Son los registros de este centro que forman el término <strong>{{ lf.codigo }}</strong>
+                @if (lf.termino) {<code class="jus-lectura-term">{{ lf.termino }}</code>}
+                @if (lf.letra) {, la letra <strong>{{ lf.letra }}</strong> ({{ lf.variable }}),}
+                y que no son iguales en los datos históricos y en los actuales.
+                } @else {
+                Son los registros de este centro que forman cualquier término de la fórmula y que no son iguales en los
+                datos históricos y en los actuales.
+                }
+            </p>
+            <ul>
+                <li>Cada fila es un registro: mes, grupo, actividad y servicio, como en <code>[grupo;actividad#servicio]</code>.</li>
+                <li><strong>Histórico</strong> es la cantidad que tenía el día del cierre de {{ calendario().mes }} y
+                    <strong>Actual</strong> la que tiene hoy, después de las correcciones que los estadísticos hicieron en
+                    los meses siguientes. «—» quiere decir que el registro no existía de ese lado.</li>
+                <li><strong>Registro nuevo</strong>: se ingresó después del cierre. <strong>Registro borrado</strong>: estaba al
+                    cierre y ya no está. <strong>Cantidad corregida</strong>: está en los dos con otra cantidad.</li>
+                <li>El <strong>Mes</strong> es el mes del dato, no el mes en que se cambió: un registro de marzo se puede
+                    corregir en agosto. La <strong>Fecha</strong> dice cuándo se cambió.</li>
+                <li>Si en un mismo mes hay un registro borrado y uno nuevo con la misma cantidad, el registro se volvió a
+                    cargar con otro número: el dato es el mismo y el resultado no cambia por eso. Si la cantidad es distinta,
+                    es una corrección: el registro se volvió a cargar con la cantidad nueva.</li>
+                <li><strong>Modificado por</strong> y <strong>Fecha</strong> dicen quién hizo el último cambio y cuándo (si se
+                    borró, quién lo modificó por última vez antes del cierre).</li>
+            </ul>
+            @if (f.length) {
+            <p>En total: {{ lf.nuevas }} nuevos, {{ lf.borradas }} borrados y {{ lf.corregidas }} corregidos. Juntos
+                {{ lf.diferencia === 0 ? 'no cambian' : (lf.diferencia > 0 ? 'suman ' : 'restan ') }}{{ lf.diferencia === 0 ? '' : (lf.diferencia < 0 ? -lf.diferencia : lf.diferencia) | number: '1.0-4' }}
+                {{ lf.diferencia === 0 ? 'la cantidad' : 'a la cantidad' }}{{ lf.codigo ? ' de ' + lf.codigo : '' }}{{ lf.letra ? ' (letra ' + lf.letra + ')' : '' }}
+                entre el cálculo histórico y el actual.</p>
+            }
+        </details>
+        }
         @if (f.length) {
         <div class="jus-filas">
             <div class="jus-fil jus-cab">
-                <span>Mes</span><span>Grupo</span><span>Actividad</span><span>Servicio</span><span class="num">Al cierre</span>
-                <span class="num">Hoy</span><span>Cambio</span><span>Modificado por</span><span>Fecha</span>
+                <span>Mes</span><span>Grupo</span><span>Actividad</span><span>Servicio</span><span class="num">Histórico</span>
+                <span class="num">Actual</span><span>Cambio</span><span>Modificado por</span><span>Fecha</span>
             </div>
-            @for (x of f; track x.ID) {
+            @for (x of filasPagina(); track x.ID) {
             <div class="jus-fil">
                 <span>{{ nombrePeriodo(x.periodo + '') }}</span>
                 <span>{{ x.tipgrupo }} {{ x.desctipgrupo ?? '' }}</span>
@@ -369,8 +501,13 @@
             </div>
             }
         </div>
+        @if (f.length > 10) {
+        <mat-paginator class="jus-paginador" [length]="f.length" [pageIndex]="paginaFilas()" [pageSize]="tamanoFilas()"
+            [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons aria-label="Página de registros que cambiaron"
+            (page)="cambioPaginaFilas($event)"></mat-paginator>
+        }
         } @else {
-        <div class="dyn-ok"><mat-icon>check_circle</mat-icon> Los datos son los mismos que al cierre.</div>
+        <div class="dyn-ok"><mat-icon>check_circle</mat-icon> Los registros son los mismos que al cierre.</div>
         }
         }
     </section>

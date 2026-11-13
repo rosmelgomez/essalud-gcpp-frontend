@@ -1022,7 +1022,7 @@
 
 .jus-fila {
     display: grid;
-    grid-template-columns: minmax(180px, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(180px, 1.1fr) minmax(110px, 0.7fr) minmax(0, 1fr) minmax(0, 1fr);
     gap: 12px;
     align-items: center;
     width: 100%;
@@ -1052,6 +1052,64 @@ button.jus-fila:hover {
     border-bottom: 1px solid var(--rpt-line);
 }
 
+/* Resumen de la justificación: cuántos centros cambiaron en cada indicador */
+.jus-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.jus-resumen-tabla {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--rpt-line);
+    border-radius: var(--rpt-radius-sm);
+}
+
+.jus-res {
+    display: grid;
+    grid-template-columns: minmax(200px, 1fr) 80px 90px 130px;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    padding: 7px 12px;
+    border: 0;
+    border-bottom: 1px solid var(--rpt-line-soft);
+    background: var(--rpt-surface);
+    font: inherit;
+    font-size: 13px;
+    color: var(--rpt-ink);
+    text-align: left;
+}
+
+button.jus-res {
+    cursor: pointer;
+}
+
+button.jus-res:hover:not(:disabled) {
+    background: var(--rpt-surface-2);
+}
+
+.jus-res.jus-elegido {
+    outline: 2px solid var(--rpt-brand);
+    outline-offset: -2px;
+}
+
+.jus-subtitulo {
+    margin: 4px 0 10px;
+}
+
+@media (max-width: 640px) {
+    .jus-res {
+        grid-template-columns: minmax(0, 1fr) 70px 80px;
+    }
+    .jus-res > :nth-child(4) {
+        display: none;
+    }
+}
+
+.jus-res.jus-cambio,
 .jus-fila.jus-cambio,
 .jus-term.jus-cambio {
     box-shadow: inset 3px 0 0 var(--rpt-brand);
@@ -1086,6 +1144,77 @@ button.jus-fila:hover {
     font-size: 12px;
     color: var(--rpt-ink);
     overflow-wrap: anywhere;
+}
+
+/* Cómo se lee la fórmula con corchetes */
+.jus-lectura {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--rpt-line);
+    border-radius: var(--rpt-radius-sm);
+    background: var(--rpt-surface-2);
+    font-size: 13px;
+    color: var(--rpt-ink);
+}
+
+.jus-lectura h5 {
+    margin: 0 0 6px;
+    font-size: 13px;
+}
+
+.jus-lectura ul {
+    margin: 0 0 6px;
+    padding-left: 18px;
+}
+
+.jus-lectura li {
+    margin: 2px 0;
+}
+
+.jus-lectura p {
+    margin: 0;
+    color: var(--rpt-muted);
+}
+
+.jus-lectura small {
+    color: var(--rpt-muted);
+    margin-left: 4px;
+}
+
+.jus-paginador {
+    background: transparent;
+    font-size: 12px;
+}
+
+.jus-calendario {
+    margin: 0 0 12px;
+}
+
+.jus-calendario summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.jus-calendario ul {
+    margin-top: 6px;
+}
+
+.jus-lectura-term {
+    margin-left: 4px;
+}
+
+.jus-lectura-valor {
+    margin-left: 6px;
+    white-space: nowrap;
+}
+
+.jus-detalle .jus-lectura {
+    margin: 8px 0 12px;
+}
+
+.jus-lectura code {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 12px;
 }
 
 .jus-detalle {

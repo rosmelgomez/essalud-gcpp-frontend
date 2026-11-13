@@ -102,9 +102,9 @@
         <div class="dyn-ayuda-panel" role="note">
             <p>
             En la fecha de cierre, el mes toma el estándar fijo del año (salvo donde ya tenga uno propio) y el
-            % Acept fijo. Desde ese día, el valor del mes se puede cambiar solo para ese mes. Luego el cierre calcula
-            el TMI del mes y guarda el resultado final para el Excel. Si la configuración tiene errores, el cierre
-            queda con error y no calcula.
+            % Acept fijo. Desde ese día, el valor del mes se puede cambiar solo para ese mes. Luego el cierre guarda
+            una copia de los datos del mes (los datos históricos). El TMI no se guarda: se calcula al momento con esa
+            copia o con los datos actuales. Si la configuración tiene errores, el cierre queda con error.
             </p>
             <p>
             "Filas" cuenta los estándares y los % Acept que quedaron con valor en el mes. La fecha de cada cierre
@@ -145,7 +145,7 @@
     <div class="exg-lista cie-lista">
         <div class="cie-fila cie-cabecera" aria-hidden="true">
             <span>Periodo</span><span>Fecha de cierre</span><span>Estado</span><span>Ejecución</span>
-            <span class="cie-num">Filas</span><span>Cálculo TMI</span><span>Modificado por</span>
+            <span class="cie-num">Filas</span><span>Modificado por</span>
         </div>
         @for (row of cierresFiltrados(); track row.periodo) {
         <div class="exg-fila cie-fila" [class.cie-fila-hoy]="esHoy(row)" [class.cie-fila-error]="row.estado === 'ERROR'"
@@ -178,14 +178,6 @@
                 @if (row.estado === 'PENDIENTE' && row.fecha_ejecucion) {<div class="cierre-sub">Último intento</div>}
             </div>
             <div class="cie-num">{{ row.filas_insertadas ?? '—' }}</div>
-            <div>
-                @if (row.fecha_calculo) {
-                {{ formatoFecha(row.fecha_calculo) }}
-                <div class="cierre-sub">{{ row.indicadores_calculados }} indicadores · {{ row.centros_calculados }} centros</div>
-                } @else {
-                <span class="cierre-sub">Sin calcular</span>
-                }
-            </div>
             <div class="exg-tipo">{{ row.usuario_modifica || '—' }}</div>
         </div>
         } @empty {
