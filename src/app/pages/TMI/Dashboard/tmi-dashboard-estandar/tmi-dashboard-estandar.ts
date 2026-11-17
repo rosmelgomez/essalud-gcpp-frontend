@@ -1,16 +1,13 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { AyudaFlotante } from '../../Administrativo/ayuda-flotante';
 import {
   TmiCalculoService, TmiDashboardDatos, TmiDashCentro, TmiDashDetalle, TmiDashIndicador, TmiDashRed, mensajeError,
 } from '../../../../services/tmi';
+import { MESES_CORTO as MESES_C, MESES_MIN as MESES_L, nombreIndicador, nombreServicio, titleCase } from '../../tmi-comun';
 
-const MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre',
-  'noviembre', 'diciembre'];
-const MESES_C = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 /** Indicador con su posición en el arreglo det. acum: valor de enero al mes (ACUMULADO); si no, valor del mes (MENSUAL). */
 interface Ind extends TmiDashIndicador { i: number; pct: boolean; acum: boolean; serv: string; }
@@ -20,9 +17,6 @@ interface Fila { x: Ind; d: TmiDashDetalle; meses: (number | null)[]; }
 interface FilaCentro { c: TmiDashCentro; d: TmiDashDetalle; meses: (number | null)[]; }
 interface Grupo { serv: string; filas: Fila[]; }
 
-const titleCase = (s: string) => s.toLowerCase()
-  .replace(/(^|[\s(.-])([a-záéíóúñ])/g, (_m, a, b) => a + b.toUpperCase())
-  .replace(/(?<=\s)(De|Del|La|Y)\b/g, (w) => w.toLowerCase());
 const esNum = (v: number | null | undefined): v is number => v != null && !isNaN(v);
 const periodoActual = () => { const h = new Date(); return `${h.getFullYear()}${String(h.getMonth() + 1).padStart(2, '0')}`; };
 const etiquetaPeriodo = (p: string) => `${MESES_L[+p.slice(4) - 1]} ${p.slice(0, 4)}`;
@@ -34,11 +28,36 @@ const etiquetaPeriodo = (p: string) => `${MESES_L[+p.slice(4) - 1]} ${p.slice(0,
  *  Sin promedios ni medianas ni puntajes (eso va en el tablero TMI). */
 @Component({
   selector: 'app-tmi-dashboard-estandar',
-  imports: [FormsModule, MatIconModule, ScrollingModule, AyudaFlotante],
+  imports: [FormsModule, MatIconModule, ScrollingModule],
   templateUrl: './tmi-dashboard-estandar.html',
   styleUrl: './tmi-dashboard-estandar.css',
 })
 export class TmiDashboardEstandar implements OnInit {
+  /** Guía del tablero (signo de pregunta junto al título). */
+  ayudaPagina = signal(false);
+
+  /** Ayuda abierta de una tarjeta (signo de pregunta junto a su título). */
+  ayudaTarjeta = signal<string | null>(null);
+
+  alternarAyudaPagina(ev: Event): void {
+    ev.stopPropagation();
+    this.ayudaTarjeta.set(null);
+    this.ayudaPagina.update((v) => !v);
+  }
+
+  alternarAyudaTarjeta(clave: string, ev: Event): void {
+    ev.stopPropagation();
+    this.ayudaPagina.set(false);
+    this.ayudaTarjeta.update((v) => (v === clave ? null : clave));
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  cerrarAyudaPagina(): void {
+    this.ayudaPagina.set(false);
+    this.ayudaTarjeta.set(null);
+  }
+
   private calculoSrv = inject(TmiCalculoService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -62,7 +81,6 @@ export class TmiDashboardEstandar implements OnInit {
   tipo = signal('');
   centro = signal<number | null>(null);
   ind = signal<number | null>(null);
-  cerrados = signal<Set<string>>(new Set());
   tip = signal<{ x: number; y: number; title: string; lines: string[] } | null>(null);
 
   // ---------- periodo ----------
@@ -76,8 +94,8 @@ export class TmiDashboardEstandar implements OnInit {
 
   // ---------- catálogos ----------
   inds = computed<Ind[]>(() => (this.data()?.indicadores ?? []).map((x, i) => ({
-    ...x, i, nombre: this.nombreInd(x.nombre), pct: x.formato === 'PORCENTAJE', acum: x.tipo_calculo === 'ACUMULADO',
-    serv: this.nombreServ(x.servicio),
+    ...x, i, nombre: nombreIndicador(x.nombre), pct: x.formato === 'PORCENTAJE', acum: x.tipo_calculo === 'ACUMULADO',
+    serv: nombreServicio(x.servicio),
   })));
   redes = computed(() => this.data()?.redes ?? []);
   centros = computed(() => this.data()?.centros ?? []);
@@ -312,7 +330,6 @@ export class TmiDashboardEstandar implements OnInit {
     this.guardarFiltros();
   }
   setInd(i: number) { this.ind.set(i); this.guardarFiltros(); }
-  alternarGrupo(serv: string) { this.cerrados.set(this.alternar(this.cerrados(), serv)); }
   /** Borrar selección: sin red (todas), nivel, tipo ni centro. */
   borrar() {
     this.red.set('');
@@ -321,11 +338,6 @@ export class TmiDashboardEstandar implements OnInit {
     this.centro.set(null);
     this.ind.set(null);
     this.guardarFiltros();
-  }
-  private alternar(s: Set<string>, v: string) {
-    const n = new Set(s);
-    if (n.has(v)) n.delete(v); else n.add(v);
-    return n;
   }
 
   private guardarFiltros() {
@@ -424,9 +436,4 @@ export class TmiDashboardEstandar implements OnInit {
   }
   nombreCentro(c: TmiDashCentro) { return titleCase(c.nombre); }
   etiquetaPeriodo(p: string) { return etiquetaPeriodo(p); }
-  private nombreServ(s: string) { return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : 'Otros'; }
-  private nombreInd(s: string) {
-    const t = s.trim().toLowerCase();
-    return (t.charAt(0).toUpperCase() + t.slice(1)).replace(/(?<![a-zñáéíóú])(i|ii|iii|iv|v)(?![a-zñáéíóú])/g, (m) => m.toUpperCase());
-  }
 }

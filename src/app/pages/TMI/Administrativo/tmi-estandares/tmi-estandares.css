@@ -1,5 +1,5 @@
 .std-fila {
-    grid-template-columns: minmax(0, 1fr) 170px 200px 72px;
+    grid-template-columns: minmax(0, 1fr) 170px 200px;
 }
 
 .std-fila .exg-rango strong {

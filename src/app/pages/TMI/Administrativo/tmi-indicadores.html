@@ -48,7 +48,7 @@
     <div class="tab-content"><app-tmi-calculo /></div>
     }
 
-    <!-- tap 4: tmi_centro -->
+    <!-- Centros TMI (tmi_centro) -->
     <div class="tab-content" *ngIf="activeTab === 'Centros TMI'">
         <div class="header">
             <h2 class="bar-title">Tabla de centros asistenciales TMI</h2>
@@ -123,7 +123,8 @@
                             (keyup)="filterDataCentrosTMI('tipo', $event)" />
                     </label>
                 </div>
-                <div class="wrapper-table">
+                <!-- la caja de la tabla es la que se desplaza en los dos sentidos (la lista virtual la usa como su scroll) -->
+                <div class="wrapper-table wt-scroll" cdkVirtualScrollingElement>
                     <div class="grid-table">
                         <div class="header-table">
                             <div class="cell id">ID</div>
@@ -280,10 +281,30 @@
         </div>
     </div>
 
-    <!-- tap 5: exclusion_centro_estandar -->
+    <!-- Exclusiones (tmi_exclusion_centro_indicador) -->
     <div class="tab-content" *ngIf="activeTab === 'Exclusion Centro Estandar'">
-        <div class="header">
-            <h2 class="bar-title">Exclusión de centros por indicador</h2>
+        <div class="header dyn-fila-ayuda">
+            <div class="dyn-titulo-ayuda">
+                <h2 class="bar-title">Centros excluidos por indicador</h2>
+                <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaExclusion()" [attr.aria-expanded]="ayudaExclusion()"
+                    aria-label="Cómo funciona la exclusión de centros" (click)="alternarAyudaExclusion($event)">
+                    <mat-icon>help_outline</mat-icon></button>
+                @if (ayudaExclusion()) {
+                <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
+                    <p>
+                    Aquí se marca un centro para que un indicador no se evalúe como siempre en un mes, cuando no corresponde
+                    evaluarlo. Puede ser para un indicador, para varios o para <strong>todos los indicadores</strong> del centro.
+                    </p>
+                    <p>
+                    Cada exclusión es del mes elegido arriba, y ese mes queda como <strong>0</strong> (cuenta con puntaje 0) o
+                    como <strong>NA</strong> (no se evalúa y no cuenta en el puntaje).
+                    </p>
+                    <p>
+                    Los demás meses no cambian. Para quitar la exclusión de un mes, use Eliminar en la lista.
+                    </p>
+                </div>
+                }
+            </div>
             <div class="header-actions">
                 <div class="buscar-group">
                     <select [(ngModel)]="anioExclusion" (ngModelChange)="onBuscarExclusion()" class="anio-select" aria-label="Año">
@@ -307,7 +328,7 @@
         <div *ngIf="!errorExclusion && !selectPeriodoExclusion" class="dashboard-content">
             <mat-card class="table exg">
                 <div class="table-title-row">
-                    <h3>Exclusiones por centro{{ mesSelExclusion >= 0 ? ' · ' + mesesExclusion[mesSelExclusion].nombre + ' ' + anioExclusion : ' · ' + anioExclusion }}</h3>
+                    <h3>Centros excluidos{{ mesSelExclusion >= 0 ? ' · ' + mesesExclusion[mesSelExclusion].nombre + ' ' + anioExclusion : ' · ' + anioExclusion }}</h3>
                     <button type="button" class="btn-download btn-agregar-fila" (click)="iniciarAltaExclusion()"
                         title="Agregar nueva exclusión">
                         <mat-icon>add</mat-icon> Agregar exclusión
@@ -350,7 +371,7 @@
                                 [attr.aria-expanded]="centrosExclusionAbiertos.has(g.clave)">
                                 <mat-icon class="exg-chevron" aria-hidden="true">chevron_right</mat-icon>
                                 <span class="exg-cod">{{ g.codcentro }}</span>
-                                <span class="exg-nombre">{{ g.centro }}</span>
+                                <span class="exg-nombre" [title]="g.centro">{{ g.centro }}</span>
                                 <span class="exc-contador">{{ g.filas.length }} {{ g.filas.length === 1 ? 'indicador' : 'indicadores' }}</span>
                             </button>
                             <button type="button" class="exc-accion exg-agregar" (click)="iniciarAltaExclusion(g.id_centro)"
@@ -365,7 +386,7 @@
                                 <div class="exg-indicador">
                                     <ng-container *ngIf="!f.todos">
                                         <span class="exg-tipo">{{ f.row.tipo ?? '—' }}</span>
-                                        <span class="exg-ind-nombre">{{ f.row.indicador ?? '—' }}</span>
+                                        <span class="exg-ind-nombre" [title]="f.row.indicador ?? ''">{{ f.row.indicador ?? '—' }}</span>
                                     </ng-container>
                                     <ng-container *ngIf="f.todos">
                                         <span class="exg-tipo">Aplica a cualquier indicador</span>
@@ -373,32 +394,29 @@
                                     </ng-container>
                                 </div>
 
+                                <!-- Solo el mes del periodo en pantalla (la exclusión se edita por periodo) -->
+                                @let resMes = f.res[mesSelExclusion] === '0' ? '0' : 'NA';
                                 <div class="exg-meses-col">
-                                    <div class="exg-meses" role="img"
-                                        [attr.aria-label]="'Meses excluidos: ' + f.rango">
-                                        <span class="exg-mes" *ngFor="let m of mesesCortosExclusion; let i = index"
-                                            [class.exg-mes-on]="f.meses[i]" [class.exg-mes-cero]="f.meses[i] && f.res[i] === '0'"
-                                            [class.exg-mes-sel]="i === mesSelExclusion"
-                                            [title]="m + (f.meses[i] ? ': excluido, queda ' + (f.res[i] === 'NA' ? 'NA' : 'con 0') : ': no excluido')">{{ m.charAt(0) }}</span>
-                                    </div>
-                                    <span class="exg-rango">{{ f.rango }}</span>
+                                    <span class="exg-periodo">
+                                        <span class="exg-mes exg-mes-on" [class.exg-mes-cero]="resMes === '0'" aria-hidden="true">{{ mesesCortosExclusion[mesSelExclusion] }}</span>
+                                    </span>
                                 </div>
 
-                                <span class="exg-resultado" [class.exg-resultado-azul]="f.resultado === '0'"
-                                    [title]="f.resultado === '0' ? 'El mes excluido queda con puntaje 0'
-                                        : f.resultado === 'NA' ? 'El mes excluido queda como No aplica'
-                                        : 'Unos meses quedan con 0 (azul claro) y otros como NA (azul)'">
-                                    {{ f.resultado === 'mixto' ? '0/NA' : f.resultado }}
+                                <span class="exg-resultado" [class.exg-resultado-azul]="resMes === '0'"
+                                    [title]="resMes === '0' ? 'El mes excluido queda con puntaje 0' : 'El mes excluido queda como No aplica'">
+                                    {{ resMes }}
                                 </span>
 
                                 <div class="exg-acciones">
                                     <button type="button" class="btn-icon-edit" (click)="iniciarEdicionExclusion(f.row)"
-                                        [attr.aria-label]="'Editar exclusión de ' + (f.todos ? 'todos los indicadores' : f.row.indicador)" title="Editar exclusión">
+                                        [attr.aria-label]="'Editar la exclusión de ' + mesesExclusion[mesSelExclusion]?.nombre + ' de ' + (f.todos ? 'todos los indicadores' : f.row.indicador)"
+                                        [title]="'Editar la exclusión de ' + mesesExclusion[mesSelExclusion]?.nombre">
                                         <mat-icon>edit</mat-icon>
                                     </button>
                                     <button type="button" class="btn-icon-delete" (click)="eliminarExclusion(f.row)"
                                         [disabled]="eliminandoId === f.row.id"
-                                        [attr.aria-label]="'Eliminar exclusión de ' + (f.todos ? 'todos los indicadores' : f.row.indicador)" title="Eliminar exclusión">
+                                        [attr.aria-label]="'Quitar la exclusión de ' + mesesExclusion[mesSelExclusion]?.nombre + ' de ' + (f.todos ? 'todos los indicadores' : f.row.indicador)"
+                                        [title]="'Quitar la exclusión de ' + mesesExclusion[mesSelExclusion]?.nombre + ' (los otros meses quedan)'">
                                         <mat-icon>{{ eliminandoId === f.row.id ? 'hourglass_empty' : 'delete' }}</mat-icon>
                                     </button>
                                 </div>
@@ -450,7 +468,7 @@
                                 <select id="exc_id_centro" formControlName="id_centro" (change)="cambiarCentroExclusion()">
                                     <option [ngValue]="null" disabled>{{ listaCentros.length ? 'Seleccione un centro…' : 'Cargando centros…' }}</option>
                                     <option *ngFor="let cen of centrosExclusionPorRed" [ngValue]="cen.id">
-                                        {{ cen.codcentro }} - {{ cen.centro }}<ng-container *ngIf="!redExclusion"> ({{ cen.red }})</ng-container>
+                                        {{ cen.codcentro }} - {{ cen.centro }}
                                     </option>
                                 </select>
                             </div>
@@ -471,7 +489,7 @@
                                         (change)="todosIndicadoresExclusion = $any($event.target).checked" />
                                     <span>
                                         <strong>Todos los indicadores del centro</strong>
-                                        <small>Un solo registro que aplica a cualquier indicador, incluidos los que se creen después.</small>
+                                        <small>Excluye al centro de todos los indicadores, también de los que se creen después.</small>
                                     </span>
                                 </label>
 
@@ -506,37 +524,39 @@
                             </div>
                         </div>
 
-                        <!-- Mes elegido: solo ese mes cambia (como Estándares) -->
+                        <!-- Periodo: el mes en pantalla; solo ese mes cambia (para otro mes, cámbielo en la cabecera) -->
                         <div class="form-grid exc-mes-form">
                             <div class="field-input">
-                                <label for="exc_mes">Mes <span class="required">*</span></label>
-                                <select id="exc_mes" [value]="mesFormExclusion"
-                                    (change)="cambiarMesFormExclusion($any($event.target).value)">
-                                    <option *ngFor="let m of mesesExclusion" [value]="m.key.substring(5)"
-                                        [selected]="m.key.substring(5) === mesFormExclusion">{{ m.nombre }} {{ exclusionForm.get('anio')?.value }}</option>
-                                </select>
+                                <label for="exc_mes">Periodo</label>
+                                <input id="exc_mes" type="text" readonly
+                                    [value]="nombreMesFormExclusion + ' ' + exclusionForm.get('anio')?.value" />
                             </div>
                             <div class="field-input">
                                 <label for="exc_res">Queda como <span class="required">*</span></label>
                                 <select id="exc_res" [value]="resultadoFormExclusion"
                                     [class.exc-tabla-cero]="resultadoFormExclusion === '0'"
                                     (change)="resultadoFormExclusion = $any($event.target).value">
-                                    <option value="" *ngIf="exclusionForm.get('id')?.value" [selected]="resultadoFormExclusion === ''">No excluido</option>
-                                    <option value="0" [selected]="resultadoFormExclusion === '0'">0 · Puntaje 0</option>
-                                    <option value="NA" [selected]="resultadoFormExclusion === 'NA'">NA · No aplica</option>
+                                    <option value="NA" [selected]="resultadoFormExclusion === 'NA'">NA · No se evalúa</option>
+                                    <option value="0" [selected]="resultadoFormExclusion === '0'">0 · Cuenta con puntaje 0</option>
                                 </select>
                             </div>
                         </div>
                         <p class="exc-hint">
-                            Solo se cambia {{ nombreMesFormExclusion }}; los demás meses quedan como están.
-                            <strong>0</strong>: el mes se evalúa con valor 0 y puntaje 0. <strong>NA</strong>: no se evalúa ni cuenta en el puntaje.
+                            Solo cambia {{ nombreMesFormExclusion }}; los demás meses no se tocan. Para otro mes, elíjalo arriba en la
+                            cabecera. Para quitar la exclusión, use Eliminar en la lista.
+                            <strong>0</strong>: el mes cuenta con puntaje 0. <strong>NA</strong>: el mes no se evalúa y no cuenta en el puntaje.
                         </p>
 
+                        <div class="dyn-ok exc-aviso-existente" *ngIf="exclusionCambiaDestino">
+                            <mat-icon>info</mat-icon>
+                            <span>Cambió el centro o el indicador: <strong>{{ nombreMesFormExclusion }}</strong> pasa a ese centro o indicador
+                                (si no tiene exclusión en {{ exclusionForm.get('anio')?.value }}, se crea). Los otros meses de este registro no cambian.</span>
+                        </div>
                         <div class="dyn-ok exc-aviso-existente" *ngIf="exclusionesExistentes.length">
                             <mat-icon>info</mat-icon>
                             <span>Este centro ya tiene exclusión en {{ exclusionForm.get('anio')?.value }} para:
-                                <strong>{{ exclusionesExistentes.join(', ') }}</strong>. Al guardar se
-                                <strong>actualiza ese registro</strong>: se agrega {{ nombreMesFormExclusion }} y los otros meses quedan igual.</span>
+                                <strong>{{ exclusionesExistentes.join(', ') }}</strong>. Al guardar se agrega {{ nombreMesFormExclusion }}
+                                a ese registro (<strong>no se crea otro</strong>) y los otros meses no cambian.</span>
                         </div>
                         <div class="validation-message-banner" *ngIf="errorExclusionForm" role="alert">
                             <mat-icon>error_outline</mat-icon><span>{{ errorExclusionForm }}</span>

@@ -6,6 +6,7 @@ import { CdkTableModule } from "@angular/cdk/table";
 import { TransplanteService } from '../../../services/reportes/transplante-service';
 import { FileService } from '../../../services/documentos/file-service';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { aniosHasta } from '../../../utils/anios';
 
 @Component({
   selector: 'app-dashboard-transplante',
@@ -14,6 +15,8 @@ import { FechaActualizacionService } from '../../../services/fecha-actualizacion
   styleUrl: './dashboard-transplante.css',
 })
 export class DashboardTransplante implements OnInit {
+  /** Años del select: desde 2025 hasta el año actual. */
+  readonly anios = aniosHasta(2025);
 
   currentDate: string = '';
 

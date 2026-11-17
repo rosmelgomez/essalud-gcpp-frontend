@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Backend } from '../../model/api';
 import { TmiVariable, TmiVariableComponente, TmiVariableLogica } from './tmi-models';
 
-const base_url = Backend.apiTmi + '/dinamico';
+const base_url = Backend.apiTmi + '/variable';
 
 /** Variables, sus componentes (variable compuesta) y su lógica sobre TOTALIZADO3. */
 @Injectable({ providedIn: 'root' })
@@ -28,6 +28,11 @@ export class TmiVariableService {
   }
   postComponente(dto: TmiVariableComponente) { return this.http.post(`${base_url}/componentes`, dto); }
   deleteComponente(id: number) { return this.http.delete(`${base_url}/componentes/${id}`); }
+
+  /** Query para SSMS que calcula la variable directo de TOTALIZADO3 (AAAAMM): valor de cada mes y de enero al mes. */
+  getConsultaSql(idVariable: number, periodo: number) {
+    return this.http.get<{ sql: string }>(`${base_url}/variables/${idVariable}/consulta/${periodo}`);
+  }
 
   getLogica(idVariable: number) { return this.http.get<TmiVariableLogica[]>(`${base_url}/variables/${idVariable}/logica`); }
   postLogica(dto: TmiVariableLogica) { return this.http.post(`${base_url}/logica`, dto); }

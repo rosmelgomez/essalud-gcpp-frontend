@@ -9,6 +9,7 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { ReporteadorService } from '../../../services/reportes/reporteador-service';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { aniosHasta } from '../../../utils/anios';
 
 @Component({
   selector: 'app-dashboard-reporteador',
@@ -17,6 +18,8 @@ import { FechaActualizacionService } from '../../../services/fecha-actualizacion
   styleUrl: './dashboard-reporteador.css',
 })
 export class DashboardReporteador implements OnInit, AfterViewInit {
+  /** Años del select: desde 2023 hasta el año actual. */
+  readonly anios = aniosHasta(2023);
   currentDate: string = '';
 
   // Estados para el reporte

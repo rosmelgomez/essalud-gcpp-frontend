@@ -327,7 +327,7 @@ export class ManageUsers implements OnInit {
       this.editingRedEnabled = false;
       this.editingCentroEnabled = false;
       this.editingAllCentroForSelectedRed = [];
-      this.editableRow.code_red = '';
+      this.editableRow.codred = '';
       this.editableRow.codcas = '';
       return;
     }
@@ -343,7 +343,7 @@ export class ManageUsers implements OnInit {
     if (role === 'USER') {
       this.editingRedEnabled = true;
       this.editingCentroEnabled = true;
-      this.updateEditingCentrosByRed(this.editableRow.code_red, false);
+      this.updateEditingCentrosByRed(this.editableRow.codred, false);
       return;
     }
 
@@ -376,7 +376,7 @@ export class ManageUsers implements OnInit {
     if (
       this.editableRow.codcas &&
       (!currentCentro ||
-        this.normalizeCode(currentCentro.redasiscod) !== this.normalizeCode(this.editableRow.code_red))
+        this.normalizeCode(currentCentro.redasiscod) !== this.normalizeCode(this.editableRow.codred))
     ) {
       this.editableRow.codcas = '';
     }
@@ -425,7 +425,7 @@ export class ManageUsers implements OnInit {
       return;
     }
 
-    this.updateEditingCentrosByRed(this.editableRow.code_red, true);
+    this.updateEditingCentrosByRed(this.editableRow.codred, true);
   }
 
   onEditingCentroChange(): void {
@@ -440,9 +440,9 @@ export class ManageUsers implements OnInit {
     }
 
     // USER: al seleccionar centro, sincronizar automáticamente su red.
-    this.editableRow.code_red = String(centroSeleccionado.redasiscod ?? '');
+    this.editableRow.codred = String(centroSeleccionado.redasiscod ?? '');
     this.editingAllCentroForSelectedRed = this.dataCentroCompleto.filter(
-      (centro: any) => this.normalizeCode(centro.redasiscod) === this.normalizeCode(this.editableRow.code_red),
+      (centro: any) => this.normalizeCode(centro.redasiscod) === this.normalizeCode(this.editableRow.codred),
     );
   }
 
@@ -457,7 +457,7 @@ export class ManageUsers implements OnInit {
       return;
     }
 
-    this.editableRow.code_red = String(centroSeleccionado.redasiscod ?? '');
+    this.editableRow.codred = String(centroSeleccionado.redasiscod ?? '');
   }
 
   private isUserRedCentroSelectionValid(): boolean {
@@ -466,7 +466,7 @@ export class ManageUsers implements OnInit {
       return true;
     }
 
-    if (!this.editableRow.code_red || !this.editableRow.codcas) {
+    if (!this.editableRow.codred || !this.editableRow.codcas) {
       return false;
     }
 
@@ -475,7 +475,7 @@ export class ManageUsers implements OnInit {
       return false;
     }
 
-    return String(centroSeleccionado.redasiscod ?? '') === String(this.editableRow.code_red ?? '');
+    return String(centroSeleccionado.redasiscod ?? '') === String(this.editableRow.codred ?? '');
   }
 
   isUpdateDisabled(): boolean {
@@ -856,7 +856,7 @@ export class ManageUsers implements OnInit {
         if (this.editableRow) {
           const primaryRole = this.getPrimaryRole(this.editableRow.roles);
           if (primaryRole === 'ADMIN') {
-            this.editableRow.code_red = '';
+            this.editableRow.codred = '';
             this.editableRow.codcas = '';
           }
 
@@ -865,7 +865,7 @@ export class ManageUsers implements OnInit {
           }
 
           if (primaryRole === 'USER') {
-            this.editableRow.code_red = '';
+            this.editableRow.codred = '';
           }
 
           this.editableRow.flag = this.editableRow.flag === '' || this.editableRow.flag == null
@@ -978,7 +978,7 @@ export class ManageUsers implements OnInit {
     }
 
     // Filtro code_red
-    const redLabel = this.getRedName(row.code_red).toLowerCase();
+    const redLabel = this.getRedName(row.codred).toLowerCase();
     if (this.filters.code_red && !redLabel.includes(this.filters.code_red.toLowerCase())) {
       return false;
     }

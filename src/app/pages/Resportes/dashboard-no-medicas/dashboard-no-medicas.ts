@@ -7,6 +7,7 @@ import { FileService } from '../../../services/documentos/file-service';
 import { forkJoin } from 'rxjs';
 import { NoMedicasService } from '../../../services/reportes/no-medicas-service';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { aniosHasta } from '../../../utils/anios';
 
 @Component({
   selector: 'app-dashboard-no-medicas',
@@ -15,6 +16,8 @@ import { FechaActualizacionService } from '../../../services/fecha-actualizacion
   styleUrl: './dashboard-no-medicas.css',
 })
 export class DashboardNoMedicas implements OnInit {
+  /** Años del select: desde 2025 hasta el año actual. */
+  readonly anios = aniosHasta(2025);
   currentDate: string = '';
 
   //data importantes
@@ -397,6 +400,12 @@ export class DashboardNoMedicas implements OnInit {
         this.cdr.detectChanges();
         this.dataImport.saveDataDNMOB(this.anioO, this.periodoO, this.tipo_aseguradoO);
       },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
+        this.loadingO = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -508,6 +517,12 @@ export class DashboardNoMedicas implements OnInit {
         this.loadingPP = false;
         this.cdr.detectChanges();
       },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
+        this.loadingPP = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -546,6 +561,12 @@ export class DashboardNoMedicas implements OnInit {
         this.dataAtencionesN.sort((a, b) => b.total - a.total);
 
         this.dataImport.saveDataDNMNU(this.anioN, this.periodoN, this.tipo_aseguradoN);
+        this.loadingN = false;
+        this.cdr.detectChanges();
+      },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
         this.loadingN = false;
         this.cdr.detectChanges();
       },
@@ -681,6 +702,12 @@ export class DashboardNoMedicas implements OnInit {
         this.loadingE = false;
         this.cdr.detectChanges();
       },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
+        this.loadingE = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -748,6 +775,12 @@ export class DashboardNoMedicas implements OnInit {
         this.loadingPs = false;
         this.cdr.detectChanges();
       },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
+        this.loadingPs = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -769,6 +802,12 @@ export class DashboardNoMedicas implements OnInit {
         this.trabajoSocialAtenciones = results.trabajoSocialAtenciones.length || 0;
         this.trabajoSocialProcedimientos = results.trabajoSocialProcedimientos.length || 0;
         this.dataImport.saveDataDNMTS(this.anioTs, this.periodoTs, this.tipo_aseguradoTs);
+        this.loadingTs = false;
+        this.cdr.detectChanges();
+      },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
         this.loadingTs = false;
         this.cdr.detectChanges();
       },
@@ -861,6 +900,12 @@ export class DashboardNoMedicas implements OnInit {
         this.loadingPT = false;
         this.cdr.detectChanges();
       },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
+        this.loadingPT = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -886,6 +931,12 @@ export class DashboardNoMedicas implements OnInit {
         this.procedimientosDiagnosticosAtenciones =
           results.procedimientosDiagnosticosAtenciones.length || 0;
         this.dataImport.saveDataDNMPD(this.anioPd, this.periodoPd, this.tipo_aseguradoPd);
+        this.loadingPD = false;
+        this.cdr.detectChanges();
+      },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
         this.loadingPD = false;
         this.cdr.detectChanges();
       },

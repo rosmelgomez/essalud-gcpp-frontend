@@ -17,6 +17,9 @@ export interface User {
   date_update: string;
   flag: boolean;
   roles?: string[] | string[];
+  /** Debe cambiar la contraseña antes de usar el sistema (así lo envía el backend). */
+  first_Login?: boolean;
+  /** Nombre antiguo del mismo dato; el backend no lo envía, se mantiene por compatibilidad. */
   firstLogin?: boolean;
   /** Puede entrar a la administración del TMI (junto con el rol ADMIN). */
   access_tmi?: boolean;

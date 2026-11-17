@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Backend } from '../../model/api';
 import { TmiAnalisisFormula, TmiIndicador, TmiLetra } from './tmi-models';
 
-const base_url = Backend.apiTmi + '/dinamico';
+const base_url = Backend.apiTmi + '/indicador';
 
 /** Indicadores: datos de la hoja, fórmula con letras y letras. */
 @Injectable({ providedIn: 'root' })

@@ -111,8 +111,8 @@ export class HomePage implements OnInit {
       { label: 'Auditoría de Documentos', img: '/images/gestion_documentaria.png', icon: 'file-search', tone: 'admin', route: '/documento/auditoria', roles: ['ADMIN'] },
     ],
     encuesta: [
-      { label: 'Encuesta de Conformidad', img: '/images/survey.png', icon: 'clipboard-check', tone: 'admin', route: '/encuesta' },
-      { label: 'Respuesta de Encuestas', img: '/images/respuesta-encuesta.png', icon: 'pie', tone: 'admin', route: '/dashboard-encuesta', roles: ['ADMIN'] },
+      { label: 'Encuesta de Conformidad', img: '/images/survey.png', icon: 'clipboard-check', tone: 'admin', route: '/encuesta/register' },
+      { label: 'Respuesta de Encuestas', img: '/images/respuesta-encuesta.png', icon: 'pie', tone: 'admin', route: '/encuesta/dashboard', roles: ['ADMIN'] },
     ],
   };
 
@@ -260,7 +260,7 @@ export class HomePage implements OnInit {
 
   showMainEncuesta(): void {
     if (!this.user?.roles?.includes('ADMIN')) {
-      this.router.navigate(['/encuesta']);
+      this.router.navigate(['/encuesta/register']);
     } else {
       this.btnReturnModulos = true;
       this.showModulosPrincipales = false;
@@ -311,7 +311,7 @@ export class HomePage implements OnInit {
 
     this.surveyReminderError = '';
     this.showSurveyReminder = false;
-    void this.router.navigate(['/encuesta']);
+    void this.router.navigate(['/encuesta/register']);
   }
 
   closeSurveyReminder(): void {
@@ -356,6 +356,11 @@ export class HomePage implements OnInit {
             this.nameCentro = this.dataCentro.find((centro: any) => centro.cenasicod === codcas)?.cenasides || '';
             this.dataImport.saveDataCentro(codcas, this.nameCentro);
           }
+          this.cdr.detectChanges();
+        },
+        // sin este manejo el error (p. ej. 403 por contraseña pendiente de cambio) quedaba como "Uncaught" en la consola
+        error: () => {
+          this.dataCentro = [];
           this.cdr.detectChanges();
         },
       });

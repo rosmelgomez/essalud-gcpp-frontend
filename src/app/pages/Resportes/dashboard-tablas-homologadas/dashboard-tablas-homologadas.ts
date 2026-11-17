@@ -216,7 +216,6 @@ export class DashboardTablasHomologadas implements OnInit {
     const { register, update } = this.buildClasificaciones();
 
     if (register.length === 0 && update.length === 0) {
-      console.log('No hay cambios para guardar');
       return;
     }
 

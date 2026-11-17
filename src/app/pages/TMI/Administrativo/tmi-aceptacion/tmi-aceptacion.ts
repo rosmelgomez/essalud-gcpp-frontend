@@ -1,14 +1,14 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
-import { AyudaFlotante } from '../ayuda-flotante';
 import {
-  TmiCalculoService, TmiEstandarService, TmiAceptacionIndicador, TmiTipoEstandar, mensajeError,
+  TmiCalculoService, TmiEstandarService, TmiAceptacionIndicador, mensajeError,
 } from '../../../../services/tmi';
+import { MESES_NOMBRE as MESES } from '../../tmi-comun';
 
 /** Fila de la lista virtual: la cabecera del indicador o una de sus claves (si está abierto). */
 interface FilaLista {
@@ -16,7 +16,6 @@ interface FilaLista {
   k?: TmiAceptacionIndicador['claves'][number];
 }
 
-const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 /** Porcentajes de un % Acept (en % en pantalla). En banda, arriba y abajo. */
 interface Porcentaje {
@@ -24,7 +23,7 @@ interface Porcentaje {
   abajo: number | null;
 }
 
-/** Lo que el usuario edita de un indicador: si es % del estándar o puntos, el fijo del año y el valor del mes
+/** Lo que el usuario edita de un indicador: si el % es del estándar (×) o se suma o resta directo (±), el fijo del año y el valor del mes
  *  (solo si el mes ya alcanzó su fecha de cierre; antes el mes usa el fijo). */
 interface Edicion {
   tipo: 'REL' | 'ABS';
@@ -38,11 +37,25 @@ interface Edicion {
  *  del año, que cada mes toma al llegar su fecha de cierre, y luego el valor del mes se puede modificar. */
 @Component({
   selector: 'app-tmi-aceptacion',
-  imports: [AyudaFlotante, FormsModule, MatCardModule, MatIconModule, DecimalPipe, PercentPipe, ScrollingModule],
+  imports: [FormsModule, MatCardModule, MatIconModule, DecimalPipe, PercentPipe, ScrollingModule],
   templateUrl: './tmi-aceptacion.html',
-  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css', '../lista-virtual.css', '../tmi-estandar-resumen/tmi-estandar-resumen.css'],
+  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css', '../lista-virtual.css', '../tmi-estandar-resumen.css'],
 })
 export class TmiAceptacion implements OnInit {
+  /** Ayuda de la pestaña (signo de pregunta junto al título). */
+  ayudaPagina = signal(false);
+
+  alternarAyudaPagina(ev: Event): void {
+    ev.stopPropagation();
+    this.ayudaPagina.update((v) => !v);
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  cerrarAyudaPagina(): void {
+    this.ayudaPagina.set(false);
+  }
+
   private estandarSrv = inject(TmiEstandarService);
   private calculoSrv = inject(TmiCalculoService);
 
@@ -53,7 +66,6 @@ export class TmiAceptacion implements OnInit {
   nombreMes = computed(() => this.meses.find((m) => m.value === this.mes())?.label ?? '');
 
   indicadores = signal<TmiAceptacionIndicador[]>([]);
-  tipos = signal<TmiTipoEstandar[]>([]);
   edicion = signal<Record<number, Edicion>>({});
   filtro = signal('');
   visibles = computed(() => {
@@ -96,7 +108,6 @@ export class TmiAceptacion implements OnInit {
   /** Abre en el último periodo con datos (como Estándar y Calcular y Excel): el mes anterior si TOTALIZADO3 ya lo tiene;
    *  si no, el último cargado (sin datos de octubre, septiembre). */
   ngOnInit(): void {
-    this.estandarSrv.getTiposEstandar().subscribe({ next: (t) => this.tipos.set(t) });
     this.cargando.set(true);
     this.calculoSrv.getPeriodoCalculo().subscribe({
       next: (e) => {
@@ -119,9 +130,9 @@ export class TmiAceptacion implements OnInit {
         const ed: Record<number, Edicion> = {};
         for (const i of lista) {
           ed[i.id] = {
-            tipo: i.tipo_tolerancia === 'ABS' ? 'ABS' : 'REL',
-            fijo: { arriba: this.aPorcentaje(i.tolerancia_fijo), abajo: this.aPorcentaje(i.tolerancia_menos_fijo) },
-            mes: { arriba: this.aPorcentaje(i.tolerancia), abajo: this.aPorcentaje(i.tolerancia_menos) },
+            tipo: i.tipo_acept === 'ABS' ? 'ABS' : 'REL',
+            fijo: { arriba: this.aPorcentaje(i.acept_fijo), abajo: this.aPorcentaje(i.aceptmenos_fijo) },
+            mes: { arriba: this.aPorcentaje(i.acept), abajo: this.aPorcentaje(i.aceptmenos) },
             cambiado: false,
           };
         }
@@ -173,10 +184,10 @@ export class TmiAceptacion implements OnInit {
     this.abiertos.set(abrir ? new Set(this.visibles().map((i) => i.id)) : new Set());
   }
 
-  /** Cabecera: "± 20 %", "+ 20 %", "− 5 pts" según el sentido y lo que está en pantalla. */
+  /** Cabecera: "+ 20 % del estándar", "± 5 % directo" según el sentido, el tipo y lo que está en pantalla. */
   resumenPorcentaje(i: TmiAceptacionIndicador, e: Edicion): string {
     const p = i.mes_cerrado ? e.mes : e.fijo;
-    const u = e.tipo === 'REL' ? '%' : 'pts';
+    const u = e.tipo === 'REL' ? '% del estándar' : 'puntos';
     if (p.arriba == null) return 'Sin %';
     if (i.sentido === 'BANDA') {
       const abajo = p.abajo ?? p.arriba;
@@ -196,12 +207,8 @@ export class TmiAceptacion implements OnInit {
     return v == null ? null : Math.round(v * 100 * 1000) / 1000;
   }
 
-  textoTipo(codigo: string): string {
-    return this.tipos().find((t) => t.codigo === codigo)?.descripcion ?? codigo;
-  }
-
   textoSentido(s: string): string {
-    return s === 'MENOR' ? 'Menor es mejor: hacia arriba' : s === 'MAYOR' ? 'Mayor es mejor: hacia abajo' : 'Banda: hacia arriba y hacia abajo';
+    return s === 'MENOR' ? 'Menor es mejor: el margen se suma' : s === 'MAYOR' ? 'Mayor es mejor: el margen se resta' : 'Banda: margen arriba y abajo';
   }
 
   /** % Acept calculado con el porcentaje que está en pantalla (igual que usp_tmi_calcular). */
@@ -229,16 +236,16 @@ export class TmiAceptacion implements OnInit {
     const e = this.edicion()[i.id];
     const mes = i.mes_cerrado ? e.mes : e.fijo;
     if (e.fijo.arriba == null || e.fijo.arriba < 0 || mes.arriba == null || mes.arriba < 0) {
-      this.error.set(`Ingrese el porcentaje de ${i.indicador}.`);
+      this.error.set(`Escriba el margen de ${i.indicador}.`);
       return;
     }
     const banda = (v: number | null) => (i.sentido === 'BANDA' && v != null ? v / 100 : null);
     const dto = {
-      tipo_tolerancia: e.tipo,
-      tolerancia_fijo: e.fijo.arriba / 100,
-      tolerancia_menos_fijo: banda(e.fijo.abajo),
-      tolerancia: mes.arriba / 100,
-      tolerancia_menos: banda(mes.abajo),
+      tipo_acept: e.tipo,
+      acept_fijo: e.fijo.arriba / 100,
+      aceptmenos_fijo: banda(e.fijo.abajo),
+      acept: mes.arriba / 100,
+      aceptmenos: banda(mes.abajo),
       anio: this.anio(),
       mes: this.mes(),
     };
@@ -251,7 +258,7 @@ export class TmiAceptacion implements OnInit {
         this.guardando.set(null);
         this.antesDeEditar = null;
         this.editando.set(null);
-        this.mensaje.set(`% Acept de ${i.indicador} guardado para ${alcance}. Se aplica desde el próximo cálculo.`);
+        this.mensaje.set(`Margen de ${i.indicador} guardado para ${alcance}. Se usa en el próximo cálculo.`);
         this.cargar();
       },
       error: (err) => {

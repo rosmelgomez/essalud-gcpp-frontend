@@ -137,17 +137,28 @@ export class DocumentoFormDialog implements OnInit {
 
   private getRedCentro(): void {
     const codcas = this.user?.codcas;
+    // sin centro (ADMIN, ADMIN_RED) la red es la del propio usuario
+    const redDelUsuario = String(this.user?.codred ?? '');
     if (!codcas) {
-      console.error('No se encontró el codcas del usuario en el almacenamiento local');
+      this.codred = redDelUsuario;
+      this.getUsersAprobadores();
       this.getDocumentosByUser();
       return;
     }
-    this.establecimientoService.getCentroWithRedByCodcas(codcas).subscribe((response) => {
-      this.codred = response?.redasiscod ?? '';
-      this.getUsersAprobadores();
-      this.getDocumentosByUser();
-      this.cdr.detectChanges();
-    });
+    this.establecimientoService.getCentroWithRedByCodcas(codcas).subscribe(
+      (response) => {
+        this.codred = response?.redasiscod ?? redDelUsuario;
+        this.getUsersAprobadores();
+        this.getDocumentosByUser();
+        this.cdr.detectChanges();
+      },
+      (error) => {
+        console.error('Error al obtener centro y red:', error);
+        this.codred = redDelUsuario;
+        this.getUsersAprobadores();
+        this.getDocumentosByUser();
+      },
+    );
   }
 
   private loadTiposDocumentos(): void {
@@ -165,6 +176,11 @@ export class DocumentoFormDialog implements OnInit {
   }
 
   private getUsersAprobadores(): void {
+    // sin red la URL quedaba en /getallbycodred/ y el backend respondía 404
+    if (!this.codred) {
+      this.users_aprobadores = [];
+      return;
+    }
     this.userService.getUsersByCodred(this.codred).subscribe(
       (response) => {
         this.users_aprobadores = response || [];

@@ -3,32 +3,35 @@
     <div class="head-top">
       <p class="eyebrow">EsSalud · Sub Gerencia de Estadística · Datos preliminares a {{ mesTxt() }} {{ anioSel() }}</p>
       <span class="head-links">
-        <details class="dyn-ayuda ayuda-guia">
-          <summary><mat-icon>help_outline</mat-icon> ¿Cómo leer este tablero?</summary>
-          <div class="dyn-ayuda-panel" role="note">
-            <p>Al elegir la red se ven <b>todos sus centros</b> en un indicador a la vez; el nivel de atención y el tipo
-              reducen esa lista. Al elegir un centro se ven todos sus indicadores. No hay promedios ni medianas: cada número es
-              de un centro. Los puntajes están en el Tablero TMI.</p>
-            <dl class="glosa">
-              <dt>Estándar</dt><dd>La meta que se espera que alcance el centro en el indicador.</dd>
-              <dt>% Acept</dt><dd>El límite aceptable alrededor del estándar. <b>% Acept. menos</b> es el límite inferior en los
-                indicadores de rango.</dd>
-              <dt>Valor real</dt><dd>Lo que logró el centro. En los indicadores <b>acumulados</b> suma de enero al mes elegido; en
-                los <b>mensuales</b> es solo el valor de ese mes.</dd>
-              <dt>Ene … Dic</dt><dd>El valor de cada mes (acumulado o del mes, según el indicador). Los meses después del periodo
-                elegido quedan vacíos.</dd>
-            </dl>
-            <p>Cada número se calcula al abrir el tablero con los datos de hoy, que incluyen las correcciones hechas
-              después del cierre de cada mes. Cifras preliminares: podrían modificarse por omisiones o correcciones propias
-              del proceso estadístico.</p>
-          </div>
-        </details>
         <button type="button" class="btn" (click)="descargarExcel()" [disabled]="excelCargando() || sinDatos()"
           title="El mismo Excel de Administración, calculado con los datos de hoy">
           <mat-icon>table_view</mat-icon> {{ excelCargando() ? 'Generando…' : 'Descargar Excel' }}</button>
       </span>
     </div>
-    <h1>Resumen de indicadores por red y centro asistencial</h1>
+    <div class="titulo-ayuda">
+      <h1>Resumen de indicadores por red y centro asistencial
+        <button type="button" class="ayuda-btn" [class.activo]="ayudaPagina()" [attr.aria-expanded]="ayudaPagina()"
+          aria-label="Cómo leer este tablero" (click)="alternarAyudaPagina($event)">
+          <mat-icon>help_outline</mat-icon></button></h1>
+      @if (ayudaPagina()) {
+      <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
+            <p>Si elige una red, ve <b>todos sus centros</b> en un indicador; el nivel de atención y el tipo acotan la
+              lista. Si elige un centro, ve todos sus indicadores. Cada número es de un solo centro (no hay promedios). Los
+              puntajes están en el Tablero TMI.</p>
+            <dl class="glosa">
+              <dt>Estándar</dt><dd>La meta que se espera que alcance el centro en el indicador.</dd>
+              <dt>% Acept</dt><dd>El margen aceptable alrededor del estándar. <b>% Acept. menos</b> es el límite de abajo en los
+                indicadores de banda.</dd>
+              <dt>Valor real</dt><dd>Lo que logró el centro. En los indicadores <b>acumulados</b> es la suma de enero al mes
+                elegido; en los <b>mensuales</b>, solo el valor de ese mes.</dd>
+              <dt>Ene … Dic</dt><dd>El valor de cada mes (acumulado o del mes, según el indicador). Los meses después del periodo
+                elegido quedan vacíos.</dd>
+            </dl>
+            <p>Se calcula al abrir el tablero con los datos de hoy, que ya traen las correcciones hechas después de cada
+              cierre. Son cifras preliminares: pueden cambiar por omisiones o correcciones.</p>
+      </div>
+      }
+    </div>
     @if (excelError()) {<p class="estado error" role="alert">{{ excelError() }}</p>}
   </header>
 
@@ -129,7 +132,7 @@
           <div>
             <h3>{{ cen() ? 'Indicadores del centro' : redObj() ? 'Centros de la red' : 'Centros de todas las redes' }}</h3>
             <p class="note">{{ cen() ? 'Elija el indicador: abajo se ven su evolución y los demás centros del mismo nivel y tipo.'
-              : 'Clic en un centro para ver su detalle.' }}</p>
+              : 'Haga clic en un centro para ver su detalle.' }}</p>
           </div>
           <div class="card-acc">
             <label class="f f-ind">
@@ -204,15 +207,17 @@
       @if (!cen()) {
       <section class="card">
         <div class="card-head">
-          <div>
-            <h3>Valor real de cada centro</h3>
+          <div class="titulo-ayuda">
+            <h3>Valor real de cada centro
+              <button type="button" class="ayuda-btn" [class.activo]="ayudaTarjeta() === 'valores'"
+                [attr.aria-expanded]="ayudaTarjeta() === 'valores'" aria-label="Cómo se lee: Valor real de cada centro"
+                (click)="alternarAyudaTarjeta('valores', $event)"><mat-icon>help_outline</mat-icon></button></h3>
             <p class="note"><b>{{ x.nombre }}</b> · {{ comparacion().length }} centros con valor</p>
+            @if (ayudaTarjeta() === 'valores') {
+            <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()"><p>Cada barra es el valor real de un centro (no es un promedio). La raya
+              negra es el estándar de ese centro, que puede variar según su nivel o tipo. Haga clic en un centro para verlo en detalle.</p></div>
+            }
           </div>
-          <details class="dyn-ayuda">
-            <summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary>
-            <div class="dyn-ayuda-panel" role="note"><p>Cada barra es el valor real de un centro (no es un promedio). La raya
-              negra es el estándar de ese centro, que puede variar según su nivel o tipo. Clic en un centro para analizarlo.</p></div>
-          </details>
         </div>
         <cdk-virtual-scroll-viewport class="comp comp-vs" [itemSize]="altoBarra" minBufferPx="300" maxBufferPx="600"
           [style.height.px]="altoComp()">
@@ -236,16 +241,18 @@
         <!-- cada indicador frente a su estándar -->
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3>Valor real frente al estándar</h3>
+            <div class="titulo-ayuda">
+              <h3>Valor real frente al estándar
+                <button type="button" class="ayuda-btn" [class.activo]="ayudaTarjeta() === 'frente'"
+                  [attr.aria-expanded]="ayudaTarjeta() === 'frente'" aria-label="Cómo se lee: Valor real frente al estándar"
+                  (click)="alternarAyudaTarjeta('frente', $event)"><mat-icon>help_outline</mat-icon></button></h3>
               <p class="note">Cada indicador en su propia escala.</p>
-            </div>
-            <details class="dyn-ayuda">
-              <summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary>
-              <div class="dyn-ayuda-panel" role="note"><p>La barra azul es el valor real del centro. La raya
+              @if (ayudaTarjeta() === 'frente') {
+              <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()"><p>La barra azul es el valor real del centro. La raya
                 negra es el estándar y la raya punteada el % Acept. Como cada indicador tiene sus propias unidades, cada fila
                 usa su propia escala: compare la barra con su raya, no con las otras filas.</p></div>
-            </details>
+              }
+            </div>
           </div>
           <div class="legend">
             <span><i class="sw" style="background: var(--d-accent)"></i>Valor real</span><span><i class="ln-est"></i>Estándar</span><span><i class="ln-acept"></i>% Acept</span>
@@ -275,17 +282,19 @@
           @if (evolucion(); as ev) {
           <section class="card">
             <div class="card-head">
-              <div>
-                <h3>Evolución mensual</h3>
+              <div class="titulo-ayuda">
+                <h3>Evolución mensual
+                  <button type="button" class="ayuda-btn" [class.activo]="ayudaTarjeta() === 'evolucion'"
+                    [attr.aria-expanded]="ayudaTarjeta() === 'evolucion'" aria-label="Cómo se lee: Evolución mensual"
+                    (click)="alternarAyudaTarjeta('evolucion', $event)"><mat-icon>help_outline</mat-icon></button></h3>
                 <p class="note"><b>{{ ev.f.x.nombre }}</b> · {{ ev.f.x.acum ? 'acumulado de enero a cada mes' : 'valor de cada mes' }}</p>
-              </div>
-              <details class="dyn-ayuda">
-                <summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary>
-                <div class="dyn-ayuda-panel" role="note"><p>La línea azul es el valor del centro mes a mes. La línea negra es el
+                @if (ayudaTarjeta() === 'evolucion') {
+                <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()"><p>La línea azul es el valor del centro mes a mes. La línea negra es el
                   estándar y la punteada el % Acept. {{ ev.f.x.acum ? 'Este indicador es acumulado: cada punto suma desde enero.'
-                  : 'Este indicador es mensual: cada punto es solo el valor de ese mes.' }} Elija otro indicador en el
-                  select «Indicador» de la tabla.</p></div>
-              </details>
+                  : 'Este indicador es mensual: cada punto es solo el valor de ese mes.' }} Para ver otro indicador,
+                  cámbielo en «Indicador» de la tabla.</p></div>
+                }
+              </div>
             </div>
             @if (ev.vacio) {
             <p class="estado">Sin valores mensuales.</p>
@@ -315,16 +324,18 @@
           @if (indSel(); as s) {
           <section class="card">
             <div class="card-head">
-              <div>
-                <h3>Centros del mismo nivel y tipo</h3>
+              <div class="titulo-ayuda">
+                <h3>Centros del mismo nivel y tipo
+                  <button type="button" class="ayuda-btn" [class.activo]="ayudaTarjeta() === 'nivel'"
+                    [attr.aria-expanded]="ayudaTarjeta() === 'nivel'" aria-label="Cómo se lee: Centros del mismo nivel y tipo"
+                    (click)="alternarAyudaTarjeta('nivel', $event)"><mat-icon>help_outline</mat-icon></button></h3>
                 <p class="note"><b>{{ s.x.nombre }}</b> · {{ comparacion().length }} centros con valor</p>
-              </div>
-              <details class="dyn-ayuda">
-                <summary><mat-icon>lightbulb</mat-icon> Cómo se lee</summary>
-                <div class="dyn-ayuda-panel" role="note"><p>Cada barra es el valor real de un centro de la red con el nivel y
+                @if (ayudaTarjeta() === 'nivel') {
+                <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()"><p>Cada barra es el valor real de un centro de la red con el nivel y
                   el tipo elegidos arriba (no es un promedio). La raya negra es el estándar de ese centro. El centro elegido
-                  está resaltado. Clic en otro centro para analizarlo.</p></div>
-              </details>
+                  está resaltado. Haga clic en otro centro para verlo en detalle.</p></div>
+                }
+              </div>
             </div>
             <cdk-virtual-scroll-viewport class="comp comp-vs" [itemSize]="altoBarra" minBufferPx="300" maxBufferPx="600"
               [style.height.px]="altoComp()">

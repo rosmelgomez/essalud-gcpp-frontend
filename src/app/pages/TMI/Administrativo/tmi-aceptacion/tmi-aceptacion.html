@@ -1,5 +1,28 @@
-<div class="header">
-    <h2 class="bar-title">% Acept de los indicadores</h2>
+<div class="header dyn-fila-ayuda">
+    <div class="dyn-titulo-ayuda">
+        <h2 class="bar-title">% Acept de los indicadores</h2>
+        <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaPagina()" [attr.aria-expanded]="ayudaPagina()"
+            aria-label="Cómo funciona el % Acept" (click)="alternarAyudaPagina($event)">
+            <mat-icon>help_outline</mat-icon></button>
+        @if (ayudaPagina()) {
+        <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
+            <p>
+            El <strong>% Acept</strong> es el margen que se le da al estándar. Si menor es mejor, el margen se
+            <strong>suma</strong> (estándar 4 con 20 % → se acepta hasta 4.8). Si mayor es mejor, se <strong>resta</strong>
+            (estándar 10 con 20 % → se acepta desde 8). En banda hay un margen hacia arriba y otro hacia abajo.
+            </p>
+            <p>
+            El margen puede ser un <strong>porcentaje del estándar</strong> (lo normal) o <strong>puntos que se suman o
+            restan</strong>, solo para indicadores que ya están en %: ocupación 85 % con 5 puntos → 80 %.
+            </p>
+            <p>
+            El <strong>fijo del año</strong> vale para todos los meses. Cuando un mes cierra (octubre cierra en
+            noviembre) se puede cambiar solo para ese mes. Si un centro tiene su propio margen en Estándar por Centro,
+            se usa ese.
+            </p>
+        </div>
+        }
+    </div>
     <div class="header-actions">
         <div class="buscar-group">
             <select class="anio-select" [ngModel]="anio()" (ngModelChange)="cambiarPeriodo($event, mes())" aria-label="Año">
@@ -13,23 +36,6 @@
             </button>
         </div>
     </div>
-    <details class="dyn-ayuda">
-        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
-        <div class="dyn-ayuda-panel" role="note">
-            <p>
-            El <strong>% Acept</strong> es el estándar más el porcentaje del indicador cuando menor es mejor, o el estándar
-            menos ese porcentaje cuando mayor es mejor. En banda hay un porcentaje hacia arriba y otro hacia abajo. Aquí solo
-            se define el <strong>porcentaje</strong> (o los puntos, en indicadores que ya son porcentajes, como el 5 de la
-            ocupación de cama). Cada tabla muestra el estándar del mes elegido y el % Acept que resulta.
-            </p>
-            <p>
-            Como el estándar, cada indicador tiene un porcentaje <strong>fijo del año</strong>. Cuando un mes llega a su
-            fecha de cierre (octubre se cierra en noviembre), toma el fijo y desde entonces se puede cambiar solo para ese
-            mes. Antes de esa fecha, el mes usa el fijo. Si un centro tiene su propio % Acept (pestaña Estándar por
-            Centro), se usa ese en lugar de este.
-            </p>
-        </div>
-    </details>
 </div>
 
 @if (error()) {
@@ -80,7 +86,7 @@
                     <span class="exg-nombre">{{ i.indicador }}</span>
                     <span class="est-grupo">{{ i.grupo ? i.grupo + ' · ' : '' }}{{ textoSentido(i.sentido) }}</span>
                 </span>
-                <span class="est-valores" [title]="'Porcentaje ' + (i.mes_cerrado ? 'de ' + nombreMes() : 'fijo del año')">{{ resumenPorcentaje(i, e) }}</span>
+                <span class="est-valores" [title]="'Margen ' + (i.mes_cerrado ? 'de ' + nombreMes() : 'fijo del año')">{{ resumenPorcentaje(i, e) }}</span>
                 <span class="exc-contador">{{ i.claves.length }} {{ i.claves.length === 1 ? 'nivel' : 'niveles' }}</span>
             </button>
             <button type="button" class="exc-accion exg-agregar" (click)="abrirEdicion(i)"
@@ -146,34 +152,39 @@
             <div class="modal-body">
                 <div class="form-grid">
                     <div class="field-input full-width">
-                        <label for="acept_tipo">Se mide en</label>
+                        <label for="acept_tipo">Cómo se calcula el margen</label>
                         <select id="acept_tipo" name="acept_tipo" [ngModel]="e.tipo" (ngModelChange)="cambiar(i, 'tipo', $event)">
-                            <option value="REL">% del estándar</option>
-                            <option value="ABS">puntos</option>
+                            <option value="REL">Porcentaje del estándar</option>
+                            <option value="ABS">Puntos que se suman o restan (indicadores en %)</option>
                         </select>
                     </div>
                 </div>
+                <div class="acept-periodos">
                 @for (de of (i.mes_cerrado ? ['fijo', 'mes'] : ['fijo']); track de) {
                 @let p = de === 'fijo' ? e.fijo : e.mes;
                 <fieldset class="dyn-acept-grupo acept-modal-grupo">
-                    <legend>{{ de === 'fijo' ? 'Fijo ' + anio() : nombreMes() + ' ' + anio() }}</legend>
+                    <legend>{{ de === 'fijo' ? 'Fijo ' + anio() : 'Solo ' + nombreMes() + ' ' + anio() }}</legend>
                     <div class="field-input">
-                        <label [for]="de + '_arriba'">{{ i.sentido === 'MAYOR' ? 'Hacia abajo' : 'Hacia arriba' }}</label>
+                        <label [for]="de + '_arriba'">{{ i.sentido === 'MAYOR' ? 'Margen hacia abajo' : 'Margen hacia arriba' }}</label>
                         <div class="dyn-pct"><input [id]="de + '_arriba'" [name]="de + '_arriba'" type="number" step="any" min="0"
-                            [ngModel]="p.arriba" (ngModelChange)="cambiar(i, 'arriba', $event, $any(de))" /><span>{{ e.tipo === 'REL' ? '%' : 'pts' }}</span></div>
+                            [ngModel]="p.arriba" (ngModelChange)="cambiar(i, 'arriba', $event, $any(de))" /><span>%</span></div>
                     </div>
                     @if (i.sentido === 'BANDA') {
                     <div class="field-input">
-                        <label [for]="de + '_abajo'">Hacia abajo</label>
+                        <label [for]="de + '_abajo'">Margen hacia abajo</label>
                         <div class="dyn-pct"><input [id]="de + '_abajo'" [name]="de + '_abajo'" type="number" step="any" min="0"
-                            [ngModel]="p.abajo" [placeholder]="p.arriba ?? ''" (ngModelChange)="cambiar(i, 'abajo', $event, $any(de))" /><span>{{ e.tipo === 'REL' ? '%' : 'pts' }}</span></div>
+                            [ngModel]="p.abajo" [placeholder]="p.arriba ?? ''" (ngModelChange)="cambiar(i, 'abajo', $event, $any(de))" /><span>%</span></div>
                     </div>
                     }
                 </fieldset>
                 }
-                @if (!i.mes_cerrado) {
-                <p class="dyn-hint">{{ nombreMes() }} aún no llega a su fecha de cierre: usa el fijo.</p>
-                }
+                </div>
+                <p class="dyn-hint">
+                    @if (i.mes_cerrado) {El fijo vale para todo el año; el de {{ nombreMes() }} solo cambia ese mes.}
+                    @else {{{ nombreMes() }} aún no cierra, así que usa el fijo.}
+                    @if (e.tipo === 'ABS') { Escriba los puntos, por ejemplo 5 para pasar de 85 % a 80 %.}
+                    @else { Escriba el porcentaje, por ejemplo 20 para aceptar hasta 4.8 cuando el estándar es 4.}
+                </p>
                 @if (error()) {
                 <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ error() }}</span></div>
                 }

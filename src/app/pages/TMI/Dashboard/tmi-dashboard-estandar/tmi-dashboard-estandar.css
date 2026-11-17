@@ -26,13 +26,7 @@ b { font-weight: 700; }
 .tip span { color: var(--d-muted); display: block; }
 .head-links { display: flex; gap: 8px; flex-wrap: wrap; }
 /* ayudas flotantes (como en TMI Administración): cerradas por defecto; se cierran al hacer clic fuera o con Esc */
-.dyn-ayuda { position: relative; font-size: 13px; }
-.dyn-ayuda summary { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 4px; border-radius: 8px; font-weight: 600;
-  font-size: 12.5px; color: var(--d-accent); cursor: pointer; list-style: none; user-select: none; }
-.dyn-ayuda summary::-webkit-details-marker { display: none; }
-.dyn-ayuda summary:hover, .dyn-ayuda[open] summary { background: rgba(0, 122, 201, .10); }
-.dyn-ayuda summary:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
-.dyn-ayuda summary mat-icon { width: 18px; height: 18px; font-size: 18px; }
+
 .dyn-ayuda-panel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; width: min(620px, calc(100vw - 32px));
   padding: 12px 14px; font-size: 13px; line-height: 1.55; color: var(--d-fg); background: var(--d-panel);
   border: 1px solid var(--d-line); border-radius: 10px; box-shadow: 0 10px 28px rgba(15, 45, 75, .18); animation: dyn-ayuda-entra .14s cubic-bezier(.16, 1, .3, 1); }
@@ -40,9 +34,7 @@ b { font-weight: 700; }
 .dyn-ayuda-panel > p + p { margin-top: 8px; }
 @keyframes dyn-ayuda-entra { from { opacity: 0; transform: translateY(-4px); } }
 @media (prefers-reduced-motion: reduce) { .dyn-ayuda-panel { animation: none; } }
-/* la guía del encabezado se abre hacia la izquierda (el botón está a la derecha) */
-.ayuda-guia summary { border: 1px solid var(--d-line); background: var(--d-panel); padding: 7px 12px 7px 9px; font-size: 13px; }
-.ayuda-guia .dyn-ayuda-panel { left: auto; right: 0; width: min(620px, calc(100vw - 32px)); max-height: 75vh; overflow-y: auto; }
+
 /* ayudas de las tarjetas: el botón está a la derecha, el panel se abre hacia la izquierda para no salirse de la pantalla */
 .card-head .dyn-ayuda-panel { left: auto; right: 0; width: min(420px, calc(100vw - 32px)); }
 .dyn-ayuda-panel .glosa { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 10px 0; }
@@ -76,7 +68,7 @@ b { font-weight: 700; }
 /* ---------- tabla ---------- */
 .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
 .card-head h3 { font-family: var(--font-family-headings); font-size: 17px; font-weight: 700; color: var(--essalud-navy-deep, #0b1a30); }
-.tabla-wrap { overflow: auto; max-height: 70vh; border: 1px solid var(--d-line); border-radius: 8px; }
+
 .tabla { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
 .tabla thead th { position: sticky; top: 0; z-index: 2; background: #0b3a6e; color: #fff; font-weight: 700; padding: 8px; text-align: right; }
 .tabla th.nom, .tabla td.nom { text-align: left; position: sticky; left: 0; z-index: 1; }
@@ -158,3 +150,18 @@ b { font-weight: 700; }
 .tabla-vs tbody td.nom .sub { overflow: hidden; text-overflow: ellipsis; }
 .comp-vs { max-height: none; overflow-y: auto; padding-right: 4px; contain: strict; display: block; }
 .comp-vs .comp-row { height: 26px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; }
+
+/* Signo de pregunta junto al título: la guía del tablero flota debajo */
+.titulo-ayuda { position: relative; }
+.ayuda-btn { display: inline-grid; vertical-align: middle; margin-left: 4px; flex: 0 0 auto; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--d-muted, #5b6b7f); cursor: pointer; transition: color .15s ease, background-color .15s ease; }
+.ayuda-btn mat-icon { width: 22px; height: 22px; font-size: 22px; }
+.ayuda-btn:hover, .ayuda-btn.activo { color: var(--d-accent); background: rgba(0, 122, 201, .10); }
+.ayuda-btn:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.titulo-ayuda .dyn-ayuda-panel { font-size: 13px; width: min(620px, calc(100vw - 32px)); max-height: 75vh; overflow-y: auto; }
+.card-head .ayuda-btn { width: 24px; height: 24px; margin-left: 2px; }
+.card-head .ayuda-btn mat-icon { width: 18px; height: 18px; font-size: 18px; }
+/* el texto se mide contra el encabezado de la tarjeta para no salirse en móvil */
+.card-head { position: relative; }
+.card-head .titulo-ayuda { position: static; }
+.card-head .titulo-ayuda .dyn-ayuda-panel { left: 0; right: auto; width: min(420px, 100%); }

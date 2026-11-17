@@ -156,7 +156,7 @@ export class DashboardTramas implements OnInit {
           this.cdr.detectChanges();
         },
         error: () => {
-          console.log('Error al obtener los centros por red');
+          console.error('Error al obtener los centros por red');
         },
       });
     } else {
@@ -180,6 +180,11 @@ export class DashboardTramas implements OnInit {
             const codcas = this.user?.codcas?.toString();
             this.nameCentro = this.dataCentro.find((centro: any) => centro.cenasicod === codcas)?.cenasides || '';
           }
+          this.cdr.detectChanges();
+        },
+        // sin este manejo el error salía como "Uncaught" en la consola
+        error: (err) => {
+          console.error('Error al obtener los centros:', err);
           this.cdr.detectChanges();
         },
       });

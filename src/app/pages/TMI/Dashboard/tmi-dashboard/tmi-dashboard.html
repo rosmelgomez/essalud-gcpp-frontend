@@ -3,18 +3,6 @@
     <div class="head-top">
       <p class="eyebrow">EsSalud · Sub Gerencia de Estadística @if (data()) { · Cifras preliminares a {{ mesTxt() }} {{ data()!.anio }} }</p>
       <span class="head-links">
-        <details class="dyn-ayuda ayuda-guia">
-          <summary><mat-icon>help_outline</mat-icon> ¿Cómo leer este tablero?</summary>
-          <div class="dyn-ayuda-panel" role="note">
-            <p>Cada indicador se califica por establecimiento con 5 puntos si cumple el estándar, 3 si está cerca y 1 si no
-      lo cumple. El puntaje de un establecimiento o red es lo obtenido sobre el máximo posible, llevado a escala de 20. El puntaje de una red por
-      indicador es el promedio de sus establecimientos; el nacional, el promedio de las redes sin las redes APP.</p>
-            <p>Bandas de lectura: nivel alto desde 16 puntos, medio desde 12 y bajo por debajo de 12 (en escala de 1 a 5: alto desde 4, medio desde 3).</p>
-            <p>Cada puntaje se calcula al abrir el tablero con los datos de hoy, que incluyen las correcciones hechas
-              después del cierre de cada mes. Cifras preliminares: podrían modificarse por omisiones o correcciones propias
-              del proceso estadístico.</p>
-          </div>
-        </details>
         <button class="btn" type="button" (click)="descargarExcel()" [disabled]="excelCargando() || !data()"
         title="Excel del TMI del periodo, el mismo de Administración"><mat-icon>table_view</mat-icon> {{ excelCargando() ? 'Generando Excel…' : 'Descargar Excel' }}</button>
         <a class="btn" routerLink="/tmi/administrativo">TMI Administracion</a>
@@ -22,9 +10,25 @@
       </span>
     </div>
     @if (excelError()) { <p class="excel-err" role="alert">{{ excelError() }}</p> }
-    <h1>Tablero de monitoreo de gestión de los establecimientos de salud</h1>
+    <div class="titulo-ayuda">
+      <h1>Tablero de monitoreo de gestión de los establecimientos de salud
+        <button type="button" class="ayuda-btn" [class.activo]="ayudaPagina()" [attr.aria-expanded]="ayudaPagina()"
+          aria-label="Cómo leer este tablero" (click)="alternarAyudaPagina($event)">
+          <mat-icon>help_outline</mat-icon></button></h1>
+      @if (ayudaPagina()) {
+      <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
+            <p>En cada indicador, un establecimiento recibe 5 puntos si cumple el estándar, 3 si se queda cerca (dentro
+      del % Acept) y 1 si no lo cumple. El puntaje total es lo que obtuvo sobre el máximo posible, llevado a una escala de
+      20. Una red tiene el promedio de sus establecimientos, y el nacional es el promedio de las redes (sin las redes APP).</p>
+            <p>Cómo leer el puntaje: alto desde 16, medio desde 12 y bajo por debajo de 12 (en la escala de 1 a 5: alto
+      desde 4 y medio desde 3).</p>
+            <p>Se calcula al abrir el tablero con los datos de hoy, que ya traen las correcciones hechas después de cada
+              cierre. Son cifras preliminares: pueden cambiar por omisiones o correcciones.</p>
+      </div>
+      }
+    </div>
     @if (data()) {
-    <p class="lead">@for (s of lead(); track $index) { @if (s.b) { <b>{{ s.t }}</b> } @else { {{ s.t }} } }</p>
+    <p class="lead">@for (s of lead(); track $index) {@if (s.b) {<b>{{ s.t }}</b>} @else {<ng-container>{{ s.t }}</ng-container>}}</p>
     }
   </header>
 
@@ -140,12 +144,14 @@
             <span><i class="sw dot f-ok"></i>5</span><span><i class="sw dot f-warn"></i>3</span><span><i class="sw dot f-bad"></i>1</span>
             <span><i class="sw-tick"></i>Estándar</span>
           </div>
-          <div class="rank" style="max-height:520px">
+          <div class="rank">
             @if (det.escala) {
             <div class="rank-row dots axis"><span></span><span class="scale"><span>{{ det.escala[0] }}</span><span>{{ det.escala[1] }}</span></span><span></span></div>
             }
-            @for (f of det.filas; track f.c.cod) {
-            <div class="rank-row dots" role="button" tabindex="0" (click)="setCentro(f.c.cod)" (keydown.enter)="setCentro(f.c.cod)"
+            @if (det.filas.length) {
+            <cdk-virtual-scroll-viewport class="rank-vs" [itemSize]="altoPunto" minBufferPx="300" maxBufferPx="600"
+              [style.height.px]="altoLista(det.filas.length, altoPunto, 490)">
+            <div *cdkVirtualFor="let f of det.filas; trackBy: trackCod" class="rank-row dots" role="button" tabindex="0" (click)="setCentro(f.c.cod)" (keydown.enter)="setCentro(f.c.cod)"
               (mousemove)="tipPunto($event, f)" (mouseleave)="ocultarTip()">
               <span class="rank-name">{{ f.nombre }}</span>
               <span class="track">
@@ -154,7 +160,8 @@
               </span>
               <span class="rank-val">{{ f.txt }}</span>
             </div>
-            } @empty { <p class="note">Ningún establecimiento tiene este indicador aplicable.</p> }
+            </cdk-virtual-scroll-viewport>
+            } @else { <p class="note">Ningún establecimiento tiene este indicador aplicable.</p> }
           </div>
         }
       </div>
@@ -180,7 +187,7 @@
       <span><i class="sw f-ok"></i>Cumple el estándar (5)</span>
       <span><i class="sw f-warn"></i>Cerca del estándar (3)</span>
       <span><i class="sw f-bad"></i>No cumple (1 o sin producción)</span>
-      <span>Clic en un indicador para filtrarlo</span>
+      <span>Haga clic en un indicador para filtrarlo</span>
     </div>
     <div class="areas">
       @for (a of areas(); track a.nombre) {
@@ -218,8 +225,10 @@
           @for (l of ranking().leyenda; track l.cls) { <span class="pill" [class]="'pill ' + l.cls"><b>{{ l.n }}</b>&nbsp;{{ l.t }}</span> }
         </div>
         <div class="rank">
-          @for (x of ranking().filas; track x.key) {
-          <div class="rank-row" [class.on]="x.on" role="button" tabindex="0" (click)="irFila(x)" (keydown.enter)="irFila(x)"
+          @if (ranking().filas.length) {
+          <cdk-virtual-scroll-viewport class="rank-vs" [itemSize]="altoRank()" minBufferPx="300" maxBufferPx="600"
+            [style.height.px]="altoLista(ranking().filas.length, altoRank(), 760)">
+          <div *cdkVirtualFor="let x of ranking().filas; trackBy: trackKey" class="rank-row" [class.on]="x.on" role="button" tabindex="0" (click)="irFila(x)" (keydown.enter)="irFila(x)"
             (mousemove)="tipRanking($event, x)" (mouseleave)="ocultarTip()">
             <span class="rank-pos">{{ x.pos }}</span>
             <span class="rank-name">{{ x.name }}</span>
@@ -227,7 +236,8 @@
               @if (ranking().ref != null) { <u [style.left.%]="ranking().ref"></u> }</span>
             <span class="rank-val">{{ x.txt }}</span>
           </div>
-          } @empty { <p class="note">Sin datos para este filtro.</p> }
+          </cdk-virtual-scroll-viewport>
+          } @else { <p class="note">Sin datos para este filtro.</p> }
         </div>
       </div>
       <div class="card">
@@ -248,15 +258,16 @@
     <div class="sec-head">
       <h2>Mapa de calor por indicador</h2>
       <p>{{ porRed() ? 'Puntaje de cada red' : 'Puntaje de cada establecimiento' }} en cada indicador (1 a 5), ordenado por el puntaje total.
-        Pase el cursor por un código para ver el nombre del indicador; clic en una fila para filtrar.</p>
+        Pase el cursor por un código para ver el nombre del indicador. Haga clic en una fila para filtrar.</p>
     </div>
     <div class="card">
       <div class="legend">
         <span><i class="sw f-ok"></i>Alto (4 a 5)</span><span><i class="sw f-warn"></i>Medio (3 a 4)</span>
         <span><i class="sw f-bad"></i>Bajo (menos de 3)</span><span>· NA: no aplica</span>
       </div>
-      <div class="heatbox">
-        <table class="heat">
+      <cdk-virtual-scroll-viewport #vpHeat class="heatbox heat-vs" [itemSize]="altoCelda" minBufferPx="400" maxBufferPx="800"
+        [style.height.px]="altoLista(mapa().length, altoCelda, 760, 60)">
+        <table class="heat" [style.--off-cab]="offCab(vpHeat)">
           <thead>
             <tr>
               <th class="name"></th>
@@ -274,18 +285,16 @@
             </tr>
           </thead>
           <tbody>
-            @for (r of mapa(); track r.name + r.cod) {
-            <tr [class.on]="r.on" (click)="irFila(r)">
+            <tr *cdkVirtualFor="let r of mapa(); trackBy: trackMapa" [class.on]="r.on" (click)="irFila(r)">
               <td class="name" [title]="r.name">{{ r.name }}</td>
               @for (c of r.celdas; track $index) {
               <td [class]="c.b" [class.colon]="ind() === $index" (mousemove)="tipCelda($event, r.name, $index, c.v)" (mouseleave)="ocultarTip()">{{ c.txt }}</td>
               }
               <td [class]="r.b" class="tot">{{ r.nota.toFixed(1) }}</td>
             </tr>
-            }
           </tbody>
         </table>
-      </div>
+      </cdk-virtual-scroll-viewport>
       <div class="heat-ley" aria-label="Leyenda de indicadores">
         @for (a of servicios(); track a.nombre) {
         <div class="heat-ley-grupo" [style.border-top-color]="a.color">
@@ -306,7 +315,7 @@
     <div class="sec-head">
       <h2>Establecimientos</h2>
       <p>{{ S().cen ? 'Establecimientos de su red' : S().kind === 'nacional' ? 'Establecimientos de todas las redes' : 'Establecimientos de ' + S().nombre }}.
-        Clic en un encabezado para ordenar y en una fila para filtrar por el establecimiento.</p>
+        Haga clic en un encabezado para ordenar o en una fila para filtrar por ese establecimiento.</p>
     </div>
     <div class="card">
       <div class="tools">
@@ -315,8 +324,9 @@
         <span class="note">{{ filasTabla().length }} de {{ lista().length }} establecimientos</span>
         <button class="btn" type="button" (click)="descargarCsv()"><mat-icon>download</mat-icon> Descargar CSV</button>
       </div>
-      <div class="tablebox">
-        <table class="t">
+      <cdk-virtual-scroll-viewport #vpTabla class="tablebox t-vs" [itemSize]="altoFilaTabla" minBufferPx="400" maxBufferPx="800"
+        [style.height.px]="altoLista(filasTabla().length, altoFilaTabla, 640, 36)">
+        <table class="t" [style.--off-cab]="offCab(vpTabla)">
           <thead>
             <tr>
               @for (c of columnas(); track c.k) {
@@ -327,18 +337,16 @@
             </tr>
           </thead>
           <tbody>
-            @for (r of filasTabla(); track r.c.cod) {
-            <tr [class.on]="S().cen === r.c" (click)="setCentro(r.c.cod)">
+            <tr *cdkVirtualFor="let r of filasTabla(); trackBy: trackCod" [class.on]="S().cen === r.c" (click)="setCentro(r.c.cod)">
               @for (x of r.celdas; track $index) {
               <td [class.num]="x.num" [class.sm]="x.sm">
                 @if (x.pill) { <span class="pill" [class]="'pill ' + x.pill">{{ x.txt }}</span> } @else { {{ x.txt }} }
               </td>
               }
             </tr>
-            }
           </tbody>
         </table>
-      </div>
+      </cdk-virtual-scroll-viewport>
     </div>
   </section>
 

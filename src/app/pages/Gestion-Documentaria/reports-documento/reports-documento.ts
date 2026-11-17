@@ -157,22 +157,24 @@ export class ReportsDocumento implements OnInit {
 
   getRedCentro() {
     const codcas = this.user?.codcas;
+    // sin centro (ADMIN, ADMIN_RED) la red es la del propio usuario
+    const redDelUsuario = String(this.user?.codred ?? '');
     if (!codcas) {
-      console.error('No se encontró el codcas del usuario en el almacenamiento local');
+      this.codred = redDelUsuario;
       this.loadTiposDocumentos();
       this.loadUsersAprobadores();
       return;
     }
     this.establecimientoService.getCentroWithRedByCodcas(codcas).subscribe(
       (response) => {
-        console.log(response);
-        this.codred = response?.redasiscod ?? '';
+        this.codred = response?.redasiscod ?? redDelUsuario;
         this.loadTiposDocumentos();
         this.loadUsersAprobadores();
         this.cdr.detectChanges();
       },
       (error) => {
         console.error('Error al obtener centro y red:', error);
+        this.codred = redDelUsuario;
         this.loadTiposDocumentos();
         this.loadUsersAprobadores();
       }
@@ -594,6 +596,11 @@ export class ReportsDocumento implements OnInit {
           );
         }
         this.cdr.detectChanges();
+      },
+      // sin este manejo el error quedaba como "Uncaught" en la consola
+      (err) => {
+        console.error('Error al cargar el flujo de aprobación:', err);
+        this.cdr.detectChanges();
       }
     );
   }
@@ -993,6 +1000,11 @@ export class ReportsDocumento implements OnInit {
 
   loadUsersAprobadores() {
     if (!this.codred) {
+      // /user/getall es solo para ADMIN: a otro rol le respondería 403
+      if (!this.user?.roles?.includes('ADMIN')) {
+        this.users_aprobadores = [];
+        return;
+      }
       this.userService.getAllUsers().subscribe(
         (data) => {
           this.users_aprobadores = data || [];

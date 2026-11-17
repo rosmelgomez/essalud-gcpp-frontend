@@ -1,5 +1,27 @@
-<div class="header">
-    <h2 class="bar-title">Estándares por indicador</h2>
+<div class="header dyn-fila-ayuda">
+    <div class="dyn-titulo-ayuda">
+        <h2 class="bar-title">Estándares por indicador</h2>
+        <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaPagina()" [attr.aria-expanded]="ayudaPagina()"
+            aria-label="Cómo funciona el estándar por indicador" (click)="alternarAyudaPagina($event)">
+            <mat-icon>help_outline</mat-icon></button>
+        @if (ayudaPagina()) {
+        <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
+            <p>
+            Cada indicador tiene sus <strong>claves</strong>: el grupo de centros con el que se compara. Una clave puede
+            ser el nivel de atención (I, II, III) o el nivel estándar del centro (H.N., H.I, POL., C.M., P.M., CNSR...).
+            </p>
+            <p>
+            Si un indicador usa los dos, cada centro usa una sola clave: primero su nivel estándar, si está en la lista
+            (por ejemplo CNSR); si no, su nivel I, II o III. Si esa clave está vacía o en 0, el centro queda sin estándar.
+            </p>
+            <p>
+            El <strong>fijo del año</strong> vale para todos los meses. También puede poner un valor <strong>solo para el
+            mes elegido</strong>, aunque ese mes no haya cerrado: se usa desde el próximo cálculo. Un 0 deja la clave sin
+            estándar y el centro sale NA. Si un centro tiene estándar propio (pestaña Por centro), se usa ese.
+            </p>
+        </div>
+        }
+    </div>
     <div class="header-actions">
         <div class="buscar-group">
             <select class="anio-select" [ngModel]="anio()" (ngModelChange)="cambiarPeriodo($event, mes())" aria-label="Año">
@@ -13,27 +35,6 @@
             </button>
         </div>
     </div>
-    <details class="dyn-ayuda">
-        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
-        <div class="dyn-ayuda-panel" role="note">
-            <p>
-            Cada indicador muestra solo las claves con las que se evalúa, definidas al crearlo; el cálculo no usa otras.
-            El <strong>Nivel</strong> puede ser el nivel de atención del centro (I, II, III) o su nivel estándar (H.N.,
-            H.I, POL., C.M., P.M., CNSR ...).
-            </p>
-            <p>
-            Si un indicador combina los dos, cada centro usa una sola clave. Si su nivel estándar está en la lista (por
-            ejemplo CNSR), se evalúa por ese; si no, por I, II o III. Si esa clave está vacía o en 0, el centro queda sin
-            estándar y no toma el de su nivel.
-            </p>
-            <p>
-            El <strong>fijo del año</strong> es el estándar que toma cada mes al llegar su fecha de cierre. Si el mes
-            elegido ya cerró, también puede cambiar el estándar <strong>solo de ese mes</strong>. Un valor 0 deja la clave
-            sin estándar y el centro queda en NA. Si un centro tiene estándar propio (pestaña Por centro), se usa ese en
-            lugar de este.
-            </p>
-        </div>
-    </details>
 </div>
 
 @if (error()) {
@@ -94,19 +95,17 @@
         </div>
         } @else if (f.t === 'clave') {
                 @let k = f.k!;
-                @let v = efectivo(i, k);
+                @let v = efectivo(k);
                 <div class="exg-fila std-fila" [class.est-fila-cero]="v == null">
                     <div class="exg-indicador">
-                        <span class="exg-ind-nombre">{{ etiquetaClave(i, k) }}</span>
+                        <span class="exg-ind-nombre">{{ etiquetaClave(k) }}</span>
                     </div>
                     <span class="exg-rango">Fijo {{ anio() }} <strong>{{ k.fijo ? fmt(i, k.fijo) : 'sin estándar' }}</strong></span>
-                    <span class="exg-rango" [class.std-mes-distinto]="mesDistinto(i, k)"
-                        [title]="mesDistinto(i, k) ? 'Cambiado solo para ' + nombreMes() : ''">
+                    <span class="exg-rango" [class.std-mes-distinto]="mesDistinto(k)"
+                        [title]="mesDistinto(k) ? 'Cambiado solo para ' + nombreMes() : ''">
                         {{ nombreMes() }}
-                        <strong>{{ i.mes_cerrado ? (v != null ? fmt(i, v) : 'sin estándar') : 'usa el fijo' }}</strong>
+                        <strong>{{ i.mes_cerrado || k.mes ? (v != null ? fmt(i, v) : 'sin estándar') : 'usa el fijo' }}</strong>
                     </span>
-                    <span class="exg-resultado est-fijo" [class.est-fijo-cero]="v == null"
-                        title="Estándar que usa el cálculo en el mes elegido">{{ v != null ? fmt(i, v) : '—' }}</span>
                 </div>
         } @else {
                 <div class="exg-fila std-fila"><span class="exg-rango">Este indicador no tiene claves activas.</span></div>
@@ -143,30 +142,28 @@
         </header>
         <form class="modal-form-container" (ngSubmit)="guardar()">
             <div class="modal-body">
-                <div class="std-form" [class.std-form-mes]="i.mes_cerrado">
+                <div class="std-form std-form-mes">
                     <span class="std-form-cab">Clave</span>
                     <span class="std-form-cab">Fijo {{ anio() }}</span>
-                    @if (i.mes_cerrado) {<span class="std-form-cab">{{ nombreMes() }} {{ anio() }}</span>}
+                    <span class="std-form-cab">Solo {{ nombreMes() }} {{ anio() }}</span>
                     @for (e of edicion(); track e.fuente + e.clave; let idx = $index) {
                     <label class="std-form-clave" [for]="'std_f_' + idx">{{ e.etiqueta }}</label>
                     <input [id]="'std_f_' + idx" [name]="'std_f_' + idx" type="number" step="any" min="0"
                         [ngModel]="e.fijo" (ngModelChange)="cambiarValor(idx, 'fijo', $event)" />
-                    @if (i.mes_cerrado) {
                     <input [id]="'std_m_' + idx" [name]="'std_m_' + idx" type="number" step="any" min="0"
-                        [attr.aria-label]="e.etiqueta + ' en ' + nombreMes()"
+                        [attr.aria-label]="e.etiqueta + ' en ' + nombreMes()" [placeholder]="i.mes_cerrado ? '' : 'Usa el fijo'"
                         [ngModel]="e.mes" (ngModelChange)="cambiarValor(idx, 'mes', $event)" />
-                    }
                     }
                 </div>
 
                 <p class="dyn-hint">
-                    @if (i.mes_cerrado) {
-                    {{ nombreMes() }} ya cerró: su columna cambia solo ese mes. El fijo lo toman los meses que aún no cierran.
-                    } @else {
-                    {{ nombreMes() }} aún no llega a su fecha de cierre: usa el fijo, igual que los meses siguientes.
+                    El fijo vale para todo el año; "Solo {{ nombreMes() }}" cambia solo ese mes.
+                    @if (!i.mes_cerrado) {
+                    {{ nombreMes() }} aún no cierra: si lo deja vacío usa el fijo, y si pone un valor se usa desde el próximo
+                    cálculo.
                     }
-                    @if (i.formato === 'PORCENTAJE') { Valores en fracción: 0.98 = 98 %. }
-                    0 = sin estándar.
+                    @if (i.formato === 'PORCENTAJE') { Escriba en decimales: 0.98 es 98 %. }
+                    Un 0 deja la clave sin estándar.
                 </p>
                 @if (errorForm()) {
                 <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span></div>

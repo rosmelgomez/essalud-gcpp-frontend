@@ -7,6 +7,7 @@ import { LocalStorageService } from '../../../services/local-storage-service';
 import { FileService } from '../../../services/documentos/file-service';
 import { MedicasService } from '../../../services/reportes/medicas-service';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { aniosHasta } from '../../../utils/anios';
 
 @Component({
   selector: 'app-dashboard-medicas',
@@ -15,6 +16,8 @@ import { FechaActualizacionService } from '../../../services/fecha-actualizacion
   styleUrl: './dashboard-medicas.css',
 })
 export class DashboardMedicas implements OnInit {
+  /** Años del select: desde 2025 hasta el año actual. */
+  readonly anios = aniosHasta(2025);
   currentDate: string = '';
 
   // Estados para Atenciones Médicas
@@ -372,6 +375,12 @@ export class DashboardMedicas implements OnInit {
         this.loadingAM = false;
         this.cdr.detectChanges();
       },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
+        this.loadingAM = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -499,6 +508,12 @@ export class DashboardMedicas implements OnInit {
         this.dataImport.saveDataDMMC(this.anio_mc, this.periodo_mc, this.tipo_asegurado_mc);
 
         // Actualizar la pagina inmediatamente cuando se obtienen todos los datos
+        this.loadingMC = false;
+        this.cdr.detectChanges();
+      },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
         this.loadingMC = false;
         this.cdr.detectChanges();
       },
@@ -632,6 +647,12 @@ export class DashboardMedicas implements OnInit {
         this.loadingMO = false;
         this.cdr.detectChanges();
       },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
+        this.loadingMO = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -758,6 +779,12 @@ export class DashboardMedicas implements OnInit {
         ///Guardar datos de importación para MP con las variables correctas
         this.dataImport.saveDataDMMP(this.anio_mp, this.periodo_mp, this.tipo_asegurado_mp);
         // Actualizar la pagina inmediatamente cuando se obtienen todos los datos
+        this.loadingMP = false;
+        this.cdr.detectChanges();
+      },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
         this.loadingMP = false;
         this.cdr.detectChanges();
       },
@@ -896,6 +923,12 @@ export class DashboardMedicas implements OnInit {
         this.loadingCAI = false;
         this.cdr.detectChanges();
       },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
+        this.loadingCAI = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -1029,6 +1062,12 @@ export class DashboardMedicas implements OnInit {
         this.dataImport.saveDataDMCAD(this.anio_cad, this.periodo_cad, this.tipo_asegurado_cad);
 
         // Actualizar la pagina inmediatamente cuando se obtienen todos los datos
+        this.loadingCAD = false;
+        this.cdr.detectChanges();
+      },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
         this.loadingCAD = false;
         this.cdr.detectChanges();
       },

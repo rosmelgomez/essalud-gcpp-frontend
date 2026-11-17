@@ -9,6 +9,8 @@ import { LocalStorageService } from '../local-storage-service';
 const base_url = Backend.api;
 
 export const MENSAJE_SESION_EXPIRADA = 'Su sesión ha expirado. Por favor, inicie sesión de nuevo.';
+/** Estado de navegación que ponen los guards al mandar al login: ya comprobaron que no hay sesión. */
+export const SIN_SESION = 'sinSesionVerificada';
 
 @Injectable({
   providedIn: 'root',
@@ -69,15 +71,39 @@ export class AuthService {
     );
   }
 
+  /**
+   * Con la sesión ya confirmada (api_token válido): si el navegador no tiene el usuario (p. ej. se borró
+   * mientras el backend estaba apagado), lo recupera con /user/me. Emite true si queda un usuario cargado.
+   */
+  asegurarUsuario(): Observable<boolean> {
+    if (this.userSubject.value || this.localStorageService.getUser()) return of(true);
+    return this.http.get<User>(base_url + `/user/me`, { withCredentials: true }).pipe(
+      tap((user) => this.setCurrentUser(user)),
+      map(() => true),
+      catchError(() => of(false)),
+    );
+  }
+
+  /**
+   * El backend no respondió: no se sabe si la sesión sigue viva, así que no se borra nada (las cookies y el
+   * usuario siguen sirviendo cuando el servidor vuelva). Se va al login sin marcarlo como "sin sesión" para
+   * que vuelva a preguntar por ella.
+   */
+  irAlLoginSinServidor(): void {
+    if (this.cerrandoSesion) return;
+    this.cerrandoSesion = true;
+    this.router.navigate(['/login']).finally(() => (this.cerrandoSesion = false));
+  }
+
   logout(): Observable<any> {
     return this.http.post(base_url + `/logout-user`, {}, { withCredentials: true, responseType: 'text' }).pipe(
       tap(() => {
         this.clearSession();
-        this.router.navigate(['/login']);
+        this.router.navigate(['/login'], { state: { [SIN_SESION]: true } });
       }),
       catchError((err) => {
         this.clearSession();
-        this.router.navigate(['/login']);
+        this.router.navigate(['/login'], { state: { [SIN_SESION]: true } });
         return throwError(() => err);
       })
     );
@@ -105,7 +131,8 @@ export class AuthService {
     this.cerrandoSesion = true;
     this.clearSession();
     this.borrarCookiesSesion();
-    this.router.navigate(['/login'], mensaje ? { queryParams: { message: mensaje } } : {})
+    // la sesión ya se dio por terminada: el login no vuelve a preguntar por ella
+    this.router.navigate(['/login'], { state: { [SIN_SESION]: true }, ...(mensaje ? { queryParams: { message: mensaje } } : {}) })
       .finally(() => (this.cerrandoSesion = false));
   }
 

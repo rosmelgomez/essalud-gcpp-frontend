@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -8,6 +9,9 @@ import {
   TmiIndicadorService, TmiCalculoService, TmiIndicador, TmiResultadoFinal, TmiPeriodoCalculo, TmiProblemaConfig, mensajeError,
   TmiFilaCambiada, TmiLetra, TmiJustificacion, TmiJustificacionCentro, TmiOrigenDatos, TmiResumenCambios, TmiTerminoResultado,
 } from '../../../../services/tmi';
+import { MESES_NOMBRE } from '../../tmi-comun';
+
+const MESES = MESES_NOMBRE.map((label, i) => ({ value: String(i + 1).padStart(2, '0'), label }));
 
 /** Una letra de la fórmula leída: su variable y los términos [grupo;actividad#servicio] que suma, con sus nombres. */
 interface LetraLeida {
@@ -16,17 +20,19 @@ interface LetraLeida {
   partes: { termino: string; grupo: string; actividad: string; servicio: string }[];
 }
 
-/** detalle_logica de la letra ("1·Consulta Externa / 3·Consultas (Serv: Todos) | ...") en términos con sus nombres. */
+/** detalle_logica de la letra ("1·Consulta Externa / 3·Consultas (Serv: Todos) @ASEGURADO | ...") en términos con
+ *  sus nombres. @CONDICION: solo las hojas con esa condición de DIM_HOJA. */
 function leerLetra(l: TmiLetra): LetraLeida {
   const partes = (l.detalle_logica ?? '').split(' | ').filter((x) => x.trim()).map((x) => {
-    const m = /^(\d+)·(.*?) \/ (\d+)·(.*) \(Serv: (.+)\)$/.exec(x.trim());
+    const m = /^(\d+)·(.*?) \/ (\d+)·(.*) \(Serv: (.+?)\)(?: @(\w+))?$/.exec(x.trim());
     if (!m) return { termino: x.trim(), grupo: '', actividad: '', servicio: '' };
     const todos = m[5] === 'Todos';
+    const cond = m[6] ? '@' + m[6] : '';
     return {
-      termino: `[${m[1]};${m[3]}${todos ? '' : '#' + m[5]}]`,
+      termino: `[${m[1]};${m[3]}${todos ? '' : '#' + m[5]}${cond}]`,
       grupo: `${m[1]} ${m[2]}`.trim(),
       actividad: `${m[3]} ${m[4]}`.trim(),
-      servicio: todos ? 'todos los servicios' : 'servicio ' + m[5],
+      servicio: (todos ? 'todos los servicios' : 'servicio ' + m[5]) + (m[6] ? ', hojas ' + m[6] : ''),
     };
   });
   return { letra: l.letra, variable: l.variable ?? '', partes };
@@ -56,18 +62,14 @@ interface TerminoComparado {
   actividad: number;
   servicio: number | null;
   mediana: boolean;
+  periodo_mediana: boolean;
+  condicion: string | null;
   backup: TmiTerminoResultado | null;
   actual: TmiTerminoResultado | null;
   cambio: boolean;
 }
 
 
-const MESES = [
-  { value: '01', label: 'Enero' }, { value: '02', label: 'Febrero' }, { value: '03', label: 'Marzo' },
-  { value: '04', label: 'Abril' }, { value: '05', label: 'Mayo' }, { value: '06', label: 'Junio' },
-  { value: '07', label: 'Julio' }, { value: '08', label: 'Agosto' }, { value: '09', label: 'Septiembre' },
-  { value: '10', label: 'Octubre' }, { value: '11', label: 'Noviembre' }, { value: '12', label: 'Diciembre' },
-];
 
 const MOTIVOS: Record<string, string> = {
   SIN_ESTANDAR: 'Sin estándar',
@@ -75,7 +77,6 @@ const MOTIVOS: Record<string, string> = {
   SIN_DATO: 'Sin dato',
   EXCLUIDO: 'Excluido',
   EXCLUIDO_CERO: 'Excluido (puntaje 0)',
-  FUERA_DE_AMBITO: 'Fuera de ámbito',
   NO_VIGENTE_MES: 'No vigente en el mes',
   NO_FUNCIONA: 'No funciona',
 };
@@ -85,7 +86,7 @@ const MOTIVOS: Record<string, string> = {
  *  justificación. Nada se guarda: el cierre de cada mes solo guarda la copia de los datos. */
 @Component({
   selector: 'app-tmi-calculo',
-  imports: [FormsModule, MatCardModule, MatIconModule, MatPaginatorModule, DecimalPipe],
+  imports: [FormsModule, MatCardModule, MatIconModule, MatPaginatorModule, DecimalPipe, ScrollingModule],
   providers: [{ provide: MatPaginatorIntl, useFactory: paginadorEs }],
   templateUrl: './tmi-calculo.html',
   styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css'],
@@ -154,6 +155,9 @@ export class TmiCalculo implements OnInit {
       (r) => (!red || `${r.red} ${r.centro} ${r.codcentro}`.toLowerCase().includes(red)) && (!p || r.puntaje === p),
     );
   });
+  /** Virtual scroll del resultado: alto fijo de cada fila y alto de la lista (hasta 460px, menos si hay pocas filas). */
+  readonly altoFila = 44;
+  trackCentro = (_: number, r: { codcentro: unknown }) => r.codcentro;
   problemas = signal<TmiProblemaConfig[] | null>(null);
 
   // ---------- 3. justificación: con los datos del cierre y con los datos de hoy ----------
@@ -211,16 +215,25 @@ export class TmiCalculo implements OnInit {
       return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
     };
     return this.letrasLeidas().map((l) => {
+      const usados: TerminoComparado[] = [];
       const partes = l.partes.map((p) => {
-        const ts = terms.filter((t) => this.textoTermino(t).replace(/^MEDIANA\((.*)\)$/, '$1') === p.termino);
+        const ts = terms.filter((t) => this.textoTermino(t).replace(/^MEDIANA(?:_PERIODO)?\((.*)\)$/, '$1') === p.termino);
+        usados.push(...ts);
         return { ...p, historico: suma(ts, 'backup'), actual: suma(ts, 'actual'), hay: ts.length > 0 };
       });
-      const conDatos = partes.filter((p) => p.hay);
-      const total = (lado: 'historico' | 'actual') => {
-        const vals = conDatos.map((p) => p[lado]).filter((v): v is number => v != null);
-        return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
+      // total de la letra: el valor de cada término una vez (cada conjunto con mediana es su propio término y
+      // sus servicios ya vienen sumados en ese valor)
+      const total = (lado: 'backup' | 'actual'): number | null => {
+        const porCodigo = new Map<string, number>();
+        for (const t of usados) {
+          const r = t[lado];
+          const v = r?.valor_termino ?? null;
+          if (v != null && !porCodigo.has(t.codigo)) porCodigo.set(t.codigo, v);
+        }
+        if (porCodigo.size) return [...porCodigo.values()].reduce((a, b) => a + b, 0);
+        return suma(usados, lado);
       };
-      return { ...l, partes, historico: total('historico'), actual: total('actual'), hay: conDatos.length > 0 };
+      return { ...l, partes, historico: total('backup'), actual: total('actual'), hay: usados.length > 0 };
     });
   });
 
@@ -230,7 +243,7 @@ export class TmiCalculo implements OnInit {
       const clave = `${t.codigo}|${t.tipgrupo}|${t.actividad}|${t.servicio ?? ''}`;
       const f = filas.get(clave) ?? {
         clave, codigo: t.codigo, tipgrupo: t.tipgrupo, actividad: t.actividad, servicio: t.servicio,
-        mediana: t.mediana, backup: null, actual: null, cambio: false,
+        mediana: t.mediana, periodo_mediana: !!t.periodo_mediana, condicion: t.condicion ?? null, backup: null, actual: null, cambio: false,
       };
       if (t.origen_datos === 'BACKUP') f.backup = t; else f.actual = t;
       filas.set(clave, f);
@@ -265,7 +278,7 @@ export class TmiCalculo implements OnInit {
     const cod = this.codigoFilas();
     const t = cod ? this.terminosComparados().find((x) => x.codigo === cod) : undefined;
     const termino = t ? this.textoTermino(t) : '';
-    const base = termino.replace(/^MEDIANA\((.*)\)$/, '$1');
+    const base = termino.replace(/^MEDIANA(?:_PERIODO)?\((.*)\)$/, '$1');
     const letra = base ? this.letrasLeidas().find((l) => l.partes.some((p) => p.termino === base)) : undefined;
     const diferencia = f.reduce((s, x) => s + (x.cantidad_actual ?? 0) - (x.cantidad_backup ?? 0), 0);
     return {
@@ -579,10 +592,14 @@ export class TmiCalculo implements OnInit {
     });
   }
 
-  /** [grupo;actividad#servicio] de un término. */
-  textoTermino(t: { tipgrupo: number; actividad: number; servicio: number | null; mediana: boolean }): string {
-    const base = `[${t.tipgrupo};${t.actividad}${t.servicio != null ? '#' + t.servicio : ''}]`;
-    return t.mediana ? `MEDIANA(${base})` : base;
+  /** [grupo;actividad#servicio@CONDICION] de un término (@CONDICION: solo las hojas con esa condición), con su
+   *  función: MEDIANA (mediana del mes y del periodo) o MEDIANA_PERIODO (suma del mes, mediana del periodo). */
+  textoTermino(t: { tipgrupo: number; actividad: number; servicio: number | null; mediana: boolean;
+                    periodo_mediana?: boolean | null; condicion?: string | null }): string {
+    const cond = t.condicion ? '@' + t.condicion : '';
+    const base = `[${t.tipgrupo};${t.actividad}${t.servicio != null ? '#' + t.servicio : ''}${cond}]`;
+    const fn = t.mediana ? 'MEDIANA' : t.periodo_mediana ? 'MEDIANA_PERIODO' : '';
+    return fn ? `${fn}(${base})` : base;
   }
 
   diferencia(a: number | null | undefined, b: number | null | undefined): number | null {

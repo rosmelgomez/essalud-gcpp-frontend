@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { LocalStorageService } from './local-storage-service';
 import { Router, NavigationEnd } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { filter } from 'rxjs/operators';
 import { catchError, of, timeout } from 'rxjs';
 import { AuthLogin } from './usuario/auth-login';
+import { AuthService, SIN_SESION } from './usuario/auth-service';
 import { Backend } from '../model/api';
 
 const log_url = Backend.api + '/log/register';
@@ -18,11 +20,13 @@ export class RouteLogger {
   private readonly LAST_LOGGED_URL_KEY = 'lastLoggedUrl';
   private isLoggingOut = false;
   private isLogoutInProgress = false;
+  private readonly almacen = inject(LocalStorageService);
 
   constructor(
     private router: Router,
     private http: HttpClient,
     private auth: AuthLogin,
+    private sesion: AuthService,
   ) {
     this.initRouteLogging();
   }
@@ -40,8 +44,14 @@ export class RouteLogger {
       return;
     }
 
-    // No registrar rutas públicas
-    if (url === '/login' || url === '/') {
+    // No registrar rutas públicas (sin mirar los query params: /login?message=... también es el login)
+    const ruta = url.split(/[?#]/)[0];
+    if (ruta === '/login' || ruta === '/') {
+      return;
+    }
+
+    // Sin sesión no se registra: el backend responde 401 (p. ej. dashboards públicos abiertos sin iniciar sesión)
+    if (!this.almacen.getUser()) {
       return;
     }
 
@@ -144,10 +154,11 @@ export class RouteLogger {
 
   private completeLogout(): void {
 
-    // Limpiar la última URL registrada
+    // Limpiar la última URL registrada y lo que el navegador guarda de la sesión
     sessionStorage.removeItem(this.LAST_LOGGED_URL_KEY);
-    // Navegar al login
-    this.router.navigate(['/login']);
+    this.sesion.clearSession();
+    // Navegar al login (la sesión se acaba de cerrar: el login no vuelve a preguntar por ella)
+    this.router.navigate(['/login'], { state: { [SIN_SESION]: true } });
     // Resetear la bandera después de un tiempo para permitir nuevos logins
     setTimeout(() => { this.isLoggingOut = false; }, 500);
     this.isLogoutInProgress = false;

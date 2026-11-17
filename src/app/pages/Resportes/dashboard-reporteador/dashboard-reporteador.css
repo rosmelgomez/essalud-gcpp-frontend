@@ -1,7 +1,9 @@
 /* Cabecera, pestañas, filtros, tarjetas y estados: src/styles/reportes.css */
 
+/* ancho natural de las columnas (vh era el alto de la pantalla); la caja .mat-elevation-z8 desplaza lo que sobre */
 table {
-  width: 90vh;
+  width: 100%;
+  min-width: max-content;
 }
 
 th  {
@@ -91,50 +93,23 @@ td {
   background-color: #fafbfc;
 }
 
-/* Selects estilos */
-.style-select {
-  padding: 12px 16px;
-  border: 2px solid #ced4da;
-  border-radius: 10px;
-  font-family: 'Calibri', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  background-color: white;
-  color: #333333;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 100px;
-  max-width: 300px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+/* Los select usan .rpt .style-select de src/styles/reportes.css. El buscador con lista toma su misma altura y borde. */
+.custom-dropdown .dropdown-input {
+  height: var(--rpt-control-h);
+  border-color: var(--rpt-line-strong);
+  border-radius: var(--rpt-radius-sm);
 }
 
-.style-select:focus  {
-  outline: none;
-  border-color: #0064AF;
-  box-shadow: 0 0 0 4px rgba(0, 100, 175, 0.15), 0 4px 12px rgba(0, 100, 175, 0.1);
-  transform: translateY(-1px);
-}
-
-.style-select:hover {
-  border-color: #00AEEF;
-  box-shadow: 0 4px 12px rgba(0, 100, 175, 0.12);
-}
-
-
-/* Responsive */
-@media (max-width: 950px) {
-
-  .style-select {
+@media (max-width: 640px) {
+  /* en columna (reportes.css apila .buscar-group) los buscadores ocupan todo el ancho, como los select */
+  .custom-dropdown {
     width: 100%;
+    min-width: 0;
   }
 }
 
-@media (max-width: 720px) {
-
-  .style-select {
-    width: 100%;
-    font-size: 13px;
-    padding: 10px 14px;
-  }
-
+/* La tabla tiene muchas columnas: se desplaza dentro de su caja en vez de salirse de la pantalla */
+.mat-elevation-z8 {
+  overflow-x: auto;
+  max-width: 100%;
 }

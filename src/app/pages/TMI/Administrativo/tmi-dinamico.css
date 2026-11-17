@@ -18,6 +18,19 @@
     align-items: center;
 }
 
+/* Resultado del cálculo con virtual scroll: filas de alto fijo y texto en una línea */
+.dyn-vs .row-table {
+    height: 44px;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+.dyn-vs .row-table .cell {
+    white-space: nowrap;
+    overflow-wrap: normal;
+    text-overflow: ellipsis;
+}
+
 .row-table .cell.txt {
     justify-content: flex-start;
     text-align: left;
@@ -108,12 +121,6 @@
     margin: 12px 0 4px;
 }
 
-.dyn-meses {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 8px;
-}
-
 .dyn-problemas {
     margin: 0;
     padding-left: 18px;
@@ -139,120 +146,12 @@
 }
 
 /* Buscador con lupa, botón para limpiar y conteo de resultados (pestaña % Acept) */
-.dyn-buscar-fila {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 14px;
-    margin-bottom: 14px;
-}
-
-.dyn-buscar {
-    position: relative;
-    display: flex;
-    align-items: center;
-    flex: 1 1 280px;
-    max-width: 420px;
-}
-
-.dyn-buscar input {
-    box-sizing: border-box;
-    width: 100%;
-    height: var(--rpt-control-h);
-    padding: 0 38px 0 38px;
-    font: inherit;
-    font-size: 14px;
-    color: var(--rpt-ink);
-    background: var(--rpt-surface);
-    border: 1px solid var(--rpt-line-strong);
-    border-radius: var(--rpt-radius-sm);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.dyn-buscar input::placeholder {
-    color: var(--rpt-muted);
-    opacity: 0.85;
-}
-
-.dyn-buscar input::-webkit-search-cancel-button {
-    -webkit-appearance: none;
-}
-
-.dyn-buscar input:hover {
-    border-color: #9fb2c5;
-}
-
-.dyn-buscar input:focus {
-    outline: none;
-    border-color: var(--rpt-brand);
-    box-shadow: 0 0 0 3px rgba(0, 100, 175, 0.16);
-}
-
-.dyn-buscar-icono {
-    position: absolute;
-    left: 10px;
-    width: 20px;
-    height: 20px;
-    font-size: 20px;
-    color: var(--rpt-muted);
-    pointer-events: none;
-}
-
-.dyn-buscar:focus-within .dyn-buscar-icono {
-    color: var(--rpt-brand);
-}
-
-.dyn-buscar-limpiar {
-    position: absolute;
-    right: 5px;
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    color: var(--rpt-muted);
-    background: transparent;
-    border: 0;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.dyn-buscar-limpiar:hover {
-    color: var(--rpt-ink);
-    background: var(--rpt-surface-2);
-}
-
-.dyn-buscar-limpiar:focus-visible {
-    outline: 2px solid var(--rpt-brand);
-    outline-offset: 1px;
-}
-
-.dyn-buscar-limpiar mat-icon {
-    width: 18px;
-    height: 18px;
-    font-size: 18px;
-}
-
-.dyn-buscar-total {
-    font-size: 13px;
-    color: var(--rpt-muted);
-    font-variant-numeric: tabular-nums;
-}
-
-@media (max-width: 640px) {
-    .dyn-buscar {
-        flex-basis: 100%;
-        max-width: none;
-    }
-}
 
 @media (max-width: 1100px) {
     .dyn-split {
         grid-template-columns: 1fr;
     }
-    .dyn-meses {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
+
 }
 
 /* Resultado final: meses posteriores al periodo calculado (todavía sin dato) */
@@ -295,25 +194,7 @@
     margin: 0;
 }
 
-/* % Acept: una tarjeta por indicador, como la hoja "Estándares de indicadores" */
-.dyn-acept-card {
-    margin-bottom: 14px;
-    padding-bottom: 12px;
-}
-
-.dyn-acept-edicion {
-    align-items: flex-end;
-    gap: 10px;
-}
-
-.dyn-acept-edicion .field-input {
-    width: 130px;
-}
-
 /* "Se mide en": cabe "% del estándar" completo */
-.dyn-acept-edicion > .field-input:first-child {
-    width: 168px;
-}
 
 .dyn-acept-grupo {
     display: flex;
@@ -329,11 +210,6 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--rpt-muted);
-}
-
-.dyn-acept-nota {
-    max-width: 180px;
-    align-self: center;
 }
 
 /* % Acept: un solo control con la unidad (% o pts) dentro, mismo borde y foco que los demás campos */
@@ -399,48 +275,6 @@
     border-left: 1px solid var(--rpt-line-strong);
 }
 
-.dyn-acept-tabla {
-    display: grid;
-    grid-template-columns: 150px repeat(var(--n), minmax(70px, 1fr));
-    min-width: max-content;
-    margin: 0 8px;
-    border: 1px solid var(--rpt-line);
-}
-
-.dyn-acept-fila {
-    display: contents;
-}
-
-.dyn-acept-fila .cell {
-    padding: 6px 8px;
-    border-bottom: 1px solid var(--rpt-line-soft);
-    border-right: 1px solid var(--rpt-line-soft);
-    text-align: center;
-    font-size: 13px;
-}
-
-.dyn-acept-cab .cell {
-    background: var(--rpt-surface-2);
-    font-weight: 700;
-}
-
-.dyn-acept-etq {
-    text-align: left !important;
-    font-weight: 700;
-}
-
-.dyn-acept-etq.dyn-verde {
-    color: var(--rpt-ok);
-}
-
-.dyn-acept-etq.dyn-rojo {
-    color: var(--rpt-danger);
-}
-
-.dyn-acept-fila .cell.dyn-sin {
-    background: var(--rpt-surface-2);
-}
-
 /* Variables: componentes de una variable compuesta y servicios con selección múltiple */
 .row-table.dyn-componente {
     grid-template-columns: minmax(180px, 2fr) minmax(110px, 1fr) 60px;
@@ -484,10 +318,6 @@
     display: block;
     min-width: 0;
     overflow: hidden;
-}
-
-.dyn-calculo-variable {
-    margin: 0 0 8px;
 }
 
 /* Fórmula con bloques: variables (A, B, C…), operaciones y números */
@@ -766,6 +596,16 @@
     color: var(--rpt-muted);
 }
 
+/* "Probar en SQL Server" plegado como "Fórmula interna"; dentro de la tarjeta (flex en columna) no se estira */
+.dyn-sql-prueba {
+    flex: none;
+    margin: 4px 0 0;
+}
+
+.dyn-sql-prueba .dyn-sql-descarga {
+    margin: 8px 0 4px;
+}
+
 .dyn-formula-interna code {
     display: block;
     margin: 6px 0;
@@ -826,11 +666,6 @@
     cursor: pointer;
 }
 
-.dyn-acept-defecto {
-    color: var(--rpt-muted);
-    font-style: italic;
-}
-
 /* Formulario del indicador: "?" junto al nombre del campo que abre una ayuda flotante */
 .field-input:has(> .dyn-campo-cab) {
     position: relative;
@@ -841,38 +676,6 @@
     align-items: center;
     gap: 4px;
     min-width: 0;
-}
-
-.dyn-ayuda-btn {
-    display: grid;
-    flex: 0 0 auto;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    padding: 0;
-    color: var(--rpt-muted);
-    background: transparent;
-    border: 0;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: color 0.15s ease, background-color 0.15s ease;
-}
-
-.dyn-ayuda-btn mat-icon {
-    width: 17px;
-    height: 17px;
-    font-size: 17px;
-}
-
-.dyn-ayuda-btn:hover,
-.dyn-ayuda-btn.activo {
-    color: var(--rpt-brand);
-    background: var(--rpt-brand-tint);
-}
-
-.dyn-ayuda-btn:focus-visible {
-    outline: 2px solid var(--rpt-brand);
-    outline-offset: 1px;
 }
 
 .dyn-ayuda-pop {
@@ -892,13 +695,11 @@
     animation: dyn-ayuda-entra 0.14s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-
 /* Historial de cambios del indicador */
 .dyn-historial-card {
     margin-top: 16px;
     padding-bottom: 16px;
 }
-
 
 .dyn-historial-lista {
     max-height: 320px;
@@ -929,14 +730,6 @@
     overflow-wrap: anywhere;
 }
 
-/* Avisos antes de calcular (no bloquean) */
-.dyn-avisos {
-    margin: 0;
-    padding-left: 18px;
-    font-size: 0.88rem;
-    line-height: 1.5;
-}
-
 /* Indicadores: la lista y el detalle con la misma altura. La fila toma la altura del card más alto (los dos se
    estiran); solo la lista se reparte en columna: su scroll crece hasta llenar el card (mínimo 460px). El detalle no se
    toca: si fuera flex, sus bloques se encogerían y se cortaría la fórmula. */
@@ -949,26 +742,18 @@
     flex-direction: column;
 }
 
-.dyn-split-igual > .dyn-lista-card > .wrapper-table {
-    display: flex;
-    flex: 1 1 auto;
-}
-
-.dyn-split-igual > .dyn-lista-card > .wrapper-table > .grid-table {
-    display: flex;
-    flex-direction: column;
-}
-
-.dyn-split-igual > .dyn-lista-card .dyn-scroll {
+/* la caja de la tabla (con su único scroll) ocupa el alto que deja la tarjeta */
+.dyn-split-igual > .dyn-lista-card > .wrapper-table.wt-scroll {
     flex: 1 1 0;
-    min-height: 460px;
+    min-height: 500px;
     max-height: none;
 }
 
-@media (max-width: 1100px) {   /* los cards quedan uno debajo del otro: la lista vuelve a 460px */
-    .dyn-split-igual > .dyn-lista-card .dyn-scroll {
+@media (max-width: 1100px) {   /* los cards quedan uno debajo del otro: la lista vuelve a su alto fijo */
+    .dyn-split-igual > .dyn-lista-card > .wrapper-table.wt-scroll {
         flex: none;
-        max-height: 460px;
+        min-height: 0;
+        max-height: var(--wt-alto);
     }
 }
 
@@ -1326,4 +1111,13 @@ button.jus-res:hover:not(:disabled) {
     .jus-fila.jus-cab span:not(:first-child) {
         display: none;
     }
+}
+
+/* Ayuda con varias opciones (una por párrafo) */
+.dyn-ayuda-pop .dyn-ayuda-opcion {
+    margin: 0;
+}
+
+.dyn-ayuda-pop .dyn-ayuda-opcion + .dyn-ayuda-opcion {
+    margin-top: 6px;
 }

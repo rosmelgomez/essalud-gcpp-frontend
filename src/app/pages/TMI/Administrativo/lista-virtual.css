@@ -94,3 +94,66 @@
     .lv-progreso::after,
     .lv-esqueleto span { animation: none; }
 }
+
+/* La CDK posiciona su contenedor interno en absoluto: sin ancho fijo toma el de la línea más larga (un nombre
+   de centro sin cortar) y las filas se salían por la derecha. Se ata al ancho de la lista. */
+.lv-viewport ::ng-deep .cdk-virtual-scroll-content-wrapper {
+    width: 100%;
+}
+
+.lv-viewport {
+    overflow-x: hidden;
+}
+
+/* Todas las filas miden lo mismo: los textos van en una sola línea con "…" (el texto completo queda en el
+   title o en el formulario) para que ninguna fila crezca más que las demás y se corte. */
+.lv-fila .exg-ind-nombre,
+.lv-fila .exg-tipo,
+.lv-fila .exg-nombre,
+.lv-fila .est-grupo,
+.lv-fila .exg-rango {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Pantalla angosta: las filas pasan a dos líneas de alto fijo (el componente sube --lv-alto con filaEstrecha()) */
+@media (max-width: 720px) {
+
+    /* Exclusiones y Por centro: indicador, resultado y acciones arriba; los 12 meses abajo */
+    .lv-fila .exg-fila:has(.exg-meses-col) {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        grid-template-areas:
+            "ind res acc"
+            "mes mes mes";
+        gap: 6px 8px;
+        padding-right: 12px;
+        padding-left: 16px;
+    }
+
+    .lv-fila .exg-fila:has(.exg-meses-col) > .exg-indicador { grid-area: ind; }
+    .lv-fila .exg-fila:has(.exg-meses-col) > .exg-resultado { grid-area: res; min-width: 40px; padding: 0 6px; }
+    .lv-fila .exg-fila:has(.exg-meses-col) > .exg-acciones { grid-area: acc; }
+    .lv-fila .exg-fila:has(.exg-meses-col) > .exg-meses-col { grid-area: mes; min-width: 0; }
+
+    /* Por indicador y % Acept: nombre arriba; los dos valores (fijo/mes, estándar/% acept) abajo, lado a lado */
+    .lv-fila .std-fila,
+    .lv-fila .acept-fila {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 4px 12px;
+        padding-right: 12px;
+        padding-left: 16px;
+    }
+
+    .lv-fila .std-fila > .exg-indicador,
+    .lv-fila .acept-fila > .exg-indicador {
+        grid-row: 1;
+        grid-column: 1 / 3;
+    }
+
+    /* el rango ya se lee en los meses marcados (y en el aria-label) */
+    .lv-fila .exg-meses-col > .exg-rango {
+        display: none;
+    }
+}

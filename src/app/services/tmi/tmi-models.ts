@@ -29,8 +29,6 @@ export interface TmiVariableLogica {
   actividad: number;
   servicio: number | null;
   condicion_hoja: string | null;
-  periodo_desde: number;
-  periodo_hasta: number;
   activo: boolean;
   desctipgrupo?: string;
   descactividad?: string;
@@ -56,9 +54,9 @@ export interface TmiIndicador {
   sin_datos_anio: 'MOSTRAR' | 'NA' | 'OCULTAR';
   base_estandar: string;   // tmi_tipo_estandar.codigo: NIVEL, NIVEL_TIPO, TIPO, CATEGORIA...
   sentido: 'MENOR' | 'MAYOR' | 'BANDA';
-  tipo_tolerancia: 'REL' | 'ABS';   // % Acept: REL = % del estándar | ABS = puntos
-  tolerancia: number;
-  tolerancia_menos?: number | null; // banda: hacia abajo (null = el mismo que hacia arriba)
+  tipo_acept: 'REL' | 'ABS';   // % Acept: REL = % del estándar | ABS = puntos
+  acept: number;
+  aceptmenos?: number | null; // banda: hacia abajo (null = el mismo que hacia arriba)
   decimales: number | null;
   cero_es_logro: boolean;
   mostrar_no_aplica: boolean;
@@ -123,12 +121,12 @@ export interface TmiAceptacionIndicador {
   base_estandar: string;
   sentido: 'MENOR' | 'MAYOR' | 'BANDA';
   formato: 'NUMERO' | 'PORCENTAJE';
-  tipo_tolerancia: 'REL' | 'ABS';
-  tolerancia: number;
-  tolerancia_menos: number | null;
+  tipo_acept: 'REL' | 'ABS';
+  acept: number;
+  aceptmenos: number | null;
   /** % Acept fijo del año: cada mes lo toma en su fecha de cierre. */
-  tolerancia_fijo: number | null;
-  tolerancia_menos_fijo: number | null;
+  acept_fijo: number | null;
+  aceptmenos_fijo: number | null;
   /** El mes ya alcanzó su fecha de cierre: tiene su propio valor (tomado del fijo), que se puede modificar. */
   mes_cerrado: boolean;
   varia_en_anio?: boolean;
@@ -176,16 +174,27 @@ export interface TmiCentroEstandar {
   id_indicador: number;
   anio: number;
   aplica: boolean;
+  /** Fijo del año: lo toma cada mes en su fecha de cierre (como el estándar por nivel). */
+  est_fijo: number | null;
   est_01: number | null; est_02: number | null; est_03: number | null; est_04: number | null;
   est_05: number | null; est_06: number | null; est_07: number | null; est_08: number | null;
   est_09: number | null; est_10: number | null; est_11: number | null; est_12: number | null;
-  acept: number | null;
-  /** % Acept del indicador en el periodo de la consulta: se usa si el centro no tiene uno propio. */
-  acept_defecto?: number | null;
+  /** Solo lectura: estándar que usa el mes de la consulta (el del mes si ya cerró; si no, el fijo). */
+  estandar?: number | null;
+  /** Solo lectura: % Acept del periodo de la consulta, calculado con el % Acept del indicador (no se guarda). */
+  acept?: number | null;
   sustento: string | null;
   indicador?: string;
   centro?: string;
   red?: string;
+}
+
+/** Estándares propios de centro de un periodo. mes_cerrado: el mes ya llegó a su fecha de cierre. */
+export interface TmiCentroEstandarPeriodo {
+  anio: number;
+  mes: number;
+  mes_cerrado: boolean;
+  filas: TmiCentroEstandar[];
 }
 
 export interface TmiCatalogo {
@@ -224,8 +233,6 @@ export interface TmiCentroCatalogo {
   categoria?: string;
 }
 export interface TmiProblemaConfig { id_indicador: number | null; elemento: string; problema: string; }
-/** Aviso que no bloquea el cálculo: centros que quedarían NA por falta de estándar o de % Acept en el periodo. */
-export interface TmiAvisoConfig { id_indicador: number; elemento: string; indicador: string; centros: number; aviso: string; }
 
 /** Cambio de la configuración (tmi_config_historial): quién, cuándo y cada campo antes y después. */
 export interface TmiCambioConfig {
@@ -249,7 +256,6 @@ export interface TmiResultadoFinal {
   anio: number;
   id_indicador: number;
   orden: number | null;
-  orden_red: number | null;
   red: string | null;
   codcentro: number;
   centro: string | null;
@@ -358,11 +364,18 @@ export interface TmiTerminoResultado {
   actividad: number;
   servicio: number | null;
   mediana: boolean;
+  /** mediana del periodo en el acumulado (MEDIANA / MEDIANA_PERIODO) */
+  periodo_mediana?: boolean;
+  /** condición de hoja del término (DIM_HOJA.condicion): solo esas hojas de TOTALIZADO3; null = todas */
+  condicion?: string | null;
   texto: string | null;
   valor_mes: number | null;
   valor: number | null;
   filas_mes: number | null;
   filas: number | null;
+  /** valor del término completo (el de la fórmula) en el mes de corte */
+  valor_mes_termino?: number | null;
+  valor_termino?: number | null;
 }
 
 /** Fila de TOTALIZADO3 que cambió desde la copia del cierre. */

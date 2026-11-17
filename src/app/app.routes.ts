@@ -6,7 +6,6 @@ import { encuestaRoutes } from './pages/Encuestas/encuesta.router';
 import { documentoRoutes } from './pages/Gestion-Documentaria/documento.router';
 import { reportesRoutes } from './pages/Resportes/reportes.router';
 import { indicadoresRoutes } from './pages/Indicadores/indicadores.router';
-import { solicitudAccesoRoutes } from './pages/Solicitud-Acceso/solucitud-acceso.router';
 import { usuarioRoutes } from './pages/Usuarios/usuario.router';
 import { TmiRoutes } from './pages/TMI/tmi.router';
 
@@ -22,13 +21,11 @@ export const routes: Routes = [
     { path: 'home', loadComponent: () => import('./pages/home-page/home-page').then((m) => m.HomePage), canActivate: [authenticateGuard] },
 
     // usuarios
-    { path: 'usuario', children: usuarioRoutes, canActivate: [authenticateGuard] },
-
-    //solicitud de acceso
-    { path: 'solicitud-acceso', children: solicitudAccesoRoutes },
+    // canActivateChild: el guard lee el rol de cada hija (manage-users es solo ADMIN)
+    { path: 'usuario', children: usuarioRoutes, canActivateChild: [authenticateGuard] },
 
     //logs
-    { path: 'logs-reports', loadComponent: () => import('./pages/logs-reports/logs-reports').then((m) => m.LogsReports), canActivate: [authenticateGuard] },
+    { path: 'logs-reports', loadComponent: () => import('./pages/logs-reports/logs-reports').then((m) => m.LogsReports), canActivate: [authenticateGuard], data: { role: ['ADMIN'] } },
 
     //reports
     { path: 'reporte', children: reportesRoutes, canActivate: [authenticateGuard] },

@@ -21,11 +21,11 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
       // ya hay un ciclo en curso: ese mismo ciclo pinta los cambios
     }
   };
-  const publicRoutes = ['/login', '/solicitar-acceso-registro', '/tmi/dashboard', '/tmi/dashboard-estandar'];
+  const publicRoutes = ['/login', '/tmi/dashboard', '/tmi/dashboard-estandar'];
   // peticiones que forman parte del propio manejo de sesión: nunca disparan un cierre
   const esPeticionDeSesion = ['/login', '/api-token', '/logout', '/log/register'].some((r) => req.url.includes(r));
   const currentPath = router.url.split('?')[0];
-  const isPublicRoute = publicRoutes.includes(currentPath) || currentPath.startsWith('/solicitud-acceso');
+  const isPublicRoute = publicRoutes.includes(currentPath);
 
   const cleanedHeaders = req.headers.has('Authorization')
     ? req.headers.delete('Authorization')
@@ -42,9 +42,10 @@ export const auditoryInterceptor: HttpInterceptorFn = (req, next) => {
   const confirmarSesion = (error: HttpErrorResponse) => {
     if ((error.status === 401 || error.status === 0) && !esPeticionDeSesion && !isPublicRoute) {
       authService.verificarSesion().subscribe(({ activa, sinServidor }) => {
-        if (!activa) {
-          authService.endSession(sinServidor ? null : MENSAJE_SESION_EXPIRADA);
-        }
+        if (activa) return;
+        // backend caído: no se borra la sesión, solo se espera en el login a que vuelva
+        if (sinServidor) authService.irAlLoginSinServidor();
+        else authService.endSession(MENSAJE_SESION_EXPIRADA);
       });
     }
   };

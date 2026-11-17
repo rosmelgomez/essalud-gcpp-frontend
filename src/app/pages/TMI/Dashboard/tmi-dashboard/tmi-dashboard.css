@@ -142,7 +142,6 @@ select, input[type=search] { font: inherit; font-size: 14px; padding: 7px 10px; 
 .t tbody tr.on { background: var(--d-sel); }
 @media (max-width: 680px) { .t .sm { display: none; } }
 
-.method { font-size: 12px; color: var(--d-muted); display: flex; flex-direction: column; gap: 6px; max-width: 95ch; border-top: 1px solid var(--d-line); padding-top: 14px; }
 .tip { position: fixed; pointer-events: none; background: var(--d-panel); border: 1px solid var(--d-line); border-radius: 8px; box-shadow: 0 8px 24px rgba(15, 23, 42, .14); padding: 6px 10px; font-size: 12px; z-index: 1000; max-width: 280px; }
 .tip span { color: var(--d-muted); display: block; }
 
@@ -161,13 +160,7 @@ select, input[type=search] { font: inherit; font-size: 14px; padding: 7px 10px; 
 .excel-err { font-size: 13px; color: #ED202D; }
 
 /* ayudas flotantes (como en TMI Administración): cerradas por defecto; se cierran al hacer clic fuera o con Esc */
-.dyn-ayuda { position: relative; font-size: 13px; }
-.dyn-ayuda summary { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 4px; border-radius: 8px; font-weight: 600;
-  font-size: 12.5px; color: var(--d-accent); cursor: pointer; list-style: none; user-select: none; }
-.dyn-ayuda summary::-webkit-details-marker { display: none; }
-.dyn-ayuda summary:hover, .dyn-ayuda[open] summary { background: rgba(0, 122, 201, .10); }
-.dyn-ayuda summary:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
-.dyn-ayuda summary mat-icon { width: 18px; height: 18px; font-size: 18px; }
+
 .dyn-ayuda-panel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; width: min(620px, calc(100vw - 32px));
   padding: 12px 14px; font-size: 13px; line-height: 1.55; color: var(--d-fg); background: var(--d-panel);
   border: 1px solid var(--d-line); border-radius: 10px; box-shadow: 0 10px 28px rgba(15, 45, 75, .18); animation: dyn-ayuda-entra .14s cubic-bezier(.16, 1, .3, 1); }
@@ -175,7 +168,29 @@ select, input[type=search] { font: inherit; font-size: 14px; padding: 7px 10px; 
 .dyn-ayuda-panel > p + p { margin-top: 8px; }
 @keyframes dyn-ayuda-entra { from { opacity: 0; transform: translateY(-4px); } }
 @media (prefers-reduced-motion: reduce) { .dyn-ayuda-panel { animation: none; } }
-/* la guía del encabezado se abre hacia la izquierda (el botón está a la derecha) */
-.ayuda-guia summary { border: 1px solid var(--d-line); background: var(--d-panel); padding: 7px 12px 7px 9px; font-size: 13px; }
-.ayuda-guia .dyn-ayuda-panel { left: auto; right: 0; width: min(920px, calc(100vw - 32px)); max-height: 75vh; overflow-y: auto; }
-.ayuda-guia .dyn-ayuda-panel { width: min(560px, calc(100vw - 32px)); }
+
+/* ---------- virtual scroll ---------- */
+/* Solo se dibujan las filas visibles; cada fila tiene alto fijo (el mismo itemSize del componente). */
+.rank-vs { display: block; contain: strict; overflow-y: auto; padding-right: 4px; }
+.rank-vs .rank-row { height: 25px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; }
+@media (max-width: 560px) { .rank-vs .rank-row:not(.dots) { height: 44px; } }
+
+/* Mapa de calor y tabla: la cabecera sticky se compensa con --off-cab (lo que el virtual scroll bajó las filas). */
+.heat-vs, .t-vs { display: block; contain: strict; max-height: none; }
+.heat-vs .heat th { top: var(--off-cab, 0px); }
+.heat-vs .heat thead tr:nth-child(2) th { top: calc(26px + var(--off-cab, 0px)); }
+.heat-vs .heat tbody td { height: 24px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; white-space: nowrap; }
+.t-vs .t { table-layout: fixed; }
+.t-vs .t th { top: var(--off-cab, 0px); overflow: hidden; }
+.t-vs .t th:first-child { width: 30%; }
+.t-vs .t th button { overflow: hidden; text-overflow: ellipsis; max-width: 100%; box-sizing: border-box; }
+.t-vs .t td { height: 34px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Signo de pregunta junto al título: la guía del tablero flota debajo */
+.titulo-ayuda { position: relative; }
+.ayuda-btn { display: inline-grid; vertical-align: middle; margin-left: 4px; flex: 0 0 auto; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--d-muted, #5b6b7f); cursor: pointer; transition: color .15s ease, background-color .15s ease; }
+.ayuda-btn mat-icon { width: 22px; height: 22px; font-size: 22px; }
+.ayuda-btn:hover, .ayuda-btn.activo { color: var(--d-accent); background: rgba(0, 122, 201, .10); }
+.ayuda-btn:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.titulo-ayuda .dyn-ayuda-panel { font-size: 13px; width: min(620px, calc(100vw - 32px)); max-height: 75vh; overflow-y: auto; }

@@ -550,6 +550,23 @@
   color: inherit;
 }
 
+.rpt .alert-warning {
+  align-items: flex-start;
+  color: var(--rpt-warn);
+  background: var(--rpt-warn-bg);
+  border: 1px solid var(--rpt-warn-line);
+}
+
+.rpt .alert-warning .alert-cuerpo {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rpt .alert-warning ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
 .rpt .alert-danger::before,
 .rpt .error::before {
   content: '';

@@ -1,27 +1,23 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, of } from 'rxjs';
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
-import { AyudaFlotante } from '../ayuda-flotante';
-import { aNumero, fmtNum, rangoMeses } from '../tmi-estandar-resumen/meses-rango';
+import { filaEstrecha } from '../lista-virtual';
+import { aNumero, fmtNum, MESES_NOMBRE } from '../../tmi-comun';
 import { TmiIndicadorService, TmiCentroService, TmiCentroEstandar, TmiCentroCatalogo, TmiIndicador, mensajeError } from '../../../../services/tmi';
 
 export const MESES = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-export const MESES_NOMBRE = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre',
-  'Octubre', 'Noviembre', 'Diciembre'];
-export const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-/** Estándar propio de un centro en un indicador, con sus meses listos para pintar. */
+/** Estándar propio de un centro en un indicador, en el periodo elegido. */
 interface FilaCentroEstandar {
   f: TmiCentroEstandar;
-  meses: { valor: number | null; titulo: string }[];
-  rango: string;
-  valor: string;     // recuadro: "4", "NA" o "varía"
+  fijo: string;      // fijo del año
+  mesValor: string;  // valor del mes (o "usa el fijo" si aún no cierra)
+  distinto: boolean; // el mes cerrado se cambió solo para ese mes
 }
 
 /** Excepciones de un centro: el centro se muestra una vez y debajo sus indicadores (como Exclusiones). */
@@ -39,57 +35,88 @@ interface FilaLista {
   x?: FilaCentroEstandar;
 }
 
-/** Estándar específico de un centro: gana sobre el estándar por tipo, nivel o categoría. */
+/** Periodo por defecto: el mes anterior al actual (el último que se calcula), como en % Acept. */
+function periodoAnterior(): { anio: number; mes: number } {
+  const hoy = new Date();
+  return hoy.getMonth() === 0 ? { anio: hoy.getFullYear() - 1, mes: 12 } : { anio: hoy.getFullYear(), mes: hoy.getMonth() };
+}
+
+/** Estándar específico de un centro: gana sobre el estándar por tipo, nivel o categoría.
+ *  Funciona como el estándar por nivel (Por indicador): un fijo del año que cada mes toma en su fecha de cierre, y el
+ *  valor del mes, que se puede cambiar solo cuando el mes ya cerró. */
 @Component({
   selector: 'app-tmi-centro-estandar',
-  imports: [AyudaFlotante, ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, DecimalPipe, ScrollingModule],
+  imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, DecimalPipe, ScrollingModule],
   templateUrl: './tmi-centro-estandar.html',
-  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css', '../lista-virtual.css', '../tmi-estandar-resumen/tmi-estandar-resumen.css', './tmi-centro-estandar.css'],
+  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css', '../lista-virtual.css', '../tmi-estandar-resumen.css', './tmi-centro-estandar.css'],
 })
 export class TmiCentroEstandarTab implements OnInit {
+  /** Ayuda de la pestaña (signo de pregunta junto al título). */
+  ayudaPagina = signal(false);
+
+  alternarAyudaPagina(ev: Event): void {
+    ev.stopPropagation();
+    this.ayudaPagina.update((v) => !v);
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  cerrarAyudaPagina(): void {
+    this.ayudaPagina.set(false);
+  }
+
   private indicadorSrv = inject(TmiIndicadorService);
   private centroSrv = inject(TmiCentroService);
   private fb = inject(FormBuilder);
 
-  readonly meses = MESES;
-  readonly mesesCorto = MESES_CORTO;
   readonly anios = Array.from({ length: 6 }, (_, i) => new Date().getFullYear() + 1 - i);
-
-  anio = signal(new Date().getFullYear());
-  /** Mes de la cabecera: 0 = todo el año; 1..12 filtra la lista a los estándares propios de ese mes (y los NA). */
-  mes = signal(0);
   readonly mesesNombre = MESES_NOMBRE;
-  /** Mes elegido en el formulario (0 = ninguno): su casilla se resalta. */
-  mesForm = 0;
+
+  /** Periodo elegido (año y mes 1..12). */
+  anio = signal(periodoAnterior().anio);
+  mes = signal(periodoAnterior().mes);
+  nombreMes = computed(() => MESES_NOMBRE[this.mes() - 1]);
+  /** Columna del mes elegido (est_01..est_12). */
+  colMes = computed(() => 'est_' + MESES[this.mes() - 1]);
+
   filas = signal<TmiCentroEstandar[]>([]);
+  /** El mes elegido ya llegó a su fecha de cierre: su estándar se puede cambiar solo para ese mes. */
+  mesCerrado = signal(false);
   centros = signal<TmiCentroCatalogo[]>([]);
   indicadores = signal<TmiIndicador[]>([]);
-  filtroCentro = signal('');
   filtroRed = signal('');
   redes = computed(() => [...new Set(this.centros().map((c) => c.red).filter((r) => !!r))].sort((a, b) => a.localeCompare(b)));
   centrosFiltrados = computed(() => {
-    const f = this.filtroCentro().trim().toLowerCase();
     const red = this.filtroRed();
-    return this.centros().filter((c) => (!red || c.red === red) && (!f || `${c.codcentro} ${c.centro}`.toLowerCase().includes(f)));
+    return this.centros().filter((c) => !red || c.red === red);
   });
 
   /** Búsqueda (código, centro, red o indicador) y centros desplegados. */
   busqueda = signal('');
   abiertos = signal<Set<string>>(new Set());
+  /** Centros con estándar propio en el año (fijo o del mes elegido) o que no aplican (quedan NA todo el año). */
   grupos = computed<GrupoCentroEstandar[]>(() => {
     const texto = this.busqueda().trim().toLowerCase();
     const contiene = (...vals: any[]) => vals.some((v) => String(v ?? '').toLowerCase().includes(texto));
     const mapa = new Map<string, GrupoCentroEstandar>();
-    const mes = this.mes();
+    const col = this.colMes();
+    const cerrado = this.mesCerrado();
     for (const f of this.filas()) {
-      if (mes && f.aplica && aNumero((f as any)['est_' + MESES[mes - 1]]) === null) continue;
+      const fijo = aNumero(f.est_fijo);
+      const delMes = aNumero((f as any)[col]);
+      if (f.aplica && fijo === null && delMes === null) continue;
       const clave = String(f.codcentro);
       let g = mapa.get(clave);
       if (!g) {
         g = { clave, codcentro: clave, centro: f.centro || 'Centro sin nombre', red: f.red || '', filas: [] };
         mapa.set(clave, g);
       }
-      g.filas.push(this.fila(f, mes));
+      g.filas.push({
+        f,
+        fijo: f.aplica ? (fijo ? fmtNum(fijo) : 'sin estándar') : 'NA',
+        mesValor: !f.aplica ? 'NA' : delMes ? fmtNum(delMes) : cerrado ? 'sin estándar' : 'usa el fijo',
+        distinto: !!f.aplica && delMes !== null && fijo !== null && delMes !== fijo,
+      });
     }
     const resultado: GrupoCentroEstandar[] = [];
     for (const g of mapa.values()) {
@@ -105,7 +132,9 @@ export class TmiCentroEstandarTab implements OnInit {
   totalFilas = computed(() => this.grupos().reduce((n, g) => n + g.filas.length, 0));
 
   /** Lista virtual: todas las filas miden lo mismo, así solo se dibujan las que se ven. */
-  readonly altoFila = 56;
+  private readonly estrecha = filaEstrecha();
+  /** En pantalla angosta la fila pasa a dos líneas (indicador arriba; fijo y mes abajo). */
+  altoFila = computed(() => (this.estrecha() ? 84 : 56));
   readonly esqueleto = [1, 2, 3, 4, 5, 6];
   lista = computed<FilaLista[]>(() => {
     const abiertos = this.abiertos();
@@ -116,9 +145,9 @@ export class TmiCentroEstandarTab implements OnInit {
     }
     return out;
   });
-  altoLista = computed(() => Math.max(this.altoFila, Math.min(this.lista().length * this.altoFila, 640)));
+  altoLista = computed(() => Math.max(this.altoFila(), Math.min(this.lista().length * this.altoFila(), 640)));
   trackFila = (_: number, r: FilaLista) => `${r.g.clave}-${r.x?.f.id ?? ''}`;
-  /** Si el usuario cambia de año antes de que llegue la respuesta, la vieja se descarta. */
+  /** Si el usuario cambia de periodo antes de que llegue la respuesta, la vieja se descarta. */
   private pedido = 0;
 
   loading = signal(false);
@@ -127,54 +156,40 @@ export class TmiCentroEstandarTab implements OnInit {
   mostrarForm = signal(false);
   guardando = signal(false);
   errorForm = signal('');
-  valorTodos: number | null = null;
 
+  /** El formulario guarda el registro del año: el fijo y, si el mes ya cerró, el valor de ese mes. Los otros meses se
+   *  conservan. */
   form = this.fb.group({
     id: [0],
     codcentro: ['', Validators.required],
     id_indicador: [null as number | null, Validators.required],
-    anio: [new Date().getFullYear(), Validators.required],
+    anio: [this.anio(), Validators.required],
     aplica: [true],
+    est_fijo: [null as number | null],
     est_01: [null as number | null], est_02: [null as number | null], est_03: [null as number | null],
     est_04: [null as number | null], est_05: [null as number | null], est_06: [null as number | null],
     est_07: [null as number | null], est_08: [null as number | null], est_09: [null as number | null],
     est_10: [null as number | null], est_11: [null as number | null], est_12: [null as number | null],
-    acept: [null as number | null],
     sustento: [''],
   });
 
-  /** Valores del formulario como señal, y estándares de otros años (para saber si el centro ya está registrado). */
+  /** Valores del formulario como señal (para saber si el centro ya está registrado). */
   private valorForm = signal(this.form.getRawValue());
-  private otrosAnios = signal<Record<number, TmiCentroEstandar[]>>({});
 
   /** Registro ya guardado del mismo centro, indicador y año: en un alta, guardar lo actualiza en vez de duplicarlo. */
   existente = computed(() => {
     const v = this.valorForm();
-    if (v.id || !v.codcentro || v.id_indicador == null || !v.anio) return null;
-    const anio = Number(v.anio);
-    const lista = anio === this.anio() ? this.filas() : this.otrosAnios()[anio];
-    return lista ? this.buscarRegistro(lista, String(v.codcentro), Number(v.id_indicador), anio) : null;
+    if (v.id || !v.codcentro || v.id_indicador == null) return null;
+    return this.buscarRegistro(String(v.codcentro), Number(v.id_indicador));
   });
 
   constructor() {
-    this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
-      const v = this.form.getRawValue();
-      this.valorForm.set(v);
-      const anio = Number(v.anio);
-      if (!v.id && anio && anio !== this.anio() && !(anio in this.otrosAnios())) {
-        this.listaDelAnio(anio).subscribe((lista) => this.otrosAnios.update((o) => ({ ...o, [anio]: lista })));
-      }
-    });
+    this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.valorForm.set(this.form.getRawValue()));
   }
 
-  private buscarRegistro(lista: TmiCentroEstandar[], codcentro: string, idIndicador: number, anio: number, sinId?: number) {
-    return lista.find((x) => String(x.codcentro) === codcentro && Number(x.id_indicador) === idIndicador
-      && Number(x.anio ?? anio) === anio && x.id !== sinId) ?? null;
-  }
-
-  /** Estándares de un año: los ya cargados si es el año en pantalla; si no, se consultan. */
-  private listaDelAnio(anio: number): Observable<TmiCentroEstandar[]> {
-    return anio === this.anio() ? of(this.filas()) : this.centroSrv.getCentroEstandar(anio);
+  private buscarRegistro(codcentro: string, idIndicador: number, sinId?: number) {
+    return this.filas().find((x) => String(x.codcentro) === codcentro && Number(x.id_indicador) === idIndicador
+      && x.id !== sinId) ?? null;
   }
 
   ngOnInit(): void {
@@ -183,14 +198,16 @@ export class TmiCentroEstandarTab implements OnInit {
     this.indicadorSrv.getIndicadores().subscribe({ next: (i) => this.indicadores.set(i) });
   }
 
+  /** Estándares del año, con el estándar y el % Acept que usa el mes elegido. */
   cargar(): void {
     const n = ++this.pedido;
     this.loading.set(true);
     this.error.set('');
-    this.centroSrv.getCentroEstandar(this.anio()).subscribe({
-      next: (f) => {
+    this.centroSrv.getCentroEstandar(this.anio(), this.mes()).subscribe({
+      next: (r) => {
         if (n !== this.pedido) return;
-        this.filas.set(f);
+        this.mesCerrado.set(!!r.mes_cerrado);
+        this.filas.set(r.filas ?? []);
         this.loading.set(false);
       },
       error: (e) => {
@@ -202,25 +219,10 @@ export class TmiCentroEstandarTab implements OnInit {
     });
   }
 
-  cambiarAnio(valor: string): void {
-    this.anio.set(Number(valor));
+  cambiarPeriodo(anio: number, mes: number): void {
+    this.anio.set(Number(anio));
+    this.mes.set(Number(mes));
     this.cargar();
-  }
-
-  /** mes (1..12): el recuadro muestra el estándar de ese mes. */
-  private fila(f: TmiCentroEstandar, mes = 0): FilaCentroEstandar {
-    const valores = MESES.map((m) => aNumero((f as any)['est_' + m]));
-    const meses = valores.map((v, i) => ({
-      valor: f.aplica ? v : null,
-      titulo: `${this.mesesCorto[i]}: ${!f.aplica ? 'no aplica (NA)' : v === null ? 'usa el estándar general' : fmtNum(v)}`,
-    }));
-    const distintos = [...new Set(valores.filter((v) => v !== null))];
-    return {
-      f,
-      meses,
-      rango: f.aplica ? rangoMeses(valores, 'estándar general') : 'No aplica: el indicador queda NA todo el año',
-      valor: !f.aplica ? 'NA' : mes ? fmtNum(valores[mes - 1] as number) : distintos.length === 1 ? fmtNum(distintos[0] as number) : distintos.length ? 'varía' : '—',
-    };
   }
 
   buscar(valor: string): void {
@@ -239,88 +241,66 @@ export class TmiCentroEstandarTab implements OnInit {
     this.abiertos.set(abrir ? new Set(this.grupos().map((g) => g.clave)) : new Set());
   }
 
-  nuevo(codcentro = ''): void {
-    this.form.reset({ id: 0, codcentro, id_indicador: null, anio: this.anio(), aplica: true, acept: null, sustento: '' });
-    this.mesForm = this.mes();
-    this.valorTodos = null;
-    this.filtroCentro.set('');
+  private abrirForm(valores: Record<string, any>): void {
+    this.form.reset({ id: 0, codcentro: '', id_indicador: null, aplica: true, est_fijo: null, sustento: '', ...valores,
+      anio: this.anio() } as any);
     this.filtroRed.set('');
     this.errorForm.set('');
     this.mostrarForm.set(true);
+  }
+
+  nuevo(codcentro = ''): void {
+    this.abrirForm({ codcentro });
   }
 
   editar(f: TmiCentroEstandar): void {
-    this.form.reset({ ...f, id: f.id ?? 0, sustento: f.sustento ?? '' } as any);
-    this.mesForm = this.mes();
-    this.valorTodos = null;
-    this.filtroCentro.set('');
-    this.filtroRed.set('');
-    this.errorForm.set('');
-    this.mostrarForm.set(true);
-  }
-
-  aplicarATodos(): void {
-    if (this.valorTodos == null || (this.valorTodos as any) === '') return;
-    const patch: Record<string, number> = {};
-    MESES.forEach((m) => (patch['est_' + m] = Number(this.valorTodos)));
-    this.form.patchValue(patch);
+    this.abrirForm({ ...f, id: f.id ?? 0, sustento: f.sustento ?? '' });
   }
 
   guardar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.errorForm.set('Seleccione el centro, el indicador y el año.');
+      this.errorForm.set('Seleccione el centro y el indicador.');
       return;
     }
     const f = this.form.getRawValue();
-    const anio = Number(f.anio);
-    this.guardando.set(true);
-    this.errorForm.set('');
-    // Antes de guardar se revisa si el centro ya tiene registro en ese indicador y año (consultando el año si hace falta)
-    this.listaDelAnio(anio).subscribe({
-      next: (lista) => this.guardarCon(f, this.buscarRegistro(lista, String(f.codcentro), Number(f.id_indicador), anio, f.id || undefined)),
-      error: (e) => {
-        this.errorForm.set(mensajeError(e, 'No se pudo revisar si el centro ya tiene estándar en ese año.'));
-        this.guardando.set(false);
-      },
-    });
-  }
-
-  /** Alta de un centro ya registrado (mismo indicador y año): se actualiza ese registro; los meses ingresados reemplazan
-   *  a los guardados y los vacíos conservan su valor. Al editar no se permite chocar con otro registro. */
-  private guardarCon(f: ReturnType<typeof this.form.getRawValue>, otro: TmiCentroEstandar | null): void {
+    const otro = this.buscarRegistro(String(f.codcentro), Number(f.id_indicador), f.id || undefined);
     if (otro && f.id) {
-      this.errorForm.set('Ya existe otro estándar de este centro para ese indicador y año. Edite ese registro.');
-      this.guardando.set(false);
+      this.errorForm.set('Este centro ya tiene estándar en ese indicador y año. Edite ese registro.');
       return;
     }
     const num = (v: any) => (v == null || v === '' ? null : Number(v));
-    const meses: Record<string, number | null> = {};
-    MESES.forEach((m) => {
-      const nuevo = num((f as any)['est_' + m]);
-      meses['est_' + m] = f.aplica ? (nuevo ?? (otro ? aNumero((otro as any)['est_' + m]) : null)) : null;
-    });
-    if (f.aplica && Object.values(meses).every((v) => v == null)) {
-      this.errorForm.set('Ingrese el estándar de al menos un mes.');
-      this.guardando.set(false);
+    const col = this.colMes();
+    const fijo = num(f.est_fijo);
+    if (f.aplica && fijo == null) {
+      this.errorForm.set(`Escriba el estándar fijo de ${this.anio()}.`);
       return;
     }
+    // los meses quedan como estaban (los del registro que se edita); el mes elegido toma el valor ingresado. Vacío:
+    // si ya cerró, el fijo (como en el cierre); si aún no cierra, queda vacío y usa el fijo. En un alta el backend busca
+    // el registro del mismo año, centro e indicador: si existe, solo cambia el periodo (no se duplica).
+    const base: any = f.id ? f : {};
+    const meses: Record<string, number | null> = {};
+    MESES.forEach((m) => (meses['est_' + m] = f.aplica ? num(base['est_' + m]) : null));
+    if (f.aplica) meses[col] = num((f as any)[col]) ?? (this.mesCerrado() ? fijo : null);
     const dto = {
       codcentro: String(f.codcentro),
       id_indicador: Number(f.id_indicador),
-      anio: Number(f.anio),
+      anio: this.anio(),
       aplica: !!f.aplica,
+      est_fijo: f.aplica ? fijo : null,
       ...meses,
-      acept: f.aplica ? (num(f.acept) ?? (otro ? num(otro.acept) : null)) : null,
-      sustento: f.sustento || otro?.sustento || null,
+      sustento: f.sustento || null,
+      ...(f.id ? {} : { mes: this.mes() }),
     } as TmiCentroEstandar;
-    const id = f.id || otro?.id;
+    const id = f.id;
+    this.guardando.set(true);
+    this.errorForm.set('');
     const req = id ? this.centroSrv.putCentroEstandar(id, dto) : this.centroSrv.postCentroEstandar(dto);
     req.subscribe({
       next: () => {
         this.guardando.set(false);
         this.mostrarForm.set(false);
-        this.otrosAnios.set({});
         this.cargar();
       },
       error: (e) => {
@@ -330,8 +310,12 @@ export class TmiCentroEstandarTab implements OnInit {
     });
   }
 
+  /** Elimina el estándar propio del centro en el año (fijo y meses): el centro vuelve al estándar de su tipo o nivel. */
   eliminar(f: TmiCentroEstandar): void {
-    if (!f.id || !confirm(`¿Eliminar el estándar propio de ${f.centro ?? f.codcentro} en "${f.indicador}"?`)) return;
+    if (!f.id) return;
+    const pregunta = `¿Eliminar el estándar propio de ${f.centro ?? f.codcentro} en "${f.indicador}" (${this.anio()})? `
+      + 'Se borran el fijo y todos los meses, y el centro vuelve al estándar normal de su tipo o nivel.';
+    if (!confirm(pregunta)) return;
     this.eliminandoId.set(f.id);
     this.centroSrv.deleteCentroEstandar(f.id).subscribe({
       next: () => {

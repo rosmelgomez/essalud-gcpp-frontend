@@ -287,11 +287,10 @@ export class Encuesta implements OnInit, OnDestroy {
 
       const requests = this.variablesConCalificacion.map((variable) =>
         this.encuestaService.createEncuesta({
-          id: 0,
+          // id y date_creation los pone el backend; un "" no es una fecha válida para LocalDateTime
           codcas: codcas,
           status: variable.calificacion,
           comment: variable.observacion?.trim() || '',
-          date_creation: '',
           id_user: id_user,
           id_modulo: this.selectedModuloId,
           id_categoria: this.selectedCategoriaId,

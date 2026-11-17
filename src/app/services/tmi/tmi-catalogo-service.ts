@@ -4,7 +4,7 @@ import { Observable, shareReplay } from 'rxjs';
 import { Backend } from '../../model/api';
 import { TmiCatalogo, TmiGrupoActividadServicio } from './tmi-models';
 
-const base_url = Backend.apiTmi + '/dinamico';
+const base_url = Backend.apiTmi + '/catalogo';
 
 /** Catálogos de TOTALIZADO3 y DIM_*: grupos, actividades, servicios y tipos de cálculo. */
 @Injectable({ providedIn: 'root' })
@@ -15,15 +15,15 @@ export class TmiCatalogoService {
   /** Relación grupo -> actividad -> servicio; se pide una sola vez y la comparten los formularios. */
   getGrupoActividadServicio() {
     this.relacionGas$ ??= this.http
-      .get<TmiGrupoActividadServicio[]>(`${base_url}/catalogo/grupo-actividad-servicio`)
+      .get<TmiGrupoActividadServicio[]>(`${base_url}/grupo-actividad-servicio`)
       .pipe(shareReplay(1));
     return this.relacionGas$;
   }
 
   getGruposReporte() {
-    return this.http.get<TmiCatalogo[]>(`${base_url}/catalogo/grupos-reporte`);
+    return this.http.get<TmiCatalogo[]>(`${base_url}/grupos-reporte`);
   }
   getTiposCalculo() {
-    return this.http.get<{ codigo: string; descripcion: string }[]>(`${base_url}/catalogo/tipos-calculo`);
+    return this.http.get<{ codigo: string; descripcion: string }[]>(`${base_url}/tipos-calculo`);
   }
 }

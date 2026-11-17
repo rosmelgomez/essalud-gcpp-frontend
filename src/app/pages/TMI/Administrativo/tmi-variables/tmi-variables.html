@@ -1,5 +1,27 @@
-<div class="header">
-    <h2 class="bar-title">Variables del pivot</h2>
+<div class="header dyn-fila-ayuda">
+    <div class="dyn-titulo-ayuda">
+        <h2 class="bar-title">Variables para el cálculo</h2>
+        <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaPagina()" [attr.aria-expanded]="ayudaPagina()"
+            aria-label="Qué es una variable del pivot" (click)="alternarAyudaPagina($event)">
+            <mat-icon>help_outline</mat-icon></button>
+        @if (ayudaPagina()) {
+        <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
+            <p>
+            Una variable se arma con <strong>conjuntos</strong>. Cada conjunto es un grupo, una actividad y, si hace
+            falta, algunos de sus servicios y la condición de hoja. Un registro entra si cumple <strong>al menos
+            uno</strong> de los conjuntos. La variable da un valor por cada mes y otro de enero al mes:
+            </p>
+            <ul>
+                <li><strong>Suma</strong>: cada mes suma las cantidades; de enero al mes, suma los meses.</li>
+                <li><strong>Suma con mediana del periodo</strong>: cada mes suma las cantidades; de enero al mes, saca la
+                    mediana de cada conjunto y servicio con todos los registros de esos meses.</li>
+                <li><strong>Mediana</strong>: cada mes saca la mediana de cada conjunto y servicio, la redondea y las suma;
+                    de enero al mes, hace lo mismo con todos los registros de esos meses.</li>
+            </ul>
+            <p>Solo se calculan las variables que usa algún indicador activo.</p>
+        </div>
+        }
+    </div>
     <div class="header-actions">
         <div class="buscar-group">
             <button (click)="cargar()" class="btn-download" [disabled]="loading()">
@@ -7,21 +29,23 @@
             </button>
         </div>
     </div>
-    <details class="dyn-ayuda">
-        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
-        <div class="dyn-ayuda-panel" role="note">
-            <p>
-            Una variable reúne los registros que cumplen <strong>al menos uno</strong> de sus conjuntos. Cada conjunto es un
-            grupo, una actividad y, si hace falta, algunos de sus servicios. Con esos registros, la variable hace su cálculo:
-            <strong>SUMA</strong> de las cantidades, o <strong>MEDIANA</strong> de cada servicio en el mes. Solo se calculan
-            las variables que usa algún indicador activo.
-            </p>
-        </div>
-    </details>
 </div>
 
 @if (error()) {
 <div class="alert alert-danger">{{ error() }}</div>
+}
+@if (avisosFormula().length) {
+<div class="alert alert-warning" role="status">
+    <div class="alert-cuerpo">
+        <strong>Se guardó el cambio, pero estas fórmulas no se pudieron actualizar:</strong>
+        <ul>
+            @for (a of avisosFormula(); track a) {
+            <li>{{ a }}</li>
+            }
+        </ul>
+    </div>
+    <button type="button" class="btn-modal-action btn-cancel" (click)="avisosFormula.set([])">Cerrar</button>
+</div>
 }
 
 <div class="dyn-split dyn-split-igual">
@@ -35,7 +59,7 @@
         </div>
         <input type="text" class="filter-input dyn-search" placeholder="Buscar variable..."
             [ngModel]="filtro()" (ngModelChange)="filtro.set($event)" />
-        <div class="wrapper-table">
+        <div class="wrapper-table wt-scroll">
             <div class="grid-table">
                 <div class="header-table">
                     <div class="cell">VARIABLE</div>
@@ -51,7 +75,7 @@
                     <div class="row-table dyn-clickable" [class.dyn-selected]="seleccionada()?.id === v.id"
                         [class.dyn-inactivo]="!v.activo" (click)="seleccionar(v)">
                         <div class="cell txt" [title]="v.descripcion || v.nombre">{{ v.nombre }}</div>
-                        <div class="cell" [title]="'Cálculo: ' + textoCalculo(v)"><span class="dyn-badge">{{ v.agregacion }}</span></div>
+                        <div class="cell" [title]="'Cálculo: ' + textoCalculo(v)"><span class="dyn-badge">{{ opcionCalculo(calculoDe(v)).corto }}</span></div>
                         <div class="cell" [title]="v.componentes ? 'Variable compuesta: suma ' + v.componentes + ' variable(s)' + (v.filas_logica ? ' y ' + v.filas_logica + ' conjunto(s) propio(s)' : '') : ''">{{ v.componentes ? (v.filas_logica ? v.filas_logica + ' + ' : '') + v.componentes + ' var.' : v.filas_logica }}</div>                        <div class="cell acciones">
                             <button type="button" class="btn-icon-edit" (click)="editarVariable(v, $event)"
                                 title="Editar variable"><mat-icon>edit</mat-icon></button>
@@ -75,37 +99,62 @@
 
     <!-- LÓGICA -->
     <mat-card class="table" style="--cols-table: minmax(120px, 1.4fr) minmax(140px, 1.8fr) minmax(62px, 0.6fr) minmax(80px, 0.8fr) minmax(76px, 0.6fr);">
-        <div class="table-title-row">
-            <h3>{{ seleccionada() ? 'Lógica: ' + seleccionada()!.nombre : 'Lógica de la variable' }}</h3>
+        <div class="table-title-row dyn-fila-ayuda">
+            @if (seleccionada(); as sv) {
+            <div class="dyn-titulo-ayuda">
+                <h3>{{ sv.nombre }}</h3>
+                <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaVariable()" [attr.aria-expanded]="ayudaVariable()"
+                    aria-label="Cómo se calcula esta variable" (click)="alternarAyudaVariable($event)">
+                    <mat-icon>help_outline</mat-icon></button>
+                @if (ayudaVariable()) {
+                <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
+                    <p>
+                    Cálculo de la variable: <span class="dyn-badge">{{ opcionCalculo(calculoDe(sv)).corto }}</span> {{ textoCalculo(sv) }}.
+                    @if (logica().length > 1) {
+                    Toma los registros que cumplen <strong>al menos uno</strong> de estos {{ logica().length }} conjuntos; un
+                    registro que cumple dos cuenta una sola vez.
+                    }
+                    </p>
+                    <p>El cálculo se cambia en <em>Editar variable</em>.</p>
+                </div>
+                }
+            </div>
+            } @else {
+            <h3>Conjuntos de la variable</h3>
+            }
             @if (seleccionada()) {
             <button type="button" class="btn-download btn-agregar-fila" (click)="nuevaLogica()">
                 <mat-icon>add</mat-icon> Agregar conjunto
             </button>
             }
         </div>
-        @if (seleccionada(); as sv) {
-        <p class="dyn-hint dyn-calculo-variable">
-            Cálculo de la variable: <span class="dyn-badge">{{ sv.agregacion }}</span> {{ textoCalculo(sv) }}.
-            @if (logica().length > 1) {
-            Toma los registros que cumplen <strong>al menos uno</strong> de estos {{ logica().length }} conjuntos; un registro
-            que cumple dos cuenta una sola vez.
-            }
-            <span class="dyn-bloque-nota">El cálculo se cambia en <em>Editar variable</em>.</span>
-        </p>
-        }
         @if (errorLogica()) {
         <div class="alert alert-danger">{{ errorLogica() }}</div>
         }
+        @if (seleccionada(); as sv) {
+        <details class="dyn-formula-interna dyn-sql-prueba">
+            <summary>Probar en SQL Server</summary>
+            <div class="dyn-inline dyn-sql-descarga">
+                <button type="button" class="btn-download" (click)="descargarSql(sv)"
+                    [disabled]="descargandoSql()"
+                    title="Descarga un query con el valor de cada mes y el de enero al mes, por red y centro">
+                    <mat-icon>{{ descargandoSql() ? 'hourglass_empty' : 'download' }}</mat-icon> SQL de la variable
+                </button>
+                <span class="dyn-hint">Sale con el periodo {{ periodoSql }}. Para otro mes, cambie &#64;PERIODO al
+                    inicio del archivo.</span>
+            </div>
+        </details>
+        }
         @if (!seleccionada()) {
-        <div class="dyn-empty">Seleccione una variable para ver de qué grupo, actividad y servicio se construye.</div>
+        <div class="dyn-empty">Elija una variable para ver sus conjuntos.</div>
         } @else {
-        <div class="wrapper-table">
+        <div class="wrapper-table wt-scroll">
             <div class="grid-table">
                 <div class="header-table">
                     <div class="cell">GRUPO</div>
                     <div class="cell">ACTIVIDAD</div>
                     <div class="cell">SERVICIO</div>
-                    <div class="cell">VIGENCIA</div>
+                    <div class="cell">HOJA</div>
                     <div class="cell acciones">ACCIONES</div>
                 </div>
                 <div class="dyn-scroll">
@@ -116,8 +165,8 @@
                     <div class="row-table" [class.dyn-inactivo]="!l.activo">
                         <div class="cell txt" [title]="'tipgrupo ' + l.tipgrupo">{{ l.tipgrupo }} · {{ l.desctipgrupo || '¿?' }}</div>
                         <div class="cell txt" [title]="'actividad ' + l.actividad">{{ l.actividad }} · {{ l.descactividad || '¿?' }}</div>
-                        <div class="cell">{{ l.servicio ?? 'Todos' }}{{ l.condicion_hoja ? ' · ' + l.condicion_hoja : '' }}</div>
-                        <div class="cell">{{ vigencia(l) }}</div>
+                        <div class="cell">{{ l.servicio ?? 'Todos' }}</div>
+                        <div class="cell" [title]="l.condicion_hoja ? 'Solo las hojas ' + l.condicion_hoja + ' de DIM_HOJA' : 'Todas las hojas'">{{ l.condicion_hoja || 'Todas' }}</div>
                         <div class="cell acciones">
                             <button type="button" class="btn-icon-edit" (click)="editarLogica(l)" title="Editar">
                                 <mat-icon>edit</mat-icon></button>
@@ -136,17 +185,21 @@
             </div>
         </div>
 
-        <div class="dyn-section-title">Variables que suma (variable compuesta)</div>
-        <details class="dyn-ayuda dyn-ayuda-seccion">
-            <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
-            <div class="dyn-ayuda-panel" role="note">
+        <div class="dyn-titulo-ayuda dyn-seccion-ayuda">
+            <div class="dyn-section-title">Variables que suma (variable compuesta)</div>
+            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCompuesta()" [attr.aria-expanded]="ayudaCompuesta()"
+                aria-label="Cómo funciona una variable compuesta" (click)="alternarAyudaCompuesta($event)">
+                <mat-icon>help_outline</mat-icon></button>
+            @if (ayudaCompuesta()) {
+            <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
                 <p>
-                Además de sus conjuntos, la variable puede sumar el valor de otras variables, y cada una conserva su
-                propio cálculo. Por ejemplo, el Consolidado de Consultas suma Consultas, Teleconsulta, CAI y las demás.
-                Solo se suman variables con el mismo cálculo que esta: {{ seleccionada()?.agregacion }}.
+                Además de sus conjuntos, esta variable puede sumar otras variables; cada una se calcula a su manera.
+                Por ejemplo, el Consolidado de Consultas suma Consultas, Teleconsulta, CAI y otras. Solo puede sumar
+                variables con su mismo cálculo: {{ opcionCalculo(calculoDe(seleccionada() ?? {})).corto }}.
                 </p>
             </div>
-        </details>
+            }
+        </div>
         @for (c of componentes(); track c.id) {
         <div class="row-table dyn-componente" [class.dyn-inactivo]="!c.componente_activo">
             <div class="cell txt">{{ c.componente }}</div>
@@ -179,7 +232,7 @@
         <header class="modal-header">
             <div class="modal-header-info">
                 <h2>{{ formVariable.controls.id.value ? 'Editar variable' : 'Nueva variable' }}</h2>
-                <p class="modal-subtitle">Use el mismo nombre que en el consolidado de cifras para poder comparar.</p>
+                <p class="modal-subtitle">Use el mismo nombre que en el consolidado de cifras, así se pueden comparar.</p>
             </div>
             <button type="button" class="close-modal-btn" (click)="mostrarFormVariable.set(false)" aria-label="Cerrar">
                 <mat-icon>close</mat-icon></button>
@@ -196,25 +249,29 @@
                         <label for="var_desc">Descripción</label>
                         <input id="var_desc" type="text" formControlName="descripcion" />
                     </div>
-                    <div class="field-input">
-                        <label for="var_agr">Cálculo de la variable</label>
-                        <select id="var_agr" formControlName="agregacion" (change)="alCambiarCalculo()">
-                            <option value="SUMA">SUMA de cantidades</option>
-                            <option value="MEDIANA">MEDIANA por servicio</option>
-                        </select>
-                    </div>
-                    @if (formVariable.controls.agregacion.value === 'MEDIANA') {
-                    <div class="field-input">
-                        <label for="var_total">Total anual</label>
-                        <select id="var_total" formControlName="total_anual">
-                            <option value="MEDIANA_PERIODO">Mediana del periodo</option>
-                            <option value="SUMA_MESES">Suma de los meses</option>
-                        </select>
-                    </div>
-                    }
                     <div class="field-input full-width">
-                        <span class="dyn-hint dyn-bloque-nota">El cálculo vale para todos los conjuntos de la variable. Un
-                            registro entra si cumple al menos uno de ellos.</span>
+                        <div class="dyn-campo-cab">
+                            <label for="var_calculo">Cálculo de la variable</label>
+                            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaCalculo()"
+                                [attr.aria-expanded]="ayudaCalculo()" aria-label="Qué hace cada cálculo de la variable"
+                                (click)="alternarAyudaCalculo($event)"><mat-icon>help_outline</mat-icon></button>
+                        </div>
+                        @if (ayudaCalculo()) {
+                        <div class="dyn-ayuda-pop" role="note" (click)="$event.stopPropagation()">
+                            @for (o of opcionesCalculo; track o.valor) {
+                            <p class="dyn-ayuda-opcion"><strong>{{ o.nombre }}.</strong> {{ o.detalle }}</p>
+                            }
+                        </div>
+                        }
+                        <select id="var_calculo" [value]="calculoForm()" (change)="elegirCalculo($any($event.target).value)">
+                            @for (o of opcionesCalculo; track o.valor) {
+                            <option [value]="o.valor">{{ o.nombre }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="field-input full-width">
+                        <span class="dyn-hint dyn-bloque-nota">El cálculo vale para todos los conjuntos. Un registro entra
+                            si cumple al menos uno.</span>
                     </div>
                     <div class="field-input">
                         <label for="var_activo">Estado</label>
@@ -313,14 +370,6 @@
                             <option [ngValue]="true">Activa</option>
                             <option [ngValue]="false">Inactiva</option>
                         </select>
-                    </div>
-                    <div class="field-input">
-                        <label for="lg_desde">Vigente desde (AAAAMM)</label>
-                        <input id="lg_desde" type="number" formControlName="periodo_desde" />
-                    </div>
-                    <div class="field-input">
-                        <label for="lg_hasta">Vigente hasta (AAAAMM)</label>
-                        <input id="lg_hasta" type="number" formControlName="periodo_hasta" />
                     </div>
                 </div>
                 @if (errorForm()) {

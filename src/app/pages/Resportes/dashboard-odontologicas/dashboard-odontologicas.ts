@@ -7,6 +7,7 @@ import { FileService } from '../../../services/documentos/file-service';
 import { forkJoin } from 'rxjs';
 import { OdontologicasService } from '../../../services/reportes/odontologicas-service';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { aniosHasta } from '../../../utils/anios';
 
 @Component({
   selector: 'app-dashboard-odontologicas',
@@ -15,6 +16,8 @@ import { FechaActualizacionService } from '../../../services/fecha-actualizacion
   styleUrl: './dashboard-odontologicas.css',
 })
 export class DashboardOdontologicas implements OnInit {
+  /** Años del select: desde 2025 hasta el año actual. */
+  readonly anios = aniosHasta(2025);
   currentDate: string = '';
 
   //data importantes
@@ -159,13 +162,12 @@ export class DashboardOdontologicas implements OnInit {
     }).subscribe({
       next: (results) => {
 
-        console.log(results);
 
         //total consultantes atencion
-        this.totalConsultantesAtencionSO = results.totalConsultantesAtencion[0].cantidad ?? 0;
+        this.totalConsultantesAtencionSO = results.totalConsultantesAtencion?.[0]?.cantidad ?? 0;
 
         //total consultantes servicio
-        this.totalConsultantesServicioSO = results.totalConsultantesServicio[0].cantidad ?? 0;
+        this.totalConsultantesServicioSO = results.totalConsultantesServicio?.[0]?.cantidad ?? 0;
         this.dataTotalConsultantesServicioSO = results.totalConsultantesServicio;
 
         //total atenciones

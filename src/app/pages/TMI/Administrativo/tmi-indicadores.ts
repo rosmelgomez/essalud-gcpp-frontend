@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit, ViewChild, effect, signal } from '@angular/core';
 
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
@@ -21,8 +21,10 @@ import { TmiCierreComponent } from './tmi-cierre/tmi-cierre';
 import { TmiAceptacion } from './tmi-aceptacion/tmi-aceptacion';
 import { TmiEstandares } from './tmi-estandares/tmi-estandares';
 import { TmiEstandarService } from '../../../services/tmi/tmi-estandar-service';
-import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
 import { TmiCatalogosCentro, TmiCentroService } from '../../../services/tmi';
+import { filaEstrecha } from './lista-virtual';
+import { aniosHasta } from '../../../utils/anios';
+import { MESES_CORTO as MESES_CORTOS } from '../tmi-comun';
 
 /** Exclusión (fila de tmi_exclusion_centro_indicador) con sus meses listos para pintar. */
 interface FilaExclusion {
@@ -51,7 +53,6 @@ interface FilaListaExclusion {
   f?: FilaExclusion;
 }
 
-const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 export type TabType = 'Estandares' | 'Centros TMI' | 'Exclusion Centro Estandar' | 'Fecha Cierre'
   | 'Aceptacion' | 'Variables' | 'Indicadores' | 'Estandar Centro' | 'Calcular';
@@ -80,12 +81,24 @@ export type TabType = 'Estandares' | 'Centros TMI' | 'Exclusion Centro Estandar'
     TmiEstandares
   ],
   templateUrl: './tmi-indicadores.html',
-  styleUrls: ['./tmi-indicadores.css', './lista-virtual.css'],
+  styleUrls: ['./tmi-indicadores.css', './lista-virtual.css', './ayuda-flotante.css'],
 })
 export class TmiIndicadores implements OnInit {
-  @ViewChild('viewportCentros') viewportCentros?: CdkVirtualScrollViewport;
+  /** Ayuda "?" del título de Exclusión: se cierra con un clic fuera o con Escape. */
+  ayudaExclusion = signal(false);
 
-  currentDate: string = '';
+  alternarAyudaExclusion(ev: Event): void {
+    ev.stopPropagation();
+    this.ayudaExclusion.update((v) => !v);
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  cerrarAyudaExclusion(): void {
+    this.ayudaExclusion.set(false);
+  }
+
+  @ViewChild('viewportCentros') viewportCentros?: CdkVirtualScrollViewport;
 
   eliminandoId: number | null = null;
   errorEliminarFila: string = '';
@@ -112,40 +125,12 @@ export class TmiIndicadores implements OnInit {
     ] },
   ];
 
-  // Filtros de Años y Meses (replicando dashboard-medicas)
+  /** Años del filtro de Exclusiones. */
   aniosDisponibles: string[] = [];
-  mesesDisponibles = [
-    { value: '01', label: 'Enero' },
-    { value: '02', label: 'Febrero' },
-    { value: '03', label: 'Marzo' },
-    { value: '04', label: 'Abril' },
-    { value: '05', label: 'Mayo' },
-    { value: '06', label: 'Junio' },
-    { value: '07', label: 'Julio' },
-    { value: '08', label: 'Agosto' },
-    { value: '09', label: 'Septiembre' },
-    { value: '10', label: 'Octubre' },
-    { value: '11', label: 'Noviembre' },
-    { value: '12', label: 'Diciembre' }
-  ];
-
-  generarAniosDinamicos(cantidad: number = 6): string[] {
-    const anios: string[] = [];
-    const anioActual = new Date().getFullYear();
-    for (let i = 0; i < cantidad; i++) {
-      anios.push(String(anioActual - i));
-    }
-    return anios;
-  }
-
-  onBuscarCentrosTMI(): void {
-    this.selectPeriodoCentrosTMI = false;
-    this.getQueryCentrosTMI();
-  }
 
   onBuscarExclusion(): void {
     if (!this.anioExclusion) {
-      this.errorExclusion = 'Seleccione un año válido.';
+      this.errorExclusion = 'Elija un año válido.';
       return;
     }
     this.selectPeriodoExclusion = false;
@@ -164,7 +149,6 @@ export class TmiIndicadores implements OnInit {
   anioCentrosTMI: string = '';
   mesCentrosTMI: string = '';
   periodoCentrosTMI: string = '';
-  selectPeriodoCentrosTMI: boolean = false;
   public loadingCentrosTMI: boolean = false;
   public errorCentrosTMI: string = '';
   public mostrarFormularioCentrosTMI: boolean = false;
@@ -205,10 +189,19 @@ export class TmiIndicadores implements OnInit {
   public centrosExclusionAbiertos = new Set<string>();
 
   /** Lista virtual de Exclusiones: todas las filas miden lo mismo, así solo se dibujan las que se ven. */
-  readonly altoFilaLista = 56;
+  /** En pantalla angosta los 12 meses van debajo del indicador: la fila sube a 72px (ver lista-virtual.css). */
+  private readonly filaEstrecha = filaEstrecha();
+  get altoFilaLista(): number { return this.filaEstrecha() ? 72 : 56; }
+  /** El componente se repinta a mano (cdr): al cruzar los 720px se avisa para que la lista tome el alto nuevo. */
+  private readonly repintarAlCambiarAncho = effect(() => {
+    this.filaEstrecha();
+    this.cdr.markForCheck();
+  });
   readonly esqueletoLista = [1, 2, 3, 4, 5, 6];
   public filasExclusion: FilaListaExclusion[] = [];
-  public altoListaExclusion = 0;
+  get altoListaExclusion(): number {
+    return Math.max(this.altoFilaLista, Math.min(this.filasExclusion.length * this.altoFilaLista, 640));
+  }
   trackFilaExclusion = (_: number, r: FilaListaExclusion) => `${r.g.clave}-${r.f?.row?.id ?? ''}`;
 
   /** Rearma la lista plana (centros y, si están abiertos, sus exclusiones). */
@@ -219,19 +212,18 @@ export class TmiIndicadores implements OnInit {
       if (this.centrosExclusionAbiertos.has(g.clave)) for (const f of g.filas) out.push({ g, f });
     }
     this.filasExclusion = out;
-    this.altoListaExclusion = Math.max(this.altoFilaLista, Math.min(out.length * this.altoFilaLista, 640));
   }
 
   constructor(
     private estandarSrv: TmiEstandarService,
     private centroSrv: TmiCentroService,
     private formBuilder: FormBuilder,
-    private cdr: ChangeDetectorRef,
-    private fechaService: FechaActualizacionService
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
-    this.aniosDisponibles = this.generarAniosDinamicos(6);
+    // del año siguiente (para dejar listas las exclusiones del próximo año) a cinco años atrás
+    this.aniosDisponibles = aniosHasta(new Date().getFullYear() - 5, 1).reverse();
     // por defecto el mes anterior al actual (en enero: diciembre del año anterior)
     const fechaActual = new Date();
     const mesAnterior = new Date(fechaActual.getFullYear(), fechaActual.getMonth() - 1, 1);
@@ -265,17 +257,6 @@ export class TmiIndicadores implements OnInit {
     });
   }
 
-  loadFechaActualizacion() {
-    this.fechaService.queryFechaActualizacion().subscribe({
-      next: (data) => {
-        this.currentDate = data.fecha_act;
-      },
-      error: (error) => {
-        console.error('Error al cargar la fecha de actualizacion', error);
-      }
-    });
-  }
-
   reactiveForm() {
     // Form 4: tmi_centro
     this.centrosForm = this.formBuilder.group({
@@ -297,7 +278,7 @@ export class TmiIndicadores implements OnInit {
       id_centro: [null, [Validators.required]],
       id_estandar: [null, []],
       anio: [null, [Validators.required]],
-      resultado: ['0', [Validators.required]],
+      resultado: ['NA', [Validators.required]],
       excl_01: [false, []],
       excl_02: [false, []],
       excl_03: [false, []],
@@ -509,7 +490,7 @@ export class TmiIndicadores implements OnInit {
       },
       error: (error: any) => {
         console.error(error);
-        this.errorExclusion = 'Error al cargar las exclusiones de centros y estándares';
+        this.errorExclusion = 'No se pudieron cargar las exclusiones.';
         this.loadingExclusion = false;
         this.cdr.markForCheck();
       }
@@ -528,7 +509,7 @@ export class TmiIndicadores implements OnInit {
       id_centro: idCentro != null ? Number(idCentro) : null,
       id_estandar: null,
       anio: Number(this.anioExclusion),
-      resultado: '0',
+      resultado: 'NA',
       excl_01: false,
       excl_02: false,
       excl_03: false,
@@ -542,7 +523,7 @@ export class TmiIndicadores implements OnInit {
       excl_11: false,
       excl_12: false
     });
-    this.resultadoFormExclusion = '0';
+    this.resultadoFormExclusion = 'NA';
     this.indicadoresExclusion = new Set<number>();
     this.todosIndicadoresExclusion = false;
     this.filtroIndicadorExclusion = '';
@@ -640,33 +621,7 @@ export class TmiIndicadores implements OnInit {
 
   /** Resultado con que queda el mes i: el propio o el general. */
   resultadoMes(i: number): '0' | 'NA' {
-    return this.resultadoMesExclusion[i] ?? (this.exclusionForm?.get('resultado')?.value === 'NA' ? 'NA' : '0');
-  }
-
-  /** Cambia el mes entre 0 y NA; si queda igual al general, deja de ser propio. */
-  cambiarResultadoMes(i: number): void {
-    const nuevo = this.resultadoMes(i) === 'NA' ? '0' : 'NA';
-    const general = this.exclusionForm.get('resultado')?.value === 'NA' ? 'NA' : '0';
-    this.resultadoMesExclusion = this.resultadoMesExclusion.map((r, j) => (j === i ? (nuevo === general ? null : nuevo) : r));
-  }
-
-  /** Elegir el resultado general lo aplica a todos los meses excluidos (se quitan los propios). */
-  resultadoGeneralExclusion(): void {
-    this.resultadoMesExclusion = Array(12).fill(null);
-  }
-
-  /** Meses excluidos con resultado distinto del general. */
-  get mesesConResultadoPropio(): number {
-    return this.mesesExclusion.filter((m, i) => this.exclusionForm?.get(m.key)?.value && this.resultadoMesExclusion[i] != null).length;
-  }
-
-  toggleMesExclusion(key: string): void {
-    const control = this.exclusionForm.get(key);
-    control?.setValue(!control.value);
-  }
-
-  marcarMesesExclusion(marcar: boolean): void {
-    this.exclusionForm.patchValue(Object.fromEntries(this.mesesExclusion.map(m => [m.key, marcar])));
+    return this.resultadoMesExclusion[i] ?? (this.exclusionForm?.get('resultado')?.value === '0' ? '0' : 'NA');
   }
 
   iniciarEdicionExclusion(row: any): void {
@@ -679,7 +634,7 @@ export class TmiIndicadores implements OnInit {
       id_centro: row.id_centro != null ? Number(row.id_centro) : null,
       id_estandar: this.resolverIdEstandar(row),
       anio: row.anio ?? Number(this.anioExclusion),
-      resultado: row.resultado === 'NA' ? 'NA' : '0',
+      resultado: row.resultado === '0' ? '0' : 'NA',
       excl_01: Boolean(row.excl_01),
       excl_02: Boolean(row.excl_02),
       excl_03: Boolean(row.excl_03),
@@ -694,17 +649,68 @@ export class TmiIndicadores implements OnInit {
       excl_12: Boolean(row.excl_12)
     });
     // resultado propio de los meses excluidos que no tienen el general de la fila
-    const general = row.resultado === 'NA' ? 'NA' : '0';
+    const general = row.resultado === '0' ? '0' : 'NA';
     this.resultadoMesExclusion = this.mesesExclusion.map((m, i) => {
       const r = row[`res_${String(i + 1).padStart(2, '0')}`];
       return row[m.key] && (r === 'NA' || r === '0') && r !== general ? r : null;
     });
-    this.mesFormExclusion = this.mesExclusion;
-    this.resultadoFormExclusion = this.estadoMesExclusion(this.mesFormExclusion);
+    this.mesFormExclusion = this.mesExclusion;   // por periodo: solo se edita el mes en pantalla
+    this.resultadoFormExclusion = this.estadoMesExclusion(this.mesFormExclusion) || 'NA';
+    this.centroOriginalExclusion = row.id_centro != null ? Number(row.id_centro) : null;
+    this.indicadorOriginalExclusion = this.resolverIdEstandar(row);
     this.redExclusion = this.redDeCentro(row.id_centro);
     this.errorExclusionForm = '';
     this.mostrarFormularioExclusion = true;
     this.cdr.markForCheck();
+  }
+
+  /** Centro e indicador del registro que se edita: si cambian, solo el mes pasa a la exclusión elegida. */
+  centroOriginalExclusion: number | null = null;
+  indicadorOriginalExclusion: number | null = null;
+
+  /** Edición cambió de centro o indicador: el mes sale de este registro y pasa al elegido. */
+  get exclusionCambiaDestino(): boolean {
+    const v = this.exclusionForm?.getRawValue();
+    if (!v?.id) return false;
+    const ind = v.id_estandar != null ? Number(v.id_estandar) : null;
+    return Number(v.id_centro) !== Number(this.centroOriginalExclusion) || ind !== this.indicadorOriginalExclusion;
+  }
+
+  /** Edición por periodo: solo cambia el mes en pantalla del registro (los otros meses quedan como están). */
+  private guardarMesExclusion(mes: string): void {
+    const valor = this.exclusionForm.getRawValue();
+    if (valor.id_centro == null) {
+      this.errorExclusionForm = 'Elija el centro.';
+      return;
+    }
+    const idEstandar = valor.id_estandar != null ? Number(valor.id_estandar) : null;
+    const resultado = this.resultadoFormExclusion === '0' ? '0' : 'NA';
+    const dto = {
+      id: Number(valor.id),
+      mes: Number(mes),
+      id_centro: Number(valor.id_centro),
+      id_estandar: idEstandar,
+      id_indicador: idEstandar,
+      anio: Number(valor.anio),
+      resultado,
+      [`excl_${mes}`]: true,
+      [`res_${mes}`]: resultado
+    };
+    this.savingExclusion = true;
+    this.errorExclusionForm = '';
+    this.centroSrv.putQueryExclusionCentroEstandar(dto).subscribe({
+      next: () => {
+        this.savingExclusion = false;
+        this.mostrarFormularioExclusion = false;
+        this.getQueryExclusion();
+      },
+      error: (error: any) => {
+        console.error(error);
+        this.savingExclusion = false;
+        this.errorExclusionForm = error?.error?.detail || 'Error al actualizar la exclusión';
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   cancelarEdicionExclusion(): void {
@@ -721,8 +727,12 @@ export class TmiIndicadores implements OnInit {
       this.errorExclusionForm = 'Elija el mes.';
       return;
     }
-    if (!this.exclusionForm.get('id')?.value && !this.resultadoFormExclusion) {
+    if (!this.resultadoFormExclusion) {
       this.errorExclusionForm = 'Elija cómo queda el mes: 0 o NA.';
+      return;
+    }
+    if (this.exclusionForm.get('id')?.value) {
+      this.guardarMesExclusion(mes);
       return;
     }
     this.exclusionForm.get(`excl_${mes}`)?.setValue(!!this.resultadoFormExclusion);
@@ -738,7 +748,7 @@ export class TmiIndicadores implements OnInit {
     }
     if (this.exclusionForm.invalid) {
       this.exclusionForm.markAllAsTouched();
-      this.errorExclusionForm = 'Seleccione el centro, el estándar y el año.';
+      this.errorExclusionForm = 'Elija el centro, el indicador y el año.';
       return;
     }
     const valor = this.exclusionForm.getRawValue();
@@ -750,7 +760,7 @@ export class TmiIndicadores implements OnInit {
       return;
     }
     if (!this.mesesExcluidosCount) {
-      this.errorExclusionForm = 'La exclusión se quedaría sin meses: para quitarla use Eliminar en la lista.';
+      this.errorExclusionForm = 'La exclusión quedaría sin ningún mes. Para quitarla, use Eliminar en la lista.';
       return;
     }
     this.savingExclusion = true;
@@ -764,7 +774,7 @@ export class TmiIndicadores implements OnInit {
       id_indicador: idEstandar,
       ids_indicador: ids.length ? ids : null,
       anio: Number(valor.anio),
-      resultado: valor.resultado === 'NA' ? 'NA' : '0',
+      resultado: valor.resultado === '0' ? '0' : 'NA',
       excl_01: Boolean(valor.excl_01),
       excl_02: Boolean(valor.excl_02),
       excl_03: Boolean(valor.excl_03),
@@ -801,8 +811,11 @@ export class TmiIndicadores implements OnInit {
 
   eliminarExclusion(row: any): void {
     if (this.eliminandoId !== null) return;
-    if (!confirm(`¿Eliminar la exclusión ID ${row.id} (${row.centro} - ${row.indicador}) del año ${row.anio}? Esta acción no se puede deshacer.`)) return;
-    this.eliminarFila(row, this.centroSrv.deleteQueryExclusionCentroEstandar(row.id), () => this.getQueryExclusion());
+    // por periodo: solo se quita el mes en pantalla; los otros meses del registro quedan como están
+    const mes = Number(this.mesExclusion);
+    const periodo = `${this.mesesExclusion[mes - 1]?.nombre ?? ''} ${row.anio}`;
+    if (!confirm(`¿Quitar la exclusión de ${periodo} (${row.centro} - ${row.indicador})? Los otros meses no cambian.`)) return;
+    this.eliminarFila(row, this.centroSrv.deleteQueryExclusionCentroEstandar(row.id, mes), () => this.getQueryExclusion());
   }
 
   buscarExclusion(valor: string): void {
@@ -833,19 +846,6 @@ export class TmiIndicadores implements OnInit {
     return [0, ''];
   }
 
-  /** Resultado de un mes excluido elegido en la tabla; si es igual al general, deja de ser propio. */
-  ponerResultadoMes(i: number, valor: string): void {
-    const nuevo = valor === 'NA' ? 'NA' : '0';
-    const general = this.exclusionForm.get('resultado')?.value === 'NA' ? 'NA' : '0';
-    this.resultadoMesExclusion = this.resultadoMesExclusion.map((r, j) => (j === i ? (nuevo === general ? null : nuevo) : r));
-  }
-
-  /** "Todos en 0" / "Todos en NA": pasa a ser el resultado general y se quitan los propios. */
-  todosResultadoExclusion(valor: '0' | 'NA'): void {
-    this.exclusionForm.get('resultado')?.setValue(valor);
-    this.resultadoGeneralExclusion();
-  }
-
   /** Centro elegido en el formulario de exclusión (subtítulo del modal, como en Estándares). */
   get centroExclusionNombre(): string {
     const id = this.exclusionForm?.get('id_centro')?.value;
@@ -857,17 +857,11 @@ export class TmiIndicadores implements OnInit {
   mesFormExclusion = '';
 
   /** Cómo queda el mes elegido en el formulario: '0', 'NA' o '' (no excluido). */
-  resultadoFormExclusion: '' | '0' | 'NA' = '0';
+  resultadoFormExclusion: '' | '0' | 'NA' = 'NA';
 
   /** Estado guardado de un mes ('01'..'12') en el registro que se edita. */
   estadoMesExclusion(mes: string): '' | '0' | 'NA' {
     return mes && this.exclusionForm.get(`excl_${mes}`)?.value ? this.resultadoMes(Number(mes) - 1) : '';
-  }
-
-  /** Otro mes en el formulario: al editar, muestra cómo está guardado ese mes. */
-  cambiarMesFormExclusion(mes: string): void {
-    this.mesFormExclusion = mes;
-    if (this.exclusionForm.get('id')?.value) this.resultadoFormExclusion = this.estadoMesExclusion(mes);
   }
 
   get nombreMesFormExclusion(): string {
@@ -893,11 +887,11 @@ export class TmiIndicadores implements OnInit {
       }
       const meses = Array.from({ length: 12 }, (_, i) => Boolean(row[`excl_${String(i + 1).padStart(2, '0')}`]));
       const res = Array.from({ length: 12 }, (_, i) =>
-        (row[`res_${String(i + 1).padStart(2, '0')}`] ?? row.resultado) === 'NA' ? 'NA' : '0');
+        (row[`res_${String(i + 1).padStart(2, '0')}`] ?? row.resultado) === '0' ? '0' : 'NA');
       const usados = new Set(res.filter((_, i) => meses[i]));
       // con un mes elegido, el recuadro muestra el resultado de ese mes
       const resultado = mesSel >= 0 ? res[mesSel]
-        : usados.size > 1 ? 'mixto' : (usados.values().next().value ?? (row.resultado === 'NA' ? 'NA' : '0'));
+        : usados.size > 1 ? 'mixto' : (usados.values().next().value ?? (row.resultado === '0' ? '0' : 'NA'));
       grupo.filas.push({ row, todos: row.id_indicador == null && row.id_estandar == null, meses, res, resultado,
                          rango: this.rangoMeses(meses) });
     }
@@ -951,30 +945,6 @@ export class TmiIndicadores implements OnInit {
   abrirTodosCentrosExclusion(abrir: boolean): void {
     this.centrosExclusionAbiertos = abrir ? new Set(this.gruposExclusion.map(g => g.clave)) : new Set<string>();
     this.armarFilasExclusion();
-  }
-
-  downloadCSV(): void {
-    if (!this.dataCentrosTMI?.length) {
-      console.warn('No hay datos para descargar');
-      return;
-    }
-
-    const fileName = `tmi_centros_${this.periodoCentrosTMI}.csv`;
-
-    const headers = Object.keys(this.dataCentrosTMI[0]);
-    const csvContent = [
-      headers.join(';'),
-      ...this.dataCentrosTMI.map((row) =>
-        headers.map((h) => `="${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'),
-      ),
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName.endsWith('.csv') ? fileName : `${fileName}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
   }
 
 

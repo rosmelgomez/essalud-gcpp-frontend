@@ -1,16 +1,14 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 import { MatIconModule } from '@angular/material/icon';
-import { AyudaFlotante } from '../../Administrativo/ayuda-flotante';
 import {
   TmiCalculoService, TmiDashboardDatos, TmiDashCentro, TmiDashDetalle, TmiDashIndicador, TmiDashRed, mensajeError,
 } from '../../../../services/tmi';
+import { MESES_CORTO as MESES, MESES_MIN as MESES_L, nombreIndicador, nombreServicio, titleCase } from '../../tmi-comun';
 
-const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-const MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre',
-  'noviembre', 'diciembre'];
 const COLORES_SERV = ['#007AC9', '#7a5bb5', '#e08a00', '#ED202D', '#00A557', '#00A79C', '#475569'];
 
 type Banda = 'ok' | 'warn' | 'bad' | '';
@@ -38,9 +36,6 @@ const pct = (v: number | null | undefined) =>
 const band20 = (v: number | null | undefined): Banda => v == null ? '' : v >= 16 ? 'ok' : v >= 12 ? 'warn' : 'bad';
 const band5 = (v: number | null | undefined): Banda => v == null ? '' : v >= 4 ? 'ok' : v >= 3 ? 'warn' : 'bad';
 const BAND_WORD: Record<string, string> = { ok: 'Nivel alto', warn: 'Nivel medio', bad: 'Nivel bajo', '': 'Sin dato' };
-const titleCase = (s: string) => s.toLowerCase()
-  .replace(/(^|[\s(.-])([a-záéíóúñ])/g, (_m, a, b) => a + b.toUpperCase())
-  .replace(/(?<=\s)(De|Del|La|Y)\b/g, (w) => w.toLowerCase());
 const lcFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
 
@@ -48,11 +43,25 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, 
  *  con filtros de periodo, red, establecimiento e indicador. */
 @Component({
   selector: 'app-tmi-dashboard',
-  imports: [FormsModule, NgTemplateOutlet, RouterLink, MatIconModule, AyudaFlotante],
+  imports: [FormsModule, NgTemplateOutlet, RouterLink, MatIconModule, ScrollingModule],
   templateUrl: './tmi-dashboard.html',
   styleUrl: './tmi-dashboard.css',
 })
 export class TmiDashboard implements OnInit {
+  /** Guía del tablero (signo de pregunta junto al título). */
+  ayudaPagina = signal(false);
+
+  alternarAyudaPagina(ev: Event): void {
+    ev.stopPropagation();
+    this.ayudaPagina.update((v) => !v);
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  cerrarAyudaPagina(): void {
+    this.ayudaPagina.set(false);
+  }
+
   private calculoSrv = inject(TmiCalculoService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -87,12 +96,12 @@ export class TmiDashboard implements OnInit {
       const s = servs.indexOf(x.servicio);
       cuenta[x.servicio] = (cuenta[x.servicio] ?? 0) + 1;
       const ab = (x.servicio || 'I').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() + cuenta[x.servicio];
-      return { ...x, nombre: this.nombreInd(x.nombre), i, ab, pct: x.formato === 'PORCENTAJE', color: COLORES_SERV[s % COLORES_SERV.length] };
+      return { ...x, nombre: nombreIndicador(x.nombre), i, ab, pct: x.formato === 'PORCENTAJE', color: COLORES_SERV[s % COLORES_SERV.length] };
     });
   });
   servicioNombres = computed(() => [...new Set((this.data()?.indicadores ?? []).map((x) => x.servicio))]);
   servicios = computed(() => this.servicioNombres().map((nombre, k) => ({
-    nombre: this.nombreServ(nombre), color: COLORES_SERV[k % COLORES_SERV.length],
+    nombre: nombreServicio(nombre), color: COLORES_SERV[k % COLORES_SERV.length],
     inds: this.inds().filter((x) => x.servicio === nombre),
   })));
   redes = computed(() => this.data()?.redes ?? []);
@@ -133,6 +142,22 @@ export class TmiDashboard implements OnInit {
   });
   porRed = computed(() => this.S().kind === 'nacional');
 
+  // ---------- virtual scroll (ranking, detalle, mapa de calor y tabla) ----------
+  // Las filas tienen alto fijo (lo exige el virtual scroll). En pantallas angostas la fila del ranking ocupa dos líneas.
+  private mqAngosto = typeof window !== 'undefined' ? window.matchMedia('(max-width: 560px)') : null;
+  angosto = signal(this.mqAngosto?.matches ?? false);
+  readonly altoPunto = 25;
+  readonly altoCelda = 26;
+  readonly altoFilaTabla = 34;
+  altoRank = computed(() => this.angosto() ? 44 : 25);
+  /** Alto de la lista: el de sus filas (más la cabecera), hasta el máximo de la tarjeta. */
+  altoLista(n: number, alto: number, max: number, cab = 0) { return Math.min(max, cab + Math.max(1, n) * alto + 2); }
+  trackKey = (_: number, x: { key: string }) => x.key;
+  trackCod = (_: number, x: { c: TmiDashCentro }) => x.c.cod;
+  trackMapa = (_: number, r: { name: string; cod: number | null }) => r.name + r.cod;
+  /** La cabecera fija (sticky) está dentro del bloque que el virtual scroll desplaza: se compensa ese desplazamiento. */
+  offCab(vp: CdkVirtualScrollViewport) { return -(vp.getOffsetToRenderedContentStart() ?? 0) + 'px'; }
+
   opcionesRed = computed(() => this.redes().map((r) => ({ value: r.nombre, label: this.nombreRed(r, true) })));
   opcionesCentro = computed(() => {
     const filtra = (cs: TmiDashCentro[]) => cs
@@ -162,7 +187,7 @@ export class TmiDashboard implements OnInit {
       { t: num(S.nota, 1), b: true }, { t: ' de 20 puntos (' }, { t: pct(S.nota == null ? null : S.nota / 20), b: true },
       { t: ' del máximo). ' }, { t: String(fuertes), b: true }, { t: ` de ${evaluados} indicadores evaluados alcanzan 4 puntos o más` }];
     if (crit.length) {
-      segs.push({ t: '; la brecha está en ' }, { t: String(crit.length), b: true }, { t: ' bajo 3 puntos: ' },
+      segs.push({ t: '; ' }, { t: String(crit.length), b: true }, { t: ' tienen menos de 3 puntos: ' },
         { t: crit.slice(0, 5).map((x) => lcFirst(x.nombre)).join(', ') + (crit.length > 5 ? ` y ${crit.length - 5} más` : ''), b: true }, { t: '.' });
     } else segs.push({ t: '.' });
     return segs;
@@ -231,7 +256,7 @@ export class TmiDashboard implements OnInit {
       return [
         { label: 'Redes evaluadas', value: String(rs.length), note: 'Redes asistenciales, prestacionales e institutos.' },
         { label: 'Establecimientos evaluados', value: S.centros.length.toLocaleString('es-PE'), note: 'Activos, con al menos un indicador medido.' },
-        { label: 'Evaluaciones que cumplen', value: cumplen, note: `De ${evals.length.toLocaleString('es-PE')} evaluaciones indicador–establecimiento.` },
+        { label: 'Evaluaciones que cumplen', value: cumplen, note: `De ${evals.length.toLocaleString('es-PE')} evaluaciones (cada indicador en cada establecimiento).` },
         { label: 'Redes en nivel alto', value: String(alto), note: `${rs.length - alto - bajo} en nivel medio y ${bajo} en nivel bajo.`, cls: 'ok' },
       ];
     }
@@ -240,7 +265,7 @@ export class TmiDashboard implements OnInit {
     return [
       { label: 'Puesto entre redes', value: `${ord.indexOf(S.red!) + 1} de ${ord.length}`, note: `Índice nacional: ${num(this.notaNacional(), 1)}.` },
       { label: 'Establecimientos evaluados', value: String(S.centros.length), note: 'Activos, con al menos un indicador medido.' },
-      { label: 'Evaluaciones que cumplen', value: cumplen, note: `De ${evals.length} evaluaciones indicador–establecimiento.` },
+      { label: 'Evaluaciones que cumplen', value: cumplen, note: `De ${evals.length} evaluaciones (cada indicador en cada establecimiento).` },
       { label: 'Establecimientos en nivel alto', value: String(alto), note: `${S.centros.length - alto - bajo} en nivel medio y ${bajo} en nivel bajo.`, cls: 'ok' },
     ];
   });
@@ -288,7 +313,7 @@ export class TmiDashboard implements OnInit {
       { cls: 'bad', n: filas.filter((x) => x.v! < limites[1]).length, t: `bajo (menos de ${limites[1]})` },
     ];
     const sub = (i == null ? `Puntaje sobre 20 a ${this.mesTxt()}` : `Puntaje en ${lcFirst(S.ind!.nombre)} (1 a 5)`)
-      + `. La línea vertical marca el valor ${refName}. Clic en una fila para filtrar.`;
+      + `. La línea vertical marca el valor ${refName}. Haga clic en una fila para filtrar.`;
     return { titulo, sub, filas, leyenda, ref: ref == null ? null : ref / max * 100, max };
   });
 
@@ -316,7 +341,7 @@ export class TmiDashboard implements OnInit {
     const S = this.S();
     if (!S.ind) return null;
     const x = S.ind, f = (v: number | null | undefined) => this.fmtV(v, x);
-    const ficha = [['Servicio', this.nombreServ(x.servicio)], ['Código', x.codigo],
+    const ficha = [['Servicio', nombreServicio(x.servicio)], ['Código', x.codigo],
       ['Sentido', x.sentido === 'MAYOR' ? 'De incremento (mayor es mejor)' : x.sentido === 'MENOR' ? 'De decremento (menor es mejor)' : x.sentido === 'BANDA' ? 'De banda (dentro del rango)' : ''],
       ['Formato', x.pct ? 'Porcentaje' : 'Número'], ['Puntaje nacional', `${num(x.nacional, 2)} de 5`]].filter((p) => p[1]);
     if (S.cen) {
@@ -382,6 +407,7 @@ export class TmiDashboard implements OnInit {
   });
 
   ngOnInit() {
+    this.mqAngosto?.addEventListener('change', (e) => this.angosto.set(e.matches));
     const qp = this.route.snapshot.queryParamMap;
     this.red.set(qp.get('red') ?? '');
     this.centro.set(qp.get('centro') ? Number(qp.get('centro')) : null);
@@ -527,11 +553,6 @@ export class TmiDashboard implements OnInit {
   /** Este tablero muestra la categoría del centro (C.A.P.I, P.M., ...); si no viene, el tipo. */
   catTxt(c: TmiDashCentro) { return c.categoria ?? c.tipo ?? ''; }
   redCorta(n: string) { return titleCase(n.replace(/^RED (ASISTENCIAL|PRESTACIONAL) /i, '')); }
-  private nombreServ(s: string) { return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : 'Otros'; }
-  private nombreInd(s: string) {
-    const t = s.trim().toLowerCase();
-    return (t.charAt(0).toUpperCase() + t.slice(1)).replace(/(?<![a-zñáéíóú])(i|ii|iii|iv|v)(?![a-zñáéíóú])/g, (m) => m.toUpperCase());
-  }
 
   private grafico(series: Serie[], opt: { fmt: (v: number | null) => string; ref?: number | null; refName?: string; bandas?: number[];
     dominio?: (lo: number, hi: number) => [number, number] }): Grafico {

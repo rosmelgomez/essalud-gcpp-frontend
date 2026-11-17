@@ -10,6 +10,7 @@ import { OnInit } from '@angular/core';
 import { IntervencionesQuirurgicasService } from '../../../services/reportes/intervenciones-quirurgicas-service';
 import { FileService } from '../../../services/documentos/file-service';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { aniosHasta } from '../../../utils/anios';
 
 @Component({
   selector: 'app-intervenciones-quirurgicas',
@@ -18,6 +19,8 @@ import { FechaActualizacionService } from '../../../services/fecha-actualizacion
   styleUrl: './dashboard-intervenciones-quirurgicas.css',
 })
 export class DashboardIntervencionesQuirurgicas implements OnInit {
+  /** Años del select: desde 2025 hasta el año actual. */
+  readonly anios = aniosHasta(2025);
 
   currentDate: string = '';
 
@@ -178,7 +181,13 @@ export class DashboardIntervencionesQuirurgicas implements OnInit {
               this.dataComplejidadB.sort((a, b) => b.total - a.total);
 
               this.cdr.detectChanges();
-            }
+            },
+            // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+            error: (err) => {
+              console.error('Error al cargar los datos del reporte:', err);
+              this.loadingGC = false;
+              this.cdr.detectChanges();
+            },
           });
           break;
         case 'C':
@@ -202,7 +211,13 @@ export class DashboardIntervencionesQuirurgicas implements OnInit {
               this.dataComplejidadC.sort((a, b) => b.total - a.total);
 
               this.cdr.detectChanges();
-            }
+            },
+            // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+            error: (err) => {
+              console.error('Error al cargar los datos del reporte:', err);
+              this.loadingGC = false;
+              this.cdr.detectChanges();
+            },
           });
           break;
         case 'D':
@@ -227,7 +242,13 @@ export class DashboardIntervencionesQuirurgicas implements OnInit {
               this.dataComplejidadD.sort((a, b) => b.total - a.total);
 
               this.cdr.detectChanges();
-            }
+            },
+            // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+            error: (err) => {
+              console.error('Error al cargar los datos del reporte:', err);
+              this.loadingGC = false;
+              this.cdr.detectChanges();
+            },
           });
           break;
         case 'E':
@@ -252,7 +273,13 @@ export class DashboardIntervencionesQuirurgicas implements OnInit {
               this.dataComplejidadE.sort((a, b) => b.total - a.total);
 
               this.cdr.detectChanges();
-            }
+            },
+            // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+            error: (err) => {
+              console.error('Error al cargar los datos del reporte:', err);
+              this.loadingGC = false;
+              this.cdr.detectChanges();
+            },
           });
           break;
         case 'null':
@@ -276,7 +303,13 @@ export class DashboardIntervencionesQuirurgicas implements OnInit {
 
               this.loadingGC = false;
               this.cdr.detectChanges();
-            }
+            },
+            // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+            error: (err) => {
+              console.error('Error al cargar los datos del reporte:', err);
+              this.loadingGC = false;
+              this.cdr.detectChanges();
+            },
           });
           break;
       }
@@ -307,12 +340,14 @@ export class DashboardIntervencionesQuirurgicas implements OnInit {
         this.horasQuirurgicasEmergencia = result.horasQuirurgicasEmergencia.totalHorasElectivas || 0;
         this.intervencionesSuspendidas = result.intervencionesSuspendidas.length;
 
-        console.log(this.horasQuirurgicasElectivas);
-        console.log(this.horasQuirurgicasEmergencia);
-        console.log(this.intervencionesSuspendidas);
         ///this.dataIntervencionesSuspendidas = result.intervencionesSuspendidas;
         this.cdr.detectChanges();
-      }
+      },
+      // sin este manejo el error salía como "Uncaught" y la carga quedaba girando
+      error: (err) => {
+        console.error('Error al cargar los datos del reporte:', err);
+        this.cdr.detectChanges();
+      },
     });
     this.dataImport.saveDataIQGC(this.anio_gc, this.periodo_gc, this.tipo_asegurado_gc);
 

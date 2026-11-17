@@ -1,5 +1,25 @@
-<div class="header">
-    <h2 class="bar-title">Indicadores del TMI</h2>
+<div class="header dyn-fila-ayuda">
+    <div class="dyn-titulo-ayuda">
+        <h2 class="bar-title">Indicadores del TMI</h2>
+        <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaPagina()" [attr.aria-expanded]="ayudaPagina()"
+            aria-label="Cómo se arma un indicador" (click)="alternarAyudaPagina($event)">
+            <mat-icon>help_outline</mat-icon></button>
+        @if (ayudaPagina()) {
+        <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
+            <p>
+            La fórmula de un indicador se arma con letras. Cada variable que usa recibe una letra (A, B, C…), y las letras se
+            combinan con sumas, restas, multiplicaciones, divisiones, paréntesis y números. Por ejemplo, el Intervalo de
+            sustitución es <span class="dyn-formula">(A - B) / C</span>. Los indicadores inactivos no se calculan ni salen en
+            el Excel.
+            </p>
+            <p>
+            <strong>Validar configuración</strong> revisa los indicadores activos antes de calcular: que tengan fórmula,
+            que sus variables usen grupos y actividades que existen, y que el resto de su configuración sea válida. Si hay
+            problemas, los muestra en una lista. Mientras haya alguno, el TMI no se calcula, ni a mano ni en el cierre.
+            </p>
+        </div>
+        }
+    </div>
     <div class="header-actions">
         <div class="buscar-group">
             <button (click)="validar()" class="btn-search" [disabled]="validando()">
@@ -10,23 +30,6 @@
             </button>
         </div>
     </div>
-    <details class="dyn-ayuda">
-        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
-        <div class="dyn-ayuda-panel" role="note">
-            <p>
-            La fórmula de un indicador se arma con letras. Cada variable que usa recibe una letra (A, B, C…), y las letras se
-            combinan con sumas, restas, multiplicaciones, divisiones, paréntesis y números. Por ejemplo, el Intervalo de
-            sustitución es <span class="dyn-formula">(A - B) / C</span>. Los indicadores inactivos no se calculan ni salen en
-            el Excel.
-            </p>
-            <p>
-            <strong>Validar configuración</strong> revisa los indicadores activos antes de calcular: que todos tengan
-            fórmula, que sus variables usen grupos y actividades que existen en los datos, y que su tipo de cálculo y su
-            forma de evaluarse sean válidos. Si encuentra problemas, los lista para corregirlos; mientras haya alguno, el
-            TMI no se calcula, ni a mano ni en el cierre.
-            </p>
-        </div>
-    </details>
 </div>
 
 @if (error()) {
@@ -38,7 +41,7 @@
     @if (p.length === 0) {
     <div class="dyn-ok"><mat-icon>check_circle</mat-icon> La configuración no tiene errores. Ya se puede calcular.</div>
     } @else {
-    <h3>{{ p.length }} problema(s) en la configuración</h3>
+    <h3>{{ p.length }} {{ p.length === 1 ? 'problema' : 'problemas' }} en la configuración</h3>
     <ul class="dyn-problemas">
         @for (x of p; track $index) {
         <li><strong>{{ x.elemento }}</strong>: {{ x.problema }}</li>
@@ -57,7 +60,7 @@
                 <mat-icon>add</mat-icon> Agregar indicador
             </button>
         </div>
-        <div class="wrapper-table">
+        <div class="wrapper-table wt-scroll">
             <div class="grid-table">
                 <div class="header-table">
                     <div class="cell">#</div>
@@ -109,7 +112,7 @@
         <div class="dyn-chips">
             <span class="dyn-badge">{{ ind.tipo_calculo }}</span>
             <span class="dyn-badge">{{ textoSentido(ind.sentido) }}</span>
-            <span class="dyn-badge" title="Se cambia en la pestaña % Acept">% Acept {{ ind.tipo_tolerancia === 'REL' ? (ind.tolerancia * 100) + ' %' : '± ' + (ind.tolerancia * 100) + ' pts' }}</span>
+            <span class="dyn-badge" title="Se cambia en la pestaña % Acept">% Acept {{ (ind.acept * 100) + (ind.tipo_acept === 'REL' ? ' % del estándar' : ' puntos') }}</span>
             <span class="dyn-badge" title="Se cambia al editar el indicador">Se evalúa por {{ textoTipoEstandar(ind.base_estandar) }}</span>
         </div>
 
@@ -117,45 +120,50 @@
         <div class="alert alert-danger">{{ errorDetalle() }}</div>
         }
 
-        <div class="dyn-inline dyn-sql-descarga">
-            <div class="field-input">
-                <label for="in_periodo_sql">Mes para probar en SQL Server</label>
-                <input id="in_periodo_sql" type="month" [ngModel]="periodoSql()" (ngModelChange)="periodoSql.set($event)" />
+        <details class="dyn-formula-interna dyn-sql-prueba">
+            <summary>Probar en SQL Server</summary>
+            <div class="dyn-inline dyn-sql-descarga">
+                <button type="button" class="btn-download" (click)="descargarSql(ind, false)"
+                    [disabled]="!ind.formula || !!descargandoSql()"
+                    [title]="ind.formula ? 'Descarga un query con solo la fórmula, por red y centro (sin estándares ni exclusiones)' : 'Guarde la fórmula primero'">
+                    <mat-icon>{{ descargandoSql() === 'formula' ? 'hourglass_empty' : 'download' }}</mat-icon> SQL solo fórmula
+                </button>
+                <button type="button" class="btn-download" (click)="descargarSql(ind, true)"
+                    [disabled]="!ind.formula || !!descargandoSql()"
+                    [title]="ind.formula ? 'Descarga un query con la fórmula, el estándar del mes (también el propio de cada centro) y los centros y meses excluidos' : 'Guarde la fórmula primero'">
+                    <mat-icon>{{ descargandoSql() === 'completo' ? 'hourglass_empty' : 'download' }}</mat-icon> SQL con estándares y exclusiones
+                </button>
+                <span class="dyn-hint">Sale con el periodo {{ periodoSql }}. Para otro mes, cambie &#64;PERIODO al
+                    inicio del archivo.</span>
+                @if (formulaCambiada()) {
+                <span class="dyn-hint">El SQL usa la fórmula guardada. Guarde los cambios antes de descargar.</span>
+                }
             </div>
-            <button type="button" class="btn-download" (click)="descargarSql(ind, false)"
-                [disabled]="!ind.formula || !periodoSql() || !!descargandoSql()"
-                [title]="ind.formula ? 'Query que calcula solo la fórmula sobre TOTALIZADO3, por red y centro (sin estándares ni exclusiones)' : 'Guarde la fórmula primero'">
-                <mat-icon>{{ descargandoSql() === 'formula' ? 'hourglass_empty' : 'download' }}</mat-icon> SQL solo fórmula
-            </button>
-            <button type="button" class="btn-download" (click)="descargarSql(ind, true)"
-                [disabled]="!ind.formula || !periodoSql() || !!descargandoSql()"
-                [title]="ind.formula ? 'Query con la fórmula, el estándar del mes (también el específico de cada centro) y los centros/meses excluidos' : 'Guarde la fórmula primero'">
-                <mat-icon>{{ descargandoSql() === 'completo' ? 'hourglass_empty' : 'download' }}</mat-icon> SQL con estándares y exclusiones
-            </button>
-            @if (formulaCambiada()) {
-            <span class="dyn-hint">El SQL usa la fórmula guardada: guarde los cambios para descargarlos.</span>
-            }
-        </div>
+        </details>
 
-        <div class="dyn-section-title">Fórmula</div>
-        <details class="dyn-ayuda dyn-ayuda-seccion">
-            <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
-            <div class="dyn-ayuda-panel" role="note">
+        <div class="dyn-titulo-ayuda dyn-seccion-ayuda">
+            <div class="dyn-section-title">Fórmula</div>
+            <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaFormula()" [attr.aria-expanded]="ayudaFormula()"
+                aria-label="Cómo se arma la fórmula" (click)="alternarAyudaFormula($event)">
+                <mat-icon>help_outline</mat-icon></button>
+            @if (ayudaFormula()) {
+            <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
                 <p>
                 Primero agregue las variables que usa el indicador. Cada una recibe una letra (A, B, C…); las variables se
                 crean en la pestaña Variables.
                 </p>
                 <p>
-                Después arme la fórmula con clics en las letras, las operaciones y los paréntesis. Cada clic agrega un bloque
-                al final, y puede arrastrar los bloques para cambiarlos de lugar. Por ejemplo:
+                Después arme la fórmula haciendo clic en las letras, las operaciones y los paréntesis. Cada clic agrega un
+                bloque al final, y puede arrastrar los bloques para moverlos. Por ejemplo:
                 <span class="dyn-formula">( A − B ) ÷ C</span>.
                 </p>
                 <p>
-                La multiplicación y la división se resuelven antes que la suma y la resta, así que use paréntesis para
-                agrupar. Si en un mes se divide entre 0, ese mes queda como NA.
+                Primero se hacen las multiplicaciones y divisiones, y luego las sumas y restas: use paréntesis para
+                agrupar. Si un mes divide entre 0, se aplica lo elegido en «División entre 0» al editar el indicador.
                 </p>
             </div>
-        </details>
+            }
+        </div>
 
         <div class="dyn-inline dyn-calc-agregar">
             <select class="style-select dyn-calc-select" aria-label="Variable para agregar a la fórmula"
@@ -284,7 +292,7 @@
         </div>
 
         } @else {
-        <div class="dyn-empty">Seleccione un indicador para ver su fórmula.</div>
+        <div class="dyn-empty">Elija un indicador para ver su fórmula.</div>
         }
     </mat-card>
 </div>
@@ -295,7 +303,7 @@
     <div class="table-title-row">
         <div>
             <h3>Historial de cambios · {{ ind.codigo }}</h3>
-            <span class="dyn-hint">Quién cambió la fórmula, los estándares, el % Acept, las exclusiones o el ámbito, y cuándo.</span>
+            <span class="dyn-hint">Quién cambió la fórmula, los estándares, el % Acept o las exclusiones, y cuándo.</span>
         </div>
         <button type="button" class="btn-download" (click)="verHistorial(ind)" [disabled]="cargandoHistorial()">
             <mat-icon>{{ cargandoHistorial() ? 'hourglass_empty' : 'history' }}</mat-icon> {{ historial() ? 'Ocultar' : 'Ver historial' }}
@@ -338,7 +346,7 @@
         <header class="modal-header">
             <div class="modal-header-info">
                 <h2>{{ form.controls.id.value ? 'Editar indicador' : 'Nuevo indicador' }}</h2>
-                <p class="modal-subtitle">Después de guardar, escriba la fórmula en el panel del indicador.</p>
+                <p class="modal-subtitle">Después de guardar, arme la fórmula en el panel del indicador.</p>
             </div>
             <button type="button" class="close-modal-btn" (click)="mostrarForm.set(false)" aria-label="Cerrar">
                 <mat-icon>close</mat-icon></button>
@@ -398,9 +406,9 @@
 
                 }
                 @if (paso() === 2) {
-                <div class="dyn-section-title">1. Cálculo del pivot final</div>
-                <p class="dyn-hint">La fórmula se escribe en el panel del indicador
-                    {{ form.controls.id.value ? '' : 'después de guardarlo' }}. Una división entre 0 da NA ese mes.</p>
+                <div class="dyn-section-title">1. Cálculo</div>
+                <p class="dyn-hint">Cómo se calcula el valor de cada centro. La fórmula se arma en el panel del indicador{{
+                    form.controls.id.value ? '' : ', después de guardarlo' }}.</p>
                 <div class="form-grid">
                     <div class="field-input">
                         <div class="dyn-campo-cab">
@@ -467,7 +475,7 @@
                 }
                 @if (paso() === 3) {
                 <div class="dyn-section-title">2. Evaluación</div>
-                <p class="dyn-hint">Cómo se evalúa el indicador. Los valores de los estándares se cargan en las pestañas de Estándares y el porcentaje del % Acept en la pestaña % Acept.</p>
+                <p class="dyn-hint">Cómo se califica el indicador. Los estándares se escriben en las pestañas de Estándares y el margen en % Acept.</p>
                 <div class="form-grid">
                     <div class="field-input">
                         <div class="dyn-campo-cab">
@@ -498,7 +506,7 @@
                         <select id="in_sentido" formControlName="sentido">
                             <option value="MENOR">Menor es mejor</option>
                             <option value="MAYOR">Mayor es mejor</option>
-                            <option value="BANDA">Dentro de una banda (% Aceptmenos / % Acept)</option>
+                            <option value="BANDA">Dentro de una banda (margen arriba y abajo)</option>
                         </select>
                     </div>
                     <div class="field-input">

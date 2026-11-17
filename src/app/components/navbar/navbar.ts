@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { User } from '../../model/user';
 import { AuthService } from '../../services/usuario/auth-service';
 import { RouteLogger } from '../../services/route-logger';
+import { rutaInicio } from '../../guards/tmi-acceso';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -76,6 +77,11 @@ export class Navbar implements OnInit, OnDestroy {
     this.closeMenu();
   }
 
+  /** Inicio según el usuario (el mismo que usa el login): administración del TMI o /home. */
+  inicio(): string {
+    return rutaInicio(this.user);
+  }
+
   getShortName(): string {
     const first = this.user?.name?.trim().split(/\s+/)[0] ?? '';
     const last = this.user?.lastname?.trim().split(/\s+/)[0] ?? '';
@@ -102,10 +108,7 @@ export class Navbar implements OnInit, OnDestroy {
   logout() {
     this.closeMenu();
     this.closeProfile();
+    // registra el cierre, llama una sola vez a /logout-user, borra la sesión local y va al login
     this.routeLogger.logLogout();
-    this.authService.logout().subscribe({
-      next: () => {},
-      error: () => {}
-    });
   }
 }

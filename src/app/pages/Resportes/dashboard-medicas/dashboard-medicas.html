@@ -53,8 +53,7 @@
         <div class="buscar-group">
           <select [(ngModel)]="anio" class="anio-select">
             <option value="">Seleccione un Año</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
+            @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
           </select>
           <select [(ngModel)]="periodo" class="periodo-select">
             <option value="">Seleccione un periodo</option>
@@ -308,8 +307,7 @@
         <div class="buscar-group">
           <select [(ngModel)]="anio_mc" class="anio-select">
             <option value="">Seleccione un Año</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
+            @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
           </select>
           <select [(ngModel)]="periodo_mc" class="periodo-select">
             <option value="">Seleccione un periodo</option>
@@ -510,8 +508,7 @@
         <div class="buscar-group">
           <select [(ngModel)]="anio_mo" class="anio-select">
             <option value="">Seleccione un Año</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
+            @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
           </select>
           <select [(ngModel)]="periodo_mo" class="periodo-select">
             <option value="">Seleccione un periodo</option>
@@ -726,8 +723,7 @@
         <div class="buscar-group">
           <select [(ngModel)]="anio_mp" class="anio-select">
             <option value="">Seleccione un Año</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
+            @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
           </select>
           <select [(ngModel)]="periodo_mp" class="periodo-select">
             <option value="">Seleccione un periodo</option>
@@ -940,8 +936,7 @@
         <div class="buscar-group">
           <select [(ngModel)]="anio_cai" class="anio-select">
             <option value="">Seleccione un Año</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
+            @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
           </select>
           <select [(ngModel)]="periodo_cai" class="periodo-select">
             <option value="">Seleccione un periodo</option>
@@ -1153,8 +1148,7 @@
         <div class="buscar-group">
           <select [(ngModel)]="anio_cad" class="anio-select">
             <option value="">Seleccione un Año</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
+            @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
           </select>
           <select [(ngModel)]="periodo_cad" class="periodo-select">
             <option value="">Seleccione un periodo</option>

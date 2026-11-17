@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LocalStorageService } from '../../../services/local-storage-service';
 import { EmergenciasService } from '../../../services/reportes/emergencias-service';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { aniosHasta } from '../../../utils/anios';
 
 
 @Component({
@@ -14,6 +15,8 @@ import { FechaActualizacionService } from '../../../services/fecha-actualizacion
   styleUrl: './dashboard-emergencia.css',
 })
 export class DashboardEmergencia implements OnInit {
+  /** Años del select: desde 2025 hasta el año actual. */
+  readonly anios = aniosHasta(2025);
   currentDate: string = '';
   centroNombre: string = '';
 

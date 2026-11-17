@@ -5,6 +5,7 @@ import { LocalStorageService } from '../../../services/local-storage-service';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { aniosHasta } from '../../../utils/anios';
 
 export interface ProcedimientoInfo {
   cod_relacional: number; // codigo solo de referencia 
@@ -21,6 +22,8 @@ export interface ProcedimientoInfo {
   styleUrl: './dashboard-procedimientos.css',
 })
 export class DashboardProcedimientos {
+  /** Años del select: desde 2025 hasta el año actual. */
+  readonly anios = aniosHasta(2025);
   currentDate: string = '';
   centroAtencion: string = '';
 

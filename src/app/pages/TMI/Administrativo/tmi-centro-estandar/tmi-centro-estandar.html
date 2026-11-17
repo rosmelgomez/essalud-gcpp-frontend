@@ -1,12 +1,33 @@
-<div class="header">
-    <h2 class="bar-title">Estándar específico por centro</h2>
+<div class="header dyn-fila-ayuda">
+    <div class="dyn-titulo-ayuda">
+        <h2 class="bar-title">Estándar propio por centro</h2>
+        <button type="button" class="dyn-ayuda-btn" [class.activo]="ayudaPagina()" [attr.aria-expanded]="ayudaPagina()"
+            aria-label="Cómo funciona el estándar por centro" (click)="alternarAyudaPagina($event)">
+            <mat-icon>help_outline</mat-icon></button>
+        @if (ayudaPagina()) {
+        <div class="dyn-ayuda-panel" role="note" (click)="$event.stopPropagation()">
+            <p>
+            Aquí se pone un estándar distinto para un centro en un indicador, cuando un documento lo respalda (carta o
+            directiva). Ese estándar reemplaza al de su tipo, nivel o categoría.
+            </p>
+            <p>
+            El <strong>fijo del año</strong> vale para todos los meses. También puede poner un valor <strong>solo para el
+            mes elegido</strong>, aunque ese mes no haya cerrado: se usa desde el próximo cálculo. Al empezar un año nuevo
+            se copian los estándares del año anterior.
+            </p>
+            <p>
+            El % Acept no se escribe aquí: se usa el margen del indicador (pestaña % Acept) sobre el estándar del centro.
+            No hace falta agregar un centro solo para dejarlo en NA: si no tiene estándar, ya sale NA.
+            </p>
+        </div>
+        }
+    </div>
     <div class="header-actions">
         <div class="buscar-group">
-            <select class="anio-select" [value]="anio()" (change)="cambiarAnio($any($event.target).value)">
-                @for (a of anios; track a) {<option [value]="a" [selected]="a === anio()">{{ a }}</option>}
+            <select class="anio-select" aria-label="Año" [ngModel]="anio()" (ngModelChange)="cambiarPeriodo($event, mes())">
+                @for (a of anios; track a) {<option [ngValue]="a">{{ a }}</option>}
             </select>
-            <select class="periodo-select" aria-label="Mes" [ngModel]="mes()" (ngModelChange)="mes.set(+$event)">
-                <option [ngValue]="0">Todo el año</option>
+            <select class="periodo-select" aria-label="Mes" [ngModel]="mes()" (ngModelChange)="cambiarPeriodo(anio(), $event)">
                 @for (m of mesesNombre; track m; let i = $index) {<option [ngValue]="i + 1">{{ m }}</option>}
             </select>
             <button (click)="cargar()" class="btn-download" [disabled]="loading()">
@@ -14,17 +35,6 @@
             </button>
         </div>
     </div>
-    <details class="dyn-ayuda">
-        <summary><mat-icon>help_outline</mat-icon> Cómo funciona</summary>
-        <div class="dyn-ayuda-panel" role="note">
-            <p>
-            Este estándar tiene prioridad sobre el del tipo, nivel o categoría del centro. Úselo para las excepciones con
-            sustento (carta o directiva), como las notas de la hoja Estándares del Excel (Pol. Ancije en recetas, San Isidro
-            Labrador...). Un centro sin estándar ya queda en NA. El % Acept propio es opcional. Si no se ingresa, se usa el
-            % Acept del indicador en el periodo de la consulta, que se ve en gris.
-            </p>
-        </div>
-    </details>
 </div>
 
 @if (error()) {
@@ -33,7 +43,7 @@
 
 <mat-card class="table exg">
     <div class="table-title-row">
-        <h3>Excepciones {{ mes() ? mesesNombre[mes() - 1] + ' ' : '' }}{{ anio() }}</h3>
+        <h3>Centros con estándar propio · {{ nombreMes() }} {{ anio() }}</h3>
         <button type="button" class="btn-download btn-agregar-fila" (click)="nuevo()">
             <mat-icon>add</mat-icon> Agregar estándar
         </button>
@@ -63,8 +73,8 @@
         @for (n of esqueleto; track n) {<div class="lv-esqueleto" aria-hidden="true"><span></span><span></span><span></span></div>}
         }
         @if (grupos().length) {
-        <cdk-virtual-scroll-viewport class="lv-viewport" [itemSize]="altoFila" [minBufferPx]="altoFila * 8"
-            [maxBufferPx]="altoFila * 16" [style.height.px]="altoLista()" [style.--lv-alto]="altoFila + 'px'">
+        <cdk-virtual-scroll-viewport class="lv-viewport" [itemSize]="altoFila()" [minBufferPx]="altoFila() * 8"
+            [maxBufferPx]="altoFila() * 16" [style.height.px]="altoLista()" [style.--lv-alto]="altoFila() + 'px'">
         <div *cdkVirtualFor="let r of lista(); trackBy: trackFila" class="lv-fila">
         @let g = r.g;
         @if (!r.x) {
@@ -75,7 +85,7 @@
                     <mat-icon class="exg-chevron" aria-hidden="true">chevron_right</mat-icon>
                     <span class="exg-cod">{{ g.codcentro }}</span>
                     <span class="est-titulo">
-                        <span class="exg-nombre">{{ g.centro }}</span>
+                        <span class="exg-nombre" [title]="g.centro">{{ g.centro }}</span>
                         @if (g.red) {<span class="est-grupo">{{ g.red }}</span>}
                     </span>
                     <span class="exc-contador">{{ g.filas.length }} {{ g.filas.length === 1 ? 'indicador' : 'indicadores' }}</span>
@@ -88,30 +98,23 @@
         </div>
         } @else {
                 @let x = r.x!;
-                <div class="exg-fila est-fila" [class.est-fila-cero]="!x.f.aplica">
+                <div class="exg-fila ce-fila" [class.est-fila-cero]="!x.f.aplica">
                     <div class="exg-indicador">
-                        <span class="exg-ind-nombre">{{ x.f.indicador || ('Indicador ' + x.f.id_indicador) }}</span>
+                        <span class="exg-ind-nombre" [title]="x.f.indicador || ''">{{ x.f.indicador || ('Indicador ' + x.f.id_indicador) }}</span>
                         <span class="exg-tipo">
                             % Acept
-                            @if (x.f.acept != null) { {{ x.f.acept }} }
-                            @else if (x.f.acept_defecto != null) {<span class="dyn-acept-defecto"
-                                title="% Acept del indicador en el periodo de la consulta">{{ x.f.acept_defecto | number: '1.0-4' }}</span>}
+                            @if (x.f.acept != null) {<span
+                                [title]="'Sale del margen del indicador en ' + nombreMes() + ' ' + anio()">{{ x.f.acept | number: '1.0-4' }}</span>}
                             @else { — }
                             @if (x.f.sustento) { · <span [title]="x.f.sustento">{{ x.f.sustento }}</span> }
                         </span>
                     </div>
 
-                    <div class="exg-meses-col">
-                        <div class="exg-meses" role="img" [attr.aria-label]="'Meses: ' + x.rango">
-                            @for (m of x.meses; track $index) {
-                            <span class="exg-mes" [class.exg-mes-on]="m.valor !== null" [class.exg-mes-sel]="$index === mes() - 1" [title]="m.titulo">{{ mesesCorto[$index].charAt(0) }}</span>
-                            }
-                        </div>
-                        <span class="exg-rango">{{ x.rango }}</span>
-                    </div>
-
-                    <span class="exg-resultado est-fijo" [class.exg-resultado-cero]="!x.f.aplica"
-                        [title]="x.f.aplica ? 'Estándar propio del centro' : 'No aplica: queda NA'">{{ x.valor }}</span>
+                    <span class="exg-rango ce-fijo">Fijo {{ anio() }} <strong>{{ x.fijo }}</strong></span>
+                    <span class="exg-rango ce-mes" [class.std-mes-distinto]="x.distinto"
+                        [title]="x.distinto ? 'Cambiado solo para ' + nombreMes() : ''">
+                        {{ nombreMes() }} <strong>{{ x.mesValor }}</strong>
+                    </span>
 
                     <div class="exg-acciones">
                         <button type="button" class="btn-icon-edit" (click)="editar(x.f)" title="Editar"
@@ -134,7 +137,7 @@
             <p>Ningún estándar coincide con «{{ busqueda() }}».</p>
             <button type="button" class="exc-accion" (click)="buscar('')">Limpiar búsqueda</button>
             } @else {
-            <p>No hay estándares propios de centro en {{ mes() ? mesesNombre[mes() - 1] + ' ' : '' }}{{ anio() }}.</p>
+            <p>No hay estándares propios de centro en {{ anio() }}.</p>
             }
         </div>
         }
@@ -143,11 +146,11 @@
 
 @if (mostrarForm()) {
 <div class="modal-overlay" (click)="mostrarForm.set(false)">
-    <div class="modal-card dyn-modal-wide" (click)="$event.stopPropagation()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ce_titulo" (click)="$event.stopPropagation()">
         <header class="modal-header">
             <div class="modal-header-info">
-                <h2>{{ form.controls.id.value ? 'Editar estándar del centro' : 'Nuevo estándar del centro' }}</h2>
-                <p class="modal-subtitle">Los meses vacíos usan el estándar general del centro.</p>
+                <h2 id="ce_titulo">{{ form.controls.id.value ? 'Editar estándar del centro' : 'Nuevo estándar del centro' }}</h2>
+                <p class="modal-subtitle">{{ nombreMes() }} {{ anio() }}</p>
             </div>
             <button type="button" class="close-modal-btn" (click)="mostrarForm.set(false)" aria-label="Cerrar">
                 <mat-icon>close</mat-icon></button>
@@ -155,21 +158,21 @@
         <form [formGroup]="form" (ngSubmit)="guardar()" class="modal-form-container">
             <div class="modal-body">
                 <div class="form-grid">
-                    <div class="field-input full-width">
-                        <label for="ce_buscar">Centro <span class="required">*</span></label>
-                        <div class="ce-filtros">
-                            <select id="ce_red" aria-label="Filtrar por red" [ngModel]="filtroRed()"
-                                (ngModelChange)="filtroRed.set($event)" [ngModelOptions]="{ standalone: true }">
-                                <option value="">Todas las redes</option>
-                                @for (r of redes(); track r) {<option [value]="r">{{ r }}</option>}
-                            </select>
-                            <input id="ce_buscar" type="text" class="dyn-search" placeholder="Filtrar por código o nombre..."
-                                [ngModel]="filtroCentro()" (ngModelChange)="filtroCentro.set($event)" [ngModelOptions]="{ standalone: true }" />
-                        </div>
+                    <div class="field-input">
+                        <label for="ce_red">Red</label>
+                        <select id="ce_red" [ngModel]="filtroRed()" (ngModelChange)="filtroRed.set($event)"
+                            [ngModelOptions]="{ standalone: true }">
+                            <option value="">Todas las redes</option>
+                            @for (r of redes(); track r) {<option [value]="r">{{ r }}</option>}
+                        </select>
+                    </div>
+                    <div class="field-input">
+                        <label for="ce_centro">Centro <span class="required">*</span>
+                            @if (filtroRed()) {<span class="ce-campo-ayuda">{{ centrosFiltrados().length }} en la red</span>}</label>
                         <select id="ce_centro" formControlName="codcentro">
-                            <option value="">Seleccione un centro</option>
+                            <option value="">{{ centros().length ? 'Seleccione un centro…' : 'Cargando centros…' }}</option>
                             @for (c of centrosFiltrados(); track c.codcentro) {
-                            <option [value]="'' + c.codcentro">{{ c.codcentro }} · {{ c.centro }} ({{ c.tipo }}, {{ c.red }})</option>
+                            <option [value]="'' + c.codcentro">{{ c.codcentro }} - {{ c.centro }}</option>
                             }
                         </select>
                     </div>
@@ -180,43 +183,18 @@
                             @for (i of indicadores(); track i.id) {<option [ngValue]="i.id">{{ i.orden }}. {{ i.indicador }}</option>}
                         </select>
                     </div>
+                    @if (form.controls.aplica.value) {
                     <div class="field-input">
-                        <label for="ce_anio">Año <span class="required">*</span></label>
-                        <select id="ce_anio" formControlName="anio">
-                            @for (a of anios; track a) {<option [ngValue]="a">{{ a }}</option>}
-                        </select>
-                    </div>
-                    <div class="field-input">
-                        <label for="ce_mes">Mes</label>
-                        <select id="ce_mes" [ngModel]="mesForm" (ngModelChange)="mesForm = +$event" [ngModelOptions]="{ standalone: true }">
-                            <option [ngValue]="0">Todos los meses</option>
-                            @for (m of mesesNombre; track m; let i = $index) {<option [ngValue]="i + 1">{{ m }}</option>}
-                        </select>
+                        <label for="ce_fijo">Estándar fijo {{ anio() }} <span class="required">*</span></label>
+                        <input id="ce_fijo" type="number" step="any" formControlName="est_fijo" />
                     </div>
                     <div class="field-input">
-                        <label for="ce_acept">% Acept propio (opcional)</label>
-                        <input id="ce_acept" type="number" step="any" formControlName="acept" placeholder="Usa el % Acept del indicador" />
-                    </div>
-                </div>
-
-                @if (form.controls.aplica.value) {
-                <div class="dyn-section-title">Estándar por mes</div>
-                <div class="dyn-inline" style="margin-bottom: 10px;">
-                    <div class="field-input" style="width: 180px;">
-                        <label for="ce_todos">Mismo valor para todos</label>
-                        <input id="ce_todos" type="number" step="any" [(ngModel)]="valorTodos" [ngModelOptions]="{ standalone: true }" />
-                    </div>
-                    <button type="button" class="btn-download" (click)="aplicarATodos()"><mat-icon>done_all</mat-icon> Aplicar</button>
-                </div>
-                <div class="dyn-meses">
-                    @for (m of meses; track m; let i = $index) {
-                    <div class="field-input" [class.dyn-mes-elegido]="i === mesForm - 1">
-                        <label [for]="'ce_m' + m">{{ mesesCorto[i] }}</label>
-                        <input [id]="'ce_m' + m" type="number" step="any" [formControlName]="'est_' + m" />
+                        <label for="ce_est">Solo {{ nombreMes() }} {{ anio() }}</label>
+                        <input id="ce_est" type="number" step="any" [formControlName]="colMes()"
+                            [placeholder]="mesCerrado() ? (form.controls.est_fijo.value ?? '') : 'Usa el fijo'" />
                     </div>
                     }
                 </div>
-                }
 
                 <div class="form-grid" style="margin-top: 12px;">
                     <div class="field-input full-width">
@@ -225,11 +203,17 @@
                             placeholder="Ej. Carta N° 3002-OCPD-EsSalud-2009" />
                     </div>
                 </div>
+                @if (form.controls.aplica.value) {
+                <p class="dyn-hint">El fijo vale para todo el año; "Solo {{ nombreMes() }}" cambia solo ese mes.
+                    @if (mesCerrado()) {Si lo deja vacío, toma el fijo.}
+                    @else {{{ nombreMes() }} aún no cierra: si lo deja vacío usa el fijo, y si pone un valor se usa desde el
+                    próximo cálculo.}</p>
+                }
                 @if (existente(); as ex) {
                 <div class="dyn-ok ce-aviso"><mat-icon>info</mat-icon>
-                    <span>Este centro ya tiene estándar propio para este indicador en {{ ex.anio }}. Al guardar se
-                        <strong>actualiza ese registro</strong>: los meses que ingreses reemplazan a los guardados y los
-                        meses que dejes vacíos conservan su valor.</span></div>
+                    <span>Este centro ya tiene estándar propio en este indicador para {{ anio() }}. Al guardar se actualiza
+                        ese mismo registro (<strong>no se crea otro</strong>) y los demás meses no cambian.
+                        @if (!form.controls.aplica.value) {El centro queda en NA todo el año.}</span></div>
                 }
                 @if (errorForm()) {
                 <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span></div>

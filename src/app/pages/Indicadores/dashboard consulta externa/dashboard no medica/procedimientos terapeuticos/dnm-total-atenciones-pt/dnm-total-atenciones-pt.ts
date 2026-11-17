@@ -160,7 +160,6 @@ export class DnmTotalAtencionesPt implements OnInit, OnDestroy {
         //this.query2DATA = q2;
         //this.query3DATA = q3;
         this.query4DATA = q2;
-        console.log('Datos CSV:', q2);
 
         this.dataCSV = q2;
 

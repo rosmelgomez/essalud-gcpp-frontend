@@ -168,7 +168,7 @@
                 <span class="role-badge" [ngClass]="getRoleClass(user)">{{ getPrimaryRoleLabel(user) }}</span>
               </td>
               <td class="cell-place" data-label="Red / Centro">
-                <span class="place-red">{{ getRedName(user.code_red) || '—' }}</span>
+                <span class="place-red">{{ getRedName(user.codred) || '—' }}</span>
                 <span class="place-centro" *ngIf="user.codcas">{{ getCentroName(user.codcas) }}</span>
               </td>
               <td class="cell-status" data-label="Estado">
@@ -503,7 +503,7 @@
             </div>
             <div class="field-input">
               <label for="edit-red">Red</label>
-              <select id="edit-red" [(ngModel)]="editUser.code_red" [disabled]="!editingRedEnabled"
+              <select id="edit-red" [(ngModel)]="editUser.codred" [disabled]="!editingRedEnabled"
                 (change)="onEditingRedChange()">
                 <option value="">{{ getEditingRedPlaceholder() }}</option>
                 <option *ngFor="let red of dataRed" [value]="red.redasiscod">{{ red.redasisdes }}</option>

@@ -4,7 +4,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthLogin } from '../../services/usuario/auth-login';
-import { AuthService, MENSAJE_SESION_EXPIRADA } from '../../services/usuario/auth-service';
+import { AuthService, MENSAJE_SESION_EXPIRADA, SIN_SESION } from '../../services/usuario/auth-service';
 import { RouteLogger } from '../../services/route-logger';
 import { UsersService } from '../../services/usuario/users-service';
 import { Auth } from '../../model/user';
@@ -21,6 +21,8 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class Login implements OnInit {
   private readonly almacen = inject(LocalStorageService);
+  /** Un guard ya comprobó que no hay sesión. Se lee al crear el componente: en ngOnInit la navegación ya terminó. */
+  private readonly sinSesionVerificada = !!inject(Router).currentNavigation()?.extras.state?.[SIN_SESION];
   public loginForm!: FormGroup;
   public changePasswordForm!: FormGroup;
   showPassword = false;
@@ -50,13 +52,20 @@ export class Login implements OnInit {
 
   ngOnInit(): void {
     // Si la sesión de api_token sigue activa, redirigir al home.
-    this.authloginService.apiToken().subscribe({
-      next: () => {
-        this.router.navigate([this.inicio()]);
-      },
-      // sin sesión válida: borrar cualquier dato que haya quedado de una sesión anterior
-      error: () => this.authService.clearSession(),
-    });
+    // Si se llegó desde un guard, este ya comprobó que no hay sesión (y la limpió): no se repite la consulta.
+    if (!this.sinSesionVerificada) {
+      this.authloginService.apiToken().subscribe({
+        // la sesión sigue viva: se recupera el usuario si se había perdido y se entra
+        next: () => {
+          this.authService.asegurarUsuario().subscribe(() => this.router.navigate([this.inicio()]));
+        },
+        // sin sesión válida: borrar cualquier dato que haya quedado de una sesión anterior
+        // (si el backend no respondió no se borra nada: la sesión puede seguir viva cuando vuelva)
+        error: (err) => {
+          if (err?.status !== 0) this.authService.clearSession();
+        },
+      });
+    }
 
     // Capturar el mensaje de sesión expirada desde los parámetros de URL
     this.route.queryParams.subscribe((params) => {
@@ -153,7 +162,8 @@ export class Login implements OnInit {
           this.routeLogger.logLogin();
           this.usersService.getUser(user.username).subscribe({
             next: (data) => {
-              if (data && data.firstLogin) {
+              // el backend envía first_Login: mientras sea true, solo deja cambiar la contraseña (el resto responde 403)
+              if (data && (data.first_Login || data.firstLogin)) {
                 this.isLoggingIn = false;
                 this.tempUserDto = data;
                 this.showChangePassword = true;
@@ -213,6 +223,7 @@ export class Login implements OnInit {
       this.usersService.changePassword(authData).subscribe({
         next: () => {
           this.isUpdatingPassword = false;
+          this.tempUserDto.first_Login = false;
           this.tempUserDto.firstLogin = false;
           this.authService.setCurrentUser(this.tempUserDto);
 

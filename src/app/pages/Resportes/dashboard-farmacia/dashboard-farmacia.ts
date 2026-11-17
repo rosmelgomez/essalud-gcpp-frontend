@@ -5,6 +5,7 @@ import { forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FechaActualizacionService } from '../../../services/fecha-actualizacion-service';
+import { aniosHasta } from '../../../utils/anios';
 
 @Component({
   selector: 'app-dashboard-farmacia',
@@ -13,6 +14,8 @@ import { FechaActualizacionService } from '../../../services/fecha-actualizacion
   styleUrl: './dashboard-farmacia.css',
 })
 export class DashboardFarmacia {
+  /** Años del select: desde 2025 hasta el año actual. */
+  readonly anios = aniosHasta(2025);
   currentDate: string = '';
   centroAtencion: string = '';
 
@@ -97,8 +100,6 @@ export class DashboardFarmacia {
         this.ayudaDiagnosticoRA = data.recetasAtendidas.find((item: { area: string; recetas: number }) => item.area === 'AYUDA AL DIAGNOSTICO')?.recetas || 0;
 
         this.dataDFCSV = data.csv;
-        console.log('Recetas Atendidas:', data.recetasAtendidas);
-        console.log('Datos CSV:', data.csv);
 
         this.loadingRA = false;
         this.selectPeriodoRA = true;

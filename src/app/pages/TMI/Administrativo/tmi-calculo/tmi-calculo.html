@@ -51,10 +51,9 @@
         </div>
     </div>
     <p class="dyn-hint">
-        Con <strong>datos actuales</strong> se calcula con la información de enero al mes elegido tal como está hoy.
-        Con <strong>datos históricos</strong> se usa la información de enero a ese mes tal como estaba el día del cierre.
-        El cálculo se hace al momento y no se guarda. El resultado, el Excel y la comparativa de abajo usan esta
-        misma elección.
+        <strong>Datos actuales</strong>: la información de enero al mes elegido, como está hoy. <strong>Datos
+        históricos</strong>: la misma información como estaba el día del cierre. El cálculo se hace al momento y no se
+        guarda. El resultado, el Excel y la comparación de abajo usan esta elección.
     </p>
     @if (ocupado() === 'calcular') {
     <div class="loading loading-excel">
@@ -138,7 +137,8 @@
             </select>
         </label>
     </div>
-    <div class="wrapper-table">
+    <!-- la caja de la tabla es la que se desplaza en los dos sentidos (la lista virtual la usa como su scroll) -->
+    <div class="wrapper-table wt-scroll" cdkVirtualScrollingElement>
         <div class="grid-table">
             <div class="header-table">
                 <div class="cell">ORDEN</div>
@@ -156,10 +156,12 @@
                 <div class="cell">PUNTAJE</div>
                 <div class="cell">MOTIVO NA</div>
             </div>
-            <div class="dyn-scroll">
-                @if (ocupado() === 'resultado') {<div class="dyn-empty">Cargando resultado...</div>}
-                @for (r of resultadoFiltrado(); track r.codcentro) {
-                <div class="row-table" [class.dyn-inactivo]="!r.visible">
+            @if (ocupado() === 'resultado') {<div class="dyn-empty">Cargando resultado...</div>}
+            @if (resultadoFiltrado().length) {
+            <!-- virtual scroll: solo se dibujan las filas visibles (filas de alto fijo) -->
+            <cdk-virtual-scroll-viewport class="viewport-table dyn-vs" [itemSize]="altoFila" [minBufferPx]="altoFila * 8"
+                [maxBufferPx]="altoFila * 16">
+                <div *cdkVirtualFor="let r of resultadoFiltrado(); trackBy: trackCentro" class="row-table" [class.dyn-inactivo]="!r.visible">
                     <div class="cell">{{ r.orden }}</div>
                     <div class="cell txt">{{ r.red }}</div>
                     <div class="cell">{{ r.codcentro }}</div>
@@ -178,14 +180,14 @@
                     <div class="cell"><span [class]="claseP(r.puntaje)">{{ r.puntaje }}</span></div>
                     <div class="cell txt">{{ motivo(r.motivo_na) }}{{ r.visible ? '' : ' (no se lista)' }}</div>
                 </div>
-                } @empty {
-                @if (ocupado() !== 'resultado') {
-                <div class="dyn-empty">
-                    {{ hayCalculo() ? 'Este indicador no tiene centros en el periodo.' : 'Pulse "Calcular" arriba para ver el resultado.' }}
-                </div>
-                }
-                }
+            </cdk-virtual-scroll-viewport>
+            } @else if (ocupado() !== 'resultado') {
+            <div class="dyn-empty">
+                {{ !hayCalculo() ? 'Pulse "Calcular" arriba para ver el resultado.'
+                    : resultado().length ? 'Ningún centro coincide con los filtros.'
+                    : 'Este indicador no tiene centros en el periodo.' }}
             </div>
+            }
         </div>
     </div>
     <div class="footer-table">
@@ -198,7 +200,7 @@
 <mat-card class="table dyn-paso jus-card">
     <div class="table-title-row">
         <div>
-            <h3>3. Comparativa de cálculos: datos históricos y actuales</h3>
+            <h3>3. Comparar datos históricos y actuales</h3>
             <div class="dyn-paso-periodo">
                 @if (backupSel(); as b) {
                 <span class="dyn-badge dyn-p5">Datos históricos de {{ nombrePeriodo(periodoSel()) }}, guardados el
@@ -220,10 +222,10 @@
         </div>
     </div>
     <p class="dyn-hint">
-        Pone lado a lado, para el periodo elegido arriba, el cálculo de cada centro con <strong>datos históricos</strong>
-        y con <strong>datos actuales</strong>. Los dos se calculan al momento: el resultado no se guarda. Primero aparece cuántos centros dan distinto en cada indicador. Al elegir un centro se ven
-        los dos cálculos con su fórmula, el valor de cada término (grupo, actividad y servicio) y los registros que
-        cambiaron después del cierre, con quién los cambió y cuándo.
+        Compara, para el mes elegido arriba, el resultado de cada centro con <strong>datos históricos</strong> y con
+        <strong>datos actuales</strong> (no se guarda). Primero verá cuántos centros cambiaron en cada indicador. Al
+        elegir un centro verá su fórmula, el valor de cada término y los registros que cambiaron después del cierre,
+        con quién los cambió y cuándo.
     </p>
     @if (calendario(); as k) {
     <details class="jus-lectura jus-calendario">
@@ -235,11 +237,10 @@
                 día@if (backupSel(); as b) { (esta copia se guardó el {{ fecha(b.fecha_backup) }})}. Esa copia ya no cambia.</li>
             <li><strong>Correcciones.</strong> En la última semana de cada mes los estadísticos pueden corregir meses
                 anteriores.@if (!k.enero) { Por ejemplo, a fines de {{ k.siguienteCorto }} pueden corregir {{ k.anteriorCorto }}
-                o {{ k.mesCorto }}.} Esas correcciones también pueden llegar mucho después: en el cierre de agosto se
-                pueden cambiar datos de marzo.</li>
-            <li><strong>Datos actuales.</strong> Son los datos como están hoy, con todas esas correcciones. Si alguien cambió
-                un registro de {{ k.rango }} después del cierre, el cálculo con datos actuales da distinto y la
-                comparativa lo muestra, con quién lo cambió y cuándo.</li>
+                o {{ k.mesCorto }}.} Y pueden corregir mucho después: en agosto se pueden corregir datos de marzo.</li>
+            <li><strong>Datos actuales.</strong> Son los datos de hoy, con todas esas correcciones. Si alguien cambió un
+                registro de {{ k.rango }} después del cierre, el resultado con datos actuales cambia y aquí se ve quién lo
+                cambió y cuándo.</li>
         </ul>
     </details>
     }
@@ -317,10 +318,12 @@
             }
         </ul>
         }
-        <p>Cada término entre corchetes es <code>[grupo;actividad]</code> y suma la cantidad registrada de ese grupo y
-            actividad en todos los servicios. Con <code>#</code> solo cuenta ese servicio: <code>[9;9#14]</code> es grupo 9,
-            actividad 9, servicio 14 (con <code>#77,78</code> cuenta los dos). <code>MEDIANA([...])</code> usa la mediana
-            de cada servicio en vez de la suma.
+        <p>Cada término entre corchetes es <code>[grupo;actividad]</code> y suma lo registrado de ese grupo y actividad
+            en todos los servicios. Con <code>#</code> solo cuenta ese servicio: <code>[9;9#14]</code> es grupo 9,
+            actividad 9, servicio 14 (con <code>#77,78</code> cuenta los dos). <code>MEDIANA([...])</code> saca la mediana
+            de cada servicio en vez de sumar; en el acumulado usa todas las filas de enero al mes.
+            <code>MEDIANA_PERIODO</code> suma el mes y saca la mediana de enero al mes. Una variable con varios conjuntos
+            suma la mediana de cada uno.
             {{ r0.tipo_calculo === 'ACUMULADO' ? 'Cada término suma de enero al mes elegido.' : 'Cada término toma el valor del mes elegido.' }}</p>
     </section>
     }
@@ -432,7 +435,7 @@
         </div>
         <p class="dyn-hint">
             Cada valor es el que entró en la fórmula{{ (c.BACKUP ?? c.ACTUAL)?.tipo_calculo === 'ACUMULADO' ? ', de enero al mes y sin los meses excluidos' : '' }}.
-            Filas es la cantidad de registros sumados en los datos históricos y en los actuales.
+            Filas es cuántos registros se sumaron con datos históricos y con datos actuales.
         </p>
         @if (backupSel()) {
         <div class="dyn-inline">
@@ -467,9 +470,8 @@
                     cierre y ya no está. <strong>Cantidad corregida</strong>: está en los dos con otra cantidad.</li>
                 <li>El <strong>Mes</strong> es el mes del dato, no el mes en que se cambió: un registro de marzo se puede
                     corregir en agosto. La <strong>Fecha</strong> dice cuándo se cambió.</li>
-                <li>Si en un mismo mes hay un registro borrado y uno nuevo con la misma cantidad, el registro se volvió a
-                    cargar con otro número: el dato es el mismo y el resultado no cambia por eso. Si la cantidad es distinta,
-                    es una corrección: el registro se volvió a cargar con la cantidad nueva.</li>
+                <li>Si en un mismo mes hay un registro borrado y uno nuevo con la misma cantidad, solo se volvió a cargar
+                    con otro número y el resultado no cambia. Si la cantidad es distinta, es una corrección.</li>
                 <li><strong>Modificado por</strong> y <strong>Fecha</strong> dicen quién hizo el último cambio y cuándo (si se
                     borró, quién lo modificó por última vez antes del cierre).</li>
             </ul>

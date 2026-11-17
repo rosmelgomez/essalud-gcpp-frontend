@@ -5,8 +5,8 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { Subject, catchError, debounceTime, map, of, switchMap } from 'rxjs';
+import { mostrarAyudaEntera } from '../ayuda-visible';
 
-import { AyudaFlotante } from '../ayuda-flotante';
 import { TmiCatalogoService, TmiVariableService, TmiIndicadorService, TmiEstandarService, TmiCalculoService, TmiIndicador, TmiCatalogo, TmiProblemaConfig, TmiTipoEstandar, TmiLetra, TmiVariable, TmiAnalisisFormula, mensajeError, TmiTerminoFormula, TmiReglaNulo, TmiCambioConfig } from '../../../../services/tmi';
 
 const HOJA = /^[^\[\]:*?/\\]+$/;
@@ -24,45 +24,41 @@ const OPERACIONES = ['+', '-', '*', '/', '(', ')'];
 /** Ayuda de cada campo del formulario del indicador (se abre con el "?" junto al nombre del campo). */
 const AYUDA_INDICADOR = {
   grupo: 'Sección del reporte en la que se agrupa el indicador, por ejemplo Consulta Externa u Hospitalización.',
-  tipo_calculo: 'MENSUAL: cada letra de la fórmula toma el valor del mes. ACUMULADO: cada letra toma la suma de enero '
-    + 'hasta el mes, sin contar los meses excluidos.',
-  sin_datos_anio: 'Qué pasa con un centro que no tiene ningún registro en todo el año. NA: aparece en la hoja con NA. '
-    + 'Mostrar 0: aparece con 0. No listar: no aparece en la hoja del indicador.',
-  base_estandar: 'Qué estándar se usa para evaluar al centro: el de su nivel estándar, su tipo, su categoría o una combinación. '
-    + 'Los valores se cargan en las pestañas de Estándares. Si el centro tiene un estándar propio en Estándar por '
-    + 'Centro, se usa ese.',
-  sentido: 'Menor es mejor: puntaje 5 si el valor no pasa el estándar, 3 si no pasa el % Acept y 1 si lo pasa. '
-    + 'Mayor es mejor: lo mismo, al revés. Dentro de una banda: 5 si el valor queda cerca del estándar, 3 si queda '
-    + 'entre el % Aceptmenos y el % Acept, y 1 si sale de la banda.',
+  tipo_calculo: 'MENSUAL: cada letra de la fórmula usa el valor del mes. ACUMULADO: cada letra usa la suma de enero '
+    + 'al mes, sin los meses excluidos.',
+  sin_datos_anio: 'Un centro que no tiene ningún registro en todo el año. NA: sale en la hoja con NA. '
+    + 'Mostrar 0: sale con 0. No listar: no sale en la hoja del indicador.',
+  base_estandar: 'Con qué estándar se compara al centro: el de su nivel estándar, su tipo, su categoría o una mezcla. '
+    + 'Los valores se escriben en las pestañas de Estándares. Si el centro tiene estándar propio (Estándar por '
+    + 'Centro), se usa ese.',
+  sentido: 'Menor es mejor: 5 puntos si el valor no pasa el estándar, 3 si no pasa el % Acept y 1 si lo pasa. '
+    + 'Mayor es mejor: igual, pero al revés. Dentro de una banda: 5 si el valor queda cerca del estándar, 3 si queda '
+    + 'dentro del margen de arriba y abajo, y 1 si sale de él.',
   formato: 'Cómo se muestran los valores del indicador en el Excel: como número o como porcentaje.',
-  decimales: 'Decimales a los que se redondea el valor antes de compararlo con el estándar. Si lo deja vacío, no se '
+  decimales: 'Con cuántos decimales se redondea el valor antes de compararlo con el estándar. Vacío: no se '
     + 'redondea.',
-  si_variable_nula: 'Qué hacer si en un mes al centro le falta el dato de una letra de la fórmula. '
-    + 'Opción «Vale 0»: esa letra se toma como 0 y la fórmula se calcula igual. '
-    + 'Opción «Deja NA»: la fórmula no se calcula y el mes queda sin resultado (NA). '
-    + 'Ejemplo: fórmula A / B, en marzo B = 50 y A no tiene dato. Con la opción «Vale 0», A se toma como 0 y marzo da '
-    + '0 / 50 = 0. Con la opción «Deja NA», marzo queda NA. '
-    + 'Si la letra sin dato es la de abajo de la división (B), se aplica lo que diga «División entre 0».',
-  si_division_cero: 'Qué hacer si en un mes la letra de abajo de la división vale 0, porque no se puede dividir entre 0. '
-    + 'Opción «Deja NA»: el mes queda sin resultado (NA). '
-    + 'Opción «Resultado 0»: el mes da 0. '
-    + 'Ejemplo: fórmula A / B, en marzo A = 30 y B = 0. Con la opción «Deja NA», marzo queda NA. '
-    + 'Con la opción «Resultado 0», marzo da 0. '
-    + 'Si B no tiene dato y en «Letra sin datos» eligió «Vale 0», B se toma como 0 y también se aplica esta regla.',
-  cero_es_logro: 'Qué puntaje recibe un mes con valor 0. Sin producción: puntaje 0. Es un buen resultado: el 0 se '
-    + 'califica contra el estándar como cualquier otro valor.',
-  mostrar_no_aplica: 'Centros que no tienen estándar o que quedan fuera del ámbito del indicador. Listar como NA: '
+  si_variable_nula: 'Qué pasa si en un mes al centro le falta el dato de una letra. '
+    + '«Vale 0»: esa letra cuenta como 0 y la fórmula se calcula igual. «Deja NA»: el mes queda NA. '
+    + 'Ejemplo: fórmula A / B, en marzo B = 50 y A no tiene dato. Con «Vale 0», marzo da 0 / 50 = 0; con «Deja NA», '
+    + 'marzo queda NA. Si falta la letra de abajo de la división (B), se aplica «División entre 0».',
+  si_division_cero: 'Qué pasa si en un mes la letra de abajo de la división vale 0 (no se puede dividir entre 0). '
+    + '«Deja NA»: el mes queda NA. «Resultado 0»: el mes da 0. '
+    + 'Ejemplo: fórmula A / B, en marzo A = 30 y B = 0: con «Deja NA» marzo queda NA; con «Resultado 0», da 0. '
+    + 'También se aplica si B no tiene dato y en «Letra sin datos» eligió «Vale 0».',
+  cero_es_logro: 'Puntaje de un mes con valor 0. Sin producción: puntaje 0. Es un buen resultado: el 0 se '
+    + 'compara con el estándar como cualquier otro valor.',
+  mostrar_no_aplica: 'Centros que no tienen estándar. Listar como NA: '
     + 'aparecen en la hoja con NA. No listar: no aparecen.',
   activo: 'Un indicador inactivo no se calcula ni sale en el Excel.',
 } as const;
 type CampoAyuda = keyof typeof AYUDA_INDICADOR;
 
-/** Mes anterior al actual como AAAA-MM (valor de un input type="month"). */
-function mesAnterior(): string {
+/** Periodo de cierre: el mes anterior al actual como AAAAMM (en noviembre de 2026, 202610). */
+function periodoCierre(): number {
   const d = new Date();
   d.setDate(1);
   d.setMonth(d.getMonth() - 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return d.getFullYear() * 100 + d.getMonth() + 1;
 }
 
 /** Convierte la fórmula guardada ((A - B) / C) en bloques. */
@@ -144,7 +140,7 @@ function normalizar(texto: string | null | undefined): string {
  *  Internamente la fórmula se guarda con términos de TOTALIZADO3 (la genera el backend). */
 @Component({
   selector: 'app-tmi-config-indicadores',
-  imports: [AyudaFlotante, ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, CdkDropList, CdkDrag],
+  imports: [ReactiveFormsModule, FormsModule, MatCardModule, MatIconModule, CdkDropList, CdkDrag],
   templateUrl: './tmi-config-indicadores.html',
   styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css', './tmi-config-indicadores.css'],
 })
@@ -171,15 +167,39 @@ export class TmiConfigIndicadores implements OnInit {
   /** Campo del formulario con su ayuda abierta (una a la vez). */
   readonly ayuda = AYUDA_INDICADOR;
   ayudaCampo = signal<CampoAyuda | null>(null);
+  /** Ayuda de la pestaña (signo de pregunta junto al título). */
+  ayudaPagina = signal(false);
+
+  /** Ayuda de la sección Fórmula del formulario. */
+  ayudaFormula = signal(false);
+
+  alternarAyudaPagina(ev: Event): void {
+    ev.stopPropagation();
+    this.ayudaCampo.set(null);
+    this.ayudaFormula.set(false);
+    this.ayudaPagina.update((v) => !v);
+  }
+
+  alternarAyudaFormula(ev: Event): void {
+    ev.stopPropagation();
+    this.ayudaCampo.set(null);
+    this.ayudaPagina.set(false);
+    this.ayudaFormula.update((v) => !v);
+    if (!this.ayudaFormula()) return;
+    afterNextRender(() => {
+      mostrarAyudaEntera(this.host.nativeElement.querySelector('.dyn-seccion-ayuda .dyn-ayuda-panel'));
+    }, { injector: this.injector });
+  }
 
   alternarAyuda(campo: CampoAyuda, ev: Event): void {
     ev.stopPropagation();
+    this.ayudaPagina.set(false);
+    this.ayudaFormula.set(false);
     this.ayudaCampo.update((c) => (c === campo ? null : campo));
     if (this.ayudaCampo() !== campo) return;
     // el formulario tiene scroll propio: si la ayuda queda cortada abajo, se desplaza hasta verla entera
     afterNextRender(() => {
-      const pop = this.host.nativeElement.querySelector('.dyn-ayuda-pop');
-      pop?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      mostrarAyudaEntera(this.host.nativeElement.querySelector('.dyn-ayuda-pop'));
     }, { injector: this.injector });
   }
 
@@ -187,6 +207,8 @@ export class TmiConfigIndicadores implements OnInit {
   @HostListener('document:keydown.escape')
   cerrarAyuda(): void {
     this.ayudaCampo.set(null);
+    this.ayudaPagina.set(false);
+    this.ayudaFormula.set(false);
   }
 
   /** Fórmula armada con bloques ((A - B) / C) y variable de cada letra. */
@@ -244,8 +266,8 @@ export class TmiConfigIndicadores implements OnInit {
     si_division_cero: ['NA' as TmiReglaNulo],
     base_estandar: ['TIPO' as TmiIndicador['base_estandar']],
     sentido: ['MENOR' as TmiIndicador['sentido']],
-    tipo_tolerancia: ['REL' as 'REL' | 'ABS'],
-    tolerancia: [0.1],
+    tipo_acept: ['REL' as 'REL' | 'ABS'],
+    acept: [0.1],
     decimales: [null as number | null],
     cero_es_logro: [false],
     mostrar_no_aplica: [true],
@@ -324,14 +346,14 @@ export class TmiConfigIndicadores implements OnInit {
   }
 
   // ---------- descargar el query del indicador (.sql) para probarlo en SQL Server ----------
-  /** Mes del query (AAAA-MM del input type="month"); por defecto el mes anterior. */
-  periodoSql = signal(mesAnterior());
+  /** Periodo del SQL de prueba: el de cierre, el mes anterior (en noviembre, 202610). En el archivo se cambia @PERIODO. */
+  readonly periodoSql = periodoCierre();
   /** Descarga en curso: 'formula' o 'completo'. */
   descargandoSql = signal<'' | 'formula' | 'completo'>('');
 
   /** completo = con estándares, exclusiones y estándar específico de cada centro; si no, solo la fórmula. */
   descargarSql(ind: TmiIndicador, completo = false): void {
-    const periodo = Number(this.periodoSql().replace('-', ''));
+    const periodo = this.periodoSql;
     if (!ind.id || !ind.formula || !/^\d{6}$/.test(String(periodo))) return;
     this.errorDetalle.set('');
     this.descargandoSql.set(completo ? 'completo' : 'formula');
@@ -353,7 +375,7 @@ export class TmiConfigIndicadores implements OnInit {
     });
   }
 
-  // ---------- historial de cambios del indicador (fórmula, estándares, % Acept, exclusiones, ámbito) ----------
+  // ---------- historial de cambios del indicador (fórmula, estándares, % Acept, exclusiones) ----------
   historial = signal<TmiCambioConfig[] | null>(null);
   cargandoHistorial = signal(false);
 
@@ -407,7 +429,7 @@ export class TmiConfigIndicadores implements OnInit {
     const n = this.paso();
     if (!this.pasoValido(n)) {
       this.camposPaso(n).forEach((k) => this.form.get(k)?.markAsTouched());
-      this.errorForm.set('Complete los campos obligatorios de este paso.');
+      this.errorForm.set('Llene los campos obligatorios de este paso.');
       return;
     }
     this.errorForm.set('');
@@ -457,7 +479,7 @@ export class TmiConfigIndicadores implements OnInit {
       // vuelve al primer paso con un campo por corregir
       const malo = this.pasos.find((x) => !this.pasoValido(x.n));
       if (malo) this.paso.set(malo.n);
-      this.errorForm.set('Revise los campos obligatorios. El nombre de hoja no admite [ ] : * ? / \\ y tiene máximo 31 caracteres.');
+      this.errorForm.set('Revise los campos obligatorios. El nombre de hoja tiene hasta 31 caracteres y no puede llevar [ ] : * ? / \\');
       return;
     }
     const { id, ...resto } = f;
@@ -466,7 +488,7 @@ export class TmiConfigIndicadores implements OnInit {
       grupo: resto.grupo == null ? null : Number(resto.grupo),
       titulo_hoja: resto.titulo_hoja || null,
       orden: Number(resto.orden),
-      tolerancia: Number(resto.tolerancia ?? 0),
+      acept: Number(resto.acept ?? 0),
       decimales: resto.decimales == null || (resto.decimales as any) === '' ? null : Number(resto.decimales),
     };
     this.guardando.set(true);

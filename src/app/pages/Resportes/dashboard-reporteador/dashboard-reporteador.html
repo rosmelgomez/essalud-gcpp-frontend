@@ -14,10 +14,7 @@
       <div class="buscar-group">
         <select [(ngModel)]="anio" class="style-select">
           <option value="">Seleccione un Año</option>
-          <option value="2023">2023</option>
-          <option value="2024">2024</option>
-          <option value="2025">2025</option>
-          <option value="2026">2026</option>
+          @for (a of anios; track a) {<option [value]="a">{{ a }}</option>}
         </select>
         <select [(ngModel)]="periodo" class="style-select">
           <option value="">Seleccione un periodo</option>
@@ -35,7 +32,7 @@
           <option value="12">Diciembre</option>
         </select>
         <div class="custom-dropdown" (mouseleave)="closeDropdownRed()" (mouseenter)="openDropdownRed()">
-          <input type="text" placeholder="Buscar y seleccionar red asistencial..." (input)="filterRed($event)"
+          <input (focus)="openDropdownRed()" type="text" placeholder="Buscar y seleccionar red asistencial..." (input)="filterRed($event)"
             [value]="selectedRedName" class="dropdown-input" />
           <div class="dropdown-list" *ngIf="isDropdownRedOpen">
             <div *ngFor="let red of filteredRed" class="dropdown-item" (click)="selectOptionRed(red)">
@@ -48,7 +45,7 @@
         </div>
         <div class="custom-dropdown" [class.disabled]="!isCentroEnabled" (mouseleave)="closeDropdownCentro()"
           (mouseenter)="openDropdownCentro()">
-          <input type="text" title="centro"
+          <input (focus)="openDropdownCentro()" type="text" title="centro"
             [placeholder]="isCentroEnabled ? 'Buscar y seleccionar centro asistencial...' : 'Primero selecciona una red'"
             (input)="filterCentro($event)" [value]="selectedCentroName" [disabled]="!isCentroEnabled"
             class="dropdown-input" />
@@ -66,7 +63,7 @@
           <option *ngFor="let item of dataServicio" value="{{item.servhoscod}}">{{item.servhosdes}}</option>
         </select>
         <div class="custom-dropdown" (mouseleave)="closeDropdownActividad()" (mouseenter)="openDropdownActividad()">
-          <input type="text" placeholder="Buscar y seleccionar actividad..." (input)="filterActividad($event)"
+          <input (focus)="openDropdownActividad()" type="text" placeholder="Buscar y seleccionar actividad..." (input)="filterActividad($event)"
             [value]="selectedActividadName" class="dropdown-input" />
           <div class="dropdown-list" *ngIf="isDropdownActividadOpen">
             <div *ngFor="let actividadItem of filteredActividad" class="dropdown-item"
@@ -80,7 +77,7 @@
         </div>
         <div class="custom-dropdown" [class.disabled]="!isSubactividadEnabled"
           (mouseleave)="closeDropdownSubactividad()" (mouseenter)="openDropdownSubactividad()">
-          <input type="text" title="subactividad"
+          <input (focus)="openDropdownSubactividad()" type="text" title="subactividad"
             [placeholder]="isSubactividadEnabled ? 'Buscar y seleccionar subactividad...' : 'Primero selecciona una actividad'"
             (input)="filterSubactividad($event)" [value]="selectedSubactividadName" [disabled]="!isSubactividadEnabled"
             class="dropdown-input" />

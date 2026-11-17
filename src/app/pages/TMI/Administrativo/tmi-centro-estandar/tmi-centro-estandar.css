@@ -1,22 +1,39 @@
-/* Centro del formulario: red (select) y búsqueda por código o nombre en una fila */
-.ce-filtros {
-    display: grid;
-    grid-template-columns: minmax(160px, 260px) minmax(0, 1fr);
-    gap: 8px;
-}
-
-.ce-filtros .dyn-search {
-    margin: 0;
-}
-
-@media (max-width: 560px) {
-    .ce-filtros {
-        grid-template-columns: minmax(0, 1fr);
-    }
+/* Centro del formulario: filtro por red sobre la lista de centros */
+.ce-campo-ayuda {
+    margin-left: 6px;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    color: var(--rpt-muted);
 }
 
 /* Aviso: el centro ya está registrado en ese indicador y año */
 .ce-aviso {
     align-items: flex-start;
     margin-top: 12px;
+}
+
+/* Fila: indicador (con % Acept), fijo del año, valor del mes y acciones (como Por indicador) */
+.ce-fila {
+    grid-template-columns: minmax(0, 1fr) 150px 170px auto;
+}
+
+.ce-fila .exg-rango strong {
+    font-weight: 600;
+    color: var(--rpt-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Pantalla angosta: indicador arriba; fijo y mes abajo; las acciones a la derecha */
+@media (max-width: 720px) {
+    .lv-fila .ce-fila {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 4px 10px;
+        padding-right: 12px;
+        padding-left: 16px;
+    }
+
+    .lv-fila .ce-fila > .exg-indicador { grid-row: 1; grid-column: 1 / 3; }
+    .lv-fila .ce-fila > .ce-fijo { grid-row: 2; grid-column: 1; }
+    .lv-fila .ce-fila > .ce-mes { grid-row: 2; grid-column: 2; }
+    .lv-fila .ce-fila > .exg-acciones { grid-row: 1 / 3; grid-column: 3; }
 }

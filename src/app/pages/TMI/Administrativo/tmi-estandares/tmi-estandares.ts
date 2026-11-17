@@ -1,15 +1,14 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
-import { AyudaFlotante } from '../ayuda-flotante';
 import {
   TmiCalculoService, TmiEstandarService, TmiEstandarPeriodo, TmiEstandarPeriodoClave, mensajeError,
 } from '../../../../services/tmi';
+import { MESES_NOMBRE as MESES } from '../../tmi-comun';
 
-const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 /** Lo que el usuario escribe en el formulario: fijo del año y, si el mes ya cerró, el valor del mes. */
 /** Fila de la lista virtual: la cabecera del indicador, una clave (si está abierto) o el aviso de que no tiene claves. */
@@ -34,11 +33,25 @@ interface EdicionClave {
  */
 @Component({
   selector: 'app-tmi-estandares',
-  imports: [AyudaFlotante, FormsModule, MatCardModule, MatIconModule, ScrollingModule],
+  imports: [FormsModule, MatCardModule, MatIconModule, ScrollingModule],
   templateUrl: './tmi-estandares.html',
-  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css', '../lista-virtual.css', '../tmi-estandar-resumen/tmi-estandar-resumen.css', './tmi-estandares.css'],
+  styleUrls: ['../tmi-indicadores.css', '../tmi-dinamico.css', '../ayuda-flotante.css', '../lista-virtual.css', '../tmi-estandar-resumen.css', './tmi-estandares.css'],
 })
 export class TmiEstandares implements OnInit {
+  /** Ayuda de la pestaña (signo de pregunta junto al título). */
+  ayudaPagina = signal(false);
+
+  alternarAyudaPagina(ev: Event): void {
+    ev.stopPropagation();
+    this.ayudaPagina.update((v) => !v);
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  cerrarAyudaPagina(): void {
+    this.ayudaPagina.set(false);
+  }
+
   private estandarSrv = inject(TmiEstandarService);
   private calculoSrv = inject(TmiCalculoService);
 
@@ -146,18 +159,18 @@ export class TmiEstandares implements OnInit {
     this.abiertos.set(abrir ? new Set(this.visibles().map((i) => i.id)) : new Set());
   }
 
-  /** Estándar que usa el cálculo en el mes elegido: el del mes si ya cerró y tiene valor; si no, el fijo. */
-  efectivo(i: TmiEstandarPeriodo, k: TmiEstandarPeriodoClave): number | null {
-    const v = i.mes_cerrado && k.mes ? k.mes : k.fijo;
+  /** Estándar que usa el cálculo en el mes elegido: el del mes si tiene valor (cerrado o fijado antes); si no, el fijo. */
+  efectivo(k: TmiEstandarPeriodoClave): number | null {
+    const v = k.mes ? k.mes : k.fijo;
     return v ? v : null;
   }
 
-  /** El mes cerrado tiene un valor distinto del fijo (se cambió solo para ese mes). */
-  mesDistinto(i: TmiEstandarPeriodo, k: TmiEstandarPeriodoClave): boolean {
-    return i.mes_cerrado && !!k.mes && k.mes !== k.fijo;
+  /** El mes tiene un valor distinto del fijo (se cambió solo para ese mes). */
+  mesDistinto(k: TmiEstandarPeriodoClave): boolean {
+    return !!k.mes && k.mes !== k.fijo;
   }
 
-  etiquetaClave(i: TmiEstandarPeriodo, k: TmiEstandarPeriodoClave): string {
+  etiquetaClave(k: TmiEstandarPeriodoClave): string {
     // solo el código de la clave (I, II, III, H.N., CNSR ...)
     return k.descripcion || k.clave;
   }
@@ -171,9 +184,10 @@ export class TmiEstandares implements OnInit {
     this.edicion.set(i.claves.map((k) => ({
       fuente: k.fuente,
       clave: k.clave,
-      etiqueta: this.etiquetaClave(i, k),
+      etiqueta: this.etiquetaClave(k),
       fijo: k.fijo,
-      mes: i.mes_cerrado ? (k.mes || k.fijo) : null,
+      // mes abierto: solo su valor propio si ya lo tiene (vacío = usa el fijo)
+      mes: i.mes_cerrado ? (k.mes || k.fijo) : (k.mes || null),
     })));
     this.errorForm.set('');
     this.editando.set(i);
@@ -193,8 +207,8 @@ export class TmiEstandares implements OnInit {
     const i = this.editando();
     if (!i) return;
     const lista = this.edicion();
-    if (lista.some((e) => e.fijo == null || e.fijo < 0 || (i.mes_cerrado && (e.mes == null || e.mes < 0)))) {
-      this.errorForm.set('Complete todos los valores (0 = sin estándar).');
+    if (lista.some((e) => e.fijo == null || e.fijo < 0 || (e.mes != null && e.mes < 0) || (i.mes_cerrado && e.mes == null))) {
+      this.errorForm.set('Llene todos los valores. Use 0 para dejar una clave sin estándar.');
       return;
     }
     this.guardando.set(true);
@@ -202,12 +216,12 @@ export class TmiEstandares implements OnInit {
     this.estandarSrv.putEstandarPeriodo(i.id, {
       anio: this.anio(),
       mes: this.mes(),
-      valores: lista.map((e) => ({ fuente: e.fuente, clave: e.clave, fijo: e.fijo, mes: i.mes_cerrado ? e.mes : null })),
+      valores: lista.map((e) => ({ fuente: e.fuente, clave: e.clave, fijo: e.fijo, mes: e.mes })),
     }).subscribe({
       next: () => {
         this.guardando.set(false);
         this.editando.set(null);
-        this.mensaje.set(`Estándar de ${i.indicador} guardado para ${i.mes_cerrado ? this.nombreMes() + ' y el fijo de ' : ''}${this.anio()}. Se aplica desde el próximo cálculo.`);
+        this.mensaje.set(`Estándar de ${i.indicador} guardado (fijo ${this.anio()} y ${this.nombreMes()}). Se usa en el próximo cálculo.`);
         this.cargar();
       },
       error: (e) => {
