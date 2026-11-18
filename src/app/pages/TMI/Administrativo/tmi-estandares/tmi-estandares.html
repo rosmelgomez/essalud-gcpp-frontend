@@ -12,12 +12,12 @@
             </p>
             <p>
             Si un indicador usa los dos, cada centro usa una sola clave: primero su nivel estándar, si está en la lista
-            (por ejemplo CNSR); si no, su nivel I, II o III. Si esa clave está vacía o en 0, el centro queda sin estándar.
+            (por ejemplo CNSR); si no, su nivel I, II o III. Si esa clave está vacía, el centro queda sin estándar (0 es un estándar válido).
             </p>
             <p>
             El <strong>fijo del año</strong> vale para todos los meses. También puede poner un valor <strong>solo para el
-            mes elegido</strong>, aunque ese mes no haya cerrado: se usa desde el próximo cálculo. Un 0 deja la clave sin
-            estándar y el centro sale NA. Si un centro tiene estándar propio (pestaña Por centro), se usa ese.
+            mes elegido</strong>, aunque ese mes no haya cerrado: se usa desde el próximo cálculo. Dejar el fijo vacío
+            deja la clave sin estándar y el centro sale NA; un 0 se usa como estándar. Si un centro tiene estándar propio (pestaña Por centro), se usa ese.
             </p>
         </div>
         }
@@ -100,11 +100,11 @@
                     <div class="exg-indicador">
                         <span class="exg-ind-nombre">{{ etiquetaClave(k) }}</span>
                     </div>
-                    <span class="exg-rango">Fijo {{ anio() }} <strong>{{ k.fijo ? fmt(i, k.fijo) : 'sin estándar' }}</strong></span>
+                    <span class="exg-rango">Fijo {{ anio() }} <strong>{{ k.fijo != null ? fmt(i, k.fijo) : 'sin estándar' }}</strong></span>
                     <span class="exg-rango" [class.std-mes-distinto]="mesDistinto(k)"
                         [title]="mesDistinto(k) ? 'Cambiado solo para ' + nombreMes() : ''">
                         {{ nombreMes() }}
-                        <strong>{{ i.mes_cerrado || k.mes ? (v != null ? fmt(i, v) : 'sin estándar') : 'usa el fijo' }}</strong>
+                        <strong>{{ i.mes_cerrado || k.mes != null ? (v != null ? fmt(i, v) : 'sin estándar') : 'usa el fijo' }}</strong>
                     </span>
                 </div>
         } @else {
@@ -163,7 +163,7 @@
                     cálculo.
                     }
                     @if (i.formato === 'PORCENTAJE') { Escriba en decimales: 0.98 es 98 %. }
-                    Un 0 deja la clave sin estándar.
+                    El 0 es un estándar válido; deje el fijo vacío para dejar la clave sin estándar.
                 </p>
                 @if (errorForm()) {
                 <div class="validation-message-banner"><mat-icon>error_outline</mat-icon><span>{{ errorForm() }}</span></div>

@@ -159,15 +159,15 @@ export class TmiEstandares implements OnInit {
     this.abiertos.set(abrir ? new Set(this.visibles().map((i) => i.id)) : new Set());
   }
 
-  /** Estándar que usa el cálculo en el mes elegido: el del mes si tiene valor (cerrado o fijado antes); si no, el fijo. */
+  /** Estándar que usa el cálculo en el mes elegido: el del mes si tiene valor (cerrado o fijado antes); si no, el fijo.
+   *  0 es un estándar válido; vacío (null) = sin estándar. */
   efectivo(k: TmiEstandarPeriodoClave): number | null {
-    const v = k.mes ? k.mes : k.fijo;
-    return v ? v : null;
+    return k.mes ?? k.fijo ?? null;
   }
 
   /** El mes tiene un valor distinto del fijo (se cambió solo para ese mes). */
   mesDistinto(k: TmiEstandarPeriodoClave): boolean {
-    return !!k.mes && k.mes !== k.fijo;
+    return k.mes != null && k.mes !== k.fijo;
   }
 
   etiquetaClave(k: TmiEstandarPeriodoClave): string {
@@ -187,7 +187,7 @@ export class TmiEstandares implements OnInit {
       etiqueta: this.etiquetaClave(k),
       fijo: k.fijo,
       // mes abierto: solo su valor propio si ya lo tiene (vacío = usa el fijo)
-      mes: i.mes_cerrado ? (k.mes || k.fijo) : (k.mes || null),
+      mes: i.mes_cerrado ? (k.mes ?? k.fijo ?? null) : (k.mes ?? null),
     })));
     this.errorForm.set('');
     this.editando.set(i);
@@ -199,7 +199,7 @@ export class TmiEstandares implements OnInit {
   }
 
   cambiarValor(idx: number, campo: 'fijo' | 'mes', valor: any): void {
-    const n = valor === '' || valor == null ? null : Number(valor);
+    const n = valor === '' || valor == null || Number.isNaN(Number(valor)) ? null : Number(valor);
     this.edicion.update((lista) => lista.map((e, i) => (i === idx ? { ...e, [campo]: n } : e)));
   }
 
@@ -207,8 +207,9 @@ export class TmiEstandares implements OnInit {
     const i = this.editando();
     if (!i) return;
     const lista = this.edicion();
-    if (lista.some((e) => e.fijo == null || e.fijo < 0 || (e.mes != null && e.mes < 0) || (i.mes_cerrado && e.mes == null))) {
-      this.errorForm.set('Llene todos los valores. Use 0 para dejar una clave sin estándar.');
+    // 0 es un estándar válido; vacío (null) deja la clave sin estándar
+    if (lista.some((e) => (e.fijo != null && e.fijo < 0) || (e.mes != null && e.mes < 0))) {
+      this.errorForm.set('Los estándares no pueden ser negativos. Deje vacío para dejar una clave sin estándar.');
       return;
     }
     this.guardando.set(true);
